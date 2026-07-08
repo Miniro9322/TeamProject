@@ -1,9 +1,9 @@
 using UnityEngine;
 public enum Language
 {
-    Kr,
-    En, 
-    jp
+    Kr = 0,
+    En = 1, 
+    jp = 2
 }
 
 public static class DataTableIds
