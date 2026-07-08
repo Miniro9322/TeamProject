@@ -16,7 +16,7 @@ public static class DataTableManager
         tables.Add(DataTableIds.String, stringTable);
         var enemyTable = new EnemyTable();
         enemyTable.Load(DataTableIds.Enemy);
-        tables.Add(DataTableIds.String, enemyTable);
+        tables.Add(DataTableIds.Enemy,enemyTable);
     }
     public static T Get<T>(string id) where T : DataTable
     {
