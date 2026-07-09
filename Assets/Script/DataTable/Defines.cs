@@ -3,7 +3,7 @@ public enum Language
 {
     Kr = 0,
     En = 1, 
-    jp = 2
+    Jp = 2
 }
 
 public static class DataTableIds
