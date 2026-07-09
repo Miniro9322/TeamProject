@@ -34,12 +34,17 @@ public class MapGame : MonoBehaviour
  
     public int enemyDummyLayer = -1;
 
-     
-    public bool attachUnitAttacker = true;
-   
-    public int unitAttackRange = 2;
-    public int unitAttackPower = 5;
-    public float unitAttackInterval = 0.5f;
+    [Header("사거리 뷰 (표시 전용)")]
+    [Tooltip("배치 프리뷰/선택 시 보여줄 사거리(타일 칸 수). 실제 전투 사거리는 Hero의 트리거 콜라이더가 결정 — 이 값은 배치 계획용 시각화일 뿐이다.")]
+    public int viewRange = 2;
+
+    [Header("전투 테스트 (Hero 스탠드인)")]
+    [Tooltip("켜면 배치되는 근접 유닛에 DummyMeleeAttacker를 붙여 Hero 방식(트리거+태그)으로 실제 데미지를 준다. Hero 완성되면 끈다.")]
+    public bool attachMeleeAttacker = true;
+    [Tooltip("공격자 사거리(월드 단위 = 트리거 반경).")]
+    public float attackerRange = 2f;
+    public int attackerPower = 5;
+    public float attackerInterval = 0.5f;
 
     [Header("Placement")]
     [Tooltip("배치할 프리팹 목록. 비워두면 유닛/건물 더미 2종이 기본 제공된다.")]
@@ -63,7 +68,7 @@ public class MapGame : MonoBehaviour
     private readonly HashSet<Vector2Int> _pathSet = new();
 
     private readonly List<Vector2Int> _tinted = new(); // 이번 프레임 임시 하이라이트(사거리/중심) — 다음 프레임에 원복
-    private DummyAttacker _selected;                    // 클릭으로 선택된 유닛(사거리 상시 표시)
+    private GameObject _selected;                       // 클릭으로 선택된 배치물(사거리 상시 표시)
     private bool _pointerOverPanel;
     private string _status = "";
     private Rect _panelRect = new(10, 10, 260, 560);
@@ -214,9 +219,9 @@ public class MapGame : MonoBehaviour
         // 지난 프레임에 칠한 임시 하이라이트(사거리/중심)를 모두 원복하고 이번 프레임 것을 다시 그린다.
         ClearTinted();
 
-        // 1) 클릭으로 선택된 유닛이 있으면 그 사거리를 상시 표시(파괴됐으면 Unity 가짜 null로 자동 해제).
+        // 1) 클릭으로 선택된 배치물이 있으면 그 사거리를 상시 표시(파괴됐으면 Unity 가짜 null로 자동 해제).
         if (_selected != null)
-            ShowRange(board.WorldToCell(_selected.transform.position), _selected.range, board.selectColor, skipCenter: false);
+            ShowRange(board.WorldToCell(_selected.transform.position), viewRange, board.selectColor, skipCenter: false);
 
         // 2) 배치 모드에서 유닛을 갖다 대면 배치될 칸 주변 사거리를 미리 표시.
         if (_mode != PlaceMode.Place || _pointerOverPanel) return;
@@ -225,7 +230,7 @@ public class MapGame : MonoBehaviour
 
         PlaceKind kind = CurrentKind();
         if (kind == PlaceKind.Unit || kind == PlaceKind.Ranged)
-            ShowRange(cell.coord, unitAttackRange, board.rangeColor, skipCenter: true);
+            ShowRange(cell.coord, viewRange, board.rangeColor, skipCenter: true);
 
         // 중심 칸(배치 가능=초록 / 불가=빨강)을 사거리 위에 덮어 가장 잘 보이게.
         bool ok = board.CanPlace(cell.coord, kind, out _);
@@ -250,11 +255,11 @@ public class MapGame : MonoBehaviour
         _tinted.Clear();
     }
 
-    /// <summary>배치 모드가 아닐 때(Off) 배치된 유닛을 클릭하면 그 유닛을 선택해 사거리를 상시 표시한다.</summary>
+    /// <summary>배치 모드가 아닐 때(Off) 배치물을 클릭하면 선택해 사거리(표시용)를 상시 표시한다.</summary>
     private void SelectAt(MapBoard.Cell cell)
     {
-        _selected = cell.occupant != null ? cell.occupant.GetComponent<DummyAttacker>() : null;
-        _status = _selected != null ? $"{cell.coord} 유닛 선택 — 사거리 {_selected.range}칸" : "선택 해제";
+        _selected = cell.occupant;
+        _status = _selected != null ? $"{cell.coord} 선택 — 표시 사거리 {viewRange}칸" : "선택 해제";
     }
 
     private void HandlePlacementClick()
@@ -290,7 +295,7 @@ public class MapGame : MonoBehaviour
         if (board.TryPlace(cell.coord, go, entry.kind, placeYOffset, out reason))
         {
             _placed.Add(go);
-            AttachAttacker(go, entry.kind);
+            AttachMeleeAttacker(go, entry.kind);
             _status = $"{cell.coord}에 {entry.label} 배치";
             Placed?.Invoke(entry.kind, go, cell);
         }
@@ -301,18 +306,17 @@ public class MapGame : MonoBehaviour
         }
     }
 
-    /// <summary>[테스트] 근접/원거리 유닛에 공격측 더미를 붙인다. 건물은 제외.</summary>
-    private void AttachAttacker(GameObject go, PlaceKind kind)
+    /// <summary>[테스트] 근접 유닛에 Hero 스탠드인 공격자를 붙인다(트리거+태그로 실제 데미지). 건물/원거리 제외.</summary>
+    private void AttachMeleeAttacker(GameObject go, PlaceKind kind)
     {
-        if (!attachUnitAttacker || go == null) return;
-        if (kind != PlaceKind.Unit && kind != PlaceKind.Ranged) return;
+        if (!attachMeleeAttacker || go == null || kind != PlaceKind.Unit) return;
 
-        DummyAttacker atk = go.GetComponent<DummyAttacker>();
-        if (atk == null) atk = go.AddComponent<DummyAttacker>();
-        atk.board = board;
-        atk.range = unitAttackRange;
-        atk.power = unitAttackPower;
-        atk.attackInterval = unitAttackInterval;
+        DummyMeleeAttacker atk = go.GetComponent<DummyMeleeAttacker>();
+        if (atk == null) atk = go.AddComponent<DummyMeleeAttacker>(); // RequireComponent가 트리거 SphereCollider 자동 추가
+        atk.range = attackerRange;
+        atk.power = attackerPower;
+        atk.attackInterval = attackerInterval;
+        atk.Apply(); // 필드 채운 뒤 트리거 반경 반영
     }
 
     private void RemoveAt(MapBoard.Cell cell)
