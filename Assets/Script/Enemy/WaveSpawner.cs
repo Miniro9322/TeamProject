@@ -25,7 +25,7 @@ public class WaveSpawner : MonoBehaviour
 
     private IEnumerator SpawnWave(WaveTable.Data wave)
     {
-        var prefab = waveTable.GetMonsterPrefab(wave.ID);
+        var prefab = waveTable.GetMonsterPrefab(wave);
         if (prefab == null)
         {
             Debug.LogWarning($"WaveSpawner: 프리팹 로드 실패 '{wave.Prefab}' (ID {wave.ID})");
