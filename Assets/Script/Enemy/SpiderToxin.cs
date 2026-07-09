@@ -1,4 +1,5 @@
 using System.Collections;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 public class SpiderToxin : EnemyBase
@@ -10,10 +11,11 @@ public class SpiderToxin : EnemyBase
     private bool isSkill;
     private float skilltimer = 3f;
     
-    private void OEnable()
+    private void OnEnable()
     {
         isSkill = false;
-        skilltimer = 0;
+        IsDie = false;
+        Dash().Forget();
     }
     private void Start()
     {
@@ -22,7 +24,7 @@ public class SpiderToxin : EnemyBase
         attack = AttackPower;
         def = Defense; //테스트용
     }
-    private IEnumerator Dash()
+    private async UniTask Dash()
     {
         float t = 0;
         while(!IsDie)
@@ -32,11 +34,27 @@ public class SpiderToxin : EnemyBase
                 t += Time.deltaTime;
                 if (t > skilltimer)
                 {
-                    // Skill();
+                    Skill().Forget();
                     t =0;
                 }
             }
-            yield return null;
+            await UniTask.Yield();
         }
+    }
+
+    private async UniTask Skill()
+    {
+        isSkill = true;
+        float t = 0f;
+        float duration = 10f;
+        Vector3 endpos = new Vector3(transform.position.x+10f,transform.position.y,transform.position.z);
+        while(t<1f)
+        {
+            t += Time.deltaTime*duration;
+            transform.position = Vector3.MoveTowards(transform.position,endpos,t);
+            await UniTask.Yield();
+        }
+        isSkill = false;
+        transform.position = endpos;
     }
 }
