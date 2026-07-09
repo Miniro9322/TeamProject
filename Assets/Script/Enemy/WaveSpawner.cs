@@ -1,4 +1,6 @@
+using System;
 using System.Collections;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 public class WaveSpawner : MonoBehaviour
@@ -19,27 +21,27 @@ public class WaveSpawner : MonoBehaviour
 
         foreach (var wave in waveTable.GetAll())
         {
-            StartCoroutine(SpawnWave(wave));
+            SpawnWave(wave).Forget();
         }
     }
 
-    private IEnumerator SpawnWave(WaveTable.Data wave)
+    private async UniTask SpawnWave(WaveTable.Data wave)
     {
         var prefab = waveTable.GetMonsterPrefab(wave);
         if (prefab == null)
         {
             Debug.LogWarning($"WaveSpawner: 프리팹 로드 실패 '{wave.Prefab}' (ID {wave.ID})");
-            yield break;
+            return;
         }
 
-        if (wave.SpawnTime > 0f) yield return new WaitForSeconds(wave.SpawnTime);
+        if (wave.SpawnTime > 0f) await UniTask.Delay(TimeSpan.FromSeconds(wave.SpawnTime));
 
         for (int i = 0; i < wave.Count; i++)
         {
             Instantiate(prefab, spawnPosition, Quaternion.identity);
  
             if (i < wave.Count - 1 && wave.Delay > 0f)
-                yield return new WaitForSeconds(wave.Delay);
+            await UniTask.Delay(TimeSpan.FromSeconds(wave.Delay));
         }
     }
 }
