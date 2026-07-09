@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using VContainer;
 using VContainer.Unity;
@@ -7,8 +8,11 @@ using VContainer.Unity;
 public class ResourceTest : MonoBehaviour
 {
     [SerializeField] private List<ProductionFacility> facilityPrefabs;
+    [SerializeField] private List<House> housePrefabs;
     private List<ProductionFacility> obj = new();
+    private List<House> houses = new();
     private ResourcesManager manager;
+    private UiManager uiManager;
     private IObjectResolver resolver;
 
     [Inject]
@@ -23,14 +27,10 @@ public class ResourceTest : MonoBehaviour
         manager = resourcesManager;
     }
 
-    private void Start()
+    [Inject]
+    public void Construct(UiManager uiManager)
     {
-        manager.ProductUpdate += ResourcesUpdateTest;
-    }
-
-    private void OnDestroy()
-    {
-        manager.ProductUpdate -= ResourcesUpdateTest;
+        this.uiManager = uiManager;
     }
 
     private void Update()
@@ -65,6 +65,38 @@ public class ResourceTest : MonoBehaviour
             obj.Add(resolver.Instantiate(facilityPrefabs[4]));
         }
 
+        if (Keyboard.current.digit6Key.wasPressedThisFrame)
+        {
+            Debug.Log("pressed");
+            houses.Add(resolver.Instantiate(housePrefabs[Random.Range(0, housePrefabs.Count)]));
+        }
+
+        if (Mouse.current.leftButton.wasPressedThisFrame)
+        {
+            if (EventSystem.current.IsPointerOverGameObject())
+            {
+                return;
+            }
+
+            Ray ray = Camera.main.ScreenPointToRay(Mouse.current.position.ReadValue());
+
+            if(Physics.Raycast(ray, out RaycastHit hit, Mathf.Infinity))
+            {
+                var building = hit.collider.GetComponent<ProductionFacility>();
+                if (building != null)
+                {
+                    uiManager.OpenBuildingUi(building);
+                }
+            }
+            else
+            {
+                if (uiManager.BuildingUiOpen)
+                {
+                    uiManager.CloseBuildingUi();
+                }
+            }
+        }
+
         if (Keyboard.current.aKey.wasPressedThisFrame)
         {
             Debug.Log("pressed");
@@ -76,10 +108,5 @@ public class ResourceTest : MonoBehaviour
                 }
             }
         }
-    }
-
-    private void ResourcesUpdateTest(ProductionType type, int amount)
-    {
-        Debug.Log($"{type}이 {amount}만큼 증가");
     }
 }

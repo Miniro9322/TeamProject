@@ -10,7 +10,12 @@ public class ResourcesManager : MonoBehaviour
     [SerializeField] private int iron = 500;
     [SerializeField] private int stone = 500;
 
-    public event Action<ProductionType, int> ProductUpdate;
+    public event Action<int, int, int, int, int> ProductUpdate;
+
+    private void Start()
+    {
+        ProductUpdate?.Invoke(wood, stone, iron, gold, food);
+    }
 
     public void ProductChanged(ProductionType type, int amount)
     {
@@ -58,9 +63,7 @@ public class ResourcesManager : MonoBehaviour
                 break;
         }
 
-        Debug.Log($"목재: {wood}, 식량: {food}, 금: {gold}, 철재: {iron}, 석재: {stone}");
-
-        ProductUpdate?.Invoke(type, amount);
+        ProductUpdate?.Invoke(wood, stone, iron, gold, food);
     }
 
     public bool TryBuild(List<ProductionType> types, List<int> amounts)

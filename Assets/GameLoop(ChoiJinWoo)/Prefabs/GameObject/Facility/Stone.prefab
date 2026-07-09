@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 7421086729262976415}
   - component: {fileID: 1984490433635416295}
+  - component: {fileID: 7083130344496196382}
   m_Layer: 0
   m_Name: Stone
   m_TagString: Untagged
@@ -46,7 +47,28 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProductionFacility
   basicValue: {fileID: 11400000, guid: 158cb232c37d29249b3d0c63a3294c53, type: 2}
-  workerAmount: 0
+  workerAmount: 7
+--- !u!65 &7083130344496196382
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2836901075419073204}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1, y: 1, z: 1}
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1001 &2605911414728776180
 PrefabInstance:
   m_ObjectHideFlags: 0
