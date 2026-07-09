@@ -1,16 +1,16 @@
 using UnityEngine;
 
-public class Archer : MonoBehaviour
+public class Archer : Hero
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
-    {
-        
-    }
+    [SerializeField] private Animator bowAnim;
+    [SerializeField] private Animator arrowAnim;
+    public Animator BowAnim => bowAnim;
+    public Animator ArrowAnim => arrowAnim;
+    
 
-    // Update is called once per frame
-    void Update()
+    protected override void Awake()
     {
-        
+        base.Awake();
+        attackState = new ArcherAttackState(this, stateMachine);
     }
 }
