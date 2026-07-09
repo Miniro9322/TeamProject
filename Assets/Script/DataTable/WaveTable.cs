@@ -13,11 +13,11 @@ public class WaveTable : DataTable
         public float Delay { get; set; }
     }
 
-    private readonly Dictionary<int, Data> table = new();
+    private readonly List<Data> waves = new();
 
     public override void Load(string filename)
     {
-        table.Clear();
+        waves.Clear();
 
         var path = $"DataTable/{filename}";
         TextAsset textAsset = Resources.Load<TextAsset>(path);
@@ -29,24 +29,24 @@ public class WaveTable : DataTable
         var list = LoadCsv<Data>(textAsset.text);
         foreach (var data in list)
         {
-            if (!table.ContainsKey(data.ID)) table.Add(data.ID, data);
-            else Debug.LogWarning($"WaveTable 키 중복 '{data.ID}'");
+            if (string.IsNullOrEmpty(data.MonsterName)) continue;
+            waves.Add(data);
         }
     }
 
-    public Data Get(int id)
+    public IReadOnlyList<Data> GetAll()
     {
-        return table.TryGetValue(id, out var data) ? data : null;
+        return waves;
     }
 
-    public IReadOnlyCollection<Data> GetAll()
+    // 같은 ID(웨이브 번호)에 속한 모든 몬스터 행
+    public List<Data> GetWave(int id)
     {
-        return table.Values;
+        return waves.FindAll(w => w.ID == id);
     }
 
-    public GameObject GetMonsterPrefab(int id)
+    public GameObject GetMonsterPrefab(Data data)
     {
-        var data = Get(id);
         return data == null ? null : LoadMonsterPrefab(data.Prefab);
     }
 

@@ -13,6 +13,9 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
     public bool IsDie { get; protected set; }
     public Animator animator;
 
+    private float currentMovespeed;
+    private bool isAttack;
+
     protected virtual void Awake()
     {
         LoadStats();
@@ -65,6 +68,8 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
         IsDie= true;
         //대충 죽는거
     }
+    
+
 }
 
 
