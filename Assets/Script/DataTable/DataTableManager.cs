@@ -17,6 +17,9 @@ public static class DataTableManager
         var enemyTable = new EnemyTable();
         enemyTable.Load(DataTableIds.Enemy);
         tables.Add(DataTableIds.Enemy,enemyTable);
+        var waveTable = new WaveTable();
+        waveTable.Load(DataTableIds.Wave);
+        tables.Add(DataTableIds.Wave, waveTable);
     }
     public static T Get<T>(string id) where T : DataTable
     {

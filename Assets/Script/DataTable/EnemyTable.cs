@@ -8,8 +8,9 @@ public class EnemyTable : DataTable
         public string Name {get ; set ;}
         public int Attack{get ; set ;}
         public float AttackSpeed{get ; set ;}
-        public int Defense {get ; set ;}
-        public int Health {get ; set ;}
+        public int Range {get ; set ; }
+        public int Defense {get ; set ; }
+        public int Health {get ; set ; }
         public float MoveSpeed {get ; set ;}
         public int UpHealthScale {get ; set ;}
         public int UpDefenseScale {get ; set ;}
