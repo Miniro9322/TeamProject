@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -19,26 +20,26 @@ public class Hero : MonoBehaviour, IDamageAble
 
     protected HeroStateMachine stateMachine;
     protected HeroIdleState idleState;
-    protected HeroAttackState attackState;
     public HeroIdleState IdleState => idleState;
+    protected HeroAttackState attackState;
     public HeroAttackState AttackState => attackState;
     [SerializeField] private Animator anim;
+    [SerializeField] private HeroAnimEvents animEvents;
     public Animator Anim => anim;
+    public HeroAnimEvents AnimEvents => animEvents;
 
     protected GameObject target;
     public GameObject Target => target;
     [SerializeField] private float attackSpeed;
     public float AttackSpeed => attackSpeed;
-    private void Awake()
+    protected virtual void Awake()
     {
         stateMachine = new HeroStateMachine();
         idleState = new HeroIdleState(this, stateMachine);
-        attackState = new HeroAttackState(this, stateMachine);
-
         stateMachine.Initialize(idleState);
     }
 
-    private void Update()
+    protected virtual void Update()
     {
         stateMachine.CurrentState.Update();
     }

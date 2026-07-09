@@ -1,9 +1,12 @@
+using Cysharp.Threading.Tasks;
+using System.Threading;
 using UnityEngine;
 
 public class HeroAttackState : HeroState
 {
-    private float attackSpeed;
-    private float timer;
+    protected float attackSpeed;
+    protected float timer;
+    protected CancellationTokenSource attackCts;
     public HeroAttackState(Hero hero, HeroStateMachine stateMachine) : base(hero, stateMachine)
     {
         attackSpeed = hero.AttackSpeed;
@@ -12,8 +15,7 @@ public class HeroAttackState : HeroState
     public override void Enter()
     {
         timer = 0f;
-        Attack();
-        hero.Anim.SetTrigger(HeroAnimHash.attack);
+        PlayAttack();
     }
 
     public override void Exit()
@@ -37,13 +39,29 @@ public class HeroAttackState : HeroState
         if (timer >= attackSpeed)
         {
             timer = 0f;
-            Attack();
-            hero.Anim.SetTrigger(HeroAnimHash.attack);
+            PlayAttack();
         }
     }
 
-    private void Attack()
+    protected virtual void PlayAttack()
     {
-        Debug.Log("Attack!!");
+        attackCts?.Cancel();
+        attackCts?.Dispose();
+        attackCts = new CancellationTokenSource();
+        hero.Anim.SetTrigger(HeroAnimHash.attack);
+        Attack().Forget();
+    }
+    public async UniTask WaitForAnimEvent(string eventName, CancellationToken ct)
+    {
+        bool fired = false;
+        System.Action handler = () => fired = true;
+        hero.AnimEvents.Subscribe(eventName, handler);
+        await UniTask.WaitUntil(() => fired, cancellationToken: ct);
+        hero.AnimEvents.Unsubscribe(eventName, handler);
+    }
+    protected virtual async UniTask Attack()
+    {
+        await WaitForAnimEvent("Attack", attackCts.Token);
+        Debug.Log("Attack");
     }
 }

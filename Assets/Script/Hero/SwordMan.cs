@@ -1,16 +1,10 @@
 using UnityEngine;
 
-public class SwordMan : MonoBehaviour
+public class SwordMan : Hero
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    protected override void Awake()
     {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
+        base.Awake();
+        attackState = new HeroAttackState(this, stateMachine);
     }
 }
