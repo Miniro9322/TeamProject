@@ -46,7 +46,7 @@ public class StringTable : DataTable
         {
             Language.Kr => data.Kr,
             Language.En => data.En,
-            Language.jp => data.Jp,
+            Language.Jp => data.Jp,
             _ => UnKnown
         };
     }

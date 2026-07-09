@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
@@ -5,7 +6,8 @@ using TMPro;
 [RequireComponent(typeof(TMP_Dropdown))]
 public class LocalizeDropdown : MonoBehaviour
 {
-    [SerializeField] private List<string> keys = new List<string>();
+    // Language enum 이름(Kr/En/jp) 앞에 붙여 StringTable 키를 만든다. 예: "Language" + "Kr" = "LanguageKr"
+    [SerializeField] private string keyPrefix = "Language";
     private TMP_Dropdown dropdown;
 
     private void Awake()
@@ -24,16 +26,9 @@ public class LocalizeDropdown : MonoBehaviour
         LocalizeTextManager.OnLanguageChanged -= Refresh;
     }
 
-    public void SetKeys(List<string> newKeys)
-    {
-        keys = newKeys;
-        Refresh();
-    }
-
     public void Refresh()
     {
         if (dropdown == null) dropdown = GetComponent<TMP_Dropdown>();
-        if (keys == null || keys.Count == 0) return;
 
         var stringTable = DataTableManager.Get<StringTable>(DataTableIds.String);
         if (stringTable == null)
@@ -42,9 +37,12 @@ public class LocalizeDropdown : MonoBehaviour
             return;
         }
 
-        var options = new List<TMP_Dropdown.OptionData>(keys.Count);
-        foreach (var key in keys)
+        // Language enum을 선언(값) 순서대로 옵션에 배치 → 인덱스가 (Language)index와 일치
+        var languages = (Language[])Enum.GetValues(typeof(Language));
+        var options = new List<TMP_Dropdown.OptionData>(languages.Length);
+        foreach (var language in languages)
         {
+            var key = keyPrefix + Capitalize(language.ToString());
             options.Add(new TMP_Dropdown.OptionData(stringTable.Get(key)));
         }
 
@@ -52,5 +50,10 @@ public class LocalizeDropdown : MonoBehaviour
         dropdown.options = options;
         dropdown.SetValueWithoutNotify(Mathf.Clamp(prevValue, 0, options.Count - 1));
         dropdown.RefreshShownValue();
+    }
+    private static string Capitalize(string name)
+    {
+        if (string.IsNullOrEmpty(name)) return name;
+        return char.ToUpperInvariant(name[0]) + name.Substring(1);
     }
 }
