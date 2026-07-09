@@ -351,8 +351,9 @@ public class MapGame : MonoBehaviour
         if (_cam == null || Mouse.current == null) return null;
         Ray ray = _cam.ScreenPointToRay(Mouse.current.position.ReadValue());
 
-        // 적/유닛 더미 콜라이더가 앞을 가려도 뚫고 가장 가까운 '타일'을 고른다.
-        RaycastHit[] hits = Physics.RaycastAll(ray, 2000f);
+        // 타일은 솔리드 콜라이더, 유닛 사거리는 트리거 → 트리거를 무시해야 사거리 구가
+        // 타일 피킹을 가로채지 않는다(유닛이 타일 자식이라 CellFromCollider가 그 타일로 잘못 잡히던 버그).
+        RaycastHit[] hits = Physics.RaycastAll(ray, 2000f, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore);
         MapBoard.Cell best = null;
         float bestDist = float.MaxValue;
         foreach (RaycastHit hit in hits)

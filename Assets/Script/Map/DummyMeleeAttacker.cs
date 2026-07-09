@@ -40,13 +40,22 @@ public class DummyMeleeAttacker : MonoBehaviour
         if (_rangeCollider == null) _rangeCollider = GetComponent<SphereCollider>();
         if (_rangeCollider == null) return;
         _rangeCollider.isTrigger = true;
-        _rangeCollider.radius = range;
+
+        // 트리거 반경은 오브젝트 스케일의 영향을 받는다. 더미 유닛이 축소돼 있어도(예: 0.4배,
+        // 타일 큐브 스케일까지 곱)  월드 반경이 range와 같도록 lossyScale로 보정한다.
+        Vector3 ls = transform.lossyScale;
+        float s = Mathf.Max(Mathf.Abs(ls.x), Mathf.Abs(ls.y), Mathf.Abs(ls.z));
+        _rangeCollider.radius = s > 1e-4f ? range / s : range;
     }
 
     // ── Hero와 동일한 타겟팅 ──
     private void OnTriggerEnter(Collider other)
     {
-        if (_target == null && other.CompareTag(targetTag)) _target = other.gameObject;
+        if (_target == null && other.CompareTag(targetTag))
+        {
+            _target = other.gameObject;
+            if (logAttack) Debug.Log($"[DummyMeleeAttacker] {name} 사거리 진입 감지 → 타겟 {_target.name}", this);
+        }
     }
 
     private void OnTriggerExit(Collider other)
