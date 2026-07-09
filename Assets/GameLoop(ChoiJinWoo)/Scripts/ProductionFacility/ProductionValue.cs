@@ -13,13 +13,15 @@ public class ProductionValue : ScriptableObject
     [Header("생산 건물 초기 최대 주민 배치 수")]
     [SerializeField] private int defaultMaxWorker;
     [Header("생산 건물 건설에 필요한 자원 종류")]
-    [SerializeField] private List<ProductionType> ConstructProduct;
+    [SerializeField] private List<ProductionType> constructProduct;
     [Header("생산 건물 건설에 필요한 자원량(자원 종류 순서에 맞게 설정해주세요)")]
-    [SerializeField] private List<int> ConstructAmount;
+    [SerializeField] private List<int> constructAmount;
 
 
     public ProductionType Type => type;
     public int DefaultAmount => defaultAmount;
     public int DefaultHp => defaulthp;
     public int DefaultMaxWorker => defaultMaxWorker;
+    public List<ProductionType> ConstructProduct => constructProduct;
+    public List<int> ConstructAmount => constructAmount;
 }
