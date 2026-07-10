@@ -25,7 +25,7 @@ public class MapBoard : MonoBehaviour
     public List<string> highCubePrefixes = new();
     [Tooltip("켜면 바닥보다 솟아 있는 큐브를 이름과 무관하게 고지(High)로 인식한다. 고지를 '큐브를 띄워' 만드는 방식에 맞춤.")]
     public bool detectHighByElevation = true;
-    [Tooltip("바닥 높이보다 (셀크기 × 이 값)만큼 높으면 고지로 판정.")]
+    [Tooltip("바닥 높이보다  높으면 고지로 판정.")]
     [Range(0.1f, 1f)] public float highRaiseFactor = 0.4f;
 
     [Header("Highlight Colors")]

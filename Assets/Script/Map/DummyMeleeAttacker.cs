@@ -1,19 +1,7 @@
 using UnityEngine;
 
-/// <summary>
-/// [테스트 전용 · 삭제 예정] Hero(실물 아군 유닛)를 흉내 낸 최소 공격자.
-///
-/// <see cref="Hero"/>와 <b>똑같은 구조</b>로 동작한다:
-///   트리거 콜라이더 = 사거리 → 범위에 들어온 태그 "Enemy"를 <c>OnTriggerEnter</c>로 타겟팅
-///   → 공격 간격마다 타겟의 <see cref="IDamageAble.TakeDamage"/> 호출.
-///
-/// 차이는 딱 하나 — Hero가 아직 비워 둔 "실제 데미지"까지 채웠다는 것.
-/// 즉 이건 Hero의 스탠드인이자, 유닛팀이 <c>Hero.Attack()</c>에 넣을 코드의 참조 틀이다.
-/// Hero.Attack()이 TakeDamage를 호출하게 완성되면 이 컴포넌트는 삭제한다.
-///
-/// 전제(적 쪽): 태그 "Enemy" + 콜라이더 + Rigidbody(트리거 이벤트 발생 조건).
-/// → <see cref="DummyDamageable"/>가 이 3종을 자동 보장하므로 그대로 맞물린다.
-/// </summary>
+// 테스트용 Hero를 흉내 낸 최소 공격자.
+ 
 [RequireComponent(typeof(SphereCollider))]
 public class DummyMeleeAttacker : MonoBehaviour
 {
@@ -54,7 +42,7 @@ public class DummyMeleeAttacker : MonoBehaviour
         if (_target == null && other.CompareTag(targetTag))
         {
             _target = other.gameObject;
-            if (logAttack) Debug.Log($"[DummyMeleeAttacker] {name} 사거리 진입 감지 → 타겟 {_target.name}", this);
+            if (logAttack) Debug.Log($"[Melee] {name} 타겟 {_target.name}", this);
         }
     }
 
@@ -78,7 +66,7 @@ public class DummyMeleeAttacker : MonoBehaviour
     {
         if (_target.GetComponentInParent<IDamageAble>() is not IDamageAble d) return;
         d.TakeDamage(power);
-        if (logAttack) Debug.Log($"[DummyMeleeAttacker] {name} → {_target.name} 공격 (-{power}, 남은 HP {d.Hp:0.#})", this);
+        if (logAttack) Debug.Log($"[Melee] {name} → {_target.name} 공격 (-{power}, 남은 HP {d.Hp:0.#})", this);
     }
 
     private void OnDrawGizmosSelected()

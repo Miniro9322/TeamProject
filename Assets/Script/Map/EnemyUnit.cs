@@ -1,11 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-/// <summary>
-/// 주어진 waypoint(타일 윗면 좌표)를 순서대로 따라간다.
-/// waypoint가 4방향 인접 칸이라 이동이 자연히 상하좌우로 보인다.
-/// 항상 타일 윗면 + yOffset 높이를 유지해 타일 위에 올라와 있게 한다.
-/// </summary>
+//적 관련 임시 코드 파일
 public class EnemyUnit : MonoBehaviour
 {
     public float speed = 2f;
@@ -16,7 +12,7 @@ public class EnemyUnit : MonoBehaviour
     private int _index;
     private bool _active;
 
-    /// <summary>경로를 주입하고 시작 지점에 배치한다.</summary>
+  
     public void SetPath(IReadOnlyList<Vector3> worldPath, float moveSpeed, float surfaceOffset)
     {
         speed = moveSpeed;
