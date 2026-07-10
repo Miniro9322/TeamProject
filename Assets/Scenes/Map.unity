@@ -6160,6 +6160,8 @@ GameObject:
   - component: {fileID: 314587625}
   - component: {fileID: 314587624}
   - component: {fileID: 314587623}
+  - component: {fileID: 314587626}
+  - component: {fileID: 314587627}
   m_Layer: 0
   m_Name: TileSystem
   m_TagString: Untagged
@@ -6181,32 +6183,37 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MapGame
   board: {fileID: 314587624}
   isoCamera: {fileID: 124960406}
-  enemyPrefab: {fileID: 6328325485107444708, guid: ad33f663ccb976944b5d6b42a39ac86a, type: 3}
+  painter: {fileID: 314587627}
+  enemyPrefab: {fileID: 8919525264853685005, guid: 51ec000295f69f8439c8f9649f3c54f8, type: 3}
   enemySpeed: 2
   enemyYOffset: 0.5
   waveCount: 5
   waveInterval: 0.5
   attachEnemyHitDummy: 1
-  enemyDummyHp: 20
+  enemyDummyHp: 50
   enemyDummyDefense: 0
-  viewRange: 2
+  viewRange: 3
   attachMeleeAttacker: 1
-  attackerRange: 2
+  attackerRange: 1
   attackerPower: 5
   attackerInterval: 0.5
   meleeBlockCapacity: 1
+  attackLineMaterial: {fileID: 10306, guid: 0000000000000000f000000000000000, type: 0}
   palette:
   - label: melee
-    prefab: {fileID: 7806208303211945086, guid: d079777ff14333349b44e731c09a16b6, type: 3}
+    prefab: {fileID: 3955076335830666319, guid: 18c2dc77e4dfa0b4eb3ee42cc16b27f1, type: 3}
     kind: 1
   - label: boxbuilding
-    prefab: {fileID: 2169973806649430370, guid: 7342df161637d6345893d124b43862e6, type: 3}
+    prefab: {fileID: 7906108523229767701, guid: 4e8c1248dd89f4d4497083013438d9ab, type: 3}
     kind: 3
   - label: Ranged
-    prefab: {fileID: 1643802228746712737, guid: 7ed632fed4f008241869f0f50fe18599, type: 3}
+    prefab: {fileID: 8588835361996399988, guid: 99c3f551b749aa04b8b30b69bc9c0c98, type: 3}
     kind: 2
   placeYOffset: 0
   showPath: 1
+  showEnemyTiles: 1
+  showBlocking: 1
+  logCombatTiles: 1
 --- !u!114 &314587624
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6221,11 +6228,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MapBoard
   isDayPhase: 1
   initialClaimRadius: 4
-  pathColor: {r: 0.22, g: 0.85, b: 0.54, a: 1}
-  okColor: {r: 0.21, g: 0.77, b: 0.41, a: 1}
-  denyColor: {r: 0.85, g: 0.29, b: 0.27, a: 1}
-  rangeColor: {r: 0.3, g: 0.6, b: 1, a: 1}
-  selectColor: {r: 0.62, g: 0.48, b: 0.98, a: 1}
 --- !u!4 &314587625
 Transform:
   m_ObjectHideFlags: 0
@@ -6241,6 +6243,43 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &314587626
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 314587622}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62738c24cbd9db847bb4b07f28ed8bb9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MapDebug
+  board: {fileID: 314587624}
+  view: 0
+  showColor: 1
+  showLabel: 1
+  yOffset: 0.08
+  size: 0.85
+--- !u!114 &314587627
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 314587622}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bd70439fc143438498afa9eeb0678627, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TilePainter
+  board: {fileID: 314587624}
+  pathColor: {r: 0.22, g: 0.85, b: 0.54, a: 1}
+  okColor: {r: 0.21, g: 0.77, b: 0.41, a: 1}
+  denyColor: {r: 0.85, g: 0.29, b: 0.27, a: 1}
+  rangeColor: {r: 0.3, g: 0.6, b: 1, a: 1}
+  enemyColor: {r: 0.9, g: 0.25, b: 0.2, a: 1}
+  blockColor: {r: 0.95, g: 0.55, b: 0.1, a: 1}
 --- !u!4 &316454629 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 2456743877844998712, guid: c9fa51b455724f74ebcbd1f2d859f1f5, type: 3}
@@ -13055,7 +13094,7 @@ MonoBehaviour:
   speed: 2
   yOffset: 0.5
   destroyOnArrive: 1
-  board: {fileID: 0}
+  board: {fileID: 314587624}
 --- !u!4 &670973471 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 3757251321633501950, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}

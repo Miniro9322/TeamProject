@@ -36,7 +36,7 @@ public class DummyDamageable : MonoBehaviour, IDamageAble
 
         int hit = Mathf.Max(1, damage - defense);
         _hp -= hit;
-        if (logHits) Debug.Log($"{name}{hit}, HP {_hp:0.#}/{maxHp:0.#}", this);
+        //if (logHits) Debug.Log($"{name}{hit}, HP {_hp:0.#}/{maxHp:0.#}", this);
         if (_hp <= 0f) Die();
     }
 

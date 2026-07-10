@@ -250,7 +250,7 @@ public class MapBoard : MonoBehaviour
             }
             sb.Append("row ").Append(row.ToString("00")).Append(" : ").AppendLine(line.ToString());
         }
-        Debug.Log(sb.ToString(), this);
+        //Debug.Log(sb.ToString(), this);
     }
 
     // ---- 인덱스 관리 (index = Row * Cols + Col) ----

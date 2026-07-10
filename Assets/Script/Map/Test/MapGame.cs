@@ -60,6 +60,8 @@ public class MapGame : MonoBehaviour
     public bool showEnemyTiles = true;
     [Tooltip("아군+적이 겹친(저지 중) 타일 색칠.")]
     public bool showBlocking = true;
+    [Tooltip("지상유닛 배치 + 적 저지중 + 원거리 사거리 포함 = 세 조건 동시 성립 타일을 콘솔에 로그(검증용).")]
+    public bool logCombatTiles = true;
 
     /// <summary>배치 직후 호출(종류, 생성된 오브젝트, 타일). 팀원 로직 연결용 훅.</summary>
     public event System.Action<OccupantKind, GameObject, Tile> Placed;
@@ -71,6 +73,8 @@ public class MapGame : MonoBehaviour
 
     private readonly List<GameObject> _enemies = new();
     private readonly List<GameObject> _placed = new();
+    private readonly HashSet<GameObject> _ranged = new();      // 배치된 원거리 유닛(커버리지 구분용, 검증)
+    private readonly HashSet<Vector2Int> _combatLogged = new(); // 이미 로그한 교전 타일(엣지 감지, 중복 로그 방지)
 
     private List<Tile> _pathCells;
     private readonly List<Vector3> _worldPath = new();
@@ -80,7 +84,9 @@ public class MapGame : MonoBehaviour
     private Tile _selectedTile;                         // 클릭으로 선택된 타일(정보 패널용, 사거리와 무관)
     private bool _pointerOverPanel;
     private string _status = "";
-    private Rect _panelRect = new(10, 10, 260, 560);
+    private const float PanelWidth = 230f;            // 두 패널 공통 폭
+    private Rect _infoRect;                            // 왼쪽 위: 읽기 전용 정보(상태·선택 타일)
+    private Rect _ctrlRect;                            // 오른쪽 끝: 조작 버튼(경로·적·배치)
 
     private void Awake()
     {
@@ -113,6 +119,41 @@ public class MapGame : MonoBehaviour
         HandleHotkeys();
         UpdateHover();
         HandlePlacementClick();
+        CheckCombatTiles();
+    }
+
+    // 검증 로그: 지상유닛 배치 + 적 저지중 + 원거리 사거리 포함이 동시에 성립하는 타일을 콘솔에 알림.
+    // 상태에 새로 진입할 때 1회만 로그(매 프레임 도배 방지). 원거리 데미지 로직 없이도 커버리지만으로 판정.
+    private void CheckCombatTiles()
+    {
+        if (!logCombatTiles || board == null) return;
+
+        foreach (Tile tile in board.Cells.Values)
+        {
+            bool hit = tile.State.Occupant == OccupantKind.MeleeHero // 지상유닛 배치
+                    && tile.BlockedCount > 0                          // 적 저지중
+                    && CoveredByRanged(tile);                         // 원거리 사거리 포함
+
+            if (hit)
+            {
+                if (_combatLogged.Add(tile.Coord))
+                    Debug.Log($"[교전] {tile.Coord} 지상유닛 저지 {tile.BlockedCount}마리 + 원거리 사거리 포함", this);
+            }
+            else
+            {
+                _combatLogged.Remove(tile.Coord); // 조건 해제 → 다음 진입 때 다시 로그
+            }
+        }
+    }
+
+    // 타일이 배치된 원거리 유닛의 커버리지에 드는가(커버리지 등록은 배치 시 이미 됨).
+    private bool CoveredByRanged(Tile tile)
+    {
+        foreach (GameObject coverer in tile.Covers)
+        {
+            if (coverer != null && _ranged.Contains(coverer)) return true;
+        }
+        return false;
     }
 
     // ---- 경로 ----
@@ -347,6 +388,7 @@ public class MapGame : MonoBehaviour
         if (board.TryPlace(tile.Coord, go, entry.kind, placeYOffset, out reason))
         {
             _placed.Add(go);
+            if (entry.kind == OccupantKind.RangedHero) _ranged.Add(go); // 커버리지 원거리 구분(검증)
             AttachMeleeAttacker(go, entry.kind);
             RegisterCover(go, tile, entry.kind);
             _selectedTile = tile; // 정보 패널만 갱신(사거리 상시표시 아님)
@@ -422,6 +464,7 @@ public class MapGame : MonoBehaviour
         GameObject go = board.Vacate(tile.Coord);
         if (go == null) return;
         _placed.Remove(go);
+        _ranged.Remove(go);
         Destroy(go);
         if (_selectedTile == tile)
         {
@@ -439,6 +482,8 @@ public class MapGame : MonoBehaviour
             if (go != null) Destroy(go);
         }
         _placed.Clear();
+        _ranged.Clear();
+        _combatLogged.Clear();
     }
 
     private GameObject DummyFor(OccupantKind kind) => kind switch
@@ -549,7 +594,7 @@ public class MapGame : MonoBehaviour
         if (tile == null || !tile.IsBlocking) return;
 
         _status = $"{tile.Coord} 저지 중 {tile.BlockedCount}/{tile.BlockCapacity} (타일 위 적 {tile.EnemyCount})";
-        Debug.Log($"[MapGame] {tile.Coord} 저지 중: {tile.BlockedCount}/{tile.BlockCapacity}, 타일 위 적 {tile.EnemyCount}", this);
+        Debug.Log($"{tile.Coord} 저지 중: {tile.BlockedCount}/{tile.BlockCapacity}, 타일 위 적 {tile.EnemyCount}", this);
     }
 
     private string SelectedTileInfo()
@@ -574,14 +619,26 @@ public class MapGame : MonoBehaviour
 
     private void OnGUI()
     {
+        // 화면 양쪽 가장자리에 도킹(가운데 맵을 가리지 않도록). 해상도 바뀌어도 따라감.
+        _infoRect = new Rect(10, 10, PanelWidth, 300);
+        _ctrlRect = new Rect(Screen.width - PanelWidth - 10, 10, PanelWidth, 560);
+
         if (Event.current.type == EventType.Repaint)
         {
             Vector2 m = Mouse.current != null ? Mouse.current.position.ReadValue() : Vector2.zero;
-            _pointerOverPanel = _panelRect.Contains(new Vector2(m.x, Screen.height - m.y));
+            Vector2 p = new(m.x, Screen.height - m.y);
+            _pointerOverPanel = _infoRect.Contains(p) || _ctrlRect.Contains(p);
         }
 
-        GUILayout.BeginArea(_panelRect, GUI.skin.box);
-        GUILayout.Label("<b>맵 테스트</b>", RichLabel());
+        DrawInfoPanel();
+        DrawControlPanel();
+    }
+
+    // 읽기 전용 정보 패널(상태·선택 타일). 조작은 DrawControlPanel.
+    private void DrawInfoPanel()
+    {
+        GUILayout.BeginArea(_infoRect, GUI.skin.box);
+        GUILayout.Label("<b>맵 정보</b>", RichLabel());
         GUILayout.Label(_status);
         string selectedInfo = SelectedTileInfo();
         if (!string.IsNullOrEmpty(selectedInfo))
@@ -589,8 +646,14 @@ public class MapGame : MonoBehaviour
             GUILayout.Space(4);
             GUILayout.Label(selectedInfo);
         }
+        GUILayout.EndArea();
+    }
 
-        GUILayout.Space(6);
+    // 조작 버튼 패널(경로·적·배치).
+    private void DrawControlPanel()
+    {
+        GUILayout.BeginArea(_ctrlRect, GUI.skin.box);
+        GUILayout.Label("<b>맵 테스트</b>", RichLabel());
         GUILayout.Label($"경로 표시: {(showPath ? "ON" : "OFF")}");
         GUILayout.BeginHorizontal();
         if (GUILayout.Button("경로 재계산")) Repath();

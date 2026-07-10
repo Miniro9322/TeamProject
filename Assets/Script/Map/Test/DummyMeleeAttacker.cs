@@ -47,7 +47,7 @@ public class DummyMeleeAttacker : MonoBehaviour, IUnitStats
         _timer = 0f;
 
         _target.TakeDamage(power);
-        if (logAttack) Debug.Log($"[Melee] {name} {_targetObject.name} (-{power}, HP {_target.Hp:0.#})", this);
+        //if (logAttack) Debug.Log($"[Melee] {name} {_targetObject.name} (-{power}, HP {_target.Hp:0.#})", this);
     }
 
     private bool IsTargetStillInRange()
@@ -99,7 +99,7 @@ public class DummyMeleeAttacker : MonoBehaviour, IUnitStats
 
             _targetObject = enemy;
             _target = damageable;
-            if (logAttack) Debug.Log($"[Melee] {name} target {_targetObject.name} on {tile.Coord}", this);
+            //if (logAttack) Debug.Log($"[Melee] {name} target {_targetObject.name} on {tile.Coord}", this);
             return true;
         }
 

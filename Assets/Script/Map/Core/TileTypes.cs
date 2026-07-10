@@ -7,12 +7,10 @@ public enum TerrainType
     Empty   // 장식/미사용 빈 타일(외곽 경계 포함)
 }
 
-/// <summary>플레이어가 이 타일을 쓸 수 있는지의 상태(설계 §3 TerritoryState).</summary>
-/// <remarks>기획상 "개활지"는 별도 지형이 아니라 Unclaimed 상태로 본다(설계 §3, decision_ans).</remarks>
 public enum TerritoryState
 {
-    Unclaimed, // 미점령(개활지). 배치·건설 불가
-    Claimed    // 점령됨. 배치·건설 후보
+    Unclaimed, // 배치·건설 불가
+    Claimed    // 배치·건설 후보
 }
 
 /// <summary>기존 씬 데이터 호환용 값. 새 코드는 TileState의 명시 필드를 사용한다.</summary>
