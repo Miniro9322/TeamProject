@@ -8,6 +8,8 @@ public class Stat
     public float BaseValue => baseValue;
 
     private readonly List<Modifier> modifiers = new();
+    private bool isModifierChanged = false;
+    private float value;
 
     public Stat(float value)
     {
@@ -17,45 +19,58 @@ public class Stat
     public void AddModifier(Modifier modifier)
     {
         modifiers.Add(modifier);
+        isModifierChanged = true;
     }
 
     public void ResetBase(float value)
     {
         baseValue = value;
+        isModifierChanged = true;
     }
 
     public void RemoveModifier(Modifier modifier)
     {
         modifiers.Remove(modifier);
+        isModifierChanged = true;
     }
 
     public void RemoveModifier(Predicate<Modifier> predicate)
     {
         modifiers.RemoveAll(predicate);
+        isModifierChanged = true;
     }
 
     public void RemoveModifier(object source)
     {
         modifiers.RemoveAll(x => x.Source == source);
+        isModifierChanged = true;
     }
 
     public float Value
     {
         get
         {
-            float result = baseValue;
+            if (isModifierChanged)
+            {
+                value = baseValue;
 
-            foreach (var mod in modifiers.Where(x => x.Type == ModifierType.Flat))
-                result += mod.Value;
+                foreach (var mod in modifiers.Where(x => x.Type == ModifierType.Flat))
+                    value += mod.Value;
 
-            float additive = modifiers.Where(x => x.Type == ModifierType.Additive).Sum(x => x.Value);
+                float additive = modifiers.Where(x => x.Type == ModifierType.Additive).Sum(x => x.Value);
 
-            result *= (1 + additive);
+                value *= (1 + additive);
 
-            foreach (var mod in modifiers.Where(x => x.Type == ModifierType.Multiplier))
-                result *= mod.Value;
+                foreach (var mod in modifiers.Where(x => x.Type == ModifierType.Multiplier))
+                    value *= mod.Value;
 
-            return result;
+                isModifierChanged = false;
+                return value;
+            }
+            else
+            {
+                return value;
+            }
         }
     }
 }
