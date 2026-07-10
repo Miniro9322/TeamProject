@@ -26,7 +26,6 @@ public class IsoCamera : MonoBehaviour
 
     private void Start()
     {
-        if (board == null) board = FindFirstObjectByType<MapBoard>();
         _cam.orthographic = true;
         transform.rotation = Quaternion.Euler(pitch, yaw, 0f);
         if (autoFrameOnStart) Frame();
@@ -67,16 +66,20 @@ public class IsoCamera : MonoBehaviour
         float maxX = 0f, maxY = 0f, maxZ = 0f;
         Vector3 c = bound.center;
         Vector3 e = bound.extents;
-        for (int i = 0; i < 8; i++)
+        float[] signs = { -1f, 1f };
+        foreach (float sx in signs)
         {
-            var corner = new Vector3(
-                (i & 1) == 0 ? -e.x : e.x,
-                (i & 2) == 0 ? -e.y : e.y,
-                (i & 4) == 0 ? -e.z : e.z);
-            Vector3 v = inv * corner;
-            maxX = Mathf.Max(maxX, Mathf.Abs(v.x));
-            maxY = Mathf.Max(maxY, Mathf.Abs(v.y));
-            maxZ = Mathf.Max(maxZ, Mathf.Abs(v.z));
+            foreach (float sy in signs)
+            {
+                foreach (float sz in signs)
+                {
+                    Vector3 corner = new(e.x * sx, e.y * sy, e.z * sz);
+                    Vector3 v = inv * corner;
+                    maxX = Mathf.Max(maxX, Mathf.Abs(v.x));
+                    maxY = Mathf.Max(maxY, Mathf.Abs(v.y));
+                    maxZ = Mathf.Max(maxZ, Mathf.Abs(v.z));
+                }
+            }
         }
 
         float aspect = _cam.aspect > 0.01f ? _cam.aspect : 16f / 9f;
