@@ -15,11 +15,14 @@ public class HeroAttackState : HeroState
     public override void Enter()
     {
         timer = 0f;
-        PlayAttack();
+        attackCts = new CancellationTokenSource();
     }
 
     public override void Exit()
     {
+        attackCts?.Cancel();
+        attackCts?.Dispose();
+        attackCts = null;
     }
 
     public override void Update()
@@ -39,29 +42,8 @@ public class HeroAttackState : HeroState
         if (timer >= attackSpeed)
         {
             timer = 0f;
-            PlayAttack();
+            // 공격
+            // hero.AttackData.Execute();
         }
-    }
-
-    protected virtual void PlayAttack()
-    {
-        attackCts?.Cancel();
-        attackCts?.Dispose();
-        attackCts = new CancellationTokenSource();
-        hero.Anim.SetTrigger(HeroAnimHash.attack);
-        Attack().Forget();
-    }
-    public async UniTask WaitForAnimEvent(string eventName, CancellationToken ct)
-    {
-        bool fired = false;
-        System.Action handler = () => fired = true;
-        hero.AnimEvents.Subscribe(eventName, handler);
-        await UniTask.WaitUntil(() => fired, cancellationToken: ct);
-        hero.AnimEvents.Unsubscribe(eventName, handler);
-    }
-    protected virtual async UniTask Attack()
-    {
-        await WaitForAnimEvent("Attack", attackCts.Token);
-        Debug.Log("Attack");
     }
 }
