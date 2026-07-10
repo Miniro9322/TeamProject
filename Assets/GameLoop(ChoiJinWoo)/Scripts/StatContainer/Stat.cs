@@ -29,7 +29,7 @@ public class Stat
         modifiers.Remove(modifier);
     }
 
-    public void RemoveModifiers(Predicate<Modifier> predicate)
+    public void RemoveModifier(Predicate<Modifier> predicate)
     {
         modifiers.RemoveAll(predicate);
     }
