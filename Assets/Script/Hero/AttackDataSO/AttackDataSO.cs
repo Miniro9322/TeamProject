@@ -1,4 +1,5 @@
 using Cysharp.Threading.Tasks;
+using System;
 using System.Threading;
 using UnityEngine;
 
@@ -7,6 +8,7 @@ public abstract class AttackDataSO : ScriptableObject
 {
     public int range = 3;
     public float attackSpeed = 1f;
+    public AttackType attackType = AttackType.Single;
 
     public virtual bool CanExecute(AttackContext ctx)
     {
@@ -14,4 +16,9 @@ public abstract class AttackDataSO : ScriptableObject
     }
 
     public abstract UniTask Execute(AttackContext ctx, CancellationToken ct);
+}
+public enum AttackType
+{
+    Single,
+    Multiple,
 }
