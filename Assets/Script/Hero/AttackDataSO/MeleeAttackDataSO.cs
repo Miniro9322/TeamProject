@@ -1,12 +1,15 @@
 using Cysharp.Threading.Tasks;
 using System.Threading;
+using System.Threading.Tasks;
 using UnityEngine;
 
 [CreateAssetMenu(menuName = "HeroAttack/AttackDataSO/MeleeAttack")]
 public class MeleeAttackDataSO : AttackDataSO
 {
-    public override UniTask Execute(AttackContext ctx, CancellationToken ct)
+    public override async UniTask Execute(AttackContext ctx, CancellationToken ct)
     {
-        throw new System.NotImplementedException();
+        ctx.anim.SetTrigger(HeroAnimHash.attack);
+        await ctx.WaitForAnimEvent("Attack", ct);
+        Debug.Log("Melee Attack");
     }
 }

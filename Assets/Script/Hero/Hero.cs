@@ -4,6 +4,11 @@ using UnityEngine.InputSystem;
 
 public class Hero : MonoBehaviour, IDamageAble
 {
+    private MeleeAttackDataSO attackData;
+    public MeleeAttackDataSO AttackData => attackData;
+    private AttackContext context;
+    public AttackContext Context => context;
+
     public float Hp => throw new System.NotImplementedException();
 
     public int Defense => throw new System.NotImplementedException();
@@ -37,6 +42,13 @@ public class Hero : MonoBehaviour, IDamageAble
         stateMachine = new HeroStateMachine();
         idleState = new HeroIdleState(this, stateMachine);
         stateMachine.Initialize(idleState);
+        context = new AttackContext
+        {
+            self = transform,
+            target = Target.transform,
+            anim = Anim,
+            animEvents = AnimEvents
+        };
     }
 
     protected virtual void Update()
@@ -49,6 +61,7 @@ public class Hero : MonoBehaviour, IDamageAble
         if (other.tag == "Enemy")
         {
             target = other.gameObject;
+            context.target = target.transform;
         }
     }
 
@@ -57,6 +70,7 @@ public class Hero : MonoBehaviour, IDamageAble
         if (target == other.gameObject)
         {
             target = null;
+            context.target = target.transform;
         }
     }
 }

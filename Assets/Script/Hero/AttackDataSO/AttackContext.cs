@@ -2,12 +2,13 @@ using Cysharp.Threading.Tasks;
 using UnityEngine;
 using System.Threading;
 
-public class AttackContext
+public struct AttackContext
 {
     public Transform self;
     public Transform target;
     public Animator anim;
     public HeroAnimEvents animEvents;
+    // 
 
     public async UniTask WaitForAnimEvent(string eventName, CancellationToken ct)
     {
