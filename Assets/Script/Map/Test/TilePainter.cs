@@ -1,13 +1,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-/// <summary>
-/// 타일 색칠(검증/디버그 시각화 전용). Core(MapBoard/Tile)는 색을 모른다.
-/// 나중에 통째로 제거 대상 — 이 컴포넌트만 지우면 게임 로직은 그대로 남는다.
-/// 좌표→타일 조회는 board에 위임하고, tint(MaterialPropertyBlock)는 여기서 직접 처리한다.
-/// </summary>
 public class TilePainter : MonoBehaviour
 {
+    //디버그용 타일 색상 변경
     public MapBoard board; // 주입(자동탐색 금지)
 
     [Header("Colors")]

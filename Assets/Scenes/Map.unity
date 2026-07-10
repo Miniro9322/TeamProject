@@ -6199,6 +6199,10 @@ MonoBehaviour:
   attackerInterval: 0.5
   meleeBlockCapacity: 1
   attackLineMaterial: {fileID: 10306, guid: 0000000000000000f000000000000000, type: 0}
+  attachRangedAttacker: 1
+  rangedPower: 4
+  rangedInterval: 0.7
+  rangedLineMaterial: {fileID: 0}
   palette:
   - label: melee
     prefab: {fileID: 3955076335830666319, guid: 18c2dc77e4dfa0b4eb3ee42cc16b27f1, type: 3}
@@ -6207,7 +6211,7 @@ MonoBehaviour:
     prefab: {fileID: 7906108523229767701, guid: 4e8c1248dd89f4d4497083013438d9ab, type: 3}
     kind: 3
   - label: Ranged
-    prefab: {fileID: 8588835361996399988, guid: 99c3f551b749aa04b8b30b69bc9c0c98, type: 3}
+    prefab: {fileID: 266918524918491471, guid: e79944d7989b2af45a37bc987be09c48, type: 3}
     kind: 2
   placeYOffset: 0
   showPath: 1

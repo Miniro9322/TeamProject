@@ -1,5 +1,7 @@
-using System.Collections;
+using System;
 using System.Collections.Generic;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -48,6 +50,13 @@ public class MapGame : MonoBehaviour
     public int meleeBlockCapacity = 1;
     [Tooltip("공격 선 표시용 머티리얼(Game뷰). 배치되는 근접 공격자에 주입된다. 비우면 선 미표시.")]
     public Material attackLineMaterial;
+
+    [Tooltip("켜면 배치되는 원거리 유닛에 타일 기반 DummyRangedAttacker를 붙여 실제 데미지를 준다. Hero 완성되면 끈다.")]
+    public bool attachRangedAttacker = true;
+    public int rangedPower = 4;
+    public float rangedInterval = 0.7f;
+    [Tooltip("원거리 공격 선 머티리얼(Game뷰). 비우면 attackLineMaterial을 재사용.")]
+    public Material rangedLineMaterial;
 
     [Header("Placement")]
     [Tooltip("배치할 프리팹 목록. 비워두면 유닛/건물 더미 3종이 기본 제공된다.")]
@@ -233,14 +242,16 @@ public class MapGame : MonoBehaviour
         _enemies.Add(go);
     }
 
-    public void SpawnWave() => StartCoroutine(WaveRoutine());
+    public void SpawnWave() => WaveRoutine().Forget();
 
-    private IEnumerator WaveRoutine()
+    // 오브젝트 파괴 시 자동 취소(코루틴이 destroy에서 멈추던 동작과 동일). 씬 전환·정리 중 스폰 방지.
+    private async UniTaskVoid WaveRoutine()
     {
+        CancellationToken token = this.GetCancellationTokenOnDestroy();
         for (int i = 0; i < waveCount; i++)
         {
             SpawnEnemy();
-            yield return new WaitForSeconds(waveInterval);
+            await UniTask.Delay(TimeSpan.FromSeconds(waveInterval), cancellationToken: token);
         }
     }
 
@@ -390,6 +401,7 @@ public class MapGame : MonoBehaviour
             _placed.Add(go);
             if (entry.kind == OccupantKind.RangedHero) _ranged.Add(go); // 커버리지 원거리 구분(검증)
             AttachMeleeAttacker(go, entry.kind);
+            AttachRangedAttacker(go, entry.kind);
             RegisterCover(go, tile, entry.kind);
             _selectedTile = tile; // 정보 패널만 갱신(사거리 상시표시 아님)
             _status = $"{tile.Coord}에 {entry.label} 배치";
@@ -423,6 +435,20 @@ public class MapGame : MonoBehaviour
         atk.attackInterval = attackerInterval;
         atk.board = board; // 자동탐색 대신 주입
         atk.lineMaterial = attackLineMaterial; // 공격 선 머티리얼 주입
+    }
+
+    /// <summary>[테스트] 원거리 유닛에 타일 기반 Hero 스탠드인 공격자를 붙인다. 근접/건물 제외.</summary>
+    private void AttachRangedAttacker(GameObject go, OccupantKind kind)
+    {
+        if (!attachRangedAttacker || go == null || kind != OccupantKind.RangedHero) return;
+
+        DummyRangedAttacker atk = go.GetComponent<DummyRangedAttacker>();
+        if (atk == null) atk = go.AddComponent<DummyRangedAttacker>();
+        atk.range = AttackRangeFor(go, kind); // 사거리는 IUnitStats 우선, 없으면 viewRange 폴백
+        atk.power = rangedPower;
+        atk.attackInterval = rangedInterval;
+        atk.board = board; // 자동탐색 대신 주입
+        atk.lineMaterial = rangedLineMaterial != null ? rangedLineMaterial : attackLineMaterial;
     }
 
     private void RegisterCover(GameObject go, Tile tile, OccupantKind kind)
