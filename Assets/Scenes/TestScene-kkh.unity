@@ -378,7 +378,7 @@ Transform:
   m_GameObject: {fileID: 1131146875}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.21166, y: 0, z: 0.56062}
+  m_LocalPosition: {x: 18.43, y: 0, z: 0.56062}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -420,6 +420,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 56167c7aa72d6c94999f63ae622c6a05, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Archer
+  attackData: {fileID: 11400000, guid: d5ba9effbda798f4b912df92b42511c7, type: 2}
   anim: {fileID: 6616087275108663170}
   animEvents: {fileID: 6655098897044754716}
   attackSpeed: 1.5
@@ -494,6 +495,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6deb4eeb61823d14e85febf5c0cf9d3c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SwordMan
+  attackData: {fileID: 11400000, guid: f34d527312665f6429e04bb2c9307781, type: 2}
   anim: {fileID: 3232737769467548735}
   animEvents: {fileID: 3232737769467548736}
   attackSpeed: 1

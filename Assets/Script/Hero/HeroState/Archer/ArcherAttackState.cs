@@ -8,4 +8,15 @@ public class ArcherAttackState : HeroAttackState
     {
         this.archer = archer;
     }
+
+    public override void Update()
+    {
+        base.Update();
+        timer += Time.deltaTime;
+        if (timer >= hero.AttackData.attackSpeed)
+        {
+            timer = 0f;
+            hero.AttackData.Execute(hero.Context, attackCts.Token).Forget();
+        }
+    }
 }
