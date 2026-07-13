@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
@@ -31,6 +32,7 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
 
     private float currentMovespeed;
     private bool isAttack;
+    private bool _animMoving; // Animator에 보고한 마지막 이동 상태 — 바뀐 프레임에만 SetBool 호출
 
     [Header("Movement")]
     [Tooltip("타일 윗면에서 유닛 피벗을 띄울 높이(월드). 유닛 크기에 맞게 조정.")]
@@ -51,6 +53,12 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
 
     /// <summary>대시/넉백 등으로 앞선 지점에 착지한 뒤, 정상 이동이 그 지점부터 이어지게 목표 인덱스를 맞춘다.</summary>
     public void ResumeFrom(int index) => _pathIndex = Mathf.Clamp(index, 0, _path.Count - 1);
+
+    /// <summary>대시가 도중에 멈춘 경우 등, 현재 위치에서 가장 가까운 경로 지점부터 정상 이동을 이어간다.</summary>
+    public void ResumeFromNearest()
+    {
+        if (_path.Count > 0) _pathIndex = NearestPathIndex(transform.position);
+    }
 
     /// <summary>대시처럼 스킬이 직접 위치를 옮기는 동안 true — 일반 경로 이동이 위치를 덮어쓰지 않게 멈춘다.</summary>
     public bool MovementSuspended { get; set; }
@@ -76,10 +84,12 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
     protected virtual void Awake()
     {
         LoadStats();
+        animator = GetComponent<Animator>();
     }
 
     protected virtual void OnEnable()
     {
+        IsDie =false;
         EnemyRegistry.Register(this);
         skillCts = new CancellationTokenSource();
         RunSkillLoop(skillCts.Token).Forget();
@@ -97,13 +107,6 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
     }
 
     // ---- 이동 (스폰→본진 경로 추종) ----
-
-    /// <summary>
-    /// 스폰 직후 스포너가 호출: MapBoard 주입 + 경로 이동 시작. waypoints를 주면 그대로 쓰고
-    /// (맵당 1회 계산해 공유하는 걸 권장), 비우면 보드에서 스폰→본진 경로를 직접 뽑는다.
-    /// snapToStart=true면 경로 시작(스폰)으로 스냅, false면 현재 위치를 유지하고
-    /// 가장 가까운 웨이포인트부터 이어간다(소환·중간 투입용).
-    /// </summary>
     public void EnterMap(MapBoard board, IReadOnlyList<Vector3> waypoints = null, bool snapToStart = true)
     {
         Board = board;
@@ -161,15 +164,17 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
 
     private void MoveAlongPath()
     {
-        if (!_moving || IsDie || Board == null || MovementSuspended) return;
+        if (!_moving || IsDie || Board == null || MovementSuspended) { SetMoving(false); return; }
 
         // 근접 영웅에게 저지당하면 그 자리에서 정지(타일 저지 시스템). 풀리면 다시 전진.
-        if (!Board.IsBlocked(gameObject))
+        bool advancing = !Board.IsBlocked(gameObject);
+        if (advancing)
         {
             Vector3 target = _path[_pathIndex];
             transform.position = Vector3.MoveTowards(transform.position, target, MoveSpeed * Time.deltaTime);
             FaceToward(target);
         }
+        SetMoving(advancing); // 저지되면 Idle, 풀리면 Move — 상태 바뀐 프레임에만 반영
 
         // 현재 칸이 바뀐 프레임에만 보드에 보고 → 저지·커버·타겟팅이 이걸로 갱신된다.
         Vector2Int now = Board.WorldToCell(transform.position);
@@ -183,6 +188,14 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
         if ((transform.position - _path[_pathIndex]).sqrMagnitude > arriveSqr) return;
         _pathIndex++;
         if (_pathIndex >= _path.Count) ArriveAtCore();
+    }
+
+    // 이동 상태를 Animator에 반영 — 바뀐 프레임에만 SetBool을 호출해 낭비/리셋 방지.
+    private void SetMoving(bool moving)
+    {
+        if (_animMoving == moving) return;
+        _animMoving = moving;
+        if (animator != null) animator.SetBool("IsMoving", moving);
     }
 
     private void FaceToward(Vector3 target)
@@ -217,17 +230,18 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
                 if (skillTimers[i] >= skills[i].cooldown)
                 {
                     skillTimers[i] = 0f;
-                    RunSkill(i).Forget();
+                    RunSkill(i, token).Forget();
                 }
             }
             await UniTask.Yield(token);
         }
     }
 
-    private async UniTask RunSkill(int index)
+    private async UniTask RunSkill(int index, CancellationToken token)
     {
         skillRunning[index] = true;
-        try { await skills[index].Execute(this); }
+        try { await skills[index].Execute(this, token); }
+        catch (System.OperationCanceledException) { /* 비활성/파괴로 취소 — 정상 */ }
         finally { skillRunning[index] = false; }
     }
 
@@ -319,25 +333,80 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
         Hp = Mathf.Min(Hp + amount, MaxHp);
     }
 
-    // 기본공격: 사거리(Range 칸) 안 가장 가까운 영웅을 AttackPower 로 때림.
-    // 대상이 없으면 아무 일도 안 함. (HeroRegistry.Alive 가 비어있으면 안전하게 무시)
+    // 기본공격: 현재 칸 기준 사거리(Range 칸) 안 타일에 배치된 영웅(점유자) 중 가장 가까운 대상을 때림.
+    // HeroRegistry가 아니라 보드 타일에 저장된 OccupantObject를 조회한다. 없으면 아무 일도 안 함.
     public virtual void Attack()
     {
-        if (IsDie) return;
+        if (IsDie || Board == null) return;
 
-        var target = EnemyTargeting.FindNearest(
-            transform.position, Range, HeroRegistry.Alive, h => h.transform.position);
+        Vector2Int origin = Board.WorldToCell(transform.position);
+        GameObject target = null;
+        int bestDist = int.MaxValue;
+        foreach (Tile tile in Board.GetTiles(origin, Range)) // Range 칸 마름모 안 타일
+        {
+            if (tile.OccupantObject == null) continue;        // 배치된 유닛이 있는 칸만
+            int d = EnemyTargeting.Distance(origin, tile.Coord);
+            if (d < bestDist) { bestDist = d; target = tile.OccupantObject; }
+        }
         if (target == null) return;
 
-        target.TakeDamage(AttackPower);
+        animator.SetTrigger("Attack");
+        // 점유자가 피해를 받을 수 있으면 데미지. (Hero.TakeDamage는 아직 미구현 — 별도 처리 필요)
+        if (target.GetComponentInParent<IDamageAble>() is IDamageAble dmg)
+            dmg.TakeDamage(AttackPower);
     }
 
     public virtual void Die()
     {
-        if(IsDie)return;
-        IsDie= true;
+        if (IsDie) return;
+        IsDie = true;                 // 스킬/공격/이동 루프가 !IsDie 조건으로 스스로 멈춘다
         _moving = false;
-        //대충 죽는거
+        MovementSuspended = false;
+        if (Board != null) Board.RemoveEnemy(gameObject); // 죽는 즉시 칸에서 빠져 저지·타겟 대상서 제외
+
+        // skillCts가 없으면(이미 비활성) 연출 없이 바로 디스폰.
+        if (skillCts == null) { Despawn(); return; }
+        DieRoutine(skillCts.Token).Forget();
+    }
+
+    // Die 애니메이션을 끝까지 재생한 뒤 디스폰. 토큰은 활성 수명(OnDisable에서 Cancel)에 묶는다.
+    private async UniTask DieRoutine(CancellationToken token)
+    {
+        try
+        {
+            if (animator != null) animator.SetTrigger("Die");
+            await WaitForDeathAnim("Die", 5f, token);
+        }
+        catch (OperationCanceledException) { return; } // 풀 반환/파괴로 취소 — 디스폰 재호출 금지
+        Despawn();
+    }
+
+    // 죽음 연출 대기: Summon용과 달리 IsDie로 중단하지 않는다(죽는 중이 정상 상태).
+    // 스테이트를 못 찾으면 timeout 후 그냥 진행해 무한 대기를 막는다.
+    private async UniTask WaitForDeathAnim(string stateName, float timeout, CancellationToken token)
+    {
+        const int layer = 0;
+        float elapsed = 0f;
+        while (animator != null && !animator.GetCurrentAnimatorStateInfo(layer).IsName(stateName))
+        {
+            elapsed += Time.deltaTime;
+            if (elapsed >= timeout)
+            {
+                Debug.LogWarning($"[{name}] Animator에서 '{stateName}' 스테이트를 찾지 못함 — 이름/전이 확인.", this);
+                return;
+            }
+            await UniTask.Yield(token);
+        }
+        if (animator == null) return;
+
+        var info = animator.GetCurrentAnimatorStateInfo(layer);
+        await UniTask.Delay(TimeSpan.FromSeconds(info.length / Mathf.Max(0.01f, animator.speed)), cancellationToken: token);
+    }
+
+    // 디스폰 지점. 지금은 파괴. 오브젝트 풀링 도입 시 이 메서드만 override해서 pool.Release(this)로 교체.
+    protected virtual void Despawn()
+    {
+        if (this != null && gameObject != null) Destroy(gameObject);
     }
 
     // Ai한테 부탁한 예시

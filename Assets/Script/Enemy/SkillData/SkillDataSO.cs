@@ -1,3 +1,4 @@
+using System.Threading;
 using UnityEngine;
 using Cysharp.Threading.Tasks;
 
@@ -21,5 +22,5 @@ public abstract class SkillDataSO : ScriptableObject
     public float range;
     public float tickInterval;
 
-    public abstract UniTask Execute(EnemyBase owner);
+    public abstract UniTask Execute(EnemyBase owner, CancellationToken token);
 }

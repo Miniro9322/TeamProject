@@ -6,8 +6,6 @@ using UnityEngine;
 
 public class WaveSpawner : MonoBehaviour
 {
-    // 소환 테스트용 나중에 지우거나 변경 ( 포탈 만들시 해당 포탈 어디에서 소환할지 추가예정)
-    [SerializeField] private Vector3 spawnPosition = Vector3.zero;
 
     [Tooltip("적이 따라갈 격자 맵. 인스펙터에서 주입(Find 함수 미사용 지침).")]
     [SerializeField] private MapBoard board;
@@ -27,8 +25,12 @@ public class WaveSpawner : MonoBehaviour
         if (board == null)
             Debug.LogWarning("WaveSpawner: MapBoard가 주입되지 않았습니다. 적이 이동하지 않습니다.", this);
         else
+        {
             waypoints = board.GetWaypoints(0f); // 타일 윗면 기준. 유닛별 높이는 EnemyBase가 더함.
+            EnemyGridService.mapBoard = board;  // 공격범위 판정 서비스도 같은 보드 사용(스폰 시작 전 1회)
+        }
 
+        
         foreach (var wave in waveTable.GetAll())
         {
             SpawnWave(wave).Forget();
@@ -48,7 +50,7 @@ public class WaveSpawner : MonoBehaviour
 
         for (int i = 0; i < wave.Count; i++)
         {
-            var go = Instantiate(prefab, spawnPosition, Quaternion.identity);
+            var go = Instantiate(prefab, Vector3.zero, Quaternion.identity);
             if (go.TryGetComponent(out EnemyBase enemy))
                 enemy.EnterMap(board, waypoints); // 보드 주입 + 스폰→본진 이동 시작
 
