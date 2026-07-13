@@ -8,7 +8,7 @@ public class Stat
     public float BaseValue => baseValue;
 
     private readonly List<Modifier> modifiers = new();
-    private bool isModifierChanged = false;
+    private bool isModifierChanged = true;
     private float value;
 
     public Stat(float value)
