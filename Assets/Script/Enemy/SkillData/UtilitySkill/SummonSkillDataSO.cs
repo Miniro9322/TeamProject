@@ -31,6 +31,7 @@ public class SummonSkillDataSO : UtilitySkillDataSO
             if (owner.animator != null)
             {
                 owner.animator.SetTrigger("Summon");
+                
                 await WaitForAnimationEnd(owner, summonStateName, animTimeout, token);
             }
 
@@ -40,13 +41,12 @@ public class SummonSkillDataSO : UtilitySkillDataSO
             Vector3 center = owner.transform.position;
             for (int i = 0; i < count; i++)
             {
-                // 겹치지 않게 여왕 주변에 살짝 흩뿌린다.
+                
                 Vector3 pos = center + new Vector3((i - (count - 1) * 0.5f) * 0.6f, 0f, 0f);
                 var go = Instantiate(summonPrefab, pos, Quaternion.identity);
-
-                // 소환자(owner)의 board·경로를 물려주고, 스폰으로 스냅하지 않고 지금 자리에서 본진으로 향한다.
                 if (go.TryGetComponent(out EnemyBase enemy))
                     enemy.EnterMap(owner.Board, owner.Path, snapToStart: false);
+                await UniTask.Delay(TimeSpan.FromSeconds(0.05f));
             }
         }
         finally
