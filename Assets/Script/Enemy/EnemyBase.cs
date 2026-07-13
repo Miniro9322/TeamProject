@@ -32,7 +32,17 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
 
     private float currentMovespeed;
     private bool isAttack;
+    private bool _attacking; // 공격 모션 재생 중 — 이 동안 스킬 시전을 막아 애니메이터 충돌 방지
     private bool _animMoving; // Animator에 보고한 마지막 이동 상태 — 바뀐 프레임에만 SetBool 호출
+
+    // 스킬 하나라도 시전 중인가 — 시전 중엔 공격을 막아 애니메이터를 서로 뺏지 않게 한다.
+    private bool AnySkillRunning()
+    {
+        if (skillRunning == null) return false;
+        for (int i = 0; i < skillRunning.Length; i++)
+            if (skillRunning[i]) return true;
+        return false;
+    }
 
     [Header("Movement")]
     [Tooltip("타일 윗면에서 유닛 피벗을 띄울 높이(월드). 유닛 크기에 맞게 조정.")]
@@ -227,7 +237,8 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
             {
                 if (skills[i] == null || skillRunning[i]) continue;
                 skillTimers[i] += Time.deltaTime;
-                if (skillTimers[i] >= skills[i].cooldown)
+                // 공격 모션 중이면 시전 보류(타이머는 계속 쌓여서 공격 끝나면 바로 발동).
+                if (skillTimers[i] >= skills[i].cooldown && !_attacking)
                 {
                     skillTimers[i] = 0f;
                     RunSkill(i, token).Forget();
@@ -252,7 +263,8 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
         {
             float interval = AttackSpeed > 0f ? 1f / AttackSpeed : 1f; //attackspped = 초당 공격횟수
             attackTimer += Time.deltaTime;
-            if (attackTimer >= interval)
+            // 스킬 시전 중이거나 이미 공격 모션 중이면 공격 보류(타이머 유지 → 풀리면 바로 공격).
+            if (attackTimer >= interval && !_attacking && !AnySkillRunning())
             {
                 attackTimer = 0f;
                 Attack();
@@ -337,23 +349,56 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
     // HeroRegistry가 아니라 보드 타일에 저장된 OccupantObject를 조회한다. 없으면 아무 일도 안 함.
     public virtual void Attack()
     {
-        if (IsDie || Board == null) return;
-
-        Vector2Int origin = Board.WorldToCell(transform.position);
-        GameObject target = null;
-        int bestDist = int.MaxValue;
-        foreach (Tile tile in Board.GetTiles(origin, Range)) // Range 칸 마름모 안 타일
+        if (IsDie || Board == null || skillCts == null) return;
+        _attacking = true; // 동기적으로 세팅 → 다음 프레임 스킬 루프가 곧바로 공격 중임을 인지
+        AttackRoutine(skillCts.Token).Forget();
+    }
+    private async UniTask AttackRoutine(CancellationToken token)
+    {
+        try
         {
-            if (tile.OccupantObject == null) continue;        // 배치된 유닛이 있는 칸만
-            int d = EnemyTargeting.Distance(origin, tile.Coord);
-            if (d < bestDist) { bestDist = d; target = tile.OccupantObject; }
-        }
-        if (target == null) return;
-
-        animator.SetTrigger("Attack");
-        // 점유자가 피해를 받을 수 있으면 데미지. (Hero.TakeDamage는 아직 미구현 — 별도 처리 필요)
-        if (target.GetComponentInParent<IDamageAble>() is IDamageAble dmg)
+    
+            _moving = false;
+            Vector2Int origin = Board.WorldToCell(transform.position);
+            GameObject target = null;
+            int bestDist = int.MaxValue;
+            foreach (Tile tile in Board.GetTiles(origin, Range)) // Range 칸 마름모 안 타일
+            {
+                if (tile.OccupantObject == null) continue;        // 배치된 유닛이 있는 칸만
+                int d = EnemyTargeting.Distance(origin, tile.Coord);
+                if (d < bestDist) { bestDist = d; target = tile.OccupantObject; }
+            }
+            if (target == null) return;
+                    if(animator !=null) animator.SetTrigger("Attack");
+            await WaitForAttackAnim("Attack",5,token);
+            if (target.GetComponentInParent<IDamageAble>() is IDamageAble dmg)
             dmg.TakeDamage(AttackPower);
+        }
+        catch (OperationCanceledException) { return; }
+        finally
+        {
+            _moving = true;
+            _attacking = false; // 공격 모션 끝 → 스킬/다음 공격 허용
+        }
+    }
+    private async UniTask WaitForAttackAnim(string stateName,float timeout,CancellationToken token)
+    {
+        const int layer = 0;
+        float elapsed = 0f;
+        while (animator != null && !animator.GetCurrentAnimatorStateInfo(layer).IsName(stateName))
+        {
+            elapsed += Time.deltaTime;
+            if (elapsed >= timeout)
+            {
+                Debug.LogWarning($"[{name}] Animator에서 '{stateName}' 스테이트를 찾지 못함 — 이름/전이 확인.", this);
+                return;
+            }
+            await UniTask.Yield(token);
+        }
+        if (animator == null) return;
+
+        var info = animator.GetCurrentAnimatorStateInfo(layer);
+        await UniTask.Delay(TimeSpan.FromSeconds(info.length / Mathf.Max(0.01f, animator.speed)), cancellationToken: token);
     }
 
     public virtual void Die()
