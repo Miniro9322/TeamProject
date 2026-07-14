@@ -16,7 +16,13 @@ public class ArcherAttackState : HeroAttackState
     {
         base.Enter();
         runner = new HeroAttackRunner(archer.BasePattern, archer.Selectors, archer.Procs, new RangedAttackExecutor());
-        TryExecuteCurrentStep();
+
+        float cooldown = archer.SC[StatType.AS];
+        float elapsed = Time.time - lastAttackTime;
+        if (elapsed >= cooldown)
+            TryExecuteCurrentStep();
+        else
+            timer = elapsed;
     }
 
     public override void Update()
@@ -34,6 +40,7 @@ public class ArcherAttackState : HeroAttackState
     protected override void TryExecuteCurrentStep()
     {
         if (runner.IsExecuting) return;
+        lastAttackTime = Time.time;
         runner.ExecuteNext(archer.Context, attackCts.Token).Forget();
     }
 }
