@@ -361,7 +361,7 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
     public void AnimEvent_AttackHit()
     {
         if (IsDie) return;
-        GameObject target = FindAttackTarget(); // 타격 순간 기준으로 다시 조회(그 사이 대상이 바뀔 수 있음)
+        GameObject target = FindAttackTarget(); 
         if (target != null && target.GetComponentInParent<IDamageAble>() is IDamageAble dmg)
             dmg.TakeDamage(AttackPower);
     }
