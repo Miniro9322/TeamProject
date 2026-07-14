@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Hero : MonoBehaviour, IDamageAble
+public class Hero : MonoBehaviour, IDamageAble, IPlaceAble
 {
     [SerializeField] private AttackDataSO[] basePattern;
     public AttackDataSO[] BasePattern => basePattern;
@@ -54,6 +54,7 @@ public class Hero : MonoBehaviour, IDamageAble
     private float currentHp;
     public float Hp => currentHp;
     public int Defense => throw new System.NotImplementedException();
+
     public void Die()
     {
 
@@ -107,13 +108,9 @@ public class Hero : MonoBehaviour, IDamageAble
             foreach (GameObject enemy in tile.Enemies)
             {
                 if (enemy == null) continue;
-                if (enemy.tag == "Enemy")
-                {
-                    //if (enemy.GetComponentInParent<IDamageAble>() is not IDamageAble damageable) continue;
-                    target = enemy;
-                    context.target = target.transform;
-                    return;
-                }
+                target = enemy;
+                context.target = target.transform;
+                return;
             }
         }
     }
@@ -127,7 +124,7 @@ public class Hero : MonoBehaviour, IDamageAble
         {
             foreach (GameObject enemy in tile.Enemies)
             {
-                if (enemy == null || enemy.tag != "Enemy") continue;
+                if (enemy == null) continue;
                 if (enemy.GetComponentInParent<IDamageAble>() is IDamageAble damageable)
                     found.Add(damageable);
             }
@@ -153,5 +150,10 @@ public class Hero : MonoBehaviour, IDamageAble
     public void UpdateBlock()
     {
 
+    }
+
+    public void SetBoard(MapBoard board)
+    {
+        this.board = board;
     }
 }
