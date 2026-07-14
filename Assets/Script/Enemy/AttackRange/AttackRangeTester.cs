@@ -11,7 +11,7 @@ public class AttackRangeTester : MonoBehaviour
     private void OnDrawGizmosSelected()
     {
         var origin = EnemyGridService.WorldToCell(transform.position);
-        Gizmos.color = new Color(1f, 0f, 0f, 0.25f);
+        Gizmos.color = new Color(1f, 0f, 0f, 0.5f);
 
         for (int dx = -range; dx <= range; dx++)
         for (int dy = -range; dy <= range; dy++)

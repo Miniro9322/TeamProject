@@ -1,3 +1,4 @@
+using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
@@ -7,7 +8,7 @@ public class HealSkillDataSO : UtilitySkillDataSO
     public float valueScale;   // 스테이지당 힐량 증가
 
     // Cooldown 을 틱 간격으로 사용한다(예: 0.5초). EnemyBase 스킬 루프가 쿨다운마다 호출 = 매 틱 1회 힐.
-    public override async UniTask Execute(EnemyBase owner)
+    public override async UniTask Execute(EnemyBase owner, CancellationToken token)
     {
         float heal = value + valueScale * (CurrentStage() - 1);   // value = 기본 힐량
         if (heal <= 0f) return;
