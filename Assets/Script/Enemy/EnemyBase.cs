@@ -6,6 +6,11 @@ using UnityEngine;
 
 public enum EnemyType
 {
+    Melee,
+    Ranged,
+}
+public enum EnemyClass
+{
     Normal,
     Elite,
     Boss,
@@ -25,7 +30,8 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
     public float AttackSpeed { get; protected set; }
     public int Range { get; protected set; }
     public float MoveSpeed { get; protected set; }
-    public EnemyType Type { get; protected set; }
+    public EnemyType Type { get; protected set; }        // 근거리/원거리
+    public EnemyClass Class { get; protected set; }      // 일반/엘리트/보스
     public bool IsDie { get; protected set; }
     private StatContainer sc = new();
     public StatContainer SC => sc;
@@ -126,7 +132,8 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
                 }
             }
             await UniTask.Yield(token);
-        }
+        } 
+        
     }
 
     private async UniTask RunSkill(int index, CancellationToken token)
@@ -173,15 +180,17 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
         MaxHp = data.Health;
         Hp = data.Health;
         MoveSpeed = data.MoveSpeed;
-        Type = ParseType(data.Type);
+        Type = ParseEnum(data.Type, EnemyType.Melee);       // 근거리/원거리 (기본 Melee)
+        Class = ParseEnum(data.Class, EnemyClass.Normal);   // 등급 (기본 Normal)
         IsDie = false;
     }
 
-    private static EnemyType ParseType(string raw)
+    // CSV 문자열 → enum. 비었거나 못 읽으면 fallback으로 대체(대소문자 무시).
+    private static T ParseEnum<T>(string raw, T fallback) where T : struct, System.Enum
     {
-        if (!string.IsNullOrEmpty(raw) && System.Enum.TryParse(raw.Trim(), true, out EnemyType type))
-            return type;
-        return EnemyType.Normal;
+        if (!string.IsNullOrEmpty(raw) && System.Enum.TryParse(raw.Trim(), true, out T value))
+            return value;
+        return fallback;
     }
 
     public void TakeDamage(int damage)
@@ -201,6 +210,7 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
     {
         if (IsDie || Board == null || skillCts == null) return;
         if (FindAttackTarget() == null) return; // 사거리에 대상 없으면 멈추지도, 공격하지도 않음
+        if(!Board.IsBlocked(gameObject)&&Type==EnemyType.Melee)return;
 
         _attacking = true; // 동기적으로 세팅 → 스킬 루프가 곧바로 공격 중임을 인지
         _move.Pause();     // 공격 동안 정지
