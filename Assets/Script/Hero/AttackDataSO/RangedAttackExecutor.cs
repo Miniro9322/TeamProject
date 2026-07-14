@@ -19,7 +19,8 @@ public class RangedAttackExecutor : IAttackExecutor
         IObjectPool<Projectile> pool = ctx.getProjectilePool(data.projectilePrefab);
         Projectile arrow = pool.Get();
         arrow.transform.SetPositionAndRotation(ctx.muzzle.position, ctx.muzzle.rotation);
-        arrow.Launch(ctx.target, data.attackDamage, pool);
+        arrow.Launch(ctx.target, (int)(ctx.sc[StatType.ATK] * data.attackPer), pool,
+            ctx.getEnemiesInRange, data.attackType, data.range, data.square);
     }
 
     private string PickTrigger(AttackDataSO data)

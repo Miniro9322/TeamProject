@@ -39,24 +39,36 @@ public class Hero : MonoBehaviour, IDamageAble
 
     [SerializeField] private MapBoard board;
     public MapBoard Board => board;
-    private Vector2Int origin;
-    private Tile currentTile;
+    protected Vector2Int origin;
+    protected Tile currentTile;
     public Tile CurrentTile => currentTile;
     //private List<Tile> attackRangedTiles;
     protected int range = 1;
 
-    private StatContainer sc;
+    private StatContainer sc = new();
     public StatContainer SC => sc;
 
     private int currentBlockCount = 0;
     private bool canBlocking = true;
     public bool CanBlocking => canBlocking;
-    public float Hp => throw new System.NotImplementedException();
+    private float currentHp;
+    public float Hp => currentHp;
     public int Defense => throw new System.NotImplementedException();
+    public void Die()
+    {
 
-    public void Die() => throw new System.NotImplementedException();
-    public void TakeDamage(int damage) => throw new System.NotImplementedException();
-    
+    }
+    public void TakeDamage(int damage)
+    {
+        if (currentHp <= 0)
+            return;
+
+        currentHp -= damage;
+        if (currentHp <= 0)
+            Die();
+    }
+    protected OccupantKind occupantKind;
+
     protected virtual void Awake()
     {
         stateMachine = new HeroStateMachine();
@@ -68,6 +80,7 @@ public class Hero : MonoBehaviour, IDamageAble
         sc.AddStat(StatType.DEF, statData.defence);
         sc.AddStat(StatType.BLK, statData.blockCount);
         sc.AddStat(StatType.AS, statData.attackSpeed);
+        currentHp = sc[StatType.HP];
     }
 
     protected virtual void Start()
@@ -75,7 +88,7 @@ public class Hero : MonoBehaviour, IDamageAble
         origin = board.WorldToCell(transform.position);
         if (board.TryGetCell(origin, out Tile current))
             currentTile = current;
-        currentTile.SetOccupant(this.gameObject, OccupantKind.MeleeHero);
+        currentTile.SetOccupant(this.gameObject, occupantKind);
     }
 
     protected virtual void Update()
@@ -103,6 +116,24 @@ public class Hero : MonoBehaviour, IDamageAble
                 }
             }
         }
+    }
+
+    public List<IDamageAble> GetEnemiesInRange(Vector3 originWorld, int range, bool square = false)
+    {
+        var found = new HashSet<IDamageAble>();
+        Vector2Int originCell = board.WorldToCell(originWorld);
+
+        foreach (Tile tile in board.GetTiles(originCell, range, square))
+        {
+            foreach (GameObject enemy in tile.Enemies)
+            {
+                if (enemy == null || enemy.tag != "Enemy") continue;
+                if (enemy.GetComponentInParent<IDamageAble>() is IDamageAble damageable)
+                    found.Add(damageable);
+            }
+        }
+
+        return new List<IDamageAble>(found);
     }
 
     private void CheckTargetStillInRange()

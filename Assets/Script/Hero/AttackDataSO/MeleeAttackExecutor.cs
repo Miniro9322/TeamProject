@@ -11,6 +11,18 @@ public class MeleeAttackExecutor : IAttackExecutor
     {
         ctx.anim.SetTrigger(PickTrigger(data));
         await ctx.WaitForAnimEvent("Attack", ct);
+
+        if (data.attackType == AttackType.Multiple)
+        {
+            foreach (IDamageAble enemy in ctx.getEnemiesInRange(ctx.self.position, data.range, data.square))
+                enemy.TakeDamage((int)(ctx.sc[StatType.ATK] * data.attackPer));
+        }
+        else
+        {
+            IDamageAble target = ctx.target.GetComponent<IDamageAble>();
+            if (target != null)
+                target.TakeDamage((int)(ctx.sc[StatType.ATK] * data.attackPer));
+        }
     }
 
     private string PickTrigger(AttackDataSO data)
