@@ -122,6 +122,6 @@ public partial class Tile : MonoBehaviour
             return 0;
         }
 
-        return 0;
+        return go.GetComponent<Hero>().BlockCount;
     }
 }
