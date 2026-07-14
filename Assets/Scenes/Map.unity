@@ -6185,13 +6185,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MapGame
   board: {fileID: 314587624}
-  isoCamera: {fileID: 124960406}
-  painter: {fileID: 314587627}
-  enemyPrefab: {fileID: 8919525264853685005, guid: 51ec000295f69f8439c8f9649f3c54f8, type: 3}
-  enemySpeed: 2
-  enemyYOffset: 0.5
-  waveCount: 5
-  waveInterval: 0.5
   palette:
   - label: melee
     prefab: {fileID: 5228687494590014126, guid: c30b2462f1d175a40be298650efb1f87, type: 3}
@@ -6206,9 +6199,6 @@ MonoBehaviour:
     kind: 2
     attackRange: 0
   placeYOffset: 0
-  showPath: 1
-  showEnemyTiles: 1
-  showBlocking: 1
 --- !u!114 &314587624
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7227,7 +7217,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TilePaintView
   board: {fileID: 314587624}
-  game: {fileID: 314587623}
+  enemyPath: {fileID: 359805065}
+  game: {fileID: 0}
   painter: {fileID: 314587627}
   showEnemyTiles: 1
   showBlocking: 1
@@ -8210,6 +8201,51 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 6331622260179485725, guid: 34f26691e2865594987260d9c8d09561, type: 3}
   m_PrefabInstance: {fileID: 1222364214}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &422220351
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 422220353}
+  - component: {fileID: 422220352}
+  m_Layer: 0
+  m_Name: WaveSpawner
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &422220352
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 422220351}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b15503c1ee9227547aa76b4511c9db1e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WaveSpawner
+  board: {fileID: 314587624}
+--- !u!4 &422220353
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 422220351}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -18.65442, y: 0, z: -13.72216}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &425288539 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 3757251321633501950, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
@@ -13465,6 +13501,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PanelLogic
   panel: {fileID: 714490552}
   game: {fileID: 314587623}
+  enemyPath: {fileID: 0}
 --- !u!4 &714490554
 Transform:
   m_ObjectHideFlags: 0
@@ -44179,3 +44216,4 @@ SceneRoots:
   - {fileID: 1681537971}
   - {fileID: 1085747330}
   - {fileID: 359805067}
+  - {fileID: 422220353}
