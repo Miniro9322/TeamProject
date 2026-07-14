@@ -2,8 +2,9 @@ using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using VContainer;
 
-public class StatContainerTest : MonoBehaviour
+public class StatContainerTest : MonoBehaviour, IUnit
 {
     private readonly StatContainer stat = new();
 
@@ -11,6 +12,17 @@ public class StatContainerTest : MonoBehaviour
     private Modifier atkBuff;
     private Modifier defDebuff;
     private Keyboard keyboard;
+    private BuffManager buffManager;
+    private SphereCollider trigger;
+    [SerializeField] private string context;
+
+    public StatContainer Stats => stat;
+
+    [Inject]
+    private void Construct(BuffManager manager)
+    {
+        buffManager = manager;
+    }
 
     private void Awake()
     {
@@ -32,13 +44,15 @@ public class StatContainerTest : MonoBehaviour
     private void Start()
     {
         Debug.Log($"ATK: {stat[StatType.ATK]}, DEF: {stat[StatType.DEF]}");
+        Debug.Log(buffManager == null);
     }
 
     private void Update()
     {
         if (keyboard != null && keyboard.digit1Key.wasPressedThisFrame)
         {
-            ATKBuff().Forget();
+            buffManager.ApplyTimedModifier(this, StatType.ATK, atkBuff, 5f);
+            Debug.Log($"ATK: {stat[StatType.ATK]}, DEF: {stat[StatType.DEF]}");
         }
         if (keyboard != null && keyboard.digit2Key.wasPressedThisFrame)
         {
@@ -47,16 +61,6 @@ public class StatContainerTest : MonoBehaviour
 
     }
 
-    private async UniTaskVoid ATKBuff()
-    {
-        stat.AddModifier(StatType.ATK, atkBuff);
-        Debug.Log("----- 공격력 버프(5초) -----");
-        Debug.Log($"ATK: {stat[StatType.ATK]}, DEF: {stat[StatType.DEF]}");
-        await UniTask.WaitForSeconds(5);
-        stat.RemoveModifier(StatType.ATK, atkBuff);
-        Debug.Log("----- 공격력 버프 끝남 -----");
-        Debug.Log($"ATK: {stat[StatType.ATK]}, DEF: {stat[StatType.DEF]}");
-    }
 
     private async UniTaskVoid DEFDeBuff()
     {
@@ -64,9 +68,20 @@ public class StatContainerTest : MonoBehaviour
         Debug.Log("----- 방어력 디버프(3초) -----");
         Debug.Log($"ATK: {stat[StatType.ATK]}, DEF: {stat[StatType.DEF]}");
         await UniTask.WaitForSeconds(3);
-        stat.RemoveModifier(defDebuff);
+        stat.RemoveModifier(StatType.DEF, defDebuff);
         Debug.Log("----- 방어력 디버프 끝남 -----");
         Debug.Log($"ATK: {stat[StatType.ATK]}, DEF: {stat[StatType.DEF]}");
     }
 
+    private void OnTriggerEnter(Collider other)
+    {
+        var enemy = other.GetComponent<IUnit>();
+
+        Debug.Log($"Id: {context} enemy: {enemy != null}, buffManager: {buffManager != null}, atkBuff: {atkBuff != null}");
+
+        if (enemy != null)
+        {
+            buffManager.ApplyTimedModifier(enemy, StatType.ATK, atkBuff, 3f);
+        }
+    }
 }

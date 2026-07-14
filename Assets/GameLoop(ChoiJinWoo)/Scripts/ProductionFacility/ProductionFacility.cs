@@ -53,7 +53,8 @@ public class ProductionFacility : MonoBehaviour, IDamageAble
     private void OnDisable()
     {
         ReleaseAllWorkers();
-        facilityManager.RemoveFacility(this);
+        if(facilityManager != null)
+            facilityManager.RemoveFacility(this);
     }
 
     private void ReleaseAllWorkers()

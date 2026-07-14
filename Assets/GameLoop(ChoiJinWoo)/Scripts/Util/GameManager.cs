@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using VContainer;
 
@@ -15,6 +16,8 @@ public class GameManager : MonoBehaviour
     private int dayCount = 0;
     public int DayCount => dayCount;
     public bool CanBuild => canBuild;
+
+    public event Action<int> EnemySpawn;
 
     [Inject]
     private void Construct(FacilityManager facilityManager, UiManager uiManager)
@@ -53,7 +56,7 @@ public class GameManager : MonoBehaviour
 
     public void SpawnEnemy()
     {
-        Debug.Log("적 스폰 시작");
+        EnemySpawn?.Invoke(dayCount);
     }
 
     public void IncreaseDayCount()
