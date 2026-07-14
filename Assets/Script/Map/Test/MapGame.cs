@@ -340,6 +340,13 @@ public class MapGame : MonoBehaviour
             RegisterCover(go, tile, entry.kind, entry.attackRange);// 배치 직후 커버리지 등록(검증용)
             _selectedTile = tile;                       // 배치 직후 선택 상태 유지
             _status = $"{tile.Coord}에 {entry.label} 배치";
+
+            IPlaceAble placeable = go.GetComponent<IPlaceAble>();
+            if (placeable != null)
+            {
+                placeable.SetBoard(board);
+            }
+
             Placed?.Invoke(entry.kind, go, tile);       // 배치 직후 훅 호출(팀원 로직 연결용)
         }
         else                                            // 배치 실패 시 생성한 오브젝트 제거
