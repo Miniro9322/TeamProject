@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
+using VContainer;
 
 public enum EnemyType
 {
@@ -39,6 +40,11 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
     private bool _attacking; // 공격 모션 재생 중 — 이 동안 스킬 시전을 막아 애니메이터 충돌 방지
     private EnemyMovement _move; // 경로 추종 이동 — Awake에서 생성, 아래 API는 여기로 위임
 
+    // 풀 반환용. 스코프에 PoolManager가 등록되면 주입되고, 아니면 Pool 프로퍼티가 Instance로 폴백.
+    private PoolManager _pool;
+    [Inject] public void Construct(PoolManager pool) => _pool = pool;
+    private PoolManager Pool => _pool ??= PoolManager.Instance;
+
     private bool AnySkillRunning()
     {   
         if (skillRunning == null) return false;
@@ -71,7 +77,11 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
     }
     protected virtual void OnEnable()
     {
-        IsDie =false;
+        // 풀 재사용 대비: Awake는 1회뿐이라 스폰마다 런타임 상태를 여기서 되돌린다.
+        Hp = MaxHp;        // 스탯 로드는 Awake에서만 → HP는 스폰마다 복구
+        IsDie = false;
+        _attacking = false; // 죽은 시점 상태가 남아 다음 스폰의 공격/스킬을 막지 않게
+
         EnemyRegistry.Register(this);
         skillCts = new CancellationTokenSource();
         RunSkillLoop(skillCts.Token).Forget();
@@ -108,10 +118,13 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
     private void HandleArrivedAtCore()
     {
         OnArrivedAtCore();
-        if (this != null && gameObject != null) Destroy(gameObject);
+        if (this != null && gameObject != null) Pool.Despawn(gameObject);
     }
 
-    protected virtual void OnArrivedAtCore() { }
+    protected virtual void OnArrivedAtCore()
+    {
+        
+    }
     private async UniTask RunSkillLoop(CancellationToken token)
     {
         if (skills == null || skills.Count == 0) return;
@@ -127,7 +140,6 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
                 // 공격 모션 중이면 시전 보류(타이머는 계속 쌓여서 공격 끝나면 바로 발동).
                 if (skillTimers[i] >= skills[i].cooldown && !_attacking)
                 {
-                    skillTimers[i] = 0f;
                     RunSkill(i, token).Forget();
                 }
             }
@@ -141,7 +153,11 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
         skillRunning[index] = true;
         try { await skills[index].Execute(this, token); }
         catch (System.OperationCanceledException) { /* 비활성/파괴로 취소 — 정상 */ }
-        finally { skillRunning[index] = false; }
+        finally 
+        {
+            skillRunning[index] = false; 
+            skillTimers[index] = 0f;
+        }
     }
 
     private async UniTask RunAttackLoop(CancellationToken token)
@@ -292,9 +308,6 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
         catch (OperationCanceledException) { return; } // 풀 반환/파괴로 취소 — 디스폰 재호출 금지
         Despawn();
     }
-
-    // 죽음 연출 대기: Summon용과 달리 IsDie로 중단하지 않는다(죽는 중이 정상 상태).
-    // 스테이트를 못 찾으면 timeout 후 그냥 진행해 무한 대기를 막는다.
     private async UniTask WaitForDeathAnim(string stateName, float timeout, CancellationToken token)
     {
         const int layer = 0;
@@ -318,7 +331,7 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
     // 디스폰 지점. 지금은 파괴. 오브젝트 풀링 도입 시 이 메서드만 override해서 pool.Release(this)로 교체.
     protected virtual void Despawn()
     {
-        if (this != null && gameObject != null) Destroy(gameObject);
+        if (this != null && gameObject != null) Pool.Despawn(gameObject);
     }
 
 }
