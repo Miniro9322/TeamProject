@@ -18,23 +18,36 @@ public class GameLifeTimeScope : LifetimeScope
     {
         builder.RegisterComponentInNewPrefab(resourcesManagerPrefab, Lifetime.Singleton).AsSelf();
         builder.RegisterComponentInNewPrefab(citizenManagerPrefab, Lifetime.Singleton).AsSelf();
-        builder.RegisterComponentInNewPrefab(UiManagerPrefab, Lifetime.Singleton).UnderTransform(UiManagerParent.transform).AsSelf();
+        if(UiManagerParent != null)
+            builder.RegisterComponentInNewPrefab(UiManagerPrefab, Lifetime.Singleton).UnderTransform(UiManagerParent.transform).AsSelf();
         builder.RegisterComponentInNewPrefab(EnviromentManagerPrefab, Lifetime.Singleton).AsSelf();
         builder.RegisterComponentInNewPrefab(GameManagerPrefab, Lifetime.Singleton).AsSelf();
         builder.RegisterComponentInNewPrefab(FacilityManagerPrefab, Lifetime.Singleton).AsSelf();
         builder.RegisterInstance(buildingPrefabRegistry);
         builder.Register<BuildingPool>(Lifetime.Singleton);
+        builder.Register<BuffManager>(Lifetime.Singleton).As<ITickable>().AsSelf();
 
-        // 생성된 인스턴스에 씬의 sunLight를 넘겨주는 콜백
-        builder.RegisterBuildCallback(resolver =>
+        if(sunLight != null)
         {
-            var toggle = resolver.Resolve<EnviromentManager>();
-            toggle.SetSunLight(sunLight);
-        });
+            builder.RegisterBuildCallback(resolver =>
+            {
+                var toggle = resolver.Resolve<EnviromentManager>();
+                toggle.SetSunLight(sunLight);
+            });
+        }
+
 
         builder.RegisterComponentInHierarchy<ResourceTest>();
         builder.RegisterComponentInHierarchy<TopBar>();
         builder.RegisterComponentInHierarchy<DayNightButton>();
         builder.RegisterComponentInHierarchy<ExpeditionButton>();
+        builder.RegisterBuildCallback(resolver =>
+        {
+            var testObjects = FindObjectsByType<StatContainerTest>(FindObjectsSortMode.None);
+            foreach (var obj in testObjects)
+            {
+                resolver.InjectGameObject(obj.gameObject);
+            }
+        });
     }
 }
