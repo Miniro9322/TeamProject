@@ -118,11 +118,8 @@ public partial class Tile : MonoBehaviour
 
     private static int GetCapacity(GameObject go, OccupantKind kind)
     {
-        if (go == null || kind != OccupantKind.MeleeHero)
-        {
-            return 0;
-        }
-
+        if (go == null || kind != OccupantKind.MeleeHero) return 0;
+       
         return 0;
     }
 }

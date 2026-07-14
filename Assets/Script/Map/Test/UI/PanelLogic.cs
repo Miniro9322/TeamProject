@@ -5,6 +5,7 @@ public class PanelLogic : MonoBehaviour
 {
     [SerializeField] private MapPanel panel;
     [SerializeField] private MapGame game;
+    [SerializeField] private EnemyPathView enemyPath; // 경로 소유자(표시/재계산은 여기로)
 
     private readonly PanelData data = new();
 
@@ -25,11 +26,7 @@ public class PanelLogic : MonoBehaviour
 
         panel.PathClicked += PathClick;
         panel.PathToggle += PathToggle;
-        panel.EnemyClicked += EnemyClick;
-        panel.WaveClicked += WaveClick;
-        panel.EnemyCleared += EnemyClear;
         panel.UnitCleared += UnitClear;
-        panel.ScanClicked += ScanClick;
         panel.RemoveClicked += RemoveClick;
         panel.ModeCleared += ModeClear;
         panel.UnitClicked += UnitClick;
@@ -44,11 +41,7 @@ public class PanelLogic : MonoBehaviour
 
         panel.PathClicked -= PathClick;
         panel.PathToggle -= PathToggle;
-        panel.EnemyClicked -= EnemyClick;
-        panel.WaveClicked -= WaveClick;
-        panel.EnemyCleared -= EnemyClear;
         panel.UnitCleared -= UnitClear;
-        panel.ScanClicked -= ScanClick;
         panel.RemoveClicked -= RemoveClick;
         panel.ModeCleared -= ModeClear;
         panel.UnitClicked -= UnitClick;
@@ -72,37 +65,17 @@ public class PanelLogic : MonoBehaviour
 
     private void PathClick()
     {
-        game.Repath();
+        enemyPath.RebuildPath();
     }
 
     private void PathToggle()
     {
-        game.PathToggle();
-    }
-
-    private void EnemyClick()
-    {
-        game.SpawnEnemy();
-    }
-
-    private void WaveClick()
-    {
-        game.SpawnWave();
-    }
-
-    private void EnemyClear()
-    {
-        game.ClearEnemies();
+        enemyPath.ToggleVisibility();
     }
 
     private void UnitClear()
     {
         game.ClearPlaced();
-    }
-
-    private void ScanClick()
-    {
-        game.Rescan();
     }
 
     private void RemoveClick()
@@ -125,8 +98,7 @@ public class PanelLogic : MonoBehaviour
         data.Status = game.Status;
         data.TileText = TileInfo(game.Selected);
         data.Mode = game.Mode;
-        data.ShowPath = game.showPath;
-        data.WaveCount = game.waveCount;
+        data.ShowPath = enemyPath != null && enemyPath.PathVisible;
         data.UnitIndex = game.UnitIndex;
         data.Units = UnitLabels(game.Items);
     }
