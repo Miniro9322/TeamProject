@@ -4,7 +4,7 @@ public class StatContainer
 {
     private readonly Dictionary<StatType, Stat> stats = new();
 
-    public void AddStat(StatType type, float baseValue)
+    public void AddStat(StatType type, float baseValue = 0f)
     {
         stats[type] = new Stat(baseValue);
     }
