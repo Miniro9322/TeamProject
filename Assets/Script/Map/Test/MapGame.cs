@@ -12,7 +12,7 @@ public class MapGame : MonoBehaviour
     {
         public string label = "유닛";
         public GameObject prefab;
-        public OccupantKind kind = OccupantKind.MeleeHero;
+        public OccupantKind kind = OccupantKind.MeleeHero; 
         [Min(0)] public int attackRange;
     }
 
@@ -46,7 +46,7 @@ public class MapGame : MonoBehaviour
     public bool logCombatTiles = true;
 
     /// <summary>배치 직후 호출(종류, 생성된 오브젝트, 타일). 팀원 로직 연결용 훅.</summary>
-    public event System.Action<OccupantKind, GameObject, Tile> Placed;
+    public event Action<OccupantKind, GameObject, Tile> Placed;
 
     private Camera _cam;
     private PlaceMode _mode = PlaceMode.Off;
@@ -304,7 +304,7 @@ public class MapGame : MonoBehaviour
         switch (_mode)
         {
             case PlaceMode.Remove: RemoveAt(tile); break;
-            case PlaceMode.Place: PlaceAt(tile); break;
+            case PlaceMode.Place: PlaceUnit(tile); break;
             default: SelectAt(tile); break;
         }
     }
@@ -315,40 +315,74 @@ public class MapGame : MonoBehaviour
         _status = $"{tile.Coord} 선택";
     }
 
-    private void PlaceAt(Tile tile)
+    private void PlaceUnit(Tile tile)//배치 모드에서 마우스 클릭 시 호출. 배치 조건 확인 후 배치 진행.
     {
-        List<Placeable> pal = Palette();
-        if (_paletteIndex < 0 || _paletteIndex >= pal.Count) return;//
-        Placeable entry = pal[_paletteIndex];       // 배치할 프리팹 정보
-
-        if (!board.CanPlace(tile.Coord, entry.kind, out string reason))
-        {
-            _status = $"{tile.Coord} {reason}";  // 배치 불가 → 클릭 무시
-            return;
-        }
-
-        CheckPrefab(entry);                         // 프리팹이 없으면 예외
-        GameObject go = Instantiate(entry.prefab);  // 배치할 오브젝트 생성
+        if(!TryGetSlot(out Placeable slot)) return;// 배치할 프리팹 정보
         
-
-        if (board.TryPlace(tile.Coord, go, entry.kind, placeYOffset, out reason))
+        if(!CanPlaceUnit(tile, slot)) return;     // 배치 가능 여부 확인
+        GameObject UnitObject = CreateUnit(slot);   // 배치할 오브젝트 생성
+        // 배치 시도
+        if (board.TryPlace(tile.Coord, UnitObject, slot.kind, placeYOffset, out string reason)) 
         {
-            _placed.Add(go);
-            if (entry.kind == OccupantKind.RangedHero) _ranged.Add(go); // 커버리지 원거리 구분(검증)
-
-            _ranges[go] = entry.attackRange;            // 사거리 등록(검증용)
-            RegisterCover(go, tile, entry.kind, entry.attackRange);// 배치 직후 커버리지 등록(검증용)
-            _selectedTile = tile;                       // 배치 직후 선택 상태 유지
-            _status = $"{tile.Coord}에 {entry.label} 배치";
-            Placed?.Invoke(entry.kind, go, tile);       // 배치 직후 훅 호출(팀원 로직 연결용)
+            //조건이 충족되어 배치 성공 시
+            SetUnit(UnitObject, tile, slot);       // 배치 성공 → 상태 갱신 및 훅 호출
         }
-        else                                            // 배치 실패 시 생성한 오브젝트 제거
+        else
         {
-            if (go != null) Destroy(go);
-            _status = $"{tile.Coord} {reason}";
+            //조건에 맞지 않아 배치 실패 시
+            SetFailedUnit(UnitObject, tile, reason); // 배치 실패 → 생성한 오브젝트 제거
+            SetFailMessage(tile, reason);
         }
     }
 
+    private bool CanPlaceUnit(Tile tile, Placeable slot)
+    {
+        return board.CanPlace(tile.Coord, slot.kind, out string reason);
+    }
+    private void SetFailMessage(Tile tile, string reason)
+    {
+        _status = $"{tile.Coord} {reason}";
+    }
+
+    private GameObject CreateUnit(Placeable slot)//조건에 맞을경우 배치 오브젝트를 생성.
+    {
+        CheckPrefab(slot);             // 프리팹이 없으면 예외
+        return Instantiate(slot.prefab);// 배치할 오브젝트 생성
+    }
+
+    private void SetUnit(GameObject unit, Tile tile, Placeable slot)//배치 직후 커버리지 등록 및 훅 호출
+    {
+        _selectedTile = tile;                         // 배치 직후 선택 상태 유지
+        _placed.Add(unit);                            // 배치된 오브젝트 목록에 추가
+        Placed?.Invoke(slot.kind, unit, tile);       //배치 이벤트 호출
+        RegisterUnit(unit, tile, slot);              // 배치된 오브젝트의 사거리 정보를 받아서 사거리 표시 및 커버리지 등록
+    }
+
+    private void SetFailedUnit(GameObject go, Tile tile, string reason)//배치 실패 시 생성한 오브젝트 제거
+    {
+        if (go != null) Destroy(go);
+        _status = $"{tile.Coord} {reason}";
+    }
+
+    private bool TryGetSlot(out Placeable entry) // 현재 팔레트 인덱스에 해당하는 배치할 프리팹 정보를 반환.
+    {
+        List<Placeable> pal = Palette();    // 배치할 프리팹 목록
+        if (_paletteIndex < 0 || _paletteIndex >= pal.Count)
+        {
+            entry = null;
+            return false;
+        }
+        entry = pal[_paletteIndex];       // 배치할 프리팹 정보
+        return true;
+    }
+
+    //유닛의 사거리 정보를 받아서 사거리 표시 (현재는 도입X)
+    private void RegisterUnit(GameObject unit, Tile tile, Placeable slot)
+    {
+        if (slot.kind == OccupantKind.RangedHero) _ranged.Add(unit); // 커버리지 원거리 구분(검증용, 임시)
+        _ranges[unit] = slot.attackRange;
+        RegisterCover(unit, tile, slot.kind, slot.attackRange);
+    }
     private static void CheckPrefab(Placeable entry)
     {
         if (entry.prefab == null)
@@ -357,12 +391,12 @@ public class MapGame : MonoBehaviour
         }
     }
 
-    private void RegisterCover(GameObject go, Tile tile, OccupantKind kind, int range)
+    private void RegisterCover(GameObject unit, Tile tile, OccupantKind kind, int range)
     {
-        if (board == null || go == null || tile == null) return;
+        if (board == null || unit == null || tile == null) return;
         if (kind == OccupantKind.Building) return;
 
-        board.SetRangeCover(go, tile.Coord, Mathf.Max(0, range));
+        board.SetRangeCover(unit, tile.Coord, Mathf.Max(0, range));
     }
 
     private int UnitRange(GameObject go, OccupantKind kind)
@@ -412,7 +446,7 @@ public class MapGame : MonoBehaviour
         _status = "배치 전부 제거";
     }
 
-    private Tile PickCellUnderPointer()
+    private Tile PickCellUnderPointer() //마우스 포인터 아래 타일을 반환. 없으면 null
     {
         if (_cam == null || Mouse.current == null) return null;
         Ray ray = _cam.ScreenPointToRay(Mouse.current.position.ReadValue());

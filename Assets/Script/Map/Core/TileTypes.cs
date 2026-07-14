@@ -4,7 +4,8 @@ public enum TerrainType
     Core,   // 본진 영역. 방어 대상이며 일반 배치 불가
     Ground, // 지상. 적 경로·근접 영웅·생산 건물의 후보 타일
     High,   // 고지. 적 이동을 막는 벽 성격, 원거리 영웅 배치
-    Empty   // 장식/미사용 빈 타일(외곽 경계 포함)
+    Empty,  // 장식/미사용 빈 타일(외곽 경계 포함)
+    Special // 특수 타일. 이벤트/보상/장식용. 배치 불가
 }
 
 public enum TerritoryState
