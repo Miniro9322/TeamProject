@@ -29,7 +29,7 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
     public EnemyType Type { get; protected set; }
     public bool IsDie { get; protected set; }
     public Animator animator;
-
+    private StatContainer sc;
     private float currentMovespeed;
     private bool isAttack;
     private bool _attacking; // 공격 모션 재생 중 — 이 동안 스킬 시전을 막아 애니메이터 충돌 방지
@@ -335,7 +335,6 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
         int hitDamage = Mathf.Max(1,damage-Defense);
         Hp -= hitDamage;
         if(Hp<=0)Die();
-
     }
 
     // 힐 (MaxHp 초과 안 함)
@@ -350,35 +349,48 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
     public virtual void Attack()
     {
         if (IsDie || Board == null || skillCts == null) return;
-        _attacking = true; // 동기적으로 세팅 → 다음 프레임 스킬 루프가 곧바로 공격 중임을 인지
-        AttackRoutine(skillCts.Token).Forget();
+        if (FindAttackTarget() == null) return; // 사거리에 대상 없으면 멈추지도, 공격하지도 않음
+
+        _attacking = true; // 동기적으로 세팅 → 스킬 루프가 곧바로 공격 중임을 인지
+        _moving = false;   // 공격 동안 정지
+        if (animator != null) animator.SetTrigger("Attack");
+        AttackWatchdog(skillCts.Token).Forget(); // 애니 끝나면 상태 복구(이벤트 누락 대비 타임아웃 포함)
     }
-    private async UniTask AttackRoutine(CancellationToken token)
+
+    /// <summary>타격 프레임 애니메이션 이벤트가 호출 → 이 순간 사거리 대상에게 데미지.</summary>
+    public void AnimEvent_AttackHit()
     {
-        try
-        {
-    
-            _moving = false;
-            Vector2Int origin = Board.WorldToCell(transform.position);
-            GameObject target = null;
-            int bestDist = int.MaxValue;
-            foreach (Tile tile in Board.GetTiles(origin, Range)) // Range 칸 마름모 안 타일
-            {
-                if (tile.OccupantObject == null) continue;        // 배치된 유닛이 있는 칸만
-                int d = EnemyTargeting.Distance(origin, tile.Coord);
-                if (d < bestDist) { bestDist = d; target = tile.OccupantObject; }
-            }
-            if (target == null) return;
-                    if(animator !=null) animator.SetTrigger("Attack");
-            await WaitForAttackAnim("Attack",5,token);
-            if (target.GetComponentInParent<IDamageAble>() is IDamageAble dmg)
+        if (IsDie) return;
+        GameObject target = FindAttackTarget(); // 타격 순간 기준으로 다시 조회(그 사이 대상이 바뀔 수 있음)
+        if (target != null && target.GetComponentInParent<IDamageAble>() is IDamageAble dmg)
             dmg.TakeDamage(AttackPower);
+    }
+
+    // 현재 칸 기준 사거리(Range 칸) 안 타일 점유자 중 가장 가까운 대상.
+    private GameObject FindAttackTarget()
+    {
+        if (Board == null) return null;
+        Vector2Int origin = Board.WorldToCell(transform.position);
+        GameObject target = null;
+        int bestDist = int.MaxValue;
+        foreach (Tile tile in Board.GetTiles(origin, Range))
+        {
+            if (tile.OccupantObject == null) continue;
+            int d = EnemyTargeting.Distance(origin, tile.Coord);
+            if (d < bestDist) { bestDist = d; target = tile.OccupantObject; }
         }
-        catch (OperationCanceledException) { return; }
+        return target;
+    }
+
+    // 공격 애니메이션이 끝나면 _attacking/_moving 복구. 이벤트를 놓쳐도 적이 멈추지 않게 하는 안전장치.
+    private async UniTask AttackWatchdog(CancellationToken token)
+    {
+        try { await WaitForAttackAnim("Attack", 5f, token); }
+        catch (OperationCanceledException) { }
         finally
         {
-            _moving = true;
             _attacking = false; // 공격 모션 끝 → 스킬/다음 공격 허용
+            _moving = true;
         }
     }
     private async UniTask WaitForAttackAnim(string stateName,float timeout,CancellationToken token)
