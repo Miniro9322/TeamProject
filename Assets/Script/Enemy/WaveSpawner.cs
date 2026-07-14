@@ -29,15 +29,21 @@ public class WaveSpawner : MonoBehaviour
             waypoints = board.GetWaypoints(0f); // 타일 윗면 기준. 유닛별 높이는 EnemyBase가 더함.
             EnemyGridService.mapBoard = board;  // 공격범위 판정 서비스도 같은 보드 사용(스폰 시작 전 1회)
         }
-
-        
-        foreach (var wave in waveTable.GetAll())
+        foreach(var wave in waveTable.GetWave(5))
         {
-            SpawnWave(wave).Forget();
+            SpawnWaveRout(wave).Forget();
+        }
+        
+    }
+    public void SpawnWave(int currentStage)
+    {
+        foreach(var wave in waveTable.GetWave(currentStage))
+        {
+            SpawnWaveRout(wave).Forget();
         }
     }
 
-    private async UniTask SpawnWave(WaveTable.Data wave)
+    private async UniTask SpawnWaveRout(WaveTable.Data wave)
     {
         var prefab = waveTable.GetMonsterPrefab(wave);
         if (prefab == null)
