@@ -12,8 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3e63ecebd4cd6e044a8a127ea3df05bc, type: 3}
   m_Name: SwordManSpecialAttack
   m_EditorClassIdentifier: Assembly-CSharp::AttackDataSO
-  range: 3
+  attackPer: 2
+  range: 1
+  square: 1
   attackType: 1
   animTriggers:
   - StrongAttack
   selectMode: 0
+  projectilePrefab: {fileID: 0}

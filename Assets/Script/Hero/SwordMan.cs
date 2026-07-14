@@ -12,6 +12,7 @@ public class SwordMan : Hero
             target = null,
             anim = Anim,
             animEvents = AnimEvents,
+            getEnemiesInRange = GetEnemiesInRange,
             sc = SC
         };
         occupantKind = OccupantKind.MeleeHero;

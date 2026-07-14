@@ -118,6 +118,24 @@ public class Hero : MonoBehaviour, IDamageAble
         }
     }
 
+    public List<IDamageAble> GetEnemiesInRange(Vector3 originWorld, int range, bool square = false)
+    {
+        var found = new HashSet<IDamageAble>();
+        Vector2Int originCell = board.WorldToCell(originWorld);
+
+        foreach (Tile tile in board.GetTiles(originCell, range, square))
+        {
+            foreach (GameObject enemy in tile.Enemies)
+            {
+                if (enemy == null || enemy.tag != "Enemy") continue;
+                if (enemy.GetComponentInParent<IDamageAble>() is IDamageAble damageable)
+                    found.Add(damageable);
+            }
+        }
+
+        return new List<IDamageAble>(found);
+    }
+
     private void CheckTargetStillInRange()
     {
         foreach (Tile tile in board.GetTiles(origin, range, false))

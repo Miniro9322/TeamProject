@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Pool;
 
@@ -11,12 +12,22 @@ public class Projectile : MonoBehaviour
     private float damage;
     private float elapsed;
     private IObjectPool<Projectile> pool;
+    private System.Func<Vector3, int, bool, List<IDamageAble>> getEnemiesInRange;
+    private AttackType attackType;
+    private int aoeRange;
+    private bool aoeSquare;
 
-    public void Launch(Transform target, float damage, IObjectPool<Projectile> pool)
+    public void Launch(Transform target, float damage, IObjectPool<Projectile> pool,
+        System.Func<Vector3, int, bool, List<IDamageAble>> getEnemiesInRange,
+        AttackType attackType, int aoeRange, bool aoeSquare)
     {
         this.target = target;
         this.damage = damage;
         this.pool = pool;
+        this.getEnemiesInRange = getEnemiesInRange;
+        this.attackType = attackType;
+        this.aoeRange = aoeRange;
+        this.aoeSquare = aoeSquare;
         elapsed = 0f;
     }
 
@@ -42,8 +53,15 @@ public class Projectile : MonoBehaviour
 
     private void Hit()
     {
-        if (target.GetComponent<IDamageAble>() is IDamageAble damageable)
+        if (attackType == AttackType.Multiple)
+        {
+            foreach (IDamageAble enemy in getEnemiesInRange(transform.position, aoeRange, aoeSquare))
+                enemy.TakeDamage((int)damage);
+        }
+        else if (target != null && target.GetComponent<IDamageAble>() is IDamageAble damageable)
+        {
             damageable.TakeDamage((int)damage);
+        }
         Return();
     }
 

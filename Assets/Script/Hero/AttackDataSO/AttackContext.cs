@@ -1,4 +1,5 @@
 using Cysharp.Threading.Tasks;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Pool;
 using System.Threading;
@@ -13,6 +14,7 @@ public struct AttackContext
     public HeroAnimEvents animEvents;
     public Transform muzzle;
     public System.Func<Projectile, IObjectPool<Projectile>> getProjectilePool;
+    public System.Func<Vector3, int, bool, List<IDamageAble>> getEnemiesInRange;
     public StatContainer sc;
 
     public async UniTask WaitForAnimEvent(string eventName, CancellationToken ct)
