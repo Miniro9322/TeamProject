@@ -24,7 +24,7 @@ public class SwordManAttackState : HeroAttackState
         base.Update();
         if (stateMachine.CurrentState != this) return;
         timer += Time.deltaTime;
-        if (timer >= swordMan.AttackSpeed)
+        if (timer >= swordMan.SC[StatType.AS])
         {
             timer = 0f;
             TryExecuteCurrentStep();

@@ -24,7 +24,7 @@ public class ArcherAttackState : HeroAttackState
         base.Update();
         if (stateMachine.CurrentState != this) return;
         timer += Time.deltaTime;
-        if (timer >= archer.AttackSpeed)
+        if (timer >= archer.SC[StatType.AS])
         {
             timer = 0f;
             TryExecuteCurrentStep();

@@ -13,6 +13,7 @@ public struct AttackContext
     public HeroAnimEvents animEvents;
     public Transform muzzle;
     public System.Func<Projectile, IObjectPool<Projectile>> getProjectilePool;
+    public StatContainer sc;
 
     public async UniTask WaitForAnimEvent(string eventName, CancellationToken ct)
     {

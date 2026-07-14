@@ -13,7 +13,7 @@ public class Archer : Hero
     public Transform Muzzle => muzzle;
 
     private readonly Dictionary<Projectile, IObjectPool<Projectile>> projectilePools = new();
-
+    
     private IObjectPool<Projectile> GetProjectilePool(Projectile prefab)
     {
         if (!projectilePools.TryGetValue(prefab, out var pool))
@@ -45,8 +45,10 @@ public class Archer : Hero
             arrowAnim = ArrowAnim,
             animEvents = AnimEvents,
             muzzle = muzzle,
-            getProjectilePool = GetProjectilePool
+            getProjectilePool = GetProjectilePool,
+            sc = SC
         };
+        occupantKind = OccupantKind.RangedHero;
         range = 10;
     }
 }

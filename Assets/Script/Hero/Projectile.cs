@@ -42,8 +42,8 @@ public class Projectile : MonoBehaviour
 
     private void Hit()
     {
-        //if (target.GetComponentInParent<IDamageAble>() is IDamageAble damageable)
-        //    damageable.TakeDamage((int)damage);
+        if (target.GetComponent<IDamageAble>() is IDamageAble damageable)
+            damageable.TakeDamage((int)damage);
         Return();
     }
 
