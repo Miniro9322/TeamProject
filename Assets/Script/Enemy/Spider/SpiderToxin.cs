@@ -9,7 +9,6 @@ public class SpiderToxin : EnemyBase
 
     protected override void OnEnable()
     {
-        IsDie = false;
         base.OnEnable();
     }
 
