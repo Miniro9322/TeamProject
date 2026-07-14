@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
-using Unity.VisualScripting;
 using UnityEngine;
 
 public enum EnemyType
@@ -93,11 +92,6 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
         sc.AddStat(StatType.DEF,Defense);
         sc.AddStat(StatType.AS,AttackSpeed);
         sc.AddStat(StatType.SPD,MoveSpeed);
-        Debug.Log($"[EnemyStat]공속 : {sc.GetValue(StatType.AS)}");
-        Debug.Log($"[EnemyStat]공격력 : {sc.GetValue(StatType.ATK)}");
-        Debug.Log($"[EnemyStat]방어력 : {sc.GetValue(StatType.DEF)}");
-        Debug.Log($"[EnemyStat]체력 : {sc.GetValue(StatType.HP)}");
-        Debug.Log($"[EnemyStat]이속 : {sc.GetValue(StatType.SPD)}");
     }
     protected virtual void Update()
     {
