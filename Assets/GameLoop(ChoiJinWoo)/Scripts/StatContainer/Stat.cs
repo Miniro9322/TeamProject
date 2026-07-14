@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine;
 
 public class Stat
 {
@@ -19,6 +20,7 @@ public class Stat
     public void AddModifier(Modifier modifier)
     {
         modifiers.Add(modifier);
+        Debug.Log(modifiers.Count);
         isModifierChanged = true;
     }
 
@@ -31,6 +33,7 @@ public class Stat
     public void RemoveModifier(Modifier modifier)
     {
         modifiers.Remove(modifier);
+        Debug.Log(modifiers.Count);
         isModifierChanged = true;
     }
 
