@@ -45,6 +45,7 @@ public partial class Tile : MonoBehaviour
     public bool IsGround => Terrain == TerrainType.Ground;
     public bool IsHigh => Terrain == TerrainType.High;
     public bool IsCore => Terrain == TerrainType.Core;
+    public bool IsSpecial => Terrain == TerrainType.Special;
     public bool IsEnemyLane => State.EnemyLane;
     public bool IsEnemySpawn => isEnemySpawn;
     public bool IsEmpty => OccupantObject == null;

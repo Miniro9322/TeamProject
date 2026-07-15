@@ -11,11 +11,7 @@ public class MapPanel : MonoBehaviour
 
     public event Action PathClicked;
     public event Action PathToggle;
-    public event Action EnemyClicked;
-    public event Action WaveClicked;
-    public event Action EnemyCleared;
     public event Action UnitCleared;
-    public event Action ScanClicked;
     public event Action RemoveClicked;
     public event Action ModeCleared;
     public event Action<int> UnitClicked;
@@ -61,14 +57,7 @@ public class MapPanel : MonoBehaviour
         GUILayout.BeginArea(rect, GUI.skin.box);
         GUILayout.Label("맵 테스트");
         DrawPath();
-        DrawEnemy();
         DrawUnits();
-
-        GUILayout.Space(6f);
-        if (GUILayout.Button("보드 다시 스캔"))
-        {
-            ScanClicked?.Invoke();
-        }
 
         GUILayout.EndArea();
     }
@@ -89,31 +78,6 @@ public class MapPanel : MonoBehaviour
         }
 
         GUILayout.EndHorizontal();
-    }
-
-    private void DrawEnemy()
-    {
-        GUILayout.Space(6f);
-        GUILayout.Label("적");
-
-        GUILayout.BeginHorizontal();
-
-        if (GUILayout.Button("적 생성"))
-        {
-            EnemyClicked?.Invoke();
-        }
-
-        if (GUILayout.Button($"웨이브 {data.WaveCount}"))
-        {
-            WaveClicked?.Invoke();
-        }
-
-        GUILayout.EndHorizontal();
-
-        if (GUILayout.Button("적 전멸"))
-        {
-            EnemyCleared?.Invoke();
-        }
     }
 
     private void DrawUnits()
