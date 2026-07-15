@@ -84,5 +84,7 @@ public enum OccupantKind
     None,
     MeleeHero,  // 근접 영웅
     RangedHero, // 원거리 영웅
-    Building    // 생산 건물
+    Building,    // 생산 건물
+    Resource,   // 자원(설계 §4.3.1)
+
 }

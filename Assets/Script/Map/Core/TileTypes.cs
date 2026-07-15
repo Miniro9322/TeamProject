@@ -11,7 +11,7 @@ public enum TerrainType
 public enum TerritoryState
 {
     Unclaimed, // 배치·건설 불가
-    Claimed    // 배치·건설 후보
+    Claimed    // 배치·건설 가능
 }
 
 /// <summary>기존 씬 데이터 호환용 값. 새 코드는 TileState의 명시 필드를 사용한다.</summary>

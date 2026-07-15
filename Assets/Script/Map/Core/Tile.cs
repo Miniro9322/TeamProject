@@ -118,8 +118,8 @@ public partial class Tile : MonoBehaviour
 
     private static int GetCapacity(GameObject go, OccupantKind kind)
     {
+ 
         if (go == null || kind != OccupantKind.MeleeHero) return 0;
-       
-        return 0;
+        return 2; // 근접 영웅은 2명까지 점유 가능. 설계 §4.3.1
     }
 }
