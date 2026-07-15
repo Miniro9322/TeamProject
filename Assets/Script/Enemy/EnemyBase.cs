@@ -5,26 +5,6 @@ using Cysharp.Threading.Tasks;
 using UnityEngine;
 using VContainer;
 
-public enum EnemyType
-{
-    Melee,
-    Ranged,
-}
-public enum EnemyClass
-{
-    Normal,
-    Elite,
-    Boss,
-}
-// 적 특성 — 서로 조합 가능하므로 비트 플래그. CSV엔 '|' 또는 ';'로 여러 개 표기(예: "Fly|Cloaking").
-[System.Flags]
-public enum EnemyAttribute
-{
-    None     = 0,
-    Cloaking = 1 << 0, // 은신: 저지당했을 때만 피격 가능
-    Fly      = 1 << 1, // 공중: 원거리 영웅만 타격 가능
-    UnJudged = 1 << 2, // 무시: 저지 불가(막는 영웅을 통과)
-}
 public abstract class EnemyBase : MonoBehaviour,IDamageAble
 {
     [SerializeField] protected string enemyKey;
@@ -101,6 +81,7 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
         Hp = MaxHp;        // 스탯 로드는 Awake에서만 → HP는 스폰마다 복구
         IsDie = false;
         _attacking = false; // 죽은 시점 상태가 남아 다음 스폰의 공격/스킬을 막지 않게
+        _shieldExpiry = 0f; // 재사용된 적에 이전 쉴드가 남지 않게 초기화
 
         // 애니메이터는 SetActive로 리셋되지 않아 Die 상태에 얼어붙은 채 재사용됨.
         // Rebind로 트리거·파라미터·스테이트를 기본값으로 되돌리고 Update(0)로 즉시 반영.
@@ -153,7 +134,7 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
 
     protected virtual void OnArrivedAtCore()
     {
-        waveSpawner.EnemyDieEvent();
+        // waveSpawner.EnemyDieEvent();
         Board.RemoveEnemy(gameObject);
     }
     private async UniTask RunSkillLoop(CancellationToken token)
@@ -257,10 +238,23 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
         return result;
     }
 
+    // --- 데미지 경감 쉴드(스콜피온 쉴드 스킬 등이 부여) — 고정 수치만큼 경감(추가 방어력처럼 동작) ---
+    private float _damageBlock;   // 고정 감소 수치
+    private float _shieldExpiry;  // Time.time 기준 만료 시각 — 코루틴 없이 지연 만료(풀링 안전)
+    public bool IsShielded => Time.time < _shieldExpiry;
+
+    /// <summary>고정 수치 데미지 경감 쉴드 부여. 재시전 시 갱신(수치·지속시간 덮어씀).</summary>
+    public void ApplyDamageReductionShield(float flatReduce, float duration)
+    {
+        _damageBlock = Mathf.Max(0f, flatReduce);
+        _shieldExpiry = Time.time + duration;
+    }
+
     public void TakeDamage(int damage)
     {
         if(IsDie)return;
-        int hitDamage = Mathf.Max(1,damage-Defense);
+        int reduce = Defense + (IsShielded ? Mathf.RoundToInt(_damageBlock) : 0); // 쉴드 = 고정 추가 방어
+        int hitDamage = Mathf.Max(1, damage - reduce);                            // 최소 1은 보장
         Hp -= hitDamage;
         if(Hp<=0)Die();
     }

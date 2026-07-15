@@ -78,6 +78,7 @@ public static class SkillTableImporter
                 case "Dash": return typeof(DashSkillDataSO);
                 case "Summon": return typeof(SummonSkillDataSO);
                 case "Heal": return typeof(HealSkillDataSO); // 나중에 스킬 추가
+                case "Shield": return typeof(ShieldSkillDataSO);
             }
         }
         return null;
@@ -113,6 +114,10 @@ public static class SkillTableImporter
                 heal.valueScale = d.ValueScale ?? 0f;  // 스테이지당 증가
                 heal.tickInterval = d.TickInterval ?? 0f;
                 break;
+            case ShieldSkillDataSO shield:
+                shield.value = d.Value ?? 0f;
+                break;
+
         }
     }
 
