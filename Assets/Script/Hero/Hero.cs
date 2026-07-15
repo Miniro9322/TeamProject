@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
+using VContainer;
 
 public class Hero : MonoBehaviour, IDamageAble, IPlaceAble
 {
@@ -59,9 +60,19 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble
     private bool isDead = false;
     public bool IsDead => isDead;
 
+    //테스트용 코드
+    private GameManager gameManager;
+    [Inject]
+    private void Construct(GameManager gameManager)
+    {
+        this.gameManager = gameManager;
+    }
+    //끝
+
     public void Die()
     {
         isDead = true;
+        anim.SetBool(HeroAnimHash.idle, false);
         stateMachine.ChangeState(deathState);
         OnBreak?.Invoke();
         // ResurrectionAfter10s().Forget();
@@ -101,8 +112,24 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble
         if (board.TryGetCell(origin, out Tile current))
             currentTile = current;
         currentTile.SetOccupant(this.gameObject, occupantKind);
+        //테스트용 코드
+        if(gameManager != null)
+        {
+            gameManager.ChangeToDay += Resurrection;
+        }
+        //끝
     }
 
+    //테스트용 코드
+    protected virtual void OnDestroy()
+    {
+        
+        if (gameManager != null)
+        {
+            gameManager.ChangeToDay -= Resurrection;
+        }
+    }
+    //끝
     protected virtual void Update()
     {
         stateMachine.CurrentState.Update();
@@ -167,7 +194,6 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble
     {
         currentHp = sc[StatType.HP];
         isDead = false;
-        stateMachine.ChangeState(idleState);
         OnResur?.Invoke();
     }
 

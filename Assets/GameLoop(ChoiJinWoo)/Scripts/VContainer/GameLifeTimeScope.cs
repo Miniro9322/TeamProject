@@ -24,6 +24,7 @@ public class GameLifeTimeScope : LifetimeScope
         builder.RegisterComponentInNewPrefab(GameManagerPrefab, Lifetime.Singleton).AsSelf();
         builder.RegisterComponentInNewPrefab(FacilityManagerPrefab, Lifetime.Singleton).AsSelf();
         builder.RegisterInstance(buildingPrefabRegistry);
+        builder.RegisterComponentOnNewGameObject<PoolManager>(Lifetime.Singleton).AsSelf();
         builder.Register<BuildingPool>(Lifetime.Singleton);
         builder.Register<BuffManager>(Lifetime.Singleton).As<ITickable>().AsSelf();
 
@@ -36,11 +37,12 @@ public class GameLifeTimeScope : LifetimeScope
             });
         }
 
-
-        builder.RegisterComponentInHierarchy<ResourceTest>();
+        //builder.RegisterComponentInHierarchy<ResourceTest>();
         builder.RegisterComponentInHierarchy<TopBar>();
         builder.RegisterComponentInHierarchy<DayNightButton>();
         builder.RegisterComponentInHierarchy<ExpeditionButton>();
+        builder.RegisterComponentInHierarchy<MapGame>();
+        builder.RegisterComponentInHierarchy<WaveSpawner>().AsSelf();
         builder.RegisterBuildCallback(resolver =>
         {
             var testObjects = FindObjectsByType<StatContainerTest>(FindObjectsSortMode.None);
