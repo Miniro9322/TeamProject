@@ -52,7 +52,7 @@ public class TilePaintView : MonoBehaviour
     {
         foreach (Tile tile in board.Cells.Values)
         {
-            if (showBlocking && !tile.IsEmpty && tile.HasEnemy)
+            if (showBlocking && tile.HasUnit && tile.HasEnemy)
             {
                 Paint(tile.Coord, painter.blockColor);
             }

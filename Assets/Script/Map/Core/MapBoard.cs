@@ -1,18 +1,15 @@
 using System;
 using System.Collections.Generic;
+using System.Security.Cryptography;
 using UnityEngine;
 
 public class MapBoard : MonoBehaviour
 {
- 
-
     private readonly Dictionary<Vector2Int, Tile> _cells = new();
     private readonly List<Tile> _spawns = new();
     private readonly List<Tile> _cores = new();
     private readonly Dictionary<GameObject, Tile> _enemyCell = new(); // 적→현재 칸(직전 칸과 비교해 이동 감지)
     private readonly Dictionary<GameObject, List<Tile>> _rangeCoverByUnit = new();
-
-    
 
     [SerializeField] private float _cellSize = 1f;
     private float _originX, _originZ; // (0,0)칸의 월드 x,z — 월드↔칸 변환 기준
@@ -34,7 +31,7 @@ public class MapBoard : MonoBehaviour
     public GameObject UnitPrefab { get; set; }
 
     public event Action<Tile> Occupied;
-    public event Action<Tile> Vacated;
+    public event Action<Tile> OnUnitRemoved; 
 
     /// <summary>적이 어떤 타일에 새로 올라섰을 때(칸 진입). 인자는 진입당한 타일.</summary>
     public event Action<Tile> EnemyEntered;
@@ -102,6 +99,7 @@ public class MapBoard : MonoBehaviour
 
             if (!hasBounds) { _worldBounds = bound; hasBounds = true; }
             else _worldBounds.Encapsulate(bound);
+            
         }
 
         // 3) 인덱스 격자: 바운딩 박스(Cols×Rows) 기준 1차원 배열. 좌표는 베이크가 min→0으로 정규화해 둔다.
@@ -209,6 +207,32 @@ public class MapBoard : MonoBehaviour
                 bestT = t;
                 best = tile;
             }
+        }
+        return best;
+    }
+
+    /// <summary>
+    /// 광선 아래 타일이 있으면 그 타일, 없으면(그리드 밖) 광선을 수평면에 투영한 지점에서
+    /// XZ 거리가 가장 가까운 타일. 집은 유닛 프리뷰를 가장자리로 클램프해 따라가게 할 때 쓴다.
+    /// </summary>
+    public Tile NearestCellFromRay(Ray ray)
+    {
+        Tile hit = CellFromRay(ray);
+        if (hit != null) return hit;
+        if (_cells.Count == 0 || Mathf.Abs(ray.direction.y) < 1e-6f) return null;
+
+        float t = (_worldBounds.center.y - ray.origin.y) / ray.direction.y;
+        if (t < 0f) return null; // 카메라 뒤쪽이면 클램프 안 함
+        Vector3 p = ray.origin + ray.direction * t;
+
+        Tile best = null;
+        float bestSqr = float.MaxValue;
+        foreach (Tile tile in _cells.Values)
+        {
+            Vector3 top = tile.WorldTop;
+            float dx = p.x - top.x, dz = p.z - top.z;
+            float sqr = dx * dx + dz * dz;
+            if (sqr < bestSqr) { bestSqr = sqr; best = tile; }
         }
         return best;
     }
@@ -321,27 +345,27 @@ public class MapBoard : MonoBehaviour
         return r.Allowed;
     }
 
-    public bool TryPlace(Vector2Int coord, GameObject go, OccupantKind kind, float yOffset, out string reason)
+    public bool TryPlace(Vector2Int coord, GameObject unit, OccupantKind kind, float yOffset, out string reason)
     {
         if (!CanPlace(coord, kind, out reason)) return false;
 
         Tile tile = _cells[coord];
-        if (go != null)
+        if (unit != null)
         {
-            go.transform.position = tile.WorldTop + Vector3.up * yOffset;
+            unit.transform.position = tile.WorldTop + Vector3.up * yOffset;
         }
-        tile.SetOccupant(go, kind);
+        tile.SetOccupant(unit, kind);
         Occupied?.Invoke(tile);
         return true;
     }
 
-    public GameObject Vacate(Vector2Int coord)
+    public GameObject RemoveUnit(Vector2Int coord)
     {
-        if (!_cells.TryGetValue(coord, out Tile tile) || tile.IsEmpty) return null;
-        GameObject go = tile.ClearOccupant();
-        ClearRangeCover(go);
-        Vacated?.Invoke(tile);
-        return go;
+        if (!_cells.TryGetValue(coord, out Tile tile) || !tile.HasUnit) return null;
+        GameObject unit = tile.ClearOccupant();
+        ClearRangeCover(unit);
+        OnUnitRemoved?.Invoke(tile);
+        return unit;
     }
 
     // ---- 적 격자 점유 (움직이는 적의 현재 칸 추적 — 좌표 기반) ----
@@ -401,21 +425,7 @@ public class MapBoard : MonoBehaviour
     }
 
     /// <summary>해당 칸 위에 지금 있는 적들(읽기 전용). 타일이 없으면 빈 목록.</summary>
-    public IReadOnlyList<GameObject> GetEnemies(Vector2Int coord)
-        => _cells.TryGetValue(coord, out Tile tile) ? tile.Enemies : System.Array.Empty<GameObject>();
-
-    public int GetEnemyCount(Vector2Int coord)
-        => _cells.TryGetValue(coord, out Tile tile) ? tile.EnemyCount : 0;
-
-    public int GetBlockCap(Vector2Int coord)
-        => _cells.TryGetValue(coord, out Tile tile) ? tile.BlockCapacity : 0;
-
-    public int GetBlockedCount(Vector2Int coord)
-        => _cells.TryGetValue(coord, out Tile tile) ? tile.BlockedCount : 0;
-
-    public int GetFreeBlock(Vector2Int coord)
-        => _cells.TryGetValue(coord, out Tile tile) ? tile.FreeBlock : 0;
-
+    
     public bool IsBlocked(GameObject enemy)
         => enemy != null && _enemyCell.TryGetValue(enemy, out Tile tile) && tile.IsBlocked(enemy);
 

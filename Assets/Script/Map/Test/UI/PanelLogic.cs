@@ -75,7 +75,7 @@ public class PanelLogic : MonoBehaviour
 
     private void UnitClear()
     {
-        game.ClearPlaced();
+        game.ClearAllPlacedUnit();
     }
 
     private void RemoveClick()
@@ -101,6 +101,7 @@ public class PanelLogic : MonoBehaviour
         data.ShowPath = enemyPath != null && enemyPath.PathVisible;
         data.UnitIndex = game.UnitIndex;
         data.Units = UnitLabels(game.Items);
+        data.Holding = game.IsHolding;
     }
 
     private static string TileInfo(Tile tile)
