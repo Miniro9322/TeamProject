@@ -2779,6 +2779,7 @@ MonoBehaviour:
   rangeColor: {r: 0.3, g: 0.6, b: 1, a: 1}
   enemyColor: {r: 0.9, g: 0.25, b: 0.2, a: 1}
   blockColor: {r: 0.95, g: 0.55, b: 0.1, a: 1}
+  splashColor: {r: 1, g: 0.75, b: 0.2, a: 1}
 --- !u!114 &116137733
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2810,13 +2811,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MapGame
   board: {fileID: 116137735}
-  isoCamera: {fileID: 94075537}
-  painter: {fileID: 116137732}
-  enemyPrefab: {fileID: 8919525264853685005, guid: 51ec000295f69f8439c8f9649f3c54f8, type: 3}
-  enemySpeed: 2
-  enemyYOffset: 0.5
-  waveCount: 5
-  waveInterval: 0.5
   palette:
   - label: melee
     prefab: {fileID: 5228687494590014126, guid: c30b2462f1d175a40be298650efb1f87, type: 3}
@@ -2831,10 +2825,6 @@ MonoBehaviour:
     kind: 2
     attackRange: 0
   placeYOffset: 0
-  showPath: 1
-  showEnemyTiles: 1
-  showBlocking: 1
-  logCombatTiles: 1
 --- !u!114 &116137735
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -18172,6 +18162,53 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 3757251321633501950, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
   m_PrefabInstance: {fileID: 372793150}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &906805354
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 906805356}
+  - component: {fileID: 906805355}
+  m_Layer: 0
+  m_Name: SplashHighlight
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &906805355
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 906805354}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6efc17a487c0be042837d92199d50644, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SplashHighlighter
+  board: {fileID: 116137735}
+  painter: {fileID: 116137732}
+  duration: 0.5
+--- !u!4 &906805356
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 906805354}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -7.89477, y: -0, z: -20.37609}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &910250279
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -31971,6 +32008,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PanelLogic
   panel: {fileID: 1624698215}
   game: {fileID: 116137734}
+  enemyPath: {fileID: 0}
 --- !u!114 &1624698215
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -44304,3 +44342,4 @@ SceneRoots:
   - {fileID: 1614851065}
   - {fileID: 1555276548}
   - {fileID: 1624698216}
+  - {fileID: 906805356}

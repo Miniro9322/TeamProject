@@ -12,10 +12,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3e63ecebd4cd6e044a8a127ea3df05bc, type: 3}
   m_Name: ArcherAttackData
   m_EditorClassIdentifier: Assembly-CSharp::AttackDataSO
-  attackDamage: 10
-  range: 3
+  attackPer: 1
+  range: 10
+  square: 0
   attackType: 0
+  attackCount: 1
+  targetCount: 1
+  shotInterval: 0.1
+  splashRange: 1
+  splashSquare: 0
+  selectMode: 0
   animTriggers:
   - Attack
-  selectMode: 0
-  projectilePrefab: {fileID: 607833191716554269, guid: 096e519a71d84cd492def126191b3ea9, type: 3}
+  projectilePrefab: {fileID: 607833191716554269, guid: 9a655c0bc584fd949b6d31f3804c9433, type: 3}
