@@ -63,8 +63,8 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble
     {
         isDead = true;
         stateMachine.ChangeState(deathState);
-        OnBreak?.Invoke(currentTile);
-        //ResurrectionAfter10s().Forget();
+        OnBreak?.Invoke();
+        // ResurrectionAfter10s().Forget();
     }
     public void TakeDamage(int damage)
     {
@@ -77,8 +77,8 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble
     }
     protected OccupantKind occupantKind;
 
-    public event Action<Tile> OnBreak;
-    public event Action<Tile> OnResur;
+    public event Action OnBreak;
+    public event Action OnResur;
 
     protected virtual void Awake()
     {
@@ -168,7 +168,7 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble
         currentHp = sc[StatType.HP];
         isDead = false;
         stateMachine.ChangeState(idleState);
-        OnResur?.Invoke(currentTile);
+        OnResur?.Invoke();
     }
 
     public async UniTask ResurrectionAfter10s()

@@ -2,6 +2,6 @@ interface IPlaceAble
 {
     MapBoard Board { get; }
     void SetBoard(MapBoard board);
-    event System.Action<Tile> OnBreak;
-    event System.Action<Tile> OnResur;
+    event System.Action OnBreak;
+    event System.Action OnResur;
 }
