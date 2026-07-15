@@ -51,7 +51,7 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble
 
     private StatContainer sc = new();
     public StatContainer SC => sc;
-    public int BlockCount => (int)SC[StatType.BLK];
+    public int BlockCount => IsDead ? 0 : (int)SC[StatType.BLK];
     private float currentHp;
     public float Hp => currentHp;
     public int Defense => throw new System.NotImplementedException();
@@ -153,11 +153,6 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble
         }
         target = null;
         context.target = null;
-    }
-
-    public void UpdateBlock()
-    {
-
     }
 
     public void SetBoard(MapBoard board)
