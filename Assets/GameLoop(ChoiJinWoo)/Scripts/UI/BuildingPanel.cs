@@ -36,9 +36,9 @@ public class BuildingPanel : MonoBehaviour
 
     public void OnRelease()
     {
-        facility.Release();
-        facility.OnWorkerChanged -= UpdateWorkerText;
-        facility = null;
-        gameObject.SetActive(false);
+        //facility.Release();
+        //facility.OnWorkerChanged -= UpdateWorkerText;
+        //facility = null;
+        //gameObject.SetActive(false);
     }
 }

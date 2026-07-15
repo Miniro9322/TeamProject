@@ -9,20 +9,20 @@ public class BuildingPrefabRegistry : ScriptableObject
     public class Entry
     {
         public ProductionType type;
-        public ProductionFacility prefab;
+        public GameObject prefab;
     }
 
     [SerializeField] private List<Entry> entries;
 
-    private Dictionary<ProductionType, ProductionFacility> _map;
+    private Dictionary<ProductionType, GameObject> _map;
 
-    public Dictionary<ProductionType, ProductionFacility> Prefabs
+    public Dictionary<ProductionType, GameObject> Prefabs
     {
         get
         {
             if (_map == null)
             {
-                _map = new Dictionary<ProductionType, ProductionFacility>();
+                _map = new Dictionary<ProductionType, GameObject>();
                 foreach (var e in entries)
                     _map[e.type] = e.prefab;
             }

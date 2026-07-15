@@ -6,8 +6,8 @@ using VContainer.Unity;
 public class BuildingPool : IBuildingPool
 {
     private readonly IObjectResolver _resolver;
-    private readonly IReadOnlyDictionary<ProductionType, ProductionFacility> _prefabs;
-    private readonly Dictionary<ProductionType, Stack<ProductionFacility>> _pools = new();
+    private readonly IReadOnlyDictionary<ProductionType, GameObject> _prefabs;
+    private readonly Dictionary<ProductionType, Stack<GameObject>> _pools = new();
     private readonly ResourcesManager resourcesManager;
 
     public BuildingPool(IObjectResolver resolver, BuildingPrefabRegistry registry, ResourcesManager resourcesManager)
@@ -17,7 +17,7 @@ public class BuildingPool : IBuildingPool
         this.resourcesManager = resourcesManager;
     }
 
-    public ProductionFacility Rent(ProductionType type)
+    public GameObject Rent(ProductionType type)
     {
         if (!_prefabs.TryGetValue(type, out var prefab))
         {
@@ -25,13 +25,13 @@ public class BuildingPool : IBuildingPool
             return null;
         }
 
-        if (!resourcesManager.CheckResources(prefab.BasicValue.ConstructProduct))
+        if (!resourcesManager.CheckResources(prefab.GetComponent<ProductionFacility>().BasicValue.ConstructProduct))
         {
             Debug.LogWarning("자원이 부족합니다.");
             return null;
         }
 
-        ProductionFacility instance;
+        GameObject instance;
         if (_pools.TryGetValue(type, out var stack) && stack.Count > 0)
         {
             instance = stack.Pop();
@@ -42,18 +42,18 @@ public class BuildingPool : IBuildingPool
             instance = _resolver.Instantiate(prefab);
         }
 
-        instance.Init();
+        instance.GetComponent<ProductionFacility>().Init();
         return instance;
     }
 
-    public void Return(ProductionFacility instance)
+    public void Return(GameObject instance)
     {
-        instance.gameObject.SetActive(false);
+        instance.SetActive(false);
 
-        var type = instance.BasicValue.Type;
+        var type = instance.GetComponent<ProductionFacility>().BasicValue.Type;
         if (!_pools.TryGetValue(type, out var stack))
         {
-            stack = new Stack<ProductionFacility>();
+            stack = new Stack<GameObject>();
             _pools[type] = stack;
         }
         stack.Push(instance);

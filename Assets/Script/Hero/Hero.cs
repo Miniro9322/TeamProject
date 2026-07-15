@@ -1,6 +1,9 @@
+using Cysharp.Threading.Tasks;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Rendering;
+using VContainer;
 
 public class Hero : MonoBehaviour, IDamageAble, IPlaceAble
 {
@@ -25,6 +28,9 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble
     protected HeroAttackState attackState;
     public HeroAttackState AttackState => attackState;
 
+    protected HeroDeathState deathState;
+    public HeroDeathState DeathState => deathState;
+
     [SerializeField] private Animator anim;
     [SerializeField] private HeroAnimEvents animEvents;
     public Animator Anim => anim;
@@ -47,18 +53,33 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble
 
     private StatContainer sc = new();
     public StatContainer SC => sc;
-    public int BlockCount => (int)SC[StatType.BLK];
+    public int BlockCount => IsDead ? 0 : (int)SC[StatType.BLK];
     private float currentHp;
     public float Hp => currentHp;
     public int Defense => throw new System.NotImplementedException();
+    private bool isDead = false;
+    public bool IsDead => isDead;
+
+    //테스트용 코드
+    private GameManager gameManager;
+    [Inject]
+    private void Construct(GameManager gameManager)
+    {
+        this.gameManager = gameManager;
+    }
+    //끝
 
     public void Die()
     {
-
+        isDead = true;
+        anim.SetBool(HeroAnimHash.idle, false);
+        stateMachine.ChangeState(deathState);
+        OnBreak?.Invoke();
+        // ResurrectionAfter10s().Forget();
     }
     public void TakeDamage(int damage)
     {
-        if (currentHp <= 0)
+        if (isDead)
             return;
 
         currentHp -= damage;
@@ -67,10 +88,14 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble
     }
     protected OccupantKind occupantKind;
 
+    public event Action OnBreak;
+    public event Action OnResur;
+
     protected virtual void Awake()
     {
         stateMachine = new HeroStateMachine();
         idleState = new HeroIdleState(this, stateMachine);
+        deathState = new HeroDeathState(this, stateMachine);
         stateMachine.Initialize(idleState);
         //attackRangedTiles = board.GetTiles(origin, range);
         sc.AddStat(StatType.HP, statData.maxHp);
@@ -87,8 +112,24 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble
         if (board.TryGetCell(origin, out Tile current))
             currentTile = current;
         currentTile.SetOccupant(this.gameObject, occupantKind);
+        //테스트용 코드
+        if(gameManager != null)
+        {
+            gameManager.ChangeToDay += Resurrection;
+        }
+        //끝
     }
 
+    //테스트용 코드
+    protected virtual void OnDestroy()
+    {
+        
+        if (gameManager != null)
+        {
+            gameManager.ChangeToDay -= Resurrection;
+        }
+    }
+    //끝
     protected virtual void Update()
     {
         stateMachine.CurrentState.Update();
@@ -144,13 +185,21 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble
         context.target = null;
     }
 
-    public void UpdateBlock()
-    {
-
-    }
-
     public void SetBoard(MapBoard board)
     {
         this.board = board;
+    }
+
+    public void Resurrection()
+    {
+        currentHp = sc[StatType.HP];
+        isDead = false;
+        OnResur?.Invoke();
+    }
+
+    public async UniTask ResurrectionAfter10s()
+    {
+        await UniTask.Delay(TimeSpan.FromSeconds(10));
+        Resurrection();
     }
 }

@@ -13,17 +13,19 @@ public class GameManager : MonoBehaviour
     private bool canBuild = false;
     private FacilityManager facilityManager;
     private UiManager uiManager;
+    private WaveSpawner waveSpawner;
     private int dayCount = 0;
     public int DayCount => dayCount;
     public bool CanBuild => canBuild;
 
-    public event Action<int> EnemySpawn;
+    public event Action ChangeToDay;
 
     [Inject]
-    private void Construct(FacilityManager facilityManager, UiManager uiManager)
+    private void Construct(FacilityManager facilityManager, UiManager uiManager, WaveSpawner waveSpawner)
     {
         this.facilityManager = facilityManager;
         this.uiManager = uiManager;
+        this.waveSpawner = waveSpawner;
     }
 
     private void Start()
@@ -31,7 +33,13 @@ public class GameManager : MonoBehaviour
         day = new DayState(this, facilityManager);
         night = new NightState(this);
         result = new ResultState(this, uiManager);
+        //waveSpawner.EnemyAllClear += OnResult;
         fsm.ChangeState(day);
+    }
+
+    private void OnDestroy()
+    {
+        //waveSpawner.EnemyAllClear -= OnResult;
     }
 
     public void OnNight()
@@ -42,6 +50,7 @@ public class GameManager : MonoBehaviour
     public void OnDay()
     {
         fsm.ChangeState(day);
+        ChangeToDay?.Invoke();
     }
 
     public void OnResult()
@@ -56,7 +65,7 @@ public class GameManager : MonoBehaviour
 
     public void SpawnEnemy()
     {
-        EnemySpawn?.Invoke(dayCount);
+        waveSpawner.SpawnWave(DayCount);
     }
 
     public void IncreaseDayCount()

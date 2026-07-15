@@ -1,5 +1,7 @@
+using UnityEngine;
+
 public interface IBuildingPool
 {
-    ProductionFacility Rent(ProductionType type);
-    void Return(ProductionFacility instance);
+    GameObject Rent(ProductionType type);
+    void Return(GameObject instance);
 }
