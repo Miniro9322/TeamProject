@@ -62,6 +62,7 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble
     {
         isDead = true;
         stateMachine.ChangeState(deathState);
+        OnBreak?.Invoke(currentTile);
     }
     public void TakeDamage(int damage)
     {
@@ -73,6 +74,8 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble
             Die();
     }
     protected OccupantKind occupantKind;
+
+    public event Action<Tile> OnBreak;
 
     protected virtual void Awake()
     {
