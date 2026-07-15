@@ -72,15 +72,22 @@ public partial class Tile : MonoBehaviour
         OccupantObject = go;
         State.Occupant = kind;
         BlockCapacity = GetCapacity(go, kind);
+        go.GetComponent<IPlaceAble>().OnBreak += SetBlockCapacity;
+        go.GetComponent<IPlaceAble>().OnResur += SetBlockCapacity;
     }
 
     //배치되어 있는 유닛을 해제 후 반환.
     public GameObject ClearOccupant()
     {
         GameObject go = OccupantObject;
+
+        go.GetComponent<IPlaceAble>().OnBreak -= SetBlockCapacity;
+        go.GetComponent<IPlaceAble>().OnResur -= SetBlockCapacity;
+
         OccupantObject = null;
         State.Occupant = OccupantKind.None;
         BlockCapacity = 0; //언덕 타일은 점유 개념이 없으므로 근접만 우선 해당.
+
         return go;
     }
 
@@ -124,5 +131,10 @@ public partial class Tile : MonoBehaviour
         }
 
         return go.GetComponent<Hero>().BlockCount;
+    }
+
+    private void SetBlockCapacity()
+    {
+        BlockCapacity = OccupantObject.GetComponent<Hero>().BlockCount;
     }
 }
