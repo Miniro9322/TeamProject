@@ -16,6 +16,15 @@ public enum EnemyClass
     Elite,
     Boss,
 }
+// 적 특성 — 서로 조합 가능하므로 비트 플래그. CSV엔 '|' 또는 ';'로 여러 개 표기(예: "Fly|Cloaking").
+[System.Flags]
+public enum EnemyAttribute
+{
+    None     = 0,
+    Cloaking = 1 << 0, // 은신: 저지당했을 때만 피격 가능
+    Fly      = 1 << 1, // 공중: 원거리 영웅만 타격 가능
+    UnJudged = 1 << 2, // 무시: 저지 불가(막는 영웅을 통과)
+}
 public abstract class EnemyBase : MonoBehaviour,IDamageAble
 {
     [SerializeField] protected string enemyKey;
@@ -33,6 +42,11 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
     public float MoveSpeed { get; protected set; }
     public EnemyType Type { get; protected set; }        // 근거리/원거리
     public EnemyClass Class { get; protected set; }      // 일반/엘리트/보스
+    public EnemyAttribute Attribute { get; protected set; }
+    // 특성 편의 접근자(비트 검사). 여러 특성을 동시에 가질 수 있다.
+    public bool IsCloaking => (Attribute & EnemyAttribute.Cloaking) != 0; // 은신
+    public bool IsFly      => (Attribute & EnemyAttribute.Fly)      != 0; // 공중
+    public bool IsUnJudged => (Attribute & EnemyAttribute.UnJudged) != 0; // 저지 불가
     public bool IsDie { get; protected set; }
     private StatContainer sc = new();
     public StatContainer SC => sc;
@@ -42,8 +56,14 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
 
     // 풀 반환용. 스코프에 PoolManager가 등록되면 주입되고, 아니면 Pool 프로퍼티가 Instance로 폴백.
     private PoolManager _pool;
-    [Inject] public void Construct(PoolManager pool) => _pool = pool;
-    private PoolManager Pool => _pool ??= PoolManager.Instance;
+    [Inject] 
+    public void Construct(PoolManager pool,WaveSpawner waveSpawner)
+    {
+        _pool = pool;
+        this.waveSpawner = waveSpawner;
+    }
+    protected PoolManager Pool => _pool ??= PoolManager.Instance; // 파생 클래스(Bat 등)도 재사용
+    private WaveSpawner waveSpawner;
 
     private bool AnySkillRunning()
     {   
@@ -133,7 +153,8 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
 
     protected virtual void OnArrivedAtCore()
     {
-        
+        waveSpawner.EnemyDieEvent();
+        Board.RemoveEnemy(gameObject);
     }
     private async UniTask RunSkillLoop(CancellationToken token)
     {
@@ -176,12 +197,16 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
         while (!IsDie)
         {
             float interval = AttackSpeed > 0f ? 1f / AttackSpeed : 1f; //attackspped = 초당 공격횟수
-            attackTimer += Time.deltaTime;
-            // 스킬 시전 중이거나 이미 공격 모션 중이면 공격 보류(타이머 유지 → 풀리면 바로 공격).
-            if (attackTimer >= interval && !_attacking && !AnySkillRunning())
+            // 공격 모션/스킬 시전 중엔 딜레이를 세지 않는다 — 공격이 끝난 뒤부터 interval을 새로 채워
+            // 매 공격 사이에 온전한 간격을 보장(안 그러면 모션 중 타이머가 넘쳐 애니 끝나자마자 연사됨).
+            if (!_attacking && !AnySkillRunning())
             {
-                attackTimer = 0f;
-                Attack();
+                attackTimer += Time.deltaTime;
+                if (attackTimer >= interval)
+                {
+                    attackTimer = 0f;
+                    Attack();
+                }
             }
             await UniTask.Yield(token);
         }
@@ -196,7 +221,7 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
         ApplyData(data);
         EnemyStatLoader.ResolveSkills(data.Skills, skills);
     }
-
+    
     protected virtual void ApplyData(EnemyTable.Data data)
     {
         AttackPower = data.Attack;
@@ -208,6 +233,7 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
         MoveSpeed = data.MoveSpeed;
         Type = ParseEnum(data.Type, EnemyType.Melee);       // 근거리/원거리 (기본 Melee)
         Class = ParseEnum(data.Class, EnemyClass.Normal);   // 등급 (기본 Normal)
+        Attribute = ParseAttribute(data.Attribute); //기본 None. '|'/';'로 구분된 여러 특성 조합
         IsDie = false;
     }
 
@@ -217,6 +243,18 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
         if (!string.IsNullOrEmpty(raw) && System.Enum.TryParse(raw.Trim(), true, out T value))
             return value;
         return fallback;
+    }
+
+    // CSV 문자열 → 플래그 특성. '|'/';'로 구분된 각 토큰을 OR로 합친다(대소문자 무시).
+    // 매칭 안 되는 토큰은 조용히 무시되므로, 특성이 안 먹으면 CSV 철자부터 확인할 것.
+    private static EnemyAttribute ParseAttribute(string raw)
+    {
+        if (string.IsNullOrEmpty(raw)) return EnemyAttribute.None;
+        EnemyAttribute result = EnemyAttribute.None;
+        foreach (string token in raw.Split(new[] { '|', ';' }, StringSplitOptions.RemoveEmptyEntries))
+            if (System.Enum.TryParse(token.Trim(), true, out EnemyAttribute flag))
+                result |= flag;
+        return result;
     }
 
     public void TakeDamage(int damage)
@@ -235,9 +273,11 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
     public virtual void Attack()
     {
         if (IsDie || Board == null || skillCts == null) return;
-        if (FindAttackTarget() == null) return; // 사거리에 대상 없으면 멈추지도, 공격하지도 않음
+        GameObject target = FindAttackTarget();
+        if (target == null) return; // 사거리에 대상 없으면 멈추지도, 공격하지도 않음
         if(!Board.IsBlocked(gameObject)&&Type==EnemyType.Melee)return;
 
+        transform.LookAt(target.transform); // 실제 공격 순간에만 대상을 바라본다(타겟 확정 후 → null 안전)
         _attacking = true; // 동기적으로 세팅 → 스킬 루프가 곧바로 공격 중임을 인지
         _move.Pause();     // 공격 동안 정지
         if (animator != null) animator.SetTrigger("Attack");
@@ -245,14 +285,17 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
     }
 
     
-    public void AnimEvent_AttackHit()
+    public virtual void AnimEvent_AttackHit()
     {
         if (IsDie) return;
         GameObject target = FindAttackTarget(); 
         if (target != null && target.GetComponentInParent<IDamageAble>() is IDamageAble dmg)
+        {
             dmg.TakeDamage(AttackPower);
+        }
+            
     }
-    private GameObject FindAttackTarget()
+    protected GameObject FindAttackTarget()
     {
         if (Board == null) return null;
         Vector2Int origin = Board.WorldToCell(transform.position);
@@ -301,8 +344,9 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
     {
         if (IsDie) return;
         IsDie = true;                 // 스킬/공격/이동 루프가 !IsDie 조건으로 스스로 멈춘다
-        _move.Stop();                 // 이동 정지 + Suspended 해제
+        _move.Stop();
         if (Board != null) Board.RemoveEnemy(gameObject); // 죽는 즉시 칸에서 빠져 저지·타겟 대상서 제외
+        waveSpawner.EnemyDieEvent();                 // 이동 정지 + Suspended 해제
 
         // skillCts가 없으면(이미 비활성) 연출 없이 바로 디스폰.
         if (skillCts == null) { Despawn(); return; }

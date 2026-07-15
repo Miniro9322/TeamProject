@@ -141,7 +141,7 @@ public class EnemyMovement
         if (!_moving || !active || Board == null || Suspended) { SetMoving(false); return; }
 
         // 근접 영웅에게 저지당하면 그 자리에서 정지(타일 저지 시스템). 풀리면 다시 전진.
-        bool advancing = !Board.IsBlocked(_go);
+        bool advancing = !Board.IsBlocked(_go)||_tf.GetComponent<EnemyBase>().IsUnJudged;
         if (advancing)
         {
             Vector3 target = _path[_pathIndex];
