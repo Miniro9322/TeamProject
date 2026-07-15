@@ -1,3 +1,4 @@
+using Cysharp.Threading.Tasks;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -63,6 +64,7 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble
         isDead = true;
         stateMachine.ChangeState(deathState);
         OnBreak?.Invoke(currentTile);
+        //ResurrectionAfter10s().Forget();
     }
     public void TakeDamage(int damage)
     {
@@ -76,6 +78,7 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble
     protected OccupantKind occupantKind;
 
     public event Action<Tile> OnBreak;
+    public event Action<Tile> OnResur;
 
     protected virtual void Awake()
     {
@@ -158,5 +161,19 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble
     public void SetBoard(MapBoard board)
     {
         this.board = board;
+    }
+
+    public void Resurrection()
+    {
+        currentHp = sc[StatType.HP];
+        isDead = false;
+        stateMachine.ChangeState(idleState);
+        OnResur?.Invoke(currentTile);
+    }
+
+    public async UniTask ResurrectionAfter10s()
+    {
+        await UniTask.Delay(TimeSpan.FromSeconds(10));
+        Resurrection();
     }
 }

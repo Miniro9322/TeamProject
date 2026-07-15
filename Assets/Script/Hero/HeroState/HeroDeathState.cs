@@ -8,17 +8,19 @@ public class HeroDeathState : HeroState
 
     public override void Enter()
     {
-        hero.Anim.SetBool(HeroAnimHash.death, true);
+        hero.Anim.SetTrigger(HeroAnimHash.death);
     }
 
     public override void Exit()
     {
-        hero.Anim.SetBool(HeroAnimHash.death, false);
-        stateMachine.ChangeState(hero.IdleState);
+        
     }
 
     public override void Update()
     {
-        
+        if (!hero.IsDead)
+        {
+            stateMachine.ChangeState(hero.IdleState);
+        }
     }
 }
