@@ -72,7 +72,7 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
         LoadStats();
         animator = GetComponent<Animator>();
         _move = new EnemyMovement(gameObject, animator, arriveSqr);
-        _move.ArrivedAtCore += HandleArrivedAtCore; // 본진 도달 → 본체가 처리·디스폰
+        
         LoadStatContainer();
     }
     protected virtual void OnEnable()
@@ -82,8 +82,17 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
         IsDie = false;
         _attacking = false; // 죽은 시점 상태가 남아 다음 스폰의 공격/스킬을 막지 않게
 
+        // 애니메이터는 SetActive로 리셋되지 않아 Die 상태에 얼어붙은 채 재사용됨.
+        // Rebind로 트리거·파라미터·스테이트를 기본값으로 되돌리고 Update(0)로 즉시 반영.
+        if (animator != null)
+        {
+            animator.Rebind();
+            animator.Update(0f);
+        }
+        _move.Resume();
         EnemyRegistry.Register(this);
         skillCts = new CancellationTokenSource();
+        _move.ArrivedAtCore += HandleArrivedAtCore;
         RunSkillLoop(skillCts.Token).Forget();
         RunAttackLoop(skillCts.Token).Forget();
     }
@@ -93,6 +102,7 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
         EnemyRegistry.Unregister(this);
         _move.Pause();
         _move.LeaveBoard(); // 어떤 경로로 사라지든 현재 칸에서 빠진다
+        _move.ArrivedAtCore -= HandleArrivedAtCore;
         skillCts?.Cancel();
         skillCts?.Dispose();
         skillCts = null;

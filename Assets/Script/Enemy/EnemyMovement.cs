@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 
 /// <summary>
@@ -70,10 +71,18 @@ public class EnemyMovement
 
     // ---- 이동 제어 (공격/사망/비활성에서 EnemyBase가 호출) ----
     public void Pause() => _moving = false;                 // 공격 등으로 일시 정지
-    public void Resume() => _moving = true;                 // 재개
+    public void Resume()
+    {
+        _moving = true;
+        _animMoving = false;
+    }
+              // 재개
     public void Stop() { _moving = false; Suspended = false; } // 사망/비활성 — 완전 정지
 
-    public void LeaveBoard() { if (Board != null) Board.RemoveEnemy(_go); } // 현재 칸에서 빠짐
+    public void LeaveBoard()
+    { 
+        if (Board != null) Board.RemoveEnemy(_go); 
+    } // 현재 칸에서 빠짐
 
     // 스폰→본진 경로를 세팅하고 이동을 시작한다.
     public void EnterMap(MapBoard board, IReadOnlyList<Vector3> waypoints, bool snapToStart, float moveSpeed, string enemyKey)
