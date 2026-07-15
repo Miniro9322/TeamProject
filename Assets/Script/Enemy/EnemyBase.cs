@@ -346,7 +346,7 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
         IsDie = true;                 // 스킬/공격/이동 루프가 !IsDie 조건으로 스스로 멈춘다
         _move.Stop();
         if (Board != null) Board.RemoveEnemy(gameObject); // 죽는 즉시 칸에서 빠져 저지·타겟 대상서 제외
-        waveSpawner.EnemyDieEvent();                 // 이동 정지 + Suspended 해제
+        // waveSpawner.EnemyDieEvent();                 // 이동 정지 + Suspended 해제
 
         // skillCts가 없으면(이미 비활성) 연출 없이 바로 디스폰.
         if (skillCts == null) { Despawn(); return; }
