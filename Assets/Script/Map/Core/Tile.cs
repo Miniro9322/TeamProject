@@ -7,7 +7,7 @@ using UnityEngine;
 //타일이 알아야 하는 정보는 해당 타일 위 배치된 오브젝트와 저지되는 적이다.
 //타일은 인덱스로 인해 인접한 타일로 접근할수있어야 한다.
 [DisallowMultipleComponent]
-public class Tile : MonoBehaviour
+public partial class Tile : MonoBehaviour
 {
     [Tooltip("이 타일의 논리 상태(지형·점령·용도 3축). 인스펙터 또는 베이크(Tools/Map)로 저작.")]
     public TileState State = new();
@@ -24,7 +24,7 @@ public class Tile : MonoBehaviour
 
     // 내 위에 올라온 적
     private readonly List<GameObject> _enemies = new();
-    private readonly HashSet<GameObject> _covers = new();
+    private readonly HashSet<GameObject> _rangeCovers = new();
 
     //지금 이 타일 위에 있는 적들(읽기 전용). 없으면 빈 목록.
     public IReadOnlyList<GameObject> Enemies => _enemies;
@@ -36,18 +36,23 @@ public class Tile : MonoBehaviour
     public int FreeBlock => Mathf.Max(0, BlockCapacity - BlockedCount);
     public bool IsBlocking => BlockedCount > 0;
     public bool IsBlockFull => BlockCapacity > 0 && BlockedCount >= BlockCapacity;
-    public bool IsCovered => _covers.Count > 0;
-    public int CoverCount => _covers.Count;
-    public IReadOnlyCollection<GameObject> Covers => _covers;
+    public bool IsRangeCovered => _rangeCovers.Count > 0;
+    public int RangeCoverCount => _rangeCovers.Count;
+    public IReadOnlyCollection<GameObject> RangeCovers => _rangeCovers;
 
     public Vector2Int Coord => new(State.Col, State.Row);
     public TerrainType Terrain => State.Terrain;
     public bool IsGround => Terrain == TerrainType.Ground;
     public bool IsHigh => Terrain == TerrainType.High;
     public bool IsCore => Terrain == TerrainType.Core;
+    public bool IsSpecial => Terrain == TerrainType.Special;
     public bool IsEnemyLane => State.EnemyLane;
     public bool IsEnemySpawn => isEnemySpawn;
     public bool IsEmpty => OccupantObject == null;
+
+ 
+    public GameObject UnitPrefab;
+    public OccupantKind UnitKind = OccupantKind.MeleeHero;
 
     /// <summary>적 통행 가능 지형인가. 고지·빈 타일은 막힘, 지상·본진은 통행(설계: 고지=이동 차단).</summary>
     public bool Walkable => State.Terrain is TerrainType.Ground or TerrainType.Core;
@@ -61,27 +66,35 @@ public class Tile : MonoBehaviour
         _topY = topY;
     }
 
-    //비어 있는 타일에 유닛을 배치
+    //비어 있는 타일에 유닛을 배치(런타임 인스턴스를 기록). UnitPrefab은 인스펙터 저작값이라 건드리지 않는다.
     public void SetOccupant(GameObject go, OccupantKind kind)
     {
         OccupantObject = go;
         State.Occupant = kind;
         BlockCapacity = GetCapacity(go, kind);
+        go.GetComponent<IPlaceAble>().OnBreak += SetBlockCapacity;
+        go.GetComponent<IPlaceAble>().OnResur += SetBlockCapacity;
     }
 
     //배치되어 있는 유닛을 해제 후 반환.
     public GameObject ClearOccupant()
     {
         GameObject go = OccupantObject;
+
+        go.GetComponent<IPlaceAble>().OnBreak -= SetBlockCapacity;
+        go.GetComponent<IPlaceAble>().OnResur -= SetBlockCapacity;
+
         OccupantObject = null;
         State.Occupant = OccupantKind.None;
         BlockCapacity = 0; //언덕 타일은 점유 개념이 없으므로 근접만 우선 해당.
+
         return go;
     }
 
     public bool IsBlocked(GameObject enemy)
     {
         if (BlockCapacity <= 0 || enemy == null) return false;
+
         int index = _enemies.IndexOf(enemy);
         return index >= 0 && index < BlockCapacity;
     }
@@ -95,24 +108,33 @@ public class Tile : MonoBehaviour
     //타일에 적 이탈 등록
     public void RemoveEnemy(GameObject enemy) => _enemies.Remove(enemy);
 
-    public void AddCover(GameObject unit)
+    public void AddRangeCover(GameObject unit)
     {
-        if (unit != null) _covers.Add(unit);
+        if (unit != null) _rangeCovers.Add(unit);
     }
 
-    public void RemoveCover(GameObject unit)
+    public void RemoveRangeCover(GameObject unit)
     {
-        if (unit != null) _covers.Remove(unit);
+        if (unit != null) _rangeCovers.Remove(unit);
     }
 
-    public void ClearCovers()
+    public void ClearRangeCovers()
     {
-        _covers.Clear();
+        _rangeCovers.Clear();
     }
 
     private static int GetCapacity(GameObject go, OccupantKind kind)
     {
-        if (go == null || kind != OccupantKind.MeleeHero) return 0;
-        return go.TryGetComponent(out TileBlocker blocker) ? blocker.Capacity : 0;
+        if (go == null || kind != OccupantKind.MeleeHero)
+        {
+            return 0;
+        }
+
+        return go.GetComponent<Hero>().BlockCount;
+    }
+
+    private void SetBlockCapacity()
+    {
+        BlockCapacity = OccupantObject.GetComponent<Hero>().BlockCount;
     }
 }

@@ -17,12 +17,9 @@ public static class TilePlacementRule
     }
 
     /// <summary>placing 종류를 tile에 놓을 수 있는지. isDayPhase=false면 밤이라 전부 불가(설계 §4·§6).</summary>
-    public static Result CanPlace(TileState tile, OccupantKind placing, bool isDayPhase)
+    public static Result CanPlace(TileState tile, OccupantKind placing)
     {
-        if (!isDayPhase)
-        {
-            return Result.No("밤에는 배치할 수 없다");
-        }
+        
 
         if (tile == null)
         {
@@ -43,6 +40,11 @@ public static class TilePlacementRule
         if (!tile.IsEmpty)
         {
             return Result.No("이미 다른 오브젝트가 있다");
+        }
+
+        if(tile.Terrain == TerrainType.Special)
+        {
+            return Result.No("특수 타일에는 배치할 수 없다");
         }
 
         return placing switch

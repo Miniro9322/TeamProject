@@ -5,10 +5,10 @@ public enum AnimSelectMode { Sequential, Random }
 [CreateAssetMenu(fileName = "AttackData", menuName = "HeroAttack/AttackData")]
 public class AttackDataSO : ScriptableObject
 {
-    public float attackDamage = 10f;
+    public float attackPer = 1f;
     public int range = 3;
+    public bool square = false;
     public AttackType attackType = AttackType.Single;
-
     public string[] animTriggers = { "Attack" };
     public AnimSelectMode selectMode = AnimSelectMode.Sequential;
 

@@ -4,6 +4,7 @@ using UnityEngine;
 public class HeroAttackState : HeroState
 {
     protected float timer;
+    protected float lastAttackTime = float.NegativeInfinity;
     protected CancellationTokenSource attackCts;
 
     public HeroAttackState(Hero hero, HeroStateMachine stateMachine) : base(hero, stateMachine)

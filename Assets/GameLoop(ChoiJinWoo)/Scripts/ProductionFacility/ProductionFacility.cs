@@ -2,7 +2,7 @@ using System;
 using UnityEngine;
 using VContainer;
 
-public class ProductionFacility : MonoBehaviour, IDamageAble
+public class ProductionFacility : MonoBehaviour, IDamageAble, IPlaceAble
 {
     [SerializeField] private ProductionValue basicValue;
     private int productAmount;
@@ -18,6 +18,10 @@ public class ProductionFacility : MonoBehaviour, IDamageAble
     public ProductionType ProductionType => basicValue.Type;
 
     public event Action<int, int> OnWorkerChanged;
+    public event Action OnBreak;
+    public event Action OnResur;
+    private MapBoard board;
+
     public ProductionValue BasicValue => basicValue;
 
     public float Hp
@@ -27,6 +31,8 @@ public class ProductionFacility : MonoBehaviour, IDamageAble
     }
 
     public int Defense => 0;
+
+    public MapBoard Board => board;
 
     [Inject]
     private void Construct(ResourcesManager resourcesManager, CitizenManager citizenManager, BuildingPool buildingPool, FacilityManager facilityManager)
@@ -53,7 +59,8 @@ public class ProductionFacility : MonoBehaviour, IDamageAble
     private void OnDisable()
     {
         ReleaseAllWorkers();
-        facilityManager.RemoveFacility(this);
+        if(facilityManager != null)
+            facilityManager.RemoveFacility(this);
     }
 
     private void ReleaseAllWorkers()
@@ -73,9 +80,8 @@ public class ProductionFacility : MonoBehaviour, IDamageAble
         {
             refund[kv.Key] = -kv.Value;
         }
-
         resourcesManager.ProductChanged(refund);
-        buildingPool.Return(this);
+        buildingPool.Return(this.gameObject);
     }
 
     public void IncreaseWorker()
@@ -140,5 +146,10 @@ public class ProductionFacility : MonoBehaviour, IDamageAble
     public void Die()
     {
         throw new NotImplementedException();
+    }
+
+    public void SetBoard(MapBoard board)
+    {
+        this.board = board;
     }
 }

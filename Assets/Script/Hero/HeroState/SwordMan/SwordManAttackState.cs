@@ -16,7 +16,13 @@ public class SwordManAttackState : HeroAttackState
     {
         base.Enter();
         runner ??= new HeroAttackRunner(swordMan.BasePattern, swordMan.Selectors, swordMan.Procs, new MeleeAttackExecutor());
-        TryExecuteCurrentStep();
+
+        float cooldown = swordMan.SC[StatType.AS];
+        float elapsed = Time.time - lastAttackTime;
+        if (elapsed >= cooldown)
+            TryExecuteCurrentStep();
+        else
+            timer = elapsed;
     }
 
     public override void Update()
@@ -24,7 +30,7 @@ public class SwordManAttackState : HeroAttackState
         base.Update();
         if (stateMachine.CurrentState != this) return;
         timer += Time.deltaTime;
-        if (timer >= swordMan.AttackSpeed)
+        if (timer >= swordMan.SC[StatType.AS])
         {
             timer = 0f;
             TryExecuteCurrentStep();
@@ -34,6 +40,7 @@ public class SwordManAttackState : HeroAttackState
     protected override void TryExecuteCurrentStep()
     {
         if (runner.IsExecuting) return;
+        lastAttackTime = Time.time;
         runner.ExecuteNext(swordMan.Context, attackCts.Token).Forget();
     }
 }

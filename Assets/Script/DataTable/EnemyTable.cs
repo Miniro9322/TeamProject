@@ -1,5 +1,6 @@
 using UnityEngine;
 using CsvHelper;
+using CsvHelper.Configuration.Attributes;
 using System.Collections.Generic;
 public class EnemyTable : DataTable
 {
@@ -15,7 +16,8 @@ public class EnemyTable : DataTable
         public int UpHealthScale {get ; set ;}
         public int UpDefenseScale {get ; set ;}
         public string Skills {get ; set ;}   // 세미콜론(;)으로 구분된 SkillId 목록
-        public string Type {get ; set ;}     // EnemyType 이름 (Normal, Elite, Boss)
+        public string Type {get ; set ;}     // 공격 타입 (Melee, Ranged)
+        public string Class {get ; set ;}     // 등급 (Normal, Elite, Boss)
     }
     
     private readonly Dictionary<string, Data> table = new();

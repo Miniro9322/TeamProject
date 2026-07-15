@@ -11,6 +11,8 @@ public class MeleeAttackExecutor : IAttackExecutor
     {
         ctx.anim.SetTrigger(PickTrigger(data));
         await ctx.WaitForAnimEvent("Attack", ct);
+
+        AttackDamageUtil.ApplyInstantDamage(data, ctx);
     }
 
     private string PickTrigger(AttackDataSO data)
