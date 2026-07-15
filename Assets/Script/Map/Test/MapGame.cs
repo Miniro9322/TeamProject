@@ -1,7 +1,11 @@
 using System;
 using System.Collections.Generic;
+using CsvHelper;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
+using VContainer;
+using VContainer.Unity;
 
 public class MapGame : MonoBehaviour
 {
@@ -50,6 +54,25 @@ public class MapGame : MonoBehaviour
     public int UnitIndex => _mode == PlaceMode.Place ? _paletteIndex : -1;
     public IReadOnlyList<Placeable> Items => Palette();
 
+    //테스트용 코드
+    private VContainer.IObjectResolver resolver;
+    private ResourcesManager resourcesManager;
+    private BuildingPool pool;
+    private UiManager uiManager;
+    private GameManager gameManager;
+
+    [Inject]
+    private void Construct(VContainer.IObjectResolver resolver, ResourcesManager resourcesManager, BuildingPool buildingPool, UiManager uiManager, GameManager gameManager)
+    {
+        this.resolver = resolver;
+        this.resourcesManager = resourcesManager;
+        this.pool = buildingPool;
+        this.uiManager = uiManager;
+        this.gameManager = gameManager;
+    }
+
+    //끝
+
     private void Awake()
     {
         _cam = Camera.main;
@@ -91,7 +114,41 @@ public class MapGame : MonoBehaviour
         if (Mouse.current == null || !Mouse.current.leftButton.wasPressedThisFrame) return;
 
         Tile tile = PickCellUnderPointer();
-        if (tile == null) return;
+        if (tile == null)
+        {
+            //테스트용 코드
+            if (EventSystem.current.IsPointerOverGameObject())
+            {
+                return;
+            }
+
+            if (uiManager.BuildingUiOpen)
+            {
+                uiManager.CloseBuildingUi();
+            }
+            //끝
+            return;
+        }
+        //테스트용 코드
+        Debug.Log(tile.State.Occupant);
+        if (tile.State.Occupant == OccupantKind.Building && _mode != PlaceMode.Remove && gameManager.CanBuild)
+        {
+            Debug.Log("건물 UI 오픈");
+            uiManager.OpenBuildingUi(tile.OccupantObject.GetComponent<ProductionFacility>());
+        }
+        else
+        {
+            if (EventSystem.current.IsPointerOverGameObject())
+            {
+                return;
+            }
+
+            if (uiManager.BuildingUiOpen)
+            {
+                uiManager.CloseBuildingUi();
+            }
+        }
+        //끝
 
         switch (_mode)
         {
@@ -112,6 +169,15 @@ public class MapGame : MonoBehaviour
         if(!TryGetSlot(out Placeable slot)) return; // 배치할 프리팹 정보
         
         if(!CanPlaceUnit(tile, slot)) return;       // 배치 가능 여부 확인
+        
+        //테스트용 코드
+        if (!gameManager.CanBuild)
+        {
+            Debug.Log("밤에는 배치할 수 없습니다.");
+            return;
+        }
+        //끝
+
         GameObject UnitObject = CreateUnit(slot);   // 배치할 오브젝트 생성
 
         BindBoard(UnitObject); // 생성한 오브젝트에 MapBoard 참조 전달
@@ -141,9 +207,17 @@ public class MapGame : MonoBehaviour
     private GameObject CreateUnit(Placeable slot)//조건에 맞을경우 배치 오브젝트를 생성.
     {
         CheckPrefab(slot);             // 프리팹이 없으면 예외
-        return Instantiate(slot.prefab);// 배치할 오브젝트 생성
-    }
+        //테스트용 코드
+        if(slot.kind == OccupantKind.Building)
+        {
+            if(resourcesManager.CheckResources(slot.prefab.GetComponent<ProductionFacility>().BasicValue.ConstructProduct))
+            return pool.Rent(slot.prefab.GetComponent<ProductionFacility>().ProductionType);// 배치할 오브젝트 생성
 
+        }
+        //끝
+        return resolver.Instantiate(slot.prefab);// 배치할 오브젝트 생성
+    }
+    
     private void SetUnit(GameObject unit, Tile tile, Placeable slot)//배치 직후 커버리지 등록 및 훅 호출
     {
         _selectedTile = tile;                         // 배치 직후 선택 상태 유지
@@ -223,7 +297,16 @@ public class MapGame : MonoBehaviour
         if (go == null) return;
         _placed.Remove(go);
         _ranges.Remove(go);
-        Destroy(go);
+        //테스트용 코드
+        if(go.GetComponent<ProductionFacility>() != null)
+        {
+            go.GetComponent<ProductionFacility>().Release();
+        }
+        else
+        {
+            Destroy(go);
+        }
+        //끝
         if (_selectedTile == tile)
         {
             _selectedTile = null;
