@@ -7,6 +7,5 @@ public class PanelData
     public string Mode = "";
     public string[] Units = Array.Empty<string>();
     public bool ShowPath;
-    public int WaveCount;
     public int UnitIndex = -1;
 }

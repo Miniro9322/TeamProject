@@ -23,7 +23,7 @@ public static class TilePosBaker
             return;
         }
 
-        Vector2 origin = FindOrigin(tiles); // 격자 원점(최소 x/z)
+        Vector2 origin = FindOriginPos(tiles); // 격자 원점(최소 x/z)
         AssignCoords(tiles, origin);        // 각 타일에 Col/Row 새김
         SaveResult(scene, tiles.Count);     // 씬 저장 표시 + 완료 로그
     }
@@ -49,7 +49,7 @@ public static class TilePosBaker
 
     // 격자 원점 = 모든 타일의 최소 x/z. 런타임 MapBoard.Build와 같은 기준(min→0)이라 좌표가 일치한다.
     // 반환 Vector2는 (x = minX, y = minZ) — y 칸에 월드 z를 담는다.
-    private static Vector2 FindOrigin(List<Tile> tiles)
+    private static Vector2 FindOriginPos(List<Tile> tiles)
     {
         float minX = float.MaxValue, minZ = float.MaxValue;
         foreach (Tile tile in tiles)

@@ -75,7 +75,8 @@ public class AreaExpand : MonoBehaviour
     private void ClaimTile(int col, int row)
     {
         if (!_board.TryGetCell(new Vector2Int(col, row), out Tile tile)) return; // 없는 칸이면 건너뜀.
-        if (tile.Terrain is not (TerrainType.Ground or TerrainType.High)) return; // 테두리·본진은 점령 제외.
+        if (tile.Terrain != TerrainType.Ground 
+        &&  tile.Terrain != TerrainType.High) return; // 테두리·본진은 점령 제외.
         if (tile.IsEnemySpawn) return; 
         
         //해당 영역 점령                                             
