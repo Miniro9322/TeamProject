@@ -41,9 +41,8 @@ public class SummonSkillDataSO : UtilitySkillDataSO
             Vector3 center = owner.transform.position;
             for (int i = 0; i < count; i++)
             {
-                
                 Vector3 pos = center + new Vector3((i - (count - 1) * 0.5f) * 0.6f, 0f, 0f);
-                var go = Instantiate(summonPrefab, pos, Quaternion.identity);
+                var go = PoolManager.Instance.Spawn(summonPrefab, pos, Quaternion.identity);
                 if (go.TryGetComponent(out EnemyBase enemy))
                     enemy.EnterMap(owner.Board, owner.Path, snapToStart: false);
                 await UniTask.Delay(TimeSpan.FromSeconds(0.05f));
