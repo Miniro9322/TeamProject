@@ -62,6 +62,7 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble
     public void Die()
     {
         isDead = true;
+        anim.SetBool(HeroAnimHash.idle, false);
         stateMachine.ChangeState(deathState);
         OnBreak?.Invoke();
         // ResurrectionAfter10s().Forget();
@@ -167,7 +168,6 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble
     {
         currentHp = sc[StatType.HP];
         isDead = false;
-        stateMachine.ChangeState(idleState);
         OnResur?.Invoke();
     }
 

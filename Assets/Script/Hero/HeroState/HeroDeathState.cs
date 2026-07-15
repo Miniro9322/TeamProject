@@ -20,6 +20,7 @@ public class HeroDeathState : HeroState
     {
         if (!hero.IsDead)
         {
+            hero.Anim.SetBool(HeroAnimHash.idle, true);
             stateMachine.ChangeState(hero.IdleState);
         }
     }
