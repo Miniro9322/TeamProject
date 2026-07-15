@@ -11,6 +11,8 @@ public class HeroAttackRunner
     private readonly List<AttackProcSO> procs;
     private readonly IAttackExecutor executor;
 
+    private AttackDataSO pendingOverride;
+
     public int HitCount { get; private set; }
     public bool IsExecuting { get; private set; }
 
@@ -28,6 +30,12 @@ public class HeroAttackRunner
 
     public AttackDataSO ResolveNext(AttackContext ctx)
     {
+        if (pendingOverride != null)
+        {
+            var forced = pendingOverride;
+            pendingOverride = null;
+            return forced;
+        }
         foreach (var sel in selectors)
         {
             var result = sel.Select(HitCount, ctx);
@@ -63,7 +71,19 @@ public class HeroAttackRunner
         {
             if (depth > 0 && !proc.allowRecursiveProc) continue;
             if (!proc.ShouldProc(attack, ctx)) continue;
-            await ExecuteWithProcs(proc.GetProcAttack(attack), ctx, ct, depth + 1);
+
+            switch (proc.effectType)
+            {
+                case ProcEffectType.ExtraAttack:
+                    await ExecuteWithProcs(proc.GetProcAttack(attack), ctx, ct, depth + 1);
+                    break;
+                case ProcEffectType.UpgradeNextAttack:
+                    pendingOverride = proc.GetProcAttack(attack);
+                    break;
+                case ProcEffectType.BonusDamage:
+                    AttackDamageUtil.ApplyInstantDamage(proc.GetProcAttack(attack), ctx);
+                    break;
+            }
         }
     }
 }

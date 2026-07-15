@@ -12,7 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 61de755d546ce274db535f1cd592370e, type: 3}
   m_Name: SwordManProbabilityProc
   m_EditorClassIdentifier: Assembly-CSharp::ProbabilityProcSO
-  triggerOnAttack: {fileID: 0}
-  procAttack: {fileID: 0}
+  triggerOnAttack: {fileID: 11400000, guid: de2156b1ee549f84198f677e451c4db2, type: 2}
+  procAttack: {fileID: 11400000, guid: de2156b1ee549f84198f677e451c4db2, type: 2}
   allowRecursiveProc: 0
+  effectType: 1
   chance: 0.3
