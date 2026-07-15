@@ -110,7 +110,10 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
     }
 
     public void EnterMap(MapBoard board, IReadOnlyList<Vector3> waypoints = null, bool snapToStart = true)
-        => _move.EnterMap(board, waypoints, snapToStart, MoveSpeed, enemyKey);
+    {
+        _move.Flying = IsFly; // 공중 특성이면 지형 무시(본진으로 직선). Map/길찾기는 건드리지 않음
+        _move.EnterMap(board, waypoints, snapToStart, MoveSpeed, enemyKey);
+    }
 
     public void LoadStatContainer()
     {
@@ -242,8 +245,6 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
     private float _damageBlock;   // 고정 감소 수치
     private float _shieldExpiry;  // Time.time 기준 만료 시각 — 코루틴 없이 지연 만료(풀링 안전)
     public bool IsShielded => Time.time < _shieldExpiry;
-
-    /// <summary>고정 수치 데미지 경감 쉴드 부여. 재시전 시 갱신(수치·지속시간 덮어씀).</summary>
     public void ApplyDamageReductionShield(float flatReduce, float duration)
     {
         _damageBlock = Mathf.Max(0f, flatReduce);
