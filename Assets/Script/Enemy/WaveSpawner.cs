@@ -52,7 +52,6 @@ public class WaveSpawner : MonoBehaviour
             Debug.LogWarning($"WaveSpawner: 프리팹 로드 실패 '{wave.Prefab}' (ID {wave.ID})");
             return;
         }
-
         if (wave.SpawnTime > 0f) await UniTask.Delay(TimeSpan.FromSeconds(wave.SpawnTime));
 
         for (int i = 0; i < wave.Count; i++)
