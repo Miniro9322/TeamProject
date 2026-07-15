@@ -47,10 +47,7 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble
 
     private StatContainer sc = new();
     public StatContainer SC => sc;
-
-    private int currentBlockCount = 0;
-    private bool canBlocking = true;
-    public bool CanBlocking => canBlocking;
+    public int BlockCount => (int)SC[StatType.BLK];
     private float currentHp;
     public float Hp => currentHp;
     public int Defense => throw new System.NotImplementedException();
