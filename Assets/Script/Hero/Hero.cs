@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 public class Hero : MonoBehaviour, IDamageAble, IPlaceAble
 {
@@ -24,6 +25,9 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble
     public HeroIdleState IdleState => idleState;
     protected HeroAttackState attackState;
     public HeroAttackState AttackState => attackState;
+
+    protected HeroDeathState deathState;
+    public HeroDeathState DeathState => deathState;
 
     [SerializeField] private Animator anim;
     [SerializeField] private HeroAnimEvents animEvents;
@@ -51,14 +55,18 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble
     private float currentHp;
     public float Hp => currentHp;
     public int Defense => throw new System.NotImplementedException();
+    private bool isDead = false;
+    public bool IsDead => isDead;
 
     public void Die()
     {
-
+        isDead = true;
+        stateMachine.ChangeState(deathState);
+        OnBreak?.Invoke(currentTile);
     }
     public void TakeDamage(int damage)
     {
-        if (currentHp <= 0)
+        if (isDead)
             return;
 
         currentHp -= damage;
@@ -67,10 +75,13 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble
     }
     protected OccupantKind occupantKind;
 
+    public event Action<Tile> OnBreak;
+
     protected virtual void Awake()
     {
         stateMachine = new HeroStateMachine();
         idleState = new HeroIdleState(this, stateMachine);
+        deathState = new HeroDeathState(this, stateMachine);
         stateMachine.Initialize(idleState);
         //attackRangedTiles = board.GetTiles(origin, range);
         sc.AddStat(StatType.HP, statData.maxHp);
