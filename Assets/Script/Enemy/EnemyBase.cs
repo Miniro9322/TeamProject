@@ -224,6 +224,7 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
         if(IsDie)return;
         int hitDamage = Mathf.Max(1,damage-Defense);
         Hp -= hitDamage;
+        Debug.Log("Damage");
         if(Hp<=0)Die();
     }
 

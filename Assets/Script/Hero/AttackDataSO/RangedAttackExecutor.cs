@@ -10,15 +10,45 @@ public class RangedAttackExecutor : IAttackExecutor
 
     public async UniTask Execute(AttackDataSO data, AttackContext ctx, CancellationToken ct)
     {
+        float interval = ctx.sc[StatType.AS] > 0f ? 1f / ctx.sc[StatType.AS] : 1f; // AS = 초당 공격 횟수
+        float scale = AttackAnimSpeedUtil.ComputeScale(data, interval);
+        AttackAnimSpeedUtil.SetSpeed(ctx.anim, scale);
+        AttackAnimSpeedUtil.SetSpeed(ctx.bowAnim, scale);
+        AttackAnimSpeedUtil.SetSpeed(ctx.arrowAnim, scale);
+
         string trigger = PickTrigger(data);
         ctx.anim.SetTrigger(trigger);
         ctx.bowAnim.SetTrigger("Attack");
         ctx.arrowAnim.SetTrigger("Attack");
-        await ctx.WaitForAnimEvent("Attack", ct);
 
         IObjectPool<Projectile> pool = ctx.getProjectilePool(data.projectilePrefab);
         int damage = (int)(ctx.sc[StatType.ATK] * data.attackPer);
 
+        try
+        {
+            float windowDuration = AttackAnimSpeedUtil.ComputeWindowDuration(data, interval);
+            using var window = new AttackEventWindow(ctx.animEvents, "Attack", "Recovery", windowDuration);
+            int hits = 0;
+            while (await window.MoveNextHit(ct))
+            {
+                await FireVolley(data, ctx, pool, damage, ct);
+                hits++;
+            }
+            // 고속 공격속도로 "Attack" 애니메이션 이벤트가 유실되면 발사가 0회가 될 수 있다.
+            // window가 취소 없이 정상 종료됐다면 최소 1회는 보장 발사한다.
+            if (hits == 0)
+                await FireVolley(data, ctx, pool, damage, ct);
+        }
+        finally
+        {
+            AttackAnimSpeedUtil.SetSpeed(ctx.anim, 1f);
+            AttackAnimSpeedUtil.SetSpeed(ctx.bowAnim, 1f);
+            AttackAnimSpeedUtil.SetSpeed(ctx.arrowAnim, 1f);
+        }
+    }
+
+    private async UniTask FireVolley(AttackDataSO data, AttackContext ctx, IObjectPool<Projectile> pool, int damage, CancellationToken ct)
+    {
         if (data.attackType == AttackType.Multiple)
         {
             List<Transform> enemies = ctx.getEnemyTargetsInRange(ctx.self.position, data.range, data.square);

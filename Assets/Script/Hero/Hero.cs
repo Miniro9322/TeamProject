@@ -39,9 +39,7 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble
     protected GameObject target;
     public GameObject Target => target;
 
-    [SerializeField] private float attackSpeed;
     [SerializeField] private StatDataSO statData;
-    public float AttackSpeed => attackSpeed;
 
     [SerializeField] private MapBoard board;
     public MapBoard Board => board;
