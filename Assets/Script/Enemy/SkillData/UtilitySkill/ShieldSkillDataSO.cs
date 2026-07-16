@@ -17,7 +17,7 @@ public class ShieldSkillDataSO : UtilitySkillDataSO
 
     public override async UniTask Execute(EnemyBase owner, CancellationToken token)
     {
-        if (owner == null || owner.IsDie) return;
+        if (owner == null || owner.IsDead) return;
         float flatReduce = Mathf.Max(0f, value); // value = 데미지 고정 감소 수치
         int cellRange = range > 0f ? Mathf.RoundToInt(range) : 1;
         Vector3 center = owner.transform.position;
@@ -25,7 +25,7 @@ public class ShieldSkillDataSO : UtilitySkillDataSO
         // 시전 시점에 범위 안에 있는 아군(자기 포함)에게 스냅샷으로 부여 — Heal 스킬과 동일 패턴.
         foreach (var ally in EnemyRegistry.Alive)
         {
-            if (ally == null || ally.IsDie) continue;
+            if (ally == null || ally.IsDead) continue;
             if (!EnemyTargeting.InRange(center, ally.transform.position, cellRange)) continue;
             ally.ApplyDamageReductionShield(flatReduce, duration);
         }
@@ -51,7 +51,7 @@ public class ShieldSkillDataSO : UtilitySkillDataSO
             if (owner != null) owner.MovementSuspended = false; // 시전 끝 → 지속시간 동안엔 정상 이동(걷기)
 
             float elapsed = 0f;
-            while (elapsed < duration && owner != null && !owner.IsDie)
+            while (elapsed < duration && owner != null && !owner.IsDead)
             {
                 if (dome != null) dome.transform.position = owner.transform.position; // 부모 없이 위치만 추종(풀링 안전)
                 elapsed += Time.deltaTime;
@@ -73,7 +73,7 @@ public class ShieldSkillDataSO : UtilitySkillDataSO
         float elapsed = 0f;
         while (owner != null && !anim.GetCurrentAnimatorStateInfo(layer).IsName(stateName))
         {
-            if (owner.IsDie) return;
+            if (owner.IsDead) return;
             elapsed += Time.deltaTime;
             if (elapsed >= timeout)
             {

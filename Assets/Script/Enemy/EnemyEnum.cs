@@ -19,4 +19,5 @@ public enum EnemyAttribute
     Cloaking = 1 << 0, // 은신: 저지당했을 때만 피격 가능
     Fly      = 1 << 1, // 공중: 원거리 영웅만 타격 가능
     UnJudged = 1 << 2, // 무시: 저지 불가(막는 영웅을 통과)
+    Berserk  = 1 << 3, // 폭주: 체력50%이하 일경우 이속+공격력 증가
 }

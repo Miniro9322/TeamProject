@@ -36,7 +36,7 @@ public class HealSkillDataSO : UtilitySkillDataSO
 
                 foreach (var ally in EnemyRegistry.Alive)
                 {
-                    if (ally == null || ally.IsDie) continue;
+                    if (ally == null || ally.IsDead) continue;
                     if (!EnemyTargeting.InRange(center, ally.transform.position, cellRange)) continue;
                     ally.Heal(heal);
                 }

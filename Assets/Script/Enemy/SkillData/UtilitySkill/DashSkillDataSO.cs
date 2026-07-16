@@ -36,7 +36,7 @@ public class DashSkillDataSO : UtilitySkillDataSO
             Vector3 cur = start;
             int seg = 0;
             // total<=0(이미 경로 끝 등)이면 이동할 것이 없어 루프를 건너뛴다(무한루프 방지).
-            while (moveSpeed > 0f && seg < points.Count && owner != null && !owner.IsDie)
+            while (moveSpeed > 0f && seg < points.Count && owner != null && !owner.IsDead)
             {
                 // 저지당하면(대시 시작 시 이미 저지 or 대시 중 적을 만남) 그 자리에서 대시 중단.
                 if (owner.Board.IsBlocked(owner.gameObject)) { blocked = true; break; }
@@ -56,7 +56,7 @@ public class DashSkillDataSO : UtilitySkillDataSO
                 await UniTask.Yield(token); // 파괴/비활성 시 취소돼 파괴된 오브젝트 접근 방지
             }
 
-            if (owner != null && !owner.IsDie)
+            if (owner != null && !owner.IsDead)
             {
                 if (!blocked)
                 {

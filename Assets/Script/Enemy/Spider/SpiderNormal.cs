@@ -8,8 +8,9 @@ public class SpiderNormal : EnemyBase
     public int attack;
     public int def; //테스트용 인스펙터 확인용 스탯들
 
-    private void Start()
+    protected override void OnEnable()
     {
+        base.OnEnable();
         hp = Hp;
         speed = MoveSpeed;
         attack = AttackPower;
