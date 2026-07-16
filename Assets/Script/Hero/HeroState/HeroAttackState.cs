@@ -32,9 +32,21 @@ public class HeroAttackState : HeroState
             stateMachine.ChangeState(hero.IdleState);
             return;
         }
+        
+        if (stateMachine.CurrentState != this) return;
+        timer += Time.deltaTime;
+        if (timer >= hero.SC[StatType.AS])
+        {
+            timer = 0f;
+            RotateToTarget();
+            TryExecuteCurrentStep();
+        }
+    }
+
+    protected void RotateToTarget()
+    {
         Vector3 aimVector = hero.Context.target.transform.position - hero.transform.position;
         aimVector.y = 0f;
-
         if (aimVector.sqrMagnitude > 0.00001f)
             hero.transform.rotation = Quaternion.LookRotation(aimVector);
     }

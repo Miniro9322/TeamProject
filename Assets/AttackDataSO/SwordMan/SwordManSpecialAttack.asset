@@ -15,8 +15,13 @@ MonoBehaviour:
   attackPer: 3.5
   range: 1
   square: 1
-  attackType: 1
+  attackType: 2
+  attackCount: 1
+  targetCount: 1
+  shotInterval: 0.1
+  splashRange: 1
+  splashSquare: 1
+  selectMode: 0
   animTriggers:
   - StrongAttack
-  selectMode: 0
   projectilePrefab: {fileID: 0}

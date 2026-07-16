@@ -47,6 +47,7 @@ public class Archer : Hero
             muzzle = muzzle,
             getProjectilePool = GetProjectilePool,
             getEnemiesInRange = GetEnemiesInRange,
+            getEnemyTargetsInRange = GetEnemyTransformsInRange,
             sc = SC
         };
         occupantKind = OccupantKind.RangedHero;

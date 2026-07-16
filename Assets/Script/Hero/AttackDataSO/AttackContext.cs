@@ -15,6 +15,7 @@ public struct AttackContext
     public Transform muzzle;
     public System.Func<Projectile, IObjectPool<Projectile>> getProjectilePool;
     public System.Func<Vector3, int, bool, List<IDamageAble>> getEnemiesInRange;
+    public System.Func<Vector3, int, bool, List<Transform>> getEnemyTargetsInRange;
     public StatContainer sc;
 
     public async UniTask WaitForAnimEvent(string eventName, CancellationToken ct)

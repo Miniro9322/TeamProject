@@ -10,20 +10,18 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3e63ecebd4cd6e044a8a127ea3df05bc, type: 3}
-  m_Name: SwordManAttackData
+  m_Name: ArcherBombAttackData
   m_EditorClassIdentifier: Assembly-CSharp::AttackDataSO
-  attackPer: 1
-  range: 3
+  attackPer: 5
+  range: 10
   square: 0
-  attackType: 0
+  attackType: 2
   attackCount: 1
   targetCount: 1
   shotInterval: 0.1
   splashRange: 1
-  splashSquare: 0
+  splashSquare: 1
   selectMode: 0
   animTriggers:
-  - Attack1
-  - Attack2
-  - Attack3
-  projectilePrefab: {fileID: 0}
+  - Attack
+  projectilePrefab: {fileID: 607833191716554269, guid: 096e519a71d84cd492def126191b3ea9, type: 3}

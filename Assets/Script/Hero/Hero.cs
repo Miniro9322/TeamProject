@@ -156,6 +156,27 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble
     public List<IDamageAble> GetEnemiesInRange(Vector3 originWorld, int range, bool square = false)
     {
         var found = new HashSet<IDamageAble>();
+        foreach (GameObject enemy in GetEnemyObjectsInRange(originWorld, range, square))
+        {
+            if (enemy.GetComponentInParent<IDamageAble>() is IDamageAble damageable)
+                found.Add(damageable);
+        }
+
+        return new List<IDamageAble>(found);
+    }
+
+    public List<Transform> GetEnemyTransformsInRange(Vector3 originWorld, int range, bool square = false)
+    {
+        var found = new HashSet<Transform>();
+        foreach (GameObject enemy in GetEnemyObjectsInRange(originWorld, range, square))
+            found.Add(enemy.transform);
+
+        return new List<Transform>(found);
+    }
+
+    private List<GameObject> GetEnemyObjectsInRange(Vector3 originWorld, int range, bool square = false)
+    {
+        var found = new List<GameObject>();
         Vector2Int originCell = board.WorldToCell(originWorld);
 
         foreach (Tile tile in board.GetTiles(originCell, range, square))
@@ -163,12 +184,11 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble
             foreach (GameObject enemy in tile.Enemies)
             {
                 if (enemy == null) continue;
-                if (enemy.GetComponentInParent<IDamageAble>() is IDamageAble damageable)
-                    found.Add(damageable);
+                found.Add(enemy);
             }
         }
 
-        return new List<IDamageAble>(found);
+        return found;
     }
 
     private void CheckTargetStillInRange()

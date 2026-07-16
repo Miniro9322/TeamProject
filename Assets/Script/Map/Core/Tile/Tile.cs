@@ -33,9 +33,6 @@ public partial class Tile : MonoBehaviour
     public bool HasEnemy => _enemies.Count > 0;
     public int EnemyCount => _enemies.Count;
     public int BlockedCount => Mathf.Min(_enemies.Count, BlockCapacity);
-    public int FreeBlock => Mathf.Max(0, BlockCapacity - BlockedCount);
-    public bool IsBlocking => BlockedCount > 0;
-    public bool IsBlockFull => BlockCapacity > 0 && BlockedCount >= BlockCapacity;
     public bool IsRangeCovered => _rangeCovers.Count > 0;
     public int RangeCoverCount => _rangeCovers.Count;
     public IReadOnlyCollection<GameObject> RangeCovers => _rangeCovers;
@@ -48,7 +45,7 @@ public partial class Tile : MonoBehaviour
     public bool IsSpecial => Terrain == TerrainType.Special;
     public bool IsEnemyLane => State.EnemyLane;
     public bool IsEnemySpawn => isEnemySpawn;
-    public bool IsEmpty => OccupantObject == null;
+    public bool HasUnit => OccupantObject != null;
 
  
     public GameObject UnitPrefab;

@@ -20,7 +20,10 @@ public class ArcherAttackState : HeroAttackState
         float cooldown = archer.SC[StatType.AS];
         float elapsed = Time.time - lastAttackTime;
         if (elapsed >= cooldown)
+        {
+            RotateToTarget();
             TryExecuteCurrentStep();
+        }
         else
             timer = elapsed;
     }
@@ -28,13 +31,13 @@ public class ArcherAttackState : HeroAttackState
     public override void Update()
     {
         base.Update();
-        if (stateMachine.CurrentState != this) return;
-        timer += Time.deltaTime;
-        if (timer >= archer.SC[StatType.AS])
-        {
-            timer = 0f;
-            TryExecuteCurrentStep();
-        }
+        //if (stateMachine.CurrentState != this) return;
+        //timer += Time.deltaTime;
+        //if (timer >= archer.SC[StatType.AS])
+        //{
+        //    timer = 0f;
+        //    TryExecuteCurrentStep();
+        //}
     }
 
     protected override void TryExecuteCurrentStep()

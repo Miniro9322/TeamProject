@@ -20,7 +20,10 @@ public class SwordManAttackState : HeroAttackState
         float cooldown = swordMan.SC[StatType.AS];
         float elapsed = Time.time - lastAttackTime;
         if (elapsed >= cooldown)
+        {
+            RotateToTarget();
             TryExecuteCurrentStep();
+        }
         else
             timer = elapsed;
     }
@@ -28,13 +31,13 @@ public class SwordManAttackState : HeroAttackState
     public override void Update()
     {
         base.Update();
-        if (stateMachine.CurrentState != this) return;
-        timer += Time.deltaTime;
-        if (timer >= swordMan.SC[StatType.AS])
-        {
-            timer = 0f;
-            TryExecuteCurrentStep();
-        }
+        //if (stateMachine.CurrentState != this) return;
+        //timer += Time.deltaTime;
+        //if (timer >= swordMan.SC[StatType.AS])
+        //{
+        //    timer = 0f;
+        //    TryExecuteCurrentStep();
+        //}
     }
 
     protected override void TryExecuteCurrentStep()
