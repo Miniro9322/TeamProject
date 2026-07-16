@@ -17,10 +17,31 @@ public class RangedAttackExecutor : IAttackExecutor
         await ctx.WaitForAnimEvent("Attack", ct);
 
         IObjectPool<Projectile> pool = ctx.getProjectilePool(data.projectilePrefab);
+        int damage = (int)(ctx.sc[StatType.ATK] * data.attackPer);
+
+        if (data.attackType == AttackType.Multiple)
+        {
+            List<Transform> enemies = ctx.getEnemyTargetsInRange(ctx.self.position, data.range, data.square);
+            List<Transform> targets = AttackTargetSelector.SelectTargets(enemies, data.attackCount, data.targetCount);
+
+            for (int i = 0; i < targets.Count; i++)
+            {
+                FireArrow(pool, ctx, targets[i], damage, data);
+                if (i < targets.Count - 1)
+                    await UniTask.Delay(System.TimeSpan.FromSeconds(data.shotInterval), cancellationToken: ct);
+            }
+        }
+        else
+        {
+            FireArrow(pool, ctx, ctx.target, damage, data);
+        }
+    }
+
+    private void FireArrow(IObjectPool<Projectile> pool, AttackContext ctx, Transform target, int damage, AttackDataSO data)
+    {
         Projectile arrow = pool.Get();
         arrow.transform.SetPositionAndRotation(ctx.muzzle.position, ctx.muzzle.rotation);
-        arrow.Launch(ctx.target, (int)(ctx.sc[StatType.ATK] * data.attackPer), pool,
-            ctx.getEnemiesInRange, data.attackType, data.range, data.square);
+        arrow.Launch(target, damage, pool, ctx.getEnemiesInRange, data.attackType, data.splashRange, data.splashSquare);
     }
 
     private string PickTrigger(AttackDataSO data)
