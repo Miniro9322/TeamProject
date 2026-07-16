@@ -9,7 +9,7 @@ public class GameLifeTimeScope : LifetimeScope
     [SerializeField] private UiManager UiManagerPrefab;
     [SerializeField] private EnviromentManager EnviromentManagerPrefab;
     [SerializeField] private GameManager GameManagerPrefab;
-    [SerializeField] private FacilityManager FacilityManagerPrefab;
+    [SerializeField] private FacilityManager FacilityManager;
     [SerializeField] private BuildingPrefabRegistry buildingPrefabRegistry;
     [SerializeField] private Canvas UiManagerParent;
     [SerializeField] private Light sunLight;
@@ -22,13 +22,13 @@ public class GameLifeTimeScope : LifetimeScope
             builder.RegisterComponentInNewPrefab(UiManagerPrefab, Lifetime.Singleton).UnderTransform(UiManagerParent.transform).AsSelf();
         builder.RegisterComponentInNewPrefab(EnviromentManagerPrefab, Lifetime.Singleton).AsSelf();
         builder.RegisterComponentInNewPrefab(GameManagerPrefab, Lifetime.Singleton).AsSelf();
-        builder.RegisterComponentInNewPrefab(FacilityManagerPrefab, Lifetime.Singleton).AsSelf();
         builder.RegisterInstance(buildingPrefabRegistry);
         builder.RegisterComponentOnNewGameObject<PoolManager>(Lifetime.Singleton).AsSelf();
         builder.Register<BuildingPool>(Lifetime.Singleton);
+        builder.Register<FacilityManager>(Lifetime.Singleton).AsSelf();
         builder.Register<BuffManager>(Lifetime.Singleton).As<ITickable>().AsSelf();
 
-        if(sunLight != null)
+        if (sunLight != null)
         {
             builder.RegisterBuildCallback(resolver =>
             {
@@ -40,7 +40,6 @@ public class GameLifeTimeScope : LifetimeScope
         //builder.RegisterComponentInHierarchy<ResourceTest>();
         builder.RegisterComponentInHierarchy<TopBar>();
         builder.RegisterComponentInHierarchy<DayNightButton>();
-        builder.RegisterComponentInHierarchy<ExpeditionButton>();
         builder.RegisterComponentInHierarchy<MapGame>();
         builder.RegisterComponentInHierarchy<WaveSpawner>().AsSelf();
         builder.RegisterBuildCallback(resolver =>

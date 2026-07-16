@@ -1,16 +1,18 @@
+using System.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 using VContainer;
 
 public class UiManager : MonoBehaviour
 {
     [SerializeField] private BuildingPanel buildingUi;
-    [SerializeField] private GameObject ExpeditionUi;
+    [SerializeField] private RequestSupportUi requestSupportUi;
     public bool BuildingUiOpen => buildingUi.gameObject.activeSelf;
 
     private void Awake()
     {
         buildingUi.gameObject.SetActive(false);
-        ExpeditionUi.SetActive(false);
+        requestSupportUi.gameObject.SetActive(false);
     }
 
     public void OpenBuildingUi(ProductionFacility facility)
@@ -24,13 +26,9 @@ public class UiManager : MonoBehaviour
         buildingUi.gameObject.SetActive(false);
     }
 
-    public void OpenExpeditoinUi()
+    public async UniTask OpenRequestSupportUi()
     {
-        ExpeditionUi.SetActive(true);
-    }
-
-    public void CloseExpeditoinUi()
-    {
-        ExpeditionUi.SetActive(false);
+        requestSupportUi.gameObject.SetActive(true);
+        await UniTask.WaitUntil(() => requestSupportUi.gameObject.activeSelf == false);
     }
 }

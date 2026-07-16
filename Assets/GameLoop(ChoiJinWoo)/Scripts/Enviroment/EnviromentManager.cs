@@ -31,6 +31,12 @@ public class EnviromentManager : MonoBehaviour
         this.gameManager = gameManager;
     }
 
+    private void Awake()
+    {
+        gameManager.ChangeToDay += ToggleDayNight;
+        gameManager.ChangeToNight += ToggleDayNight;
+    }
+
     private void Start()
     {
         SetDay();
@@ -97,13 +103,12 @@ public class EnviromentManager : MonoBehaviour
         if (isNight)
         {
             SetNight();
-            gameManager.OnNight();
+            gameManager.ChangeCanSpawnEnemy(true);
         }
         else
         {
             SetDay();
             OnDay?.Invoke();
-            gameManager.OnDay();
         }
     }
 }

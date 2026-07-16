@@ -6,7 +6,6 @@ public class FSM
 
     public void ChangeState(IState newState)
     {
-        var c = CurrentState;
         if (CurrentState == newState)
             return;
 

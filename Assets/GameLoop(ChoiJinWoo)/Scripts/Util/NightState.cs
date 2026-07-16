@@ -1,3 +1,5 @@
+using System;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 public class NightState : IState
@@ -10,16 +12,24 @@ public class NightState : IState
 
     public void Enter()
     {
-        gameManager.SpawnEnemy();
+        TestCode().Forget();
     }
 
     public void Exit()
     {
-        
+        gameManager.ChangeCanSpawnEnemy(false);
     }
 
     public void Update()
     {
         
+    }
+
+    private async UniTaskVoid TestCode()
+    {
+        await UniTask.WaitUntil(() => gameManager.CanSpawnEnemy);
+        gameManager.SpawnEnemy();
+        await UniTask.WaitForSeconds(3);
+        gameManager.OnResult();
     }
 }

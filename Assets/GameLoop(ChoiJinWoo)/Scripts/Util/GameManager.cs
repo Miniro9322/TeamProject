@@ -4,7 +4,7 @@ using VContainer;
 
 public class GameManager : MonoBehaviour
 {
-    FSM fsm = new();
+    private FSM fsm = new();
 
     IState day;
     IState night;
@@ -15,10 +15,16 @@ public class GameManager : MonoBehaviour
     private UiManager uiManager;
     private WaveSpawner waveSpawner;
     private int dayCount = 0;
+    private bool requestSupport = false;
     public int DayCount => dayCount;
     public bool CanBuild => canBuild;
+    public bool RequestSupport => requestSupport;
+    private bool canSpawnEnemy = false;
+    public bool CanSpawnEnemy => canSpawnEnemy;
 
     public event Action ChangeToDay;
+    public event Action ChangeToNight;
+    public event Action ExpandMap;
 
     [Inject]
     private void Construct(FacilityManager facilityManager, UiManager uiManager, WaveSpawner waveSpawner)
@@ -45,6 +51,7 @@ public class GameManager : MonoBehaviour
     public void OnNight()
     {
         fsm.ChangeState(night);
+        ChangeToNight?.Invoke();
     }
 
     public void OnDay()
@@ -71,5 +78,20 @@ public class GameManager : MonoBehaviour
     public void IncreaseDayCount()
     {
         dayCount++;
+    }
+
+    public void ChangeRequest(bool value)
+    {
+        requestSupport = value;
+    }
+
+    public void ExpandMapForce()
+    {
+        ExpandMap?.Invoke();
+    }
+
+    public void ChangeCanSpawnEnemy(bool value)
+    {
+        canSpawnEnemy = value;
     }
 }

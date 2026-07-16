@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using VContainer;
 
-public class FacilityManager : MonoBehaviour
+public class FacilityManager
 {
     private List<ProductionFacility> facilities = new();
     private Dictionary<ProductionType, int> products = new();
