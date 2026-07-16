@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
-using Unity.Android.Gradle.Manifest;
+
 using UnityEngine;
 using VContainer;
 
@@ -78,9 +78,11 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
     private bool _berserkOn;        // 이번 생존 동안 이미 발동했는지(중복 누적 방지)
     private float _baseMoveSpeed;   // 광폭화 원복용 기본값(ApplyData에서 스냅샷)
     private int _baseAttackPower;
+    private Vector3 _baseScale;     // 원래 스케일 — 풀 재사용 시 여기로 복구(분열체가 줄여놓은 걸 리셋)
     public bool IsShielded => Time.time < _shieldExpiry;
     protected virtual void Awake()
     {
+        _baseScale = transform.localScale; // 프리팹 원래 스케일 스냅샷(분열 축소 후 복구 기준)
         LoadStats();
         animator = GetComponent<Animator>();
         _move = new EnemyMovement(gameObject, animator, arriveSqr);
@@ -97,7 +99,8 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
         _attacking = false; // 죽은 시점 상태가 남아 다음 스폰의 공격/스킬을 막지 않게
         _shieldExpiry = 0f; // 재사용된 적에 이전 쉴드가 남지 않게 초기화
         _berserkOn = false;              // 풀링 재사용 시 광폭화 상태/버프 원복
-
+        SplitGeneration = 0;             // 일반 스폰은 원본(0). 분열체는 스폰 후 SetSplitGeneration으로 덮어씀
+        transform.localScale = _baseScale; // 분열체가 줄여놨어도 풀 재사용 시 원래 크기로 복구
         // 애니메이터는 SetActive로 리셋되지 않아 Die 상태에 얼어붙은 채 재사용됨.
         // Rebind로 트리거·파라미터·스테이트를 기본값으로 되돌리고 Update(0)로 즉시 반영.
         if (animator != null)
@@ -105,6 +108,7 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
             animator.Rebind();
             animator.Update(0f);
         }
+        
         _move.Resume();
         EnemyRegistry.Register(this);
         skillCts = new CancellationTokenSource();
@@ -165,7 +169,7 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
         {
             for (int i = 0; i < skills.Count; i++)
             {
-                if (skills[i] == null || skillRunning[i]) continue;
+                if (skills[i] == null || skillRunning[i] || skills[i].TriggerOnDeath) continue; // 온데스 스킬은 Die()에서만 발동
                 skillTimers[i] += Time.deltaTime;
                 // 공격 모션 중이면 시전 보류(타이머는 계속 쌓여서 공격 끝나면 바로 발동).
                 if (skillTimers[i] >= skills[i].cooldown && !_attacking)
@@ -283,6 +287,17 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
         if (IsDead || amount <= 0f) return;
         Hp = Mathf.Min(Hp + amount, MaxHp);
     }
+
+    // 분열 등에서 스폰 직후 현재 체력을 물려줄 때 사용.
+    // 스폰 시 OnEnable이 LoadStats로 풀피 리셋하므로, 그 뒤에 이걸 호출해 현재 체력으로 덮어쓴다.
+    public void SetCurrentHp(float hp) => Hp = Mathf.Clamp(hp, 1f, MaxHp);
+
+    // 분열 세대. 0=원본, 분열체는 부모+1. 무한 분열 방지용(SplitSkill이 maxGeneration으로 제한).
+    public int SplitGeneration { get; private set; }
+    public void SetSplitGeneration(int gen) => SplitGeneration = gen;
+
+    // 스폰 직후 인스턴스 스케일을 원래 크기의 mul배로 설정(분열체 축소용). OnEnable에서 매 스폰 원복되므로 풀 재사용 안전.
+    public void SetScaleMul(float mul) => transform.localScale = _baseScale * mul;
     public virtual void Attack()
     {
         if (IsDead || Board == null || skillCts == null) return;
@@ -358,6 +373,7 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
     {
         if (IsDead) return;
         IsDead = true;                 // 스킬/공격/이동 루프가 !IsDie 조건으로 스스로 멈춘다
+        TriggerDeathSkills();          // 분열 등 온데스 스킬 — 이동 정지/보드 제거 전이라 위치·경로가 유효
         _move.Stop();
         if (Board != null) Board.RemoveEnemy(gameObject); // 죽는 즉시 칸에서 빠져 저지·타겟 대상서 제외
         // waveSpawner.EnemyDieEvent();                 // 이동 정지 + Suspended 해제
@@ -365,6 +381,15 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
         // skillCts가 없으면(이미 비활성) 연출 없이 바로 디스폰.
         if (skillCts == null) { Despawn(); return; }
         DieRoutine(skillCts.Token).Forget();
+    }
+
+    // 죽는 순간 TriggerOnDeath 스킬(분열 등)을 발동. 분열은 동기적으로 스폰하므로 즉시 완료된다.
+    private void TriggerDeathSkills()
+    {
+        if (skills == null) return;
+        for (int i = 0; i < skills.Count; i++)
+            if (skills[i] != null && skills[i].TriggerOnDeath)
+                skills[i].Execute(this, CancellationToken.None).Forget();
     }
     private async UniTask DieRoutine(CancellationToken token)
     {

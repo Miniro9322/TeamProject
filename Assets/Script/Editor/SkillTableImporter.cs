@@ -85,6 +85,7 @@ public static class SkillTableImporter
                 case "Summon": return typeof(SummonSkillDataSO);
                 case "Heal": return typeof(HealSkillDataSO); // 나중에 스킬 추가
                 case "Shield": return typeof(ShieldSkillDataSO);
+                case "Split": return typeof(SplitSkillDataSO);
                 
             }
         }
@@ -125,6 +126,9 @@ public static class SkillTableImporter
                 break;
             case ShieldSkillDataSO shield:
                 shield.value = d.Value ?? 0f;
+                break;
+            case SplitSkillDataSO split:
+                split.value = d.Value ?? 0f;
                 break;
         }
     }

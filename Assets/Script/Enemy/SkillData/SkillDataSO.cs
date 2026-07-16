@@ -27,5 +27,8 @@ public abstract class SkillDataSO : ScriptableObject
     // 애니메이션 없이 계속 도는 배경 오라(DamageZone 등)는 false로 오버라이드해 일반 공격을 막지 않게 한다.
     public virtual bool BlocksBasicAttack => true;
 
+    // true면 쿨다운 자동 시전 대상에서 제외되고, 유닛이 죽을 때(Die) 발동된다. 분열(Split) 등에 사용.
+    public virtual bool TriggerOnDeath => false;
+
     public abstract UniTask Execute(EnemyBase owner, CancellationToken token);
 }
