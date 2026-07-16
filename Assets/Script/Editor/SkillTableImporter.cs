@@ -70,7 +70,13 @@ public static class SkillTableImporter
         var category = (d.Category ?? "").Trim();
         var type = (d.Type ?? "").Trim();
 
-        if (category == "Attack") return typeof(AttackSkillDataSO);
+        if (category == "Attack")
+        {
+            switch (type)
+            {
+                case "DamageZone" : return typeof(DamageZoneSO);
+            }
+        } 
         if (category == "Utility")
         {
             switch (type)
@@ -78,6 +84,9 @@ public static class SkillTableImporter
                 case "Dash": return typeof(DashSkillDataSO);
                 case "Summon": return typeof(SummonSkillDataSO);
                 case "Heal": return typeof(HealSkillDataSO); // 나중에 스킬 추가
+                case "Shield": return typeof(ShieldSkillDataSO);
+                case "Split": return typeof(SplitSkillDataSO);
+                
             }
         }
         return null;
@@ -92,6 +101,8 @@ public static class SkillTableImporter
 
         switch (so)
         {
+            // DamageZoneSO 등 AttackSkillDataSO 파생형도 여기서 처리(damage/tickInterval 공통).
+            // 파생 전용 필드가 생기면 이 case '위에' 구체 타입 case를 추가할 것(구체 타입이 먼저 매칭돼야 함).
             case AttackSkillDataSO attack:
                 attack.damage = d.Damage ?? 0f;
                 attack.tickInterval = d.TickInterval ?? 0f;
@@ -112,6 +123,12 @@ public static class SkillTableImporter
                 heal.value = d.Value ?? 0f;            // value = 틱당 기본 힐량
                 heal.valueScale = d.ValueScale ?? 0f;  // 스테이지당 증가
                 heal.tickInterval = d.TickInterval ?? 0f;
+                break;
+            case ShieldSkillDataSO shield:
+                shield.value = d.Value ?? 0f;
+                break;
+            case SplitSkillDataSO split:
+                split.value = d.Value ?? 0f;
                 break;
         }
     }

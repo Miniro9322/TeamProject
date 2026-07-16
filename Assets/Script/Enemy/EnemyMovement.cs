@@ -31,7 +31,10 @@ public class EnemyMovement
     /// <summary>대시/넉백 등 스킬이 직접 위치를 옮기는 동안 true — 일반 경로 이동이 위치를 덮어쓰지 않게 멈춘다.</summary>
     public bool Suspended { get; set; }
 
-    /// <summary>본진 도달 신호 — 구독자(EnemyBase)가 OnArrivedAtCore + 디스폰을 처리한다.</summary>
+    /// <summary>공중(지형 무시). true면 중간 경로점을 건너뛰고 본진(마지막 웨이포인트)으로 직선 이동한다.</summary>
+    public bool Flying { get; set; }
+
+    /// <summary>본진 도달 신호 — 구독자(EnemyBase)가 OnArrivedAtCore + 디스폰을 처리한다.</summary>    
     public event System.Action ArrivedAtCore;
 
     public EnemyMovement(GameObject go, Animator animator, float arriveSqr)
@@ -100,6 +103,14 @@ public class EnemyMovement
 
         // 웨이포인트는 타일 윗면 기준(offset 0)으로 받는다.
         IReadOnlyList<Vector3> src = waypoints ?? board.GetWaypoints(0f);
+
+        if (Flying && src.Count > 0)
+        {
+            Vector3 startW = snapToStart ? src[0] : _tf.position;
+            var flying = FlyingPathfinder.BuildWaypoints(board, startW, src[src.Count - 1],0.5f);
+            if (flying.Count > 0) src = flying;
+        }
+
         foreach (Vector3 p in src) _path.Add(p);
 
         if (_path.Count == 0)
@@ -108,7 +119,6 @@ public class EnemyMovement
             return;
         }
 
-        // MoveSpeed 기본값 0 = 제자리(이동 버그처럼 보이지만 대개 EnemyTable 행/로드 누락). 자가진단.
         if (moveSpeed <= 0f)
             Debug.LogWarning($"[{_go.name}] MoveSpeed={moveSpeed} — 제자리에 멈춥니다. EnemyTable '{enemyKey}' 행 확인.", _go);
 
@@ -141,7 +151,7 @@ public class EnemyMovement
         if (!_moving || !active || Board == null || Suspended) { SetMoving(false); return; }
 
         // 근접 영웅에게 저지당하면 그 자리에서 정지(타일 저지 시스템). 풀리면 다시 전진.
-        bool advancing = !Board.IsBlocked(_go);
+        bool advancing = !Board.IsBlocked(_go)||_tf.GetComponent<EnemyBase>().IsUnJudged||_tf.GetComponent<EnemyBase>().IsFly;
         if (advancing)
         {
             Vector3 target = _path[_pathIndex];
