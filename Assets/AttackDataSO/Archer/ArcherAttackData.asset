@@ -14,13 +14,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::AttackDataSO
   attackPer: 1
   range: 10
-  square: 0
+  rangeShape: 0
   attackType: 0
+  targetMode: 0
   attackCount: 1
   targetCount: 1
   shotInterval: 0.1
-  splashRange: 1
-  splashSquare: 0
+  areaShape: 0
+  areaRange: 1
+  lineLength: 2
+  chainRange: 2
+  chainCount: 3
+  chainFalloff: 0.8
   selectMode: 0
   animTriggers:
   - Attack
