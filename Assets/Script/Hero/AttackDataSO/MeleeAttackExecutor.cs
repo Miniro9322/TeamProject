@@ -9,10 +9,31 @@ public class MeleeAttackExecutor : IAttackExecutor
 
     public async UniTask Execute(AttackDataSO data, AttackContext ctx, CancellationToken ct)
     {
-        ctx.anim.SetTrigger(PickTrigger(data));
-        await ctx.WaitForAnimEvent("Attack", ct);
+        float interval = ctx.sc[StatType.AS] > 0f ? 1f / ctx.sc[StatType.AS] : 1f; // AS = 초당 공격 횟수
+        AttackAnimSpeedUtil.SetSpeed(ctx.anim, AttackAnimSpeedUtil.ComputeScale(data, interval));
 
-        AttackDamageUtil.ApplyInstantDamage(data, ctx);
+        ctx.anim.SetTrigger(PickTrigger(data));
+        
+        try
+        {
+            float windowDuration = AttackAnimSpeedUtil.ComputeWindowDuration(data, interval);
+            using var window = new AttackEventWindow(ctx.animEvents, "Attack", "Recovery", windowDuration);
+            int hits = 0;
+            while (await window.MoveNextHit(ct))
+            {
+                AttackDamageUtil.ApplyInstantDamage(data, ctx);
+                hits++;
+            }
+            // 고속 공격속도로 인해 애니메이터가 "Attack" 이벤트를 유실하면(재트리거/전이 도중)
+            // 타격이 0회가 되어 데미지가 통째로 사라진다. window가 취소 없이 정상 종료됐다면
+            // 최소 1회는 보장 적용한다. (취소 시엔 MoveNextHit가 예외를 던져 여기 도달하지 않음)
+            if (hits == 0)
+                AttackDamageUtil.ApplyInstantDamage(data, ctx);
+        }
+        finally
+        {
+            AttackAnimSpeedUtil.SetSpeed(ctx.anim, 1f);
+        }
     }
 
     private string PickTrigger(AttackDataSO data)

@@ -12,32 +12,22 @@ public class SwordManAttackState : HeroAttackState
         this.swordMan = swordMan;
     }
 
+    protected override bool IsBusy => runner != null && runner.IsExecuting;
+
     public override void Enter()
     {
         base.Enter();
         runner ??= new HeroAttackRunner(swordMan.BasePattern, swordMan.Selectors, swordMan.Procs, new MeleeAttackExecutor());
 
-        float cooldown = swordMan.SC[StatType.AS];
+        float interval = swordMan.SC[StatType.AS] > 0f ? 1f / swordMan.SC[StatType.AS] : 1f;
         float elapsed = Time.time - lastAttackTime;
-        if (elapsed >= cooldown)
+        if (elapsed >= interval)
         {
             RotateToTarget();
             TryExecuteCurrentStep();
         }
         else
             timer = elapsed;
-    }
-
-    public override void Update()
-    {
-        base.Update();
-        //if (stateMachine.CurrentState != this) return;
-        //timer += Time.deltaTime;
-        //if (timer >= swordMan.SC[StatType.AS])
-        //{
-        //    timer = 0f;
-        //    TryExecuteCurrentStep();
-        //}
     }
 
     protected override void TryExecuteCurrentStep()

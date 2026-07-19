@@ -19,6 +19,11 @@ public class AttackDataSO : ScriptableObject
     public AnimSelectMode selectMode = AnimSelectMode.Sequential;
     public string[] animTriggers = { "Attack" };
     public Projectile projectilePrefab;
+
+    // 이 공격이 재생하는 애니메이션 클립의 기본 길이(초). 0이면 배속을 걸지 않는다(안전 폴백).
+    // executor가 이 값과 공격 간격(1/AS)의 비율로 animator.speed를 스케일해
+    // 클립이 정확히 간격 안에서 끝나도록 맞춘다.
+    public float clipLength = 0f;
 }
 
 public enum AttackType
