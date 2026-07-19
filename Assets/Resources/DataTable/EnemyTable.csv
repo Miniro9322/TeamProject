@@ -1,4 +1,6 @@
-Name,Attack,AttackSpeed,Range,Defense,Health,MoveSpeed,UpHealthScale,UpDefenseScale,Skills,Type,Class
-SpiderNormal,10,1,1,1,100,5,10,1,,Melee,Normal
-SpiderToxin,15,1,1,2,80,6,8,1,SpiderToxin_Dash,Melee,Normal
-SpiderKing,30,1,2,5,500,4,150,2,SpiderKing_Summon,Melee,Elite
+Name,Attack,AttackSpeed,Range,Defense,Health,MoveSpeed,UpHealthScale,UpDefenseScale,Skills,Type,Class,Attribute
+SpiderNormal,10,1,1,1,100,5,10,1,Spider_Split,Melee,Normal,None
+SpiderToxin,15,1,1,2,80,6,8,1,SpiderToxin_Dash,Melee,Normal,None
+SpiderKing,30,1,2,5,500,4,150,2,SpiderKing_Summon,Melee,Elite,None
+Bat,20,0.7,5,3,100,5,10,1,DamageZoneSkill,Ranged,Normal,Fly
+Scorpion,15,1,1,1,100,5,10,1,Scorpion_Shield,Melee,Normal,Berserk

@@ -3,15 +3,14 @@ using UnityEngine;
 
 public class SpiderNormal : EnemyBase
 {
-    public float hp;
-    public float speed;
+    public float hp =>Hp;
+    public float speed =>MoveSpeed;
     public int attack;
     public int def; //테스트용 인스펙터 확인용 스탯들
 
-    private void Start()
+    protected override void OnEnable()
     {
-        hp = Hp;
-        speed = MoveSpeed;
+        base.OnEnable();
         attack = AttackPower;
         def = Defense; //테스트용
     }
