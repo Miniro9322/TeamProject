@@ -17,7 +17,7 @@ public class AttackRangeTester : MonoBehaviour
         for (int dy = -range; dy <= range; dy++)
         {
             var cell = origin + new Vector2Int(dx, dy);
-            if (!EnemyTargeting.InRange(origin, cell, range)) continue;   // 마름모만 통과
+            if (!EnemyTargeting.InRange(origin, cell, range)) continue;
             Gizmos.DrawCube(EnemyGridService.CellToWorld(cell), Vector3.one * 0.9f);
         }
     }

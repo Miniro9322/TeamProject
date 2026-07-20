@@ -14,8 +14,8 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
     private float[] skillTimers;
     private bool[] skillRunning;
     private CancellationTokenSource skillCts;
-    public float Hp { get; protected set; }
-    public float MaxHp { get; protected set; }
+    [field: SerializeField] public float Hp { get; protected set; }   // 인스펙터 표시용(런타임 값 확인). 값은 ApplyData/재생/피격이 갱신.
+    [field: SerializeField] public float MaxHp { get; protected set; }
     public int Defense { get; protected set; }
     public int AttackPower { get; protected set; }
     public float AttackSpeed { get; protected set; }
@@ -29,7 +29,10 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
     public bool IsFly      => (Attribute & EnemyAttribute.Fly)      != 0; // 공중
     public bool IsUnJudged => (Attribute & EnemyAttribute.UnJudged) != 0; // 저지 불가
     public bool IsBerserk => (Attribute & EnemyAttribute.Berserk) != 0; //폭주
+    public bool IsHitsShield => (Attribute & EnemyAttribute.HitsShield) != 0; // 타수 보호막
+    public bool IsRegeneration => (Attribute & EnemyAttribute.Regeneration) != 0; // 재생
     public bool IsDead { get; protected set; }
+    public bool IsSpawnInvincible = false;
     private StatContainer sc = new();
     public StatContainer SC => sc;
     public Animator animator;
@@ -49,6 +52,10 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
     protected PoolManager Pool => _pool ??= PoolManager.Instance; // 파생 클래스(Bat 등)도 재사용
     
     private WaveSpawner waveSpawner;
+    // 이 적이 속한 스포너(레인). 스폰 시 스포너가 SetOwner로 주입 → 죽거나 본진 도달 시 그 스포너의 카운트만 감소.
+    // 분열체는 부모의 Owner를 그대로 물려받아 같은 레인 카운트에 반영된다.
+    public WaveSpawner Owner => waveSpawner;
+    public void SetOwner(WaveSpawner spawner) => waveSpawner = spawner;
 
     private bool AnySkillRunning()
     {
@@ -76,8 +83,6 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
     private float _shieldExpiry;  // Time.time 기준 만료 시각 — 코루틴 없이 지연 만료(풀링 안전)
 
     private bool _berserkOn;        // 이번 생존 동안 이미 발동했는지(중복 누적 방지)
-    private float _baseMoveSpeed;   // 광폭화 원복용 기본값(ApplyData에서 스냅샷)
-    private int _baseAttackPower;
     private Vector3 _baseScale;     // 원래 스케일 — 풀 재사용 시 여기로 복구(분열체가 줄여놓은 걸 리셋)
     public bool IsShielded => Time.time < _shieldExpiry;
     protected virtual void Awake()
@@ -90,19 +95,13 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
     }
     protected virtual void OnEnable()
     {
-        // Hp = MaxHp;
-        // IsDie = false;
-        // MoveSpeed = _baseMoveSpeed;
-        // AttackPower = _baseAttackPower;
         LoadStats();
         LoadStatContainer();
-        _attacking = false; // 죽은 시점 상태가 남아 다음 스폰의 공격/스킬을 막지 않게
-        _shieldExpiry = 0f; // 재사용된 적에 이전 쉴드가 남지 않게 초기화
-        _berserkOn = false;              // 풀링 재사용 시 광폭화 상태/버프 원복
-        SplitGeneration = 0;             // 일반 스폰은 원본(0). 분열체는 스폰 후 SetSplitGeneration으로 덮어씀
-        transform.localScale = _baseScale; // 분열체가 줄여놨어도 풀 재사용 시 원래 크기로 복구
-        // 애니메이터는 SetActive로 리셋되지 않아 Die 상태에 얼어붙은 채 재사용됨.
-        // Rebind로 트리거·파라미터·스테이트를 기본값으로 되돌리고 Update(0)로 즉시 반영.
+        _attacking = false;
+        _shieldExpiry = 0f; 
+        _berserkOn = false;             
+        SplitGeneration = 0;           
+        transform.localScale = _baseScale; 
         if (animator != null)
         {
             animator.Rebind();
@@ -115,6 +114,7 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
         _move.ArrivedAtCore += HandleArrivedAtCore;
         RunSkillLoop(skillCts.Token).Forget();
         RunAttackLoop(skillCts.Token).Forget();
+        if(IsRegeneration)Regeneration(skillCts.Token).Forget();
     }
 
     protected virtual void OnDisable()
@@ -142,10 +142,15 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
         sc.AddStat(StatType.AS,AttackSpeed);
         sc.AddStat(StatType.SPD,MoveSpeed);
     }
+    // 재생 특성 회복량(초당 최대체력 비율). 매 프레임 deltaTime만큼 나눠 채워 부드럽게 차오른다.
+    private const float RegenPerSecond = 0.01f; // 초당 1%
+
     protected virtual void Update()
     {
         _move.Tick(!IsDead, MoveSpeed); // active=사망 아님 → 원본 게이트(!IsDie)와 동일
     }
+
+    // 초당 MaxHp*RegenPerSecond를 프레임 단위로 나눠 회복 → 1초마다 툭툭 차는 게 아니라 연속으로 차오름.
 
     // 본진 도달 시 EnemyMovement가 이벤트로 호출. 도달 후 처리·디스폰은 본체가 쥔다.
     private void HandleArrivedAtCore()
@@ -156,7 +161,7 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
 
     protected virtual void OnArrivedAtCore()
     {
-        // waveSpawner.EnemyDieEvent();
+        waveSpawner?.EnemyDieEvent(); // 본진 도달로 필드에서 사라짐 → 소유 레인 카운트 감소
         Board.RemoveEnemy(gameObject);
     }
     private async UniTask RunSkillLoop(CancellationToken token)
@@ -234,8 +239,6 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
         MaxHp = data.Health+(gameManager.DayCount*data.UpHealthScale);
         Hp = MaxHp;
         MoveSpeed = data.MoveSpeed;
-        _baseMoveSpeed = MoveSpeed;      
-        _baseAttackPower = AttackPower;
         Type = ParseEnum(data.Type, EnemyType.Melee);     
         Class = ParseEnum(data.Class, EnemyClass.Normal); 
         Attribute = ParseAttribute(data.Attribute);
@@ -270,9 +273,17 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
     public void TakeDamage(int damage)
     {
         if(IsDead)return;
+        if(IsSpawnInvincible)return;
         int reduce = Defense + (IsShielded ? Mathf.RoundToInt(_damageBlock) : 0);
-        int hitDamage = Mathf.Max(1, damage - reduce);                         
-        Hp -= hitDamage;
+        int hitDamage = Mathf.Max(1, damage - reduce);
+        if(IsHitsShield)
+        {
+            Hp -= 1f; //무조건 1데미지
+        }
+        else
+        {
+            Hp -= hitDamage;
+        }                     
         if (!_berserkOn && Hp < MaxHp * 0.5f && IsBerserk)
         {
             _berserkOn = true;
@@ -286,6 +297,15 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
     {
         if (IsDead || amount <= 0f) return;
         Hp = Mathf.Min(Hp + amount, MaxHp);
+    }
+    private async UniTask Regeneration(CancellationToken token)
+    {
+        while(!IsDead)
+        {
+            if(Hp<MaxHp)
+            Hp = Mathf.Min(Mathf.Max(1f,Hp + MaxHp * RegenPerSecond * Time.deltaTime), MaxHp);
+            await UniTask.Yield(token);
+        }
     }
 
     // 분열 등에서 스폰 직후 현재 체력을 물려줄 때 사용.
@@ -373,12 +393,9 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
     {
         if (IsDead) return;
         IsDead = true;                 // 스킬/공격/이동 루프가 !IsDie 조건으로 스스로 멈춘다
-        TriggerDeathSkills();          // 분열 등 온데스 스킬 — 이동 정지/보드 제거 전이라 위치·경로가 유효
         _move.Stop();
         if (Board != null) Board.RemoveEnemy(gameObject); // 죽는 즉시 칸에서 빠져 저지·타겟 대상서 제외
-        // waveSpawner.EnemyDieEvent();                 // 이동 정지 + Suspended 해제
-
-        // skillCts가 없으면(이미 비활성) 연출 없이 바로 디스폰.
+        waveSpawner?.EnemyDieEvent(); // 분열(TriggerDeathSkills)로 카운트를 먼저 늘린 뒤 여기서 감소 → 순서 안전
         if (skillCts == null) { Despawn(); return; }
         DieRoutine(skillCts.Token).Forget();
     }
@@ -419,6 +436,7 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
 
         var info = animator.GetCurrentAnimatorStateInfo(layer);
         await UniTask.Delay(TimeSpan.FromSeconds(info.length / Mathf.Max(0.01f, animator.speed)), cancellationToken: token);
+        TriggerDeathSkills();
     }
 
     // 디스폰 지점. 지금은 파괴. 오브젝트 풀링 도입 시 이 메서드만 override해서 pool.Release(this)로 교체.
@@ -428,5 +446,3 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
     }
 
 }
-
-

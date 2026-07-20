@@ -75,6 +75,7 @@ public static class SkillTableImporter
             switch (type)
             {
                 case "DamageZone" : return typeof(DamageZoneSO);
+                case "Explosived" : return typeof(ExplosiveSkillSO);
             }
         } 
         if (category == "Utility")

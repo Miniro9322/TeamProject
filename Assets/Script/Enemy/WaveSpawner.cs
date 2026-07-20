@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
+using TMPro;
 using UnityEngine;
 using VContainer;
 
@@ -10,7 +11,11 @@ public class WaveSpawner : MonoBehaviour
 
     [Tooltip("적이 따라갈 격자 맵. 인스펙터에서 주입(Find 함수 미사용 지침).")]
     [SerializeField] private MapBoard board;
+    [Tooltip("이 스포너가 담당하는 지역(레인) 번호. SpawnerManager가 이 값으로 매핑한다.")]
+    [SerializeField] private int region = 1;
+    public int Region => region;
     public int Enemycount;
+    public TMP_Text text;
     private WaveTable waveTable;
     private IReadOnlyList<Vector3> waypoints; // 스폰→본진 경로. 맵당 1회 계산해 모든 적이 공유.
 
@@ -19,7 +24,6 @@ public class WaveSpawner : MonoBehaviour
     [Inject] public void Construct(PoolManager pool) => _pool = pool;
     
     public event Action EnemyAllClear;
-    
     private void Start()
     {
         waveTable = DataTableManager.Get<WaveTable>(DataTableIds.Wave);
@@ -33,21 +37,30 @@ public class WaveSpawner : MonoBehaviour
             Debug.LogWarning("WaveSpawner: MapBoard가 주입되지 않았습니다. 적이 이동하지 않습니다.", this);
         else
         {
-            waypoints = board.GetWaypoints(0f); // 타일 윗면 기준. 유닛별 높이는 EnemyBase가 더함.
-            EnemyGridService.mapBoard = board;  // 공격범위 판정 서비스도 같은 보드 사용(스폰 시작 전 1회)
+            waypoints = board.GetWaypoints(0f); 
+            EnemyGridService.mapBoard = board;
         }
        
     }
     public void SpawnWave(int currentStage)
     {
         Enemycount =0;
-        foreach(var wave in waveTable.GetWave(currentStage))
+        foreach(var wave in waveTable.GetWave(1,currentStage))
         {
-         
             SpawnWaveRout(wave).Forget();
             Enemycount += wave.Count;
         }
         Debug.Log($"총마릿수 : {Enemycount}");
+    }
+    public void SpawnWave(int region,int currentStage)
+    {
+        Enemycount =0;
+        foreach(var wave in waveTable.GetWave(region,currentStage))
+        {
+            SpawnWaveRout(wave).Forget();
+            Enemycount += wave.Count;
+        }
+        Debug.Log($"{region}지역 총마릿수 : {Enemycount}");
     }
 
     private async UniTask SpawnWaveRout(WaveTable.Data wave)
@@ -65,7 +78,10 @@ public class WaveSpawner : MonoBehaviour
             
             var go = (_pool ??= PoolManager.Instance).Spawn(prefab, Vector3.zero, Quaternion.identity);
             if (go.TryGetComponent(out EnemyBase enemy))
-                enemy.EnterMap(board, waypoints); // 보드 주입 + 스폰→본진 이동 시작
+            {
+                enemy.SetOwner(this);              // 이 레인 소속으로 지정 → 죽을 때 이 스포너 카운트 감소
+                enemy.EnterMap(board, waypoints);  // 보드 주입 + 스폰→본진 이동 시작
+            }
 
             if (i < wave.Count - 1 && wave.Delay > 0f)
             await UniTask.Delay(TimeSpan.FromSeconds(wave.Delay));
@@ -77,6 +93,34 @@ public class WaveSpawner : MonoBehaviour
         if(Enemycount<=0)
         {
             EnemyAllClear?.Invoke();
+        }
+    }
+
+    // 분열 등으로 런타임에 추가로 생긴 적을 카운트에 반영(스폰 시점에 호출).
+    // 이렇게 미리 더해두면, 그 분열체가 죽을 때 EnemyDieEvent 감소와 상쇄되어 전멸 시 정확히 0이 된다.
+    public void AddSpawnCount(int n) => Enemycount += n;
+    public void Waveinformation(int currentSatge)
+    {
+        text.text = $"1지역 스테이지 {currentSatge}\n";
+        foreach(var w in waveTable.GetWave(1,currentSatge))
+        {
+            text.text += $"{DataTableManager.StringTable.Get(w.MonsterName)} {w.Count}마리 \n";
+        }
+    }
+    public void WaveinformationSecond(int currentSatge)
+    {
+        text.text = $"2지역 스테이지 {currentSatge}\n";
+        foreach(var w in waveTable.GetWave(2,currentSatge))
+        {
+            text.text += $"{DataTableManager.StringTable.Get(w.MonsterName)} {w.Count}마리 \n";
+        }
+    }
+    public void Waveinformation3rd(int currentSatge)
+    {
+        text.text = $"3지역 스테이지 {currentSatge}\n";
+        foreach(var w in waveTable.GetWave(3,currentSatge))
+        {
+            text.text += $"{DataTableManager.StringTable.Get(w.MonsterName)} {w.Count}마리 \n";
         }
     }
 }

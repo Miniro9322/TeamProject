@@ -4,7 +4,10 @@ using UnityEngine;
 public static class DataTableManager
 {
     private static readonly Dictionary<string, DataTable> tables = new Dictionary<string, DataTable>();
-
+    public static StringTable StringTable => Get<StringTable>(DataTableIds.String);
+    public static EnemyTable EnemyTable => Get<EnemyTable>(DataTableIds.Enemy);
+    public static WaveTable WaveTable => Get<WaveTable>(DataTableIds.Wave);
+    public static SkillTable SkillTable => Get<SkillTable>(DataTableIds.Skill);
     static DataTableManager()
     {
         Init();
