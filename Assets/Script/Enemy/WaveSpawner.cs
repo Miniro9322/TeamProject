@@ -10,14 +10,16 @@ public class WaveSpawner : MonoBehaviour
 
     [Tooltip("적이 따라갈 격자 맵. 인스펙터에서 주입(Find 함수 미사용 지침).")]
     [SerializeField] private MapBoard board;
-
+    public int Enemycount;
     private WaveTable waveTable;
     private IReadOnlyList<Vector3> waypoints; // 스폰→본진 경로. 맵당 1회 계산해 모든 적이 공유.
 
     // 스코프에 등록되면 주입됨. 아니면 Spawn 시 Instance로 폴백.
     private PoolManager _pool;
     [Inject] public void Construct(PoolManager pool) => _pool = pool;
-
+    
+    public event Action EnemyAllClear;
+    
     private void Start()
     {
         waveTable = DataTableManager.Get<WaveTable>(DataTableIds.Wave);
@@ -38,10 +40,14 @@ public class WaveSpawner : MonoBehaviour
     }
     public void SpawnWave(int currentStage)
     {
+        Enemycount =0;
         foreach(var wave in waveTable.GetWave(currentStage))
         {
+         
             SpawnWaveRout(wave).Forget();
+            Enemycount += wave.Count;
         }
+        Debug.Log($"총마릿수 : {Enemycount}");
     }
 
     private async UniTask SpawnWaveRout(WaveTable.Data wave)
@@ -63,6 +69,14 @@ public class WaveSpawner : MonoBehaviour
 
             if (i < wave.Count - 1 && wave.Delay > 0f)
             await UniTask.Delay(TimeSpan.FromSeconds(wave.Delay));
+        }
+    }
+    public void EnemyDieEvent()
+    {
+        Enemycount--;
+        if(Enemycount<=0)
+        {
+            EnemyAllClear?.Invoke();
         }
     }
 }

@@ -12,29 +12,22 @@ public class ArcherAttackState : HeroAttackState
         this.archer = archer;
     }
 
+    protected override bool IsBusy => runner != null && runner.IsExecuting;
+
     public override void Enter()
     {
         base.Enter();
         runner = new HeroAttackRunner(archer.BasePattern, archer.Selectors, archer.Procs, new RangedAttackExecutor());
 
-        float cooldown = archer.SC[StatType.AS];
+        float interval = archer.SC[StatType.AS] > 0f ? 1f / archer.SC[StatType.AS] : 1f;
         float elapsed = Time.time - lastAttackTime;
-        if (elapsed >= cooldown)
-            TryExecuteCurrentStep();
-        else
-            timer = elapsed;
-    }
-
-    public override void Update()
-    {
-        base.Update();
-        if (stateMachine.CurrentState != this) return;
-        timer += Time.deltaTime;
-        if (timer >= archer.SC[StatType.AS])
+        if (elapsed >= interval)
         {
-            timer = 0f;
+            RotateToTarget();
             TryExecuteCurrentStep();
         }
+        else
+            timer = elapsed;
     }
 
     protected override void TryExecuteCurrentStep()

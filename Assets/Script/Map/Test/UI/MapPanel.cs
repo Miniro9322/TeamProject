@@ -56,8 +56,11 @@ public class MapPanel : MonoBehaviour
     {
         GUILayout.BeginArea(rect, GUI.skin.box);
         GUILayout.Label("맵 테스트");
+
+        GUI.enabled = !data.Holding; // 유닛 집은 이동 중에는 버튼 비활성화(회색·클릭 불가).
         DrawPath();
         DrawUnits();
+        GUI.enabled = true;          // 이후 GUI에 영향 없도록 원복.
 
         GUILayout.EndArea();
     }

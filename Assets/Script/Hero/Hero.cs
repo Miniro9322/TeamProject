@@ -39,9 +39,7 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble
     protected GameObject target;
     public GameObject Target => target;
 
-    [SerializeField] private float attackSpeed;
     [SerializeField] private StatDataSO statData;
-    public float AttackSpeed => attackSpeed;
 
     [SerializeField] private MapBoard board;
     public MapBoard Board => board;
@@ -49,7 +47,8 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble
     protected Tile currentTile;
     public Tile CurrentTile => currentTile;
     //private List<Tile> attackRangedTiles;
-    protected int range = 1;
+    [SerializeField] protected int range = 1;
+    [SerializeField] protected RangeShape rangeShape = RangeShape.Diamond;
 
     private StatContainer sc = new();
     public StatContainer SC => sc;
@@ -146,7 +145,7 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble
 
     private void AcquireTargetFromTiles()
     {
-        foreach (Tile tile in board.GetTiles(origin, range, false))
+        foreach (Tile tile in TileShapeQuery.GetTiles(board, origin, range, rangeShape))
         {
             foreach (GameObject enemy in tile.Enemies)
             {
@@ -158,27 +157,87 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble
         }
     }
 
-    public List<IDamageAble> GetEnemiesInRange(Vector3 originWorld, int range, bool square = false)
+    public List<IDamageAble> GetEnemiesInRange(Vector3 originWorld, int range, RangeShape shape = RangeShape.Diamond)
     {
         var found = new HashSet<IDamageAble>();
-        Vector2Int originCell = board.WorldToCell(originWorld);
-
-        foreach (Tile tile in board.GetTiles(originCell, range, square))
+        foreach (GameObject enemy in GetEnemyObjectsInRange(originWorld, range, shape))
         {
-            foreach (GameObject enemy in tile.Enemies)
-            {
-                if (enemy == null) continue;
-                if (enemy.GetComponentInParent<IDamageAble>() is IDamageAble damageable)
-                    found.Add(damageable);
-            }
+            if (enemy.GetComponentInParent<IDamageAble>() is IDamageAble damageable)
+                found.Add(damageable);
         }
 
         return new List<IDamageAble>(found);
     }
 
+    public List<Transform> GetEnemyTransformsInRange(Vector3 originWorld, int range, RangeShape shape = RangeShape.Diamond)
+    {
+        var found = new HashSet<Transform>();
+        foreach (GameObject enemy in GetEnemyObjectsInRange(originWorld, range, shape))
+            found.Add(enemy.transform);
+
+        return new List<Transform>(found);
+    }
+
+    public List<GameObject> GetEnemyObjectsInRange(Vector3 originWorld, int range, RangeShape shape = RangeShape.Diamond)
+    {
+        var found = new List<GameObject>();
+        Vector2Int originCell = board.WorldToCell(originWorld);
+
+        foreach (Tile tile in TileShapeQuery.GetTiles(board, originCell, range, shape))
+        {
+            foreach (GameObject enemy in tile.Enemies)
+            {
+                if (enemy == null) continue;
+                found.Add(enemy);
+            }
+        }
+
+        return found;
+    }
+
+    // originWorld에서 towardWorld 방향으로 4방향 스냅한 직선을 length칸 조회해 적을 모은다.
+    public List<IDamageAble> GetEnemiesInLine(Vector3 originWorld, Vector3 towardWorld, int length)
+    {
+        Vector2Int originCell = board.WorldToCell(originWorld);
+        Vector2Int dir = GridCalculator.CardinalToward(originCell, board.WorldToCell(towardWorld));
+
+        var found = new HashSet<IDamageAble>();
+
+        // 근접 저지 구조상 적이 공격자 자신의 칸으로 들어와 저지되므로, origin 칸의 적도 포함한다.
+        if (board.TryGetCell(originCell, out Tile originTile))
+        {
+            foreach (GameObject enemy in originTile.Enemies)
+            {
+                if (enemy != null && enemy.GetComponentInParent<IDamageAble>() is IDamageAble d)
+                    found.Add(d);
+            }
+        }
+
+        foreach (Tile tile in TileShapeQuery.GetLineTiles(board, originCell, dir, length))
+        {
+            foreach (GameObject enemy in tile.Enemies)
+            {
+                if (enemy != null && enemy.GetComponentInParent<IDamageAble>() is IDamageAble d)
+                    found.Add(d);
+            }
+        }
+        return new List<IDamageAble>(found);
+    }
+
+    public Vector2Int GetCardinalDirection(Vector3 originWorld, Vector3 towardWorld)
+        => GridCalculator.CardinalToward(board.WorldToCell(originWorld), board.WorldToCell(towardWorld));
+
+    public Vector3 GetLineEndPoint(Vector3 originWorld, Vector2Int direction, int length)
+    {
+        Vector2Int originCell = board.WorldToCell(originWorld);
+        List<Tile> line = TileShapeQuery.GetLineTiles(board, originCell, direction, length);
+        if (line.Count > 0) return line[line.Count - 1].WorldTop;
+        return originWorld + new Vector3(direction.x, 0, direction.y) * length;
+    }
+
     private void CheckTargetStillInRange()
     {
-        foreach (Tile tile in board.GetTiles(origin, range, false))
+        foreach (Tile tile in TileShapeQuery.GetTiles(board, origin, range, rangeShape))
         {
             foreach (GameObject enemy in tile.Enemies)
             {

@@ -18,6 +18,7 @@ public class EnemyTable : DataTable
         public string Skills {get ; set ;}   // 세미콜론(;)으로 구분된 SkillId 목록
         public string Type {get ; set ;}     // 공격 타입 (Melee, Ranged)
         public string Class {get ; set ;}     // 등급 (Normal, Elite, Boss)
+        public string Attribute {get ; set ;} // 적 속성
     }
     
     private readonly Dictionary<string, Data> table = new();

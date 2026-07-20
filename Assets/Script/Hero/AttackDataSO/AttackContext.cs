@@ -14,7 +14,12 @@ public struct AttackContext
     public HeroAnimEvents animEvents;
     public Transform muzzle;
     public System.Func<Projectile, IObjectPool<Projectile>> getProjectilePool;
-    public System.Func<Vector3, int, bool, List<IDamageAble>> getEnemiesInRange;
+    public System.Func<Vector3, int, RangeShape, List<IDamageAble>> getEnemiesInRange;
+    public System.Func<Vector3, int, RangeShape, List<Transform>> getEnemyTargetsInRange;
+    public System.Func<Vector3, int, RangeShape, List<GameObject>> getEnemyObjectsInRange;
+    public System.Func<Vector3, Vector3, int, List<IDamageAble>> getEnemiesInLine;
+    public System.Func<Vector3, Vector3, Vector2Int> getCardinalDirection;
+    public System.Func<Vector3, Vector2Int, int, Vector3> getLineEndPoint;
     public StatContainer sc;
 
     public async UniTask WaitForAnimEvent(string eventName, CancellationToken ct)

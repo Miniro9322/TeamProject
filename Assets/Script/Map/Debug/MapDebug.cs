@@ -140,7 +140,7 @@ public class MapDebug : MonoBehaviour
             return new Color(1f, 0.2f, 0.15f, 0.55f);
         }
 
-        if (!tile.IsEmpty)
+        if (tile.HasUnit)
         {
             return new Color(1f, 0.9f, 0.25f, 0.55f);
         }

@@ -5434,6 +5434,53 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+--- !u!1 &262919584
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 262919586}
+  - component: {fileID: 262919585}
+  m_Layer: 0
+  m_Name: FogView
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &262919585
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 262919584}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 807fbde4bb8b88d4dbf7b4c2de3d438f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FogView
+  _board: {fileID: 314587624}
+  _area: {fileID: 1085747329}
+  _showCore: 1
+--- !u!4 &262919586
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 262919584}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -19.64393, y: 0, z: -24.64511}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &263885673 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 2456743877844998712, guid: c9fa51b455724f74ebcbd1f2d859f1f5, type: 3}
@@ -6189,7 +6236,7 @@ MonoBehaviour:
   - label: melee
     prefab: {fileID: 5228687494590014126, guid: c30b2462f1d175a40be298650efb1f87, type: 3}
     kind: 1
-    attackRange: 0
+    attackRange: 1
   - label: boxbuilding
     prefab: {fileID: 2836901075419073204, guid: 88748e8576a48a54da60fc7012a7ab0d, type: 3}
     kind: 3
@@ -6197,6 +6244,14 @@ MonoBehaviour:
   - label: Ranged
     prefab: {fileID: 9004755700449656008, guid: ca79c758b242b1f43b792e4c008ee16f, type: 3}
     kind: 2
+    attackRange: 3
+  - label: FoodBuild
+    prefab: {fileID: 2836901075419073204, guid: 7aca0e29ff41f3e4eaff836ab1cee678, type: 3}
+    kind: 3
+    attackRange: 0
+  - label: Special
+    prefab: {fileID: 2836901075419073204, guid: c4c845130f3f8fb439197ae189ce7f81, type: 3}
+    kind: 4
     attackRange: 0
   placeYOffset: 0
 --- !u!114 &314587624
@@ -7218,7 +7273,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TilePaintView
   board: {fileID: 314587624}
   enemyPath: {fileID: 359805065}
-  game: {fileID: 0}
+  game: {fileID: 314587623}
   painter: {fileID: 314587627}
   showEnemyTiles: 1
   showBlocking: 1
@@ -13501,7 +13556,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PanelLogic
   panel: {fileID: 714490552}
   game: {fileID: 314587623}
-  enemyPath: {fileID: 0}
+  enemyPath: {fileID: 359805065}
 --- !u!4 &714490554
 Transform:
   m_ObjectHideFlags: 0
@@ -17712,7 +17767,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3757251321633501950, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0
+      value: 0.02
       objectReference: {fileID: 0}
     - target: {fileID: 3757251321633501950, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: m_LocalPosition.z
@@ -44217,3 +44272,4 @@ SceneRoots:
   - {fileID: 1085747330}
   - {fileID: 359805067}
   - {fileID: 422220353}
+  - {fileID: 262919586}

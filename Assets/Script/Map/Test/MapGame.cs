@@ -43,6 +43,17 @@ public class MapGame : MonoBehaviour
     private bool _inputBlocked;
     private string _status = "";
 
+    // ---- 재배치(이동) 상태 ----
+    private GameObject _held;      // 집어든 유닛(이동 프리뷰). 보드에서 뗀 채 포인터를 따라간다.
+    private Tile _heldFrom;        // 집은 출발 타일(제자리 클릭 판별·취소용).
+    private OccupantKind _heldKind;
+    private int _heldRange;
+    private Vector2 _pressPos;     // 눌린 화면 좌표(클릭 vs 드래그 판별용).
+    [SerializeField] private float _dragPixels = 8f; // 이 픽셀 이상 움직이면 드래그로 간주.
+
+    public bool IsHolding => _held != null;
+    public string HeldInfo => _held == null ? "" : $"{_heldKind} 이동 중 (출발 {_heldFrom.Coord}, 사거리 {_heldRange})";
+
     public bool InputBlocked => _inputBlocked;
     public Tile HoverTile => PickCellUnderPointer();
     public bool IsPlacing => _mode == PlaceMode.Place;
@@ -94,7 +105,8 @@ public class MapGame : MonoBehaviour
     private void Update()
     {
         if (_cam == null) _cam = Camera.main;
-        HandlePlacementClick();
+        HandleInput();
+        FollowHeld();
     }
 
     private List<Placeable> Palette()
@@ -108,15 +120,26 @@ public class MapGame : MonoBehaviour
         return (_paletteIndex >= 0 && _paletteIndex < pal.Count) ? pal[_paletteIndex].kind : OccupantKind.MeleeHero;
     }
 
-    private void HandlePlacementClick()
+    private void HandleInput()
     {
-        if (_inputBlocked)
+        if (_inputBlocked || Mouse.current == null)
         {
             return;
         }
-        if (Mouse.current == null || !Mouse.current.leftButton.wasPressedThisFrame) return;
 
+        if (Mouse.current.leftButton.wasPressedThisFrame) OnPress();
+        if (Mouse.current.leftButton.wasReleasedThisFrame) OnRelease();
+    }
+
+    // 누르는 순간: 집은 상태면 내려놓기, 배치된 유닛을 누르면 집기(제거 모드 제외), 그 외 모드별 처리.
+    private void OnPress()
+    {
         Tile tile = PickCellUnderPointer();
+        if (_held != null)
+        {
+            Drop(HeldTarget()); // 그리드 밖이어도 프리뷰가 놓인 가장자리 타일로 내려놓기.
+            return;
+        }
         if (tile == null)
         {
             //테스트용 코드
@@ -151,12 +174,37 @@ public class MapGame : MonoBehaviour
         }
         //끝
 
+        // 어느 모드든 배치된 유닛을 누르면 집어서 재배치한다(명시적 제거 모드만 예외).
+        if (tile.HasUnit && _mode != PlaceMode.Remove)
+        {
+            PickUpUnit(tile);
+            return;
+        }
+
         switch (_mode)
         {
             case PlaceMode.Remove: RemoveAt(tile); break;
             case PlaceMode.Place: PlaceUnit(tile); break;
             default: SelectTile(tile); break;
         }
+    }
+
+    // 떼는 순간: 집은 채 드래그였다면 그 타일에 내려놓는다.
+    // 제자리 클릭이면 집은 채 유지 → 다음 클릭으로 내려놓기(클릭-클릭 방식 지원).
+    private void OnRelease()
+    {
+        if (_held == null) return;
+
+        Tile tile = PickCellUnderPointer();   // 드래그 판정은 실제 커서 타일 기준
+        if (IsDrag(tile)) Drop(HeldTarget()); // 내려놓기는 클램프된 목표 타일로
+    }
+
+    // 다른 타일 위에서 뗐거나 화면상 충분히 움직였으면 드래그로 본다(제자리 클릭과 구분).
+    private bool IsDrag(Tile releaseTile)
+    {
+        if (releaseTile != null && releaseTile != _heldFrom) return true;
+        Vector2 moved = Mouse.current.position.ReadValue() - _pressPos;
+        return moved.magnitude > _dragPixels;
     }
 
     private void SelectTile(Tile tile)
@@ -301,9 +349,72 @@ public class MapGame : MonoBehaviour
         return kind == OccupantKind.Building ? -1 : Mathf.Max(0, pal[_paletteIndex].attackRange);
     }
 
+    // 배치된 유닛을 집어 든다: 타일 점유 정보를 전부 떼고(사거리 커버 해제 포함) 프리뷰 상태로 전환. Destroy 안 함.
+    private void PickUpUnit(Tile tile)
+    {
+        OccupantKind kind = tile.State.Occupant;      // 제거 전에 종류를 읽어 둔다(ClearOccupant가 None으로 바꿈).
+        GameObject go = board.RemoveUnit(tile.Coord);
+        if (go == null) return;
+
+        _held = go;
+        _heldFrom = tile;
+        _heldKind = kind;
+        _heldRange = _ranges.TryGetValue(go, out int range) ? range : 0;
+        _selectedTile = tile;
+        _status = HeldInfo; // 패널 Status가 이 문자열을 그대로 표시(집은 유닛 정보 노출).
+    }
+
+    // 집은 유닛을 tile에 내려놓는다. 배치 규칙 통과 시 재배치(정보 복원), 아니면 차단 + 사유 표시(집은 채 유지).
+    private void Drop(Tile tile)
+    {
+        if (tile == null)
+        {
+            _status = "타일 없음";
+            return;
+        }
+
+        if (!board.CanPlace(tile.Coord, _heldKind, out string reason))
+        {
+            _status = $"{tile.Coord} {reason}";
+            return;
+        }
+
+        board.TryPlace(tile.Coord, _held, _heldKind, placeYOffset, out _);
+        RegisterCover(_held, tile, _heldKind, _heldRange);
+        _selectedTile = tile;
+        _status = $"{tile.Coord} 이동";
+        ClearHeld();
+    }
+
+    // 집은 유닛 프리뷰가 목표 타일 윗면을 따라가게 한다(그리드 밖이면 가장자리 타일로 클램프).
+    private void FollowHeld()
+    {
+        if (_held == null) return;
+
+        Tile tile = HeldTarget();
+        if (tile != null) _held.transform.position = tile.WorldTop + Vector3.up * placeYOffset;
+    }
+
+    // 집은 유닛의 목표 타일: 커서가 그리드 밖이면 가장 가까운 가장자리 타일로 클램프.
+    private Tile HeldTarget()
+    {
+        if (_cam == null || Mouse.current == null) return null;
+        Ray ray = _cam.ScreenPointToRay(Mouse.current.position.ReadValue());
+        return board.NearestCellFromRay(ray);
+    }
+
+    private void ClearHeld()
+    {
+        _heldKind = OccupantKind.None;
+        _heldRange = 0;
+        _held = null;
+        _heldFrom = null;
+        _heldRange = 0;
+    }
+
     private void RemoveAt(Tile tile)
     {
-        GameObject go = board.Vacate(tile.Coord);
+        GameObject go = board.RemoveUnit(tile.Coord);
         if (go == null) return;
         _placed.Remove(go);
         _ranges.Remove(go);
@@ -324,12 +435,17 @@ public class MapGame : MonoBehaviour
         _status = $"{tile.Coord} 제거";
     }
 
-    public void ClearPlaced()
+    public void ClearAllPlacedUnit()
     {
+        if (_held != null) // 집은 채 전체 제거 시 보드에 없는 프리뷰 유닛도 정리(고아 방지).
+        {
+            Destroy(_held);
+            ClearHeld();
+        }
         foreach (Tile tile in board.Cells.Values)
         {
             if (tile.OccupantObject == null) continue;
-            GameObject go = board.Vacate(tile.Coord);
+            GameObject go = board.RemoveUnit(tile.Coord);
             if (go != null) Destroy(go);
         }
         _placed.Clear();

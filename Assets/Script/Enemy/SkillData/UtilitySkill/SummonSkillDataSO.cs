@@ -35,7 +35,7 @@ public class SummonSkillDataSO : UtilitySkillDataSO
                 await WaitForAnimationEnd(owner, summonStateName, animTimeout, token);
             }
 
-            if (owner == null || owner.IsDie) return; // 대기 중 죽었으면 소환 안 함
+            if (owner == null || owner.IsDead) return; // 대기 중 죽었으면 소환 안 함
 
             int count = Mathf.Max(1, Mathf.RoundToInt(value));   // value = 소환 수
             Vector3 center = owner.transform.position;
@@ -65,7 +65,7 @@ public class SummonSkillDataSO : UtilitySkillDataSO
         float elapsed = 0f;
         while (owner != null && !anim.GetCurrentAnimatorStateInfo(layer).IsName(stateName))
         {
-            if (owner.IsDie) return;
+            if (owner.IsDead) return;
             elapsed += Time.deltaTime;
             if (elapsed >= timeout)
             {
