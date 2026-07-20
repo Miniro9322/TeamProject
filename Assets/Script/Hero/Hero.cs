@@ -59,6 +59,8 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble
     private bool isDead = false;
     public bool IsDead => isDead;
 
+    [SerializeField] private EnemyAttribute unattackableTarget = EnemyAttribute.Fly | EnemyAttribute.Cloaking;
+
     //테스트용 코드
     private GameManager gameManager;
     [Inject]
@@ -145,6 +147,8 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble
             foreach (GameObject enemy in tile.Enemies)
             {
                 if (enemy == null) continue;
+                var eb = enemy.GetComponent<EnemyBase>();
+                if (eb == null || (eb.Attribute & unattackableTarget) != 0) continue;
                 target = enemy;
                 context.target = target.transform;
                 return;
