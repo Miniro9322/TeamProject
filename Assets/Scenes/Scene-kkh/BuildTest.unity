@@ -2949,7 +2949,7 @@ MonoBehaviour:
   board: {fileID: 116137735}
   palette:
   - label: melee
-    prefab: {fileID: 5228687494590014126, guid: c30b2462f1d175a40be298650efb1f87, type: 3}
+    prefab: {fileID: 6360810507945036553, guid: 1c18d546630c46e4a84b6242d3953620, type: 3}
     kind: 1
     attackRange: 0
   - label: boxbuilding
@@ -9455,6 +9455,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WaveSpawner
   board: {fileID: 116137735}
+  Enemycount: 0
 --- !u!4 &430808461
 Transform:
   m_ObjectHideFlags: 0
@@ -17646,6 +17647,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WaveSpawner
   board: {fileID: 116137735}
+  Enemycount: 0
 --- !u!4 &826308558
 Transform:
   m_ObjectHideFlags: 0

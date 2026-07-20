@@ -9,7 +9,7 @@ public static class AttackDamageUtil
     public static async UniTask ApplyInstantDamage(AttackDataSO data, AttackContext ctx, CancellationToken ct)
     {
         float baseDamage = ctx.sc[StatType.ATK] * data.attackPer;
-
+        
         // Line/Chain은 targetMode와 무관하게 자체 타겟팅 모델로 처리한다.
         if (data.attackType == AttackType.Area && data.areaShape == AreaShape.Line)
         {

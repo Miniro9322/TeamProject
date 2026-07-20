@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3e63ecebd4cd6e044a8a127ea3df05bc, type: 3}
   m_Name: SpearAttackData
   m_EditorClassIdentifier: Assembly-CSharp::AttackDataSO
-  attackPer: 1
-  range: 3
-  rangeShape: 0
+  attackPer: 2
+  range: 1
+  rangeShape: 2
   attackType: 1
   targetMode: 0
   attackCount: 1
@@ -30,4 +30,4 @@ MonoBehaviour:
   animTriggers:
   - Attack
   projectilePrefab: {fileID: 0}
-  clipLength: 0
+  clipLength: 0.6666667

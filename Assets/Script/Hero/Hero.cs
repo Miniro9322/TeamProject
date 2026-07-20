@@ -47,7 +47,7 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble
     protected Tile currentTile;
     public Tile CurrentTile => currentTile;
     //private List<Tile> attackRangedTiles;
-    protected int range = 1;
+    [SerializeField] protected int range = 1;
     [SerializeField] protected RangeShape rangeShape = RangeShape.Diamond;
 
     private StatContainer sc = new();
@@ -197,6 +197,17 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble
         Vector2Int dir = GridCalculator.CardinalToward(originCell, board.WorldToCell(towardWorld));
 
         var found = new HashSet<IDamageAble>();
+
+        // 근접 저지 구조상 적이 공격자 자신의 칸으로 들어와 저지되므로, origin 칸의 적도 포함한다.
+        if (board.TryGetCell(originCell, out Tile originTile))
+        {
+            foreach (GameObject enemy in originTile.Enemies)
+            {
+                if (enemy != null && enemy.GetComponentInParent<IDamageAble>() is IDamageAble d)
+                    found.Add(d);
+            }
+        }
+
         foreach (Tile tile in TileShapeQuery.GetLineTiles(board, originCell, dir, length))
         {
             foreach (GameObject enemy in tile.Enemies)
