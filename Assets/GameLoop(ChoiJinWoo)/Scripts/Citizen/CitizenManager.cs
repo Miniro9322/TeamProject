@@ -36,6 +36,13 @@ public class CitizenManager : MonoBehaviour
         UpdateCitizen();
     }
 
+    public void UseCitizen(int amount)
+    {
+        canUseCitizen -= amount;
+        usedCitizen += amount;
+        UpdateCitizen();
+    }
+
     public void RecycleCitizen()
     {
         canUseCitizen++;

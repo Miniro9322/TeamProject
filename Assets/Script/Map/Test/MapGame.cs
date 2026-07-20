@@ -30,6 +30,7 @@ public class MapGame : MonoBehaviour
 
     /// <summary>배치 직후 호출(종류, 생성된 오브젝트, 타일). 팀원 로직 연결용 훅.</summary>
     public event Action<OccupantKind, GameObject, Tile> Placed;
+    public event Action OnPlaced;
 
     private Camera _cam;
     private PlaceMode _mode = PlaceMode.Off;
@@ -60,15 +61,17 @@ public class MapGame : MonoBehaviour
     private BuildingPool pool;
     private UiManager uiManager;
     private GameManager gameManager;
+    private CitizenManager citizenManager;
 
     [Inject]
-    private void Construct(VContainer.IObjectResolver resolver, ResourcesManager resourcesManager, BuildingPool buildingPool, UiManager uiManager, GameManager gameManager)
+    private void Construct(VContainer.IObjectResolver resolver, ResourcesManager resourcesManager, BuildingPool buildingPool, UiManager uiManager, GameManager gameManager, CitizenManager citizenManager)
     {
         this.resolver = resolver;
         this.resourcesManager = resourcesManager;
         this.pool = buildingPool;
         this.uiManager = uiManager;
         this.gameManager = gameManager;
+        this.citizenManager = citizenManager;
     }
 
     //끝
@@ -130,10 +133,8 @@ public class MapGame : MonoBehaviour
             return;
         }
         //테스트용 코드
-        Debug.Log(tile.State.Occupant);
-        if (tile.State.Occupant == OccupantKind.Building && _mode != PlaceMode.Remove && gameManager.CanBuild)
+        if (tile.State.Occupant == OccupantKind.Resource && _mode != PlaceMode.Remove && gameManager.CanBuild)
         {
-            Debug.Log("건물 UI 오픈");
             uiManager.OpenBuildingUi(tile.OccupantObject.GetComponent<ProductionFacility>());
         }
         else
@@ -176,6 +177,13 @@ public class MapGame : MonoBehaviour
             Debug.Log("밤에는 배치할 수 없습니다.");
             return;
         }
+
+        if (!CheckCanBuild(slot.label))
+        {
+            ClearMode(); // 지금 실제로 지으려는 대상이 부족할 때만 모드 종료
+            _status = $"{slot.label} 자원 부족";
+            return;
+        }
         //끝
 
         GameObject UnitObject = CreateUnit(slot);   // 배치할 오브젝트 생성
@@ -208,11 +216,10 @@ public class MapGame : MonoBehaviour
     {
         CheckPrefab(slot);             // 프리팹이 없으면 예외
         //테스트용 코드
-        if(slot.kind == OccupantKind.Building)
+        if(slot.kind == OccupantKind.Resource)
         {
             if(resourcesManager.CheckResources(slot.prefab.GetComponent<ProductionFacility>().BasicValue.ConstructProduct))
             return pool.Rent(slot.prefab.GetComponent<ProductionFacility>().ProductionType);// 배치할 오브젝트 생성
-
         }
         //끝
         return resolver.Instantiate(slot.prefab);// 배치할 오브젝트 생성
@@ -222,7 +229,10 @@ public class MapGame : MonoBehaviour
     {
         _selectedTile = tile;                         // 배치 직후 선택 상태 유지
         _placed.Add(unit);                            // 배치된 오브젝트 목록에 추가
-        Placed?.Invoke(slot.kind, unit, tile);       //배치 이벤트 호출
+        Placed?.Invoke(slot.kind, unit, tile);       // 배치 이벤트 호출
+        //테스트 코드
+        OnPlaced?.Invoke();
+        //끝
         RegisterUnit(unit, tile, slot);              // 배치된 오브젝트의 사거리 정보를 받아서 사거리 표시 및 커버리지 등록
     }
 
@@ -349,6 +359,22 @@ public class MapGame : MonoBehaviour
         _mode = PlaceMode.Place;
     }
 
+    //테스트 코드
+    public void SetUnit(string label)
+    {
+        List<Placeable> items = Palette();
+        foreach(var item in items)
+        {
+            if(item.label == label)
+            {
+                _paletteIndex = items.IndexOf(item);
+            }
+        }
+
+        _mode = PlaceMode.Place;
+    }
+    //끝
+
     public void SetRemove()
     {
         _mode = PlaceMode.Remove;
@@ -364,4 +390,61 @@ public class MapGame : MonoBehaviour
         _inputBlocked = value;
     }
 
+    public bool CheckCanBuild(string label)
+    {
+        var slot = palette.Find(x => x.label == label);
+        if (slot == null || slot.prefab == null) return false;
+
+        switch (slot.kind)
+        {
+            case OccupantKind.None:
+                return true;
+            case OccupantKind.MeleeHero:
+                var melee = slot.prefab.GetComponent<Hero>();
+                if (melee == null) return true;
+
+                if (citizenManager.CheckCanUseCitizen())
+                    return true;
+                else
+                {
+                    Debug.Log("집 호출");
+                    return false;
+                }
+            case OccupantKind.RangedHero:
+                var range = slot.prefab.GetComponent<Hero>();
+                if (range == null) return true;
+
+                if (citizenManager.CheckCanUseCitizen())
+                    return true;
+                else
+                {
+                    Debug.Log("집 호출");
+                    return false;
+                }
+            case OccupantKind.Building:
+                var house = slot.prefab.GetComponent<House>();
+                if(house == null) return true;
+
+                if (resourcesManager.CheckResources(house.Resources))
+                    return true;
+                else
+                {
+                    Debug.Log("집 호출");
+                    return false;
+                }
+            case OccupantKind.Resource:
+                var facility = slot.prefab.GetComponent<ProductionFacility>();
+                if (facility == null) return true;
+
+                if (resourcesManager == null)
+                    Debug.Log("자원 관리자 없음");
+                if (resourcesManager.CheckResources(facility.BasicValue.ConstructProduct))
+                    return true;
+                else
+                {
+                    return false;
+                }
+            default: return true;
+        }
+    }
 }

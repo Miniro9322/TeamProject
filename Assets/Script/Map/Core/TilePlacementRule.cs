@@ -52,6 +52,7 @@ public static class TilePlacementRule
             OccupantKind.MeleeHero  => CheckMelee(tile),
             OccupantKind.RangedHero => CheckRanged(tile),
             OccupantKind.Building   => CheckBuild(tile),
+            OccupantKind.Resource   => CheckBuild(tile),
             _ => Result.No("배치 대상이 없다")
         };
     }

@@ -62,10 +62,12 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble
 
     //테스트용 코드
     private GameManager gameManager;
+    private CitizenManager citizenManager;
     [Inject]
-    private void Construct(GameManager gameManager)
+    private void Construct(GameManager gameManager, CitizenManager citizenManager)
     {
         this.gameManager = gameManager;
+        this.citizenManager = citizenManager;
     }
     //끝
 
@@ -104,6 +106,9 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble
         sc.AddStat(StatType.BLK, statData.blockCount);
         sc.AddStat(StatType.AS, statData.attackSpeed);
         currentHp = sc[StatType.HP];
+        //테스트용 코드
+        citizenManager.UseCitizen(2);
+        //끝
     }
 
     protected virtual void Start()

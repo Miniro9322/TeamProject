@@ -1,6 +1,7 @@
 using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using VContainer;
 
 public class UiManager : MonoBehaviour
@@ -13,6 +14,17 @@ public class UiManager : MonoBehaviour
     {
         buildingUi.gameObject.SetActive(false);
         requestSupportUi.gameObject.SetActive(false);
+    }
+
+    private void Update()
+    {
+        if (Keyboard.current.escapeKey.wasPressedThisFrame)
+        {
+            if (buildingUi.gameObject.activeSelf)
+            {
+                CloseBuildingUi();
+            }
+        }
     }
 
     public void OpenBuildingUi(ProductionFacility facility)
