@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Security.Cryptography;
 using UnityEngine;
 
 public class MapBoard : MonoBehaviour
@@ -74,6 +73,7 @@ public class MapBoard : MonoBehaviour
         bool hasBounds = false;
         foreach (Tile tile in tiles)
         {
+            tile.SetBoard(this); // 소유 보드 도장 — 이후 모든 소비자는 tile.Board로 자기 모듈 보드를 찾는다
             tile.State.ImportFlags();
 
             Transform root = tile.transform;
@@ -326,6 +326,20 @@ public class MapBoard : MonoBehaviour
 
     public bool CanPlace(Vector2Int coord, OccupantKind kind, out string reason)
     {
+        ModuleLogic module = GetComponent<ModuleLogic>();
+        if (module != null && !module.IsPreparing)
+        {
+            if (module.CurrentState == ModuleState.Locked)
+            {
+                reason = "해금되지 않은 모듈";
+            }
+            else
+            {
+                reason = "배치할 수 없는 모듈 상태";
+            }
+            return false;
+        }
+
         if (!_cells.TryGetValue(coord, out Tile tile))
         {
             reason = "타일 없음";
@@ -497,16 +511,5 @@ public class MapBoard : MonoBehaviour
             else b.Encapsulate(r.bounds);
         }
         return b;
-    }
-
-    private void GetplacedUnit(GameObject go, OccupantKind kind)
-    {
-        if (go == null) return;
-
-        if(OccupantKind.MeleeHero == kind)
-        {
-            UnitPrefab = go;
-        }
-       
     }
 }

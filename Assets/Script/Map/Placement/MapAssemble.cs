@@ -7,6 +7,7 @@ using UnityEngine;
 public class MapAssemble : MonoBehaviour
 {
     [SerializeField] private MapGame mapGame;
+    [SerializeField] private MapRegistry registry;
     [SerializeField] private MapCommand command;
     [SerializeField] private MapView view;
     [SerializeField] private PlacePalette palette;
@@ -15,8 +16,10 @@ public class MapAssemble : MonoBehaviour
 
     private void Start()
     {
-        PointerPick pointerPick = new PointerPick(mapGame.board);
-        UnitReplace replace = new UnitReplace(mapGame.board, mapGame.Units);
+        List<MapBoard> boards = ModuleBoards();
+
+        PointerPick pointerPick = new PointerPick(boards);
+        UnitReplace replace = new UnitReplace(mapGame.Units);
 
         BuildingUiLink buildingUi = new BuildingUiLink();
         buildingUi.ui = mapGame.Ui;
@@ -27,10 +30,9 @@ public class MapAssemble : MonoBehaviour
         view.rangeInfo = new RangeInfo(mapGame.Units);
 
         PlaceAction action = new PlaceAction();
-        action.board = mapGame.board;
         action.palette = palette;
         action.placer = mapGame.Placer;
-        action.remover = new UnitRemover(mapGame.board, mapGame.Units);
+        action.remover = new UnitRemover(boards, mapGame.Units);
         action.replace = replace;
         action.buildingUi = buildingUi;
         action.view = view;
@@ -48,5 +50,16 @@ public class MapAssemble : MonoBehaviour
             { PlaceMode.Place, action.PlaceUnit },
             { PlaceMode.Remove, action.RemoveUnit },
         };
+    }
+
+    // 레지스트리에 등록된 모듈들의 보드 목록. 모듈 루트에 ModuleLogic과 MapBoard가 함께 산다.
+    private List<MapBoard> ModuleBoards()
+    {
+        List<MapBoard> boards = new();
+        foreach (ModuleLogic logic in registry.AllModules.Values)
+        {
+            boards.Add(logic.GetComponent<MapBoard>());
+        }
+        return boards;
     }
 }

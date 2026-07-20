@@ -1,14 +1,16 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 // 배치된 유닛을 판에서 치우는 담당. 보드에서 떼고, 장부에서 지우고, 풀 반납 또는 파괴한다.
+// 한 칸 제거는 그 타일의 보드에서, 전체 제거는 모든 모듈 보드를 돌며 치운다.
 public class UnitRemover
 {
-    private readonly MapBoard _board;
+    private readonly List<MapBoard> _boards;
     private readonly UnitList _unitList;
 
-    public UnitRemover(MapBoard board, UnitList unitList)
+    public UnitRemover(List<MapBoard> boards, UnitList unitList)
     {
-        _board = board;
+        _boards = boards;
         _unitList = unitList;
     }
 
@@ -22,22 +24,25 @@ public class UnitRemover
 
     public GameObject UnitRemove(Tile tile)
     {
-        GameObject unit = _board.RemoveUnit(tile.Coord);
-   
+        GameObject unit = tile.Board.RemoveUnit(tile.Coord);   // 그 타일이 속한 모듈 보드에서 뗀다
+
         _unitList.Remove(unit);
         DestroyOrReturnToPool(unit);
         return unit;
     }
 
-    // 판 위의 모든 유닛을 치운다.
+    // 모든 모듈 판 위의 모든 유닛을 치운다.
     // 주의: 여기서는 풀 반납 없이 전부 Destroy 한다(기존 동작 보존 — 생산건물 풀 오염 결함).
     public void RemoveAll()
     {
-        foreach (Tile tile in _board.Cells.Values)
+        foreach (MapBoard board in _boards)
         {
-            if (tile.OccupantObject == null) continue;
-            GameObject unit = _board.RemoveUnit(tile.Coord);
-            if (unit != null) Object.Destroy(unit);
+            foreach (Tile tile in board.Cells.Values)
+            {
+                if (tile.OccupantObject == null) continue;
+                GameObject unit = board.RemoveUnit(tile.Coord);
+                if (unit != null) Object.Destroy(unit);
+            }
         }
         _unitList.Clear();
     }

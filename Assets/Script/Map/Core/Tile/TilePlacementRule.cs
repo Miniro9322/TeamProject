@@ -31,11 +31,6 @@ public static class TilePlacementRule
             return Result.No("본진 영역에는 배치할 수 없다");
         }
 
-        if (tile.Territory != TerritoryState.Claimed)
-        {
-            return Result.No("미점령 타일이다");
-        }
-
         // 한 타일에는 하나의 주요 점유만(설계 §4). 적 경로(EnemyLane)는 점유가 아니라 통과 허용.
         if (!tile.IsEmpty)
         {

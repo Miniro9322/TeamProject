@@ -4,7 +4,6 @@ using UnityEngine;
 public class PlaceAction
 {
     // MapCommand가 조립할 때 넣어준다
-    public MapBoard board;
     public PlacePalette palette;
     public UnitPlacer placer;
     public UnitRemover remover;
@@ -22,7 +21,7 @@ public class PlaceAction
     public void PlaceUnit(Tile tile)
     {
         if (!palette.TryCurrentSlot(out Placeable slot)) return;   // 슬롯 없으면 중단(검사 게이트)
-        if (!board.CanPlace(tile.Coord, slot.kind, out _)) return; // 배치 불가면 중단
+        if (!tile.Board.CanPlace(tile.Coord, slot.kind, out _)) return; // 배치 불가면 중단(클릭된 타일이 속한 모듈 보드 기준)
         if (!buildingUi.CanBuild()) { Debug.Log("밤에는 배치할 수 없습니다."); return; } // 테스트용
 
         if (placer.TryPlace(tile, slot, placeYOffset, out _, out string reason))

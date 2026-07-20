@@ -16,6 +16,8 @@ public class ModuleLogic : MonoBehaviour
     public int ModuleId => moduleId;
 
     public ModuleState CurrentState => _currentState;
+    public bool IsUnlocked => _currentState != ModuleState.Locked;
+    public bool IsPreparing => _currentState == ModuleState.Preparing;
 
     public event Action<ModuleState> OnStateChanged;
 
@@ -31,14 +33,19 @@ public class ModuleLogic : MonoBehaviour
         _currentState = newState;
         OnStateChanged?.Invoke(newState);
     }
+
+    public void Unlock()
+    {
+        if (IsUnlocked) return;
+
+        SetState(ModuleState.Preparing);
+    }
  
 }
 
 public enum ModuleState
 {
     Locked,     // 데이터만/실루엣. 배치·전투 불가
-    Revealed,   // 보상·위험 확인 가능
     Preparing,  // 배치 가능, 적 미등장
-    Active,     // 생산·전투후보 등록 완료
     Battle      // 현재 웨이브 전투 진행
 }

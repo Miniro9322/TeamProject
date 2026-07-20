@@ -11,7 +11,7 @@ public class TilePaintView : MonoBehaviour
     [SerializeField] private bool showEnemyTiles = true;
     [SerializeField] private bool showBlocking = true;
 
-    private readonly List<Vector2Int> cellPainted = new(); // 이번 프레임 칠한 칸
+    private readonly List<Tile> cellPainted = new(); // 이번 프레임 칠한 칸(좌표는 모듈 로컬이라 타일로 기억)
 
     private void Update()
     {
@@ -44,7 +44,7 @@ public class TilePaintView : MonoBehaviour
 
         foreach (Tile tile in enemyPath.PathTiles)
         {
-            Paint(tile.Coord, painter.pathColor);
+            Paint(tile, painter.pathColor);
         }
     }
 
@@ -54,11 +54,11 @@ public class TilePaintView : MonoBehaviour
         {
             if (showBlocking && tile.HasUnit && tile.HasEnemy)
             {
-                Paint(tile.Coord, painter.blockColor);
+                Paint(tile, painter.blockColor);
             }
             else if (showEnemyTiles && tile.HasEnemy)
             {
-                Paint(tile.Coord, painter.enemyColor);
+                Paint(tile, painter.enemyColor);
             }
         }
     }
@@ -85,7 +85,7 @@ public class TilePaintView : MonoBehaviour
             int range = game.UnitRange(tile.OccupantObject);
             if (range >= 0)
             {
-                PaintRange(tile.Coord, range);
+                PaintRange(tile, range);
             }
         }
     }
@@ -95,27 +95,34 @@ public class TilePaintView : MonoBehaviour
         OccupantKind kind = game.PlacingKind;
         if (kind == OccupantKind.MeleeHero || kind == OccupantKind.RangedHero)
         {
-            PaintRange(tile.Coord, game.PlacingRange);
+            PaintRange(tile, game.PlacingRange);
         }
 
-        bool ok = board.CanPlace(tile.Coord, kind, out _);
-        Paint(tile.Coord, ok ? painter.okColor : painter.denyColor);
+        // 호버된 타일이 속한 모듈 보드 기준으로 판정한다(어느 모듈이든 프리뷰가 맞게 뜬다).
+        if (tile.Board.CanPlace(tile.Coord, kind, out _))
+        {
+            Paint(tile, painter.okColor);
+        }
+        else
+        {
+            Paint(tile, painter.denyColor);
+        }
     }
 
-    private void PaintRange(Vector2Int center, int range)
+    private void PaintRange(Tile center, int range)
     {
-        foreach (Tile tile in board.GetTiles(center, range, false))
+        foreach (Tile tile in center.Board.GetTiles(center.Coord, range, false))
         {
-            if (tile.Coord != center)
+            if (tile != center)
             {
-                Paint(tile.Coord, painter.rangeColor);
+                Paint(tile, painter.rangeColor);
             }
         }
     }
 
-    private void Paint(Vector2Int coord, Color color)
+    private void Paint(Tile tile, Color color)
     {
-        painter.SetColor(coord, color);
-        cellPainted.Add(coord);
+        painter.SetColor(tile, color);
+        cellPainted.Add(tile);
     }
 }

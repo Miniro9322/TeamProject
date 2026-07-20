@@ -31,6 +31,18 @@ public class TilePainter : MonoBehaviour
         if (board != null && board.TryGetCell(coord, out Tile tile)) Restore(tile);
     }
 
+    // 타일을 직접 받는 경로 — 좌표는 모듈 로컬이라 보드 역조회가 모듈을 특정 못 하므로,
+    // 어느 모듈 타일이든 색칠하려면 이쪽을 쓴다.
+    public void SetColor(Tile tile, Color color)
+    {
+        Paint(tile, color);
+    }
+
+    public void ClearColor(Tile tile)
+    {
+        Restore(tile);
+    }
+
     private void Paint(Tile tile, Color color)
     {
         _mpb ??= new MaterialPropertyBlock();

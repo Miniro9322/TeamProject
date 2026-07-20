@@ -18,6 +18,10 @@ public partial class Tile : MonoBehaviour
     // ---- 런타임 캐시(직렬화하지 않음) ----
     private float _topY;
 
+    /// <summary>이 타일이 속한 모듈 보드(아파트 문패의 동 번호). MapBoard.Build가 새긴다.
+    /// 좌표는 모듈 로컬 0-base라 (Col,Row)만으로는 모듈을 특정할 수 없다 — 보드까지 있어야 완전한 주소.</summary>
+    public MapBoard Board { get; private set; }
+
     //타일을 점유한 오브젝트
     public GameObject OccupantObject { get; private set; }
     public int BlockCapacity { get; private set; }
@@ -61,6 +65,12 @@ public partial class Tile : MonoBehaviour
     public void SetTop(float topY)
     {
         _topY = topY;
+    }
+
+    /// <summary>MapBoard.Build가 스캔 시 자기 자신을 새긴다(소유 보드 도장).</summary>
+    public void SetBoard(MapBoard board)
+    {
+        Board = board;
     }
 
     //비어 있는 타일에 유닛을 배치(런타임 인스턴스를 기록). UnitPrefab은 인스펙터 저작값이라 건드리지 않는다.
