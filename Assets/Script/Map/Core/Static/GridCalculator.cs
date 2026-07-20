@@ -50,6 +50,14 @@ public static class GridCalculator
         int gapY = Mathf.Abs(fromCell.y - toCell.y);
         return gapX + gapY;
     }
+
+    public static Vector2Int CardinalToward(Vector2Int from, Vector2Int to)
+    {
+        int dx = to.x - from.x;
+        int dy = to.y - from.y;
+        if (Mathf.Abs(dx) >= Mathf.Abs(dy)) return dx >= 0 ? Right : Left;
+        return dy >= 0 ? Up : Down;
+    }
    
     
 
