@@ -6,7 +6,7 @@ public class TilePaintView : MonoBehaviour
 {
     [SerializeField] private MapBoard board;
     [SerializeField] private EnemyPathView enemyPath; // 경로 데이터
-    [SerializeField] private MapGame game;            // 호버·배치 상태(읽기 전용)
+    [SerializeField] private MapView game;            // 호버·배치 상태(읽기 전용)
     [SerializeField] private TilePainter painter;
     [SerializeField] private bool showEnemyTiles = true;
     [SerializeField] private bool showBlocking = true;
@@ -82,7 +82,7 @@ public class TilePaintView : MonoBehaviour
         }
         else if (tile.OccupantObject != null)
         {
-            int range = game.UnitRange(tile.OccupantObject, tile.State.Occupant);
+            int range = game.UnitRange(tile.OccupantObject);
             if (range >= 0)
             {
                 PaintRange(tile.Coord, range);
