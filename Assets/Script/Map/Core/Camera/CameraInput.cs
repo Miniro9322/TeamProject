@@ -77,6 +77,11 @@ public class CameraInput : MonoBehaviour
         Transform view = rig.transform;
         bool moved = false;
 
+        // 지면(XZ)에 투영한 축. 카메라 up을 그대로 쓰면 pitch만큼 월드 Y가 섞여
+        // 위아래 드래그에 맵이 뜨거나 가라앉는다. 높이는 QE로만 바꾼다.
+        Vector3 forward = Vector3.ProjectOnPlane(view.forward, Vector3.up).normalized;
+        Vector3 right = Vector3.ProjectOnPlane(view.right, Vector3.up).normalized;
+
         Mouse mouse = Mouse.current;
         if (mouse != null && mouse.rightButton.isPressed && !AltHeld)
         {
@@ -84,7 +89,7 @@ public class CameraInput : MonoBehaviour
             if (delta != Vector2.zero)
             {
                 float scale = rig.distance * 0.002f * dragSpeed;
-                rig.focus += (-view.right * delta.x - view.up * delta.y) * scale;
+                rig.focus += (-right * delta.x - forward * delta.y) * scale;
                 moved = true;
             }
         }
@@ -94,10 +99,6 @@ public class CameraInput : MonoBehaviour
         {
             return moved;
         }
-
-        // pitch 영향을 빼기 위해 시선 축을 XZ 평면에 투영한다.
-        Vector3 forward = Vector3.ProjectOnPlane(view.forward, Vector3.up).normalized;
-        Vector3 right = Vector3.ProjectOnPlane(view.right, Vector3.up).normalized;
 
         Vector3 move = Vector3.zero;
         if (key.wKey.isPressed) { move += forward; }

@@ -11,8 +11,7 @@ public class MapBoard : MonoBehaviour
     private readonly Dictionary<GameObject, Tile> _enemyCell = new(); // 적→현재 칸(직전 칸과 비교해 이동 감지)
     private readonly Dictionary<GameObject, List<Tile>> _rangeCoverByUnit = new();
 
-    [SerializeField] private float _cellSize = 1f;
-    private float _originX, _originZ; // (0,0)칸의 월드 x,z — 월드↔칸 변환 기준
+    [SerializeField] private Grid _grid; // 좌표계의 단일 소스. 셀 크기·원점·Swizzle을 모두 쥔다.
     private Bounds _worldBounds;
 
     private readonly TileIndexer _indexer = new(); // 좌표(Col/Row) → 1차원 인덱스. _cells와 같은 Tile을 가리키는 배열.
@@ -24,7 +23,7 @@ public class MapBoard : MonoBehaviour
     public IReadOnlyList<Tile> Cores => _cores;
     public bool HasEndpoints => _spawns.Count > 0 && _cores.Count > 0;
     public Bounds WorldBounds => _worldBounds;
-    public float CellSize => _cellSize;
+    public float CellSize => _grid.cellSize.x;
     public int Cols => _indexer.Cols;
     public int Rows => _indexer.Rows;
 
@@ -43,18 +42,21 @@ public class MapBoard : MonoBehaviour
     [ContextMenu("Build")]
     public void Build()
     {
+        if (_grid == null)
+        {
+            Debug.LogError("[MapBoard] Grid가 주입되지 않았습니다. 인스펙터에서 씬의 Grid를 넣으세요.", this);
+            return;
+        }
+
         _cells.Clear();
         _spawns.Clear();
         _cores.Clear();
         _enemyCell.Clear();
         _rangeCoverByUnit.Clear();
 
-        // 씬을 순회해 타일을 모은다(Find 함수 미사용 — GetRootGameObjects + GetComponentsInChildren).
+        // 이 모듈 Grid 하위 타일만 모은다(씬 전체 스캔 금지 — 모듈 격리). Find 미사용.
         var tiles = new List<Tile>();
-        foreach (GameObject root in gameObject.scene.GetRootGameObjects())
-        {
-            tiles.AddRange(root.GetComponentsInChildren<Tile>(true));
-        }
+        tiles.AddRange(_grid.GetComponentsInChildren<Tile>(true));
 
         if (tiles.Count == 0)
         {
@@ -68,17 +70,7 @@ public class MapBoard : MonoBehaviour
             tile.ClearRangeCovers();
         }
 
-        // 1) 셀 크기·원점 = 타일 위치 기준(월드↔칸 변환용). 논리 좌표는 각 타일의 State.Col/Row를 신뢰한다.
-        float minX = float.MaxValue, minZ = float.MaxValue;
-        foreach(Tile tile in tiles)
-        {
-            minX = Mathf.Min(minX, tile.transform.position.x);
-            minZ = Mathf.Min(minZ, tile.transform.position.z);
-        }       
-        _originX = minX;
-        _originZ = minZ;
-
-        // 2) 타일마다 렌더 캐시 + 격자 등록. 상호작용은 좌표 기반으로 처리한다.
+        // 1) 타일마다 렌더 캐시 + 격자 등록. 논리 좌표는 각 타일의 State.Col/Row를 신뢰한다(베이크가 새김).
         bool hasBounds = false;
         foreach (Tile tile in tiles)
         {
@@ -102,10 +94,10 @@ public class MapBoard : MonoBehaviour
             
         }
 
-        // 3) 인덱스 격자: 바운딩 박스(Cols×Rows) 기준 1차원 배열. 좌표는 베이크가 min→0으로 정규화해 둔다.
+        // 2) 인덱스 격자: 바운딩 박스(Cols×Rows) 기준 1차원 배열. 좌표는 Grid 원점 기준이라 0 이상이다.
         _indexer.BuildIndexGrid(_cells.Values);
 
-        Debug.Log($"[MapBoard] 타일 {_cells.Count}개 ({Cols}×{Rows}, 셀크기 {_cellSize:0.###}), 스폰 {_spawns.Count}, 본진 {_cores.Count}", this);
+        Debug.Log($"[MapBoard] 타일 {_cells.Count}개 ({Cols}×{Rows}, 셀크기 {CellSize:0.###}), 스폰 {_spawns.Count}, 본진 {_cores.Count}", this);
 
         if (!HasEndpoints)
             Debug.LogWarning("[MapBoard] 스폰(isEnemySpawn) 또는 본진(Terrain=Core) 타일을 찾지 못했습니다.", this);
@@ -191,7 +183,7 @@ public class MapBoard : MonoBehaviour
     public Tile CellFromRay(Ray ray)
     {
         if (Mathf.Abs(ray.direction.y) < 1e-6f) return null; // 수평 시선이면 top면과 안 만남
-        float half = _cellSize * 0.5f;
+        float half = CellSize * 0.5f;
 
         Tile best = null;
         float bestT = float.MaxValue;
@@ -469,9 +461,13 @@ public class MapBoard : MonoBehaviour
     // ---- 공간 질의 (상호작용 틀) ----
     // 맵은 "몇 칸 이내에 무엇이 있나"만 계산해 후보를 돌려준다. 타겟 선정·공격·데미지는 담당 몫.
 
-    /// <summary>월드 위치를 가장 가까운 칸 좌표로 변환(연속 이동하는 적의 현재 칸 파악용).</summary>
+    /// <summary>월드 위치를 칸 좌표로 변환(연속 이동하는 적의 현재 칸 파악용).
+    /// Grid가 계산하므로 베이크된 Col/Row와 항상 같은 기준이다. Swizzle XZY라 높이는 cell.z로 빠진다.</summary>
     public Vector2Int WorldToCell(Vector3 world)
-        => GridCalculator.GetCellFromWorldPos(world, _originX, _originZ, _cellSize);
+    {
+        Vector3Int cell = _grid.WorldToCell(world);
+        return new Vector2Int(cell.x, cell.y);
+    }
 
     public static int TileDistance(Vector2Int fromCell, Vector2Int toCell)
         => GridCalculator.GetDistance(fromCell, toCell);
