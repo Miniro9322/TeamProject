@@ -20,6 +20,7 @@ public struct AttackContext
     public System.Func<Vector3, Vector3, int, List<IDamageAble>> getEnemiesInLine;
     public System.Func<Vector3, Vector3, Vector2Int> getCardinalDirection;
     public System.Func<Vector3, Vector2Int, int, Vector3> getLineEndPoint;
+    public BuffManager buffManager;
     public StatContainer sc;
 
     public async UniTask WaitForAnimEvent(string eventName, CancellationToken ct)

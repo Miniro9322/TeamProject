@@ -1,3 +1,5 @@
+using NUnit.Framework;
+using System.Collections.Generic;
 using UnityEngine;
 
 public enum AnimSelectMode { Sequential, Random }
@@ -30,6 +32,7 @@ public class AttackDataSO : ScriptableObject
     // executor가 이 값과 공격 간격(1/AS)의 비율로 animator.speed를 스케일해
     // 클립이 정확히 간격 안에서 끝나도록 맞춘다.
     public float clipLength = 0f;
+    public List<AttackBuff> buffList;
 }
 
 // Single: 대상 하나(또는 targetMode==DifferentEnemies면 서로 다른 적)에게 비범위 피해.
@@ -55,4 +58,13 @@ public enum AreaShape
     Square,
     Line,
     Chain
+}
+[System.Serializable]
+public struct AttackBuff
+{
+    public StatType statType;
+    public ModifierType modifierType;
+    public float value;
+    public float duration;
+    public bool isTargetToOther;
 }

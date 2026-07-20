@@ -16,7 +16,6 @@ public static class ChainResolver
         var visited = new HashSet<GameObject> { start };
         hitOrder.Add(start);
         ApplyDamage(start, baseDamage);
-
         GameObject current = start;
         float damage = baseDamage;
         for (int jump = 1; jump < chainCount; jump++)

@@ -62,7 +62,7 @@ public static class AttackDamageUtil
         {
             foreach (IDamageAble e in ctx.getEnemiesInRange(go.transform.position, data.areaRange, aoeShape))
                 e.TakeDamage((int)baseDamage);
-            SplashHighlighter.Instance?.Flash(go.transform.position, data.areaRange, aoeShape);
+            //SplashHighlighter.Instance?.Flash(go.transform.position, data.areaRange, aoeShape);
         }, data.shotInterval, ct);
     }
 

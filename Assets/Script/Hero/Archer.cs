@@ -52,6 +52,7 @@ public class Archer : Hero
             getEnemiesInLine = GetEnemiesInLine,
             getCardinalDirection = GetCardinalDirection,
             getLineEndPoint = GetLineEndPoint,
+            buffManager = buffManager,
             sc = SC
         };
         occupantKind = OccupantKind.RangedHero;

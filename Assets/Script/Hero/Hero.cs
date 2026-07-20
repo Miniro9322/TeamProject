@@ -5,7 +5,7 @@ using UnityEngine;
 using UnityEngine.Rendering;
 using VContainer;
 
-public class Hero : MonoBehaviour, IDamageAble, IPlaceAble
+public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
 {
     [SerializeField] private AttackDataSO[] basePattern;
     public AttackDataSO[] BasePattern => basePattern;
@@ -52,6 +52,8 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble
 
     private StatContainer sc = new();
     public StatContainer SC => sc;
+    public StatContainer Stats => sc;
+
     public int BlockCount => IsDead ? 0 : (int)SC[StatType.BLK];
     private float currentHp;
     public float Hp => currentHp;
@@ -62,13 +64,14 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble
     [SerializeField] private EnemyAttribute unattackableTarget = EnemyAttribute.Fly | EnemyAttribute.Cloaking;
 
     //테스트용 코드
-    private GameManager gameManager;
+    protected GameManager gameManager;
+    protected BuffManager buffManager;
     [Inject]
-    private void Construct(GameManager gameManager)
+    private void Construct(GameManager gameManager, BuffManager buffManager)
     {
         this.gameManager = gameManager;
+        this.buffManager = buffManager;
     }
-    //끝
 
     public void Die()
     {
@@ -265,4 +268,5 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble
         await UniTask.Delay(TimeSpan.FromSeconds(10));
         Resurrection();
     }
+
 }

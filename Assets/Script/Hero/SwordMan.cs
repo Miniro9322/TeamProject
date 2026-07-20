@@ -18,6 +18,7 @@ public class SwordMan : Hero
             getEnemiesInLine = GetEnemiesInLine,
             getCardinalDirection = GetCardinalDirection,
             getLineEndPoint = GetLineEndPoint,
+            buffManager = buffManager,
             sc = SC
         };
         occupantKind = OccupantKind.MeleeHero;
