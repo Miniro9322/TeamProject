@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3e63ecebd4cd6e044a8a127ea3df05bc, type: 3}
-  m_Name: SwordManAttackData
+  m_Name: DoubleSwordManAttackData
   m_EditorClassIdentifier: Assembly-CSharp::AttackDataSO
   attackPer: 1
   range: 3
@@ -28,8 +28,6 @@ MonoBehaviour:
   chainFalloff: 0.8
   selectMode: 0
   animTriggers:
-  - Attack1
-  - Attack2
-  - Attack3
+  - Attack
   projectilePrefab: {fileID: 0}
-  clipLength: 0.5333334
+  clipLength: 0.53333336
