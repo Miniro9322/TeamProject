@@ -11,17 +11,21 @@ public class WaveSpawner : MonoBehaviour
 
     [Tooltip("적이 따라갈 격자 맵. 인스펙터에서 주입(Find 함수 미사용 지침).")]
     [SerializeField] private MapBoard board;
+    public MapBoard Board => board;
     [Tooltip("이 스포너가 담당하는 지역(레인) 번호. SpawnerManager가 이 값으로 매핑한다.")]
     [SerializeField] private int region = 1;
     public int Region => region;
     public int Enemycount;
     public TMP_Text text;
     private WaveTable waveTable;
-    private IReadOnlyList<Vector3> waypoints; // 스폰→본진 경로. 맵당 1회 계산해 모든 적이 공유.
+    public IReadOnlyList<Vector3> waypoints; // 스폰→본진 경로. 맵당 1회 계산해 모든 적이 공유.
 
     // 스코프에 등록되면 주입됨. 아니면 Spawn 시 Instance로 폴백.
     private PoolManager _pool;
-    [Inject] public void Construct(PoolManager pool) => _pool = pool;
+    [Inject] public void Construct(PoolManager pool)
+    {
+        _pool = pool;
+    }
     
     public event Action EnemyAllClear;
     private void Start()
@@ -50,7 +54,7 @@ public class WaveSpawner : MonoBehaviour
             SpawnWaveRout(wave).Forget();
             Enemycount += wave.Count;
         }
-        Debug.Log($"총마릿수 : {Enemycount}");
+        Debug.Log($"{region}지역 : {Enemycount}");
     }
     public void SpawnWave(int region,int currentStage)
     {
@@ -90,7 +94,7 @@ public class WaveSpawner : MonoBehaviour
     public void EnemyDieEvent()
     {
         Enemycount--;
-        Debug.Log($"남은 마릿수 : {Enemycount}");
+        Debug.Log($"{region}지역남은 마릿수 : {Enemycount}");
         if(Enemycount<=0)
         {
             EnemyAllClear?.Invoke();
@@ -100,26 +104,12 @@ public class WaveSpawner : MonoBehaviour
     // 분열 등으로 런타임에 추가로 생긴 적을 카운트에 반영(스폰 시점에 호출).
     // 이렇게 미리 더해두면, 그 분열체가 죽을 때 EnemyDieEvent 감소와 상쇄되어 전멸 시 정확히 0이 된다.
     public void AddSpawnCount(int n) => Enemycount += n;
-    public void Waveinformation(int currentSatge)
+
+    public void OnClickStage(int region,int currentstage)
     {
-        text.text = $"1지역 스테이지 {currentSatge}\n";
-        foreach(var w in waveTable.GetWave(1,currentSatge))
-        {
-            text.text += $"{DataTableManager.StringTable.Get(w.MonsterName)} {w.Count}마리 \n";
-        }
-    }
-    public void WaveinformationSecond(int currentSatge)
-    {
-        text.text = $"2지역 스테이지 {currentSatge}\n";
-        foreach(var w in waveTable.GetWave(2,currentSatge))
-        {
-            text.text += $"{DataTableManager.StringTable.Get(w.MonsterName)} {w.Count}마리 \n";
-        }
-    }
-    public void Waveinformation3rd(int currentSatge)
-    {
-        text.text = $"3지역 스테이지 {currentSatge}\n";
-        foreach(var w in waveTable.GetWave(3,currentSatge))
+        if (waveTable == null || text == null) return; // Start 전 클릭/텍스트 미할당 방어
+        text.text = $"{region}지역 {currentstage}일차\n";
+        foreach(var w in waveTable.GetWave(region,currentstage))
         {
             text.text += $"{DataTableManager.StringTable.Get(w.MonsterName)} {w.Count}마리 \n";
         }

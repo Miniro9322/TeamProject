@@ -25,14 +25,14 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
     public float MoveSpeed { get; protected set; }
     public EnemyType Type { get; protected set; }        // 근거리/원거리
     public EnemyClass Class { get; protected set; }      // 일반/엘리트/보스
-    public EnemyAttribute Attribute { get; protected set; }
-    // 특성 편의 접근자(비트 검사). 여러 특성을 동시에 가질 수 있다.
-    public bool IsCloaking => (Attribute & EnemyAttribute.Cloaking) != 0; // 은신
-    public bool IsFly      => (Attribute & EnemyAttribute.Fly)      != 0; // 공중
-    public bool IsUnJudged => (Attribute & EnemyAttribute.UnJudged) != 0; // 저지 불가
-    public bool IsBerserk => (Attribute & EnemyAttribute.Berserk) != 0; //폭주
-    public bool IsHitsShield => (Attribute & EnemyAttribute.HitsShield) != 0; // 타수 보호막
-    public bool IsRegeneration => (Attribute & EnemyAttribute.Regeneration) != 0; // 재생
+    public EnemyAttribute Attribute { get; protected set; } // 외부에서 볼수있는 특성
+    private EnemyAttribute Dataattribute {get; set;} //원본
+    public bool IsCloaking => (Dataattribute & EnemyAttribute.Cloaking) != 0; // 은신
+    public bool IsFly      => (Dataattribute & EnemyAttribute.Fly)      != 0; // 공중
+    public bool IsUnJudged => (Dataattribute & EnemyAttribute.UnJudged) != 0; // 저지 불가
+    public bool IsBerserk => (Dataattribute & EnemyAttribute.Berserk) != 0; //폭주
+    public bool IsHitsShield => (Dataattribute & EnemyAttribute.HitsShield) != 0; // 타수 보호막
+    public bool IsRegeneration => (Dataattribute & EnemyAttribute.Regeneration) != 0; // 재생
     public bool IsDead { get; protected set; }
     public bool IsSpawnInvincible = false;
     private StatContainer sc = new();
@@ -40,8 +40,6 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
     public Animator animator;
     private bool _attacking; // 공격 모션 재생 중 — 이 동안 스킬 시전을 막아 애니메이터 충돌 방지
     private EnemyMovement _move; // 경로 추종 이동 — Awake에서 생성, 아래 API는 여기로 위임
-
-    // 풀 반환용. 스코프에 PoolManager가 등록되면 주입되고, 아니면 Pool 프로퍼티가 Instance로 폴백.
     private PoolManager _pool;
     private GameManager gameManager;
     [Inject] 
@@ -72,7 +70,6 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
     [Tooltip("웨이포인트 도달 판정 거리의 제곱(작을수록 정확). 기본값 유지 권장.")]
     [SerializeField] private float arriveSqr = 0.0004f;
 
-    // 이동 로직은 EnemyMovement가 담당. 스킬·스포너가 쓰는 공개 API는 여기서 그대로 위임한다.
     public MapBoard Board => _move.Board;
     public bool HasPath => _move.HasPath;
     public IReadOnlyList<Vector3> Path => _move.Path;
@@ -165,7 +162,19 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
     protected virtual void Update()
     {
         _move.Tick(!IsDead, MoveSpeed); // active=사망 아님 → 원본 게이트(!IsDie)와 동일
+        UpdateExposedAttribute();       // 저지 상태에 따라 Hero가 보는 Attribute를 갱신
         CloakTick();
+    }
+
+    // Hero가 읽는 공개 Attribute 갱신.
+    // 은신 유닛이 저지당하는 동안엔 Cloaking 비트를 빼서 Hero의 unattackable 필터를 통과(=공격 가능)시킨다.
+    // 저지가 풀리면 다시 원본으로 돌아가 공격 불가. 연출(CloakTick)과 동일한 IsBlocked 조건이라 "보이는 것=때릴 수 있는 것"이 항상 일치.
+    private void UpdateExposedAttribute()
+    {
+        EnemyAttribute exposed = Dataattribute;
+        if (IsCloaking && Board != null && Board.IsBlocked(gameObject))
+            exposed &= ~EnemyAttribute.Cloaking;
+        Attribute = exposed;
     }
 
     // 걸을 때(저지 안 됨) → 은신(1)로 페이드, 저지/사망 시 → 또렷(0)로 페이드.
@@ -343,13 +352,22 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
         AttackPower = data.Attack;
         AttackSpeed = data.AttackSpeed;
         Range = data.Range;
-        Defense = data.Defense+(data.UpDefenseScale*(gameManager.DayCount/5));
-        MaxHp = data.Health+(gameManager.DayCount*data.UpHealthScale);
+        if(gameManager ==null)
+        {
+            Defense = data.Defense;
+            MaxHp = data.Health;
+        }
+        else
+        {
+            Defense = data.Defense+(data.UpDefenseScale*(gameManager.DayCount/5));
+            MaxHp = data.Health+(gameManager.DayCount*data.UpHealthScale);
+        }
         Hp = MaxHp;
         MoveSpeed = data.MoveSpeed;
         Type = ParseEnum(data.Type, EnemyType.Melee);     
         Class = ParseEnum(data.Class, EnemyClass.Normal); 
         Attribute = ParseAttribute(data.Attribute);
+        Dataattribute = Attribute;
         IsDead = false;
     }
 
@@ -386,7 +404,7 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
         int hitDamage = Mathf.Max(1, damage - reduce);
         if(IsHitsShield)
         {
-            Hp -= 1f; //무조건 1데미지
+            Hp -= 1f;
         }
         else
         {

@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using VContainer;
 
 // 독립 레인(지역) 스포너들을 한곳에서 관리한다.
@@ -18,7 +20,9 @@ public class SpawnerManager : MonoBehaviour
     private readonly Dictionary<int, WaveSpawner> _byRegion = new();
     // 지역번호 → 해금 여부
     public Dictionary<int, bool> IsUnlockregion = new();
+    public ModuleLogic[] moduleLogics;
     // 해금된 모든 지역의 적이 전멸했을 때 1회 발생.
+    public Camera cam;
     public event Action AllRegionsClear;
     private static SpawnerManager instance;
     public static SpawnerManager Instance
@@ -39,6 +43,12 @@ public class SpawnerManager : MonoBehaviour
         if (instance != null && instance != this) { Destroy(gameObject); return; }
         instance = this;
         BuildRegistry();
+        foreach(var m in moduleLogics)
+        {
+            if(m==null)continue;
+            m.OnStateChanged += state =>
+                UnlockRegion(m.ModuleId,m.CurrentState);
+        }
     }
 
     private void OnDestroy()
@@ -46,7 +56,44 @@ public class SpawnerManager : MonoBehaviour
         foreach (var s in spawners)
             if (s != null) s.EnemyAllClear -= OnRegionClear;
     }
+    void Update()
+    {
+        InputClick();
+    }
+    private void InputClick()
+    {
+        if (cam == null) cam = Camera.main;          // 인스펙터 미할당 시 메인 카메라로 폴백
+        if (cam == null || Mouse.current == null) return;
+        if(Time.timeScale==0)return;
+        if(!Mouse.current.leftButton.wasPressedThisFrame) return;
 
+        Ray ray = cam.ScreenPointToRay(Mouse.current.position.ReadValue());
+        foreach (var kv in _byRegion)
+        {
+            WaveSpawner spawner = kv.Value;
+            if (spawner == null || spawner.Board == null) continue;
+
+            Tile tile = spawner.Board.CellFromRay(ray);
+            if (tile == null || !tile.isEnemySpawn) continue; // 이 지역 보드의 소환지점 타일이 아니면 skip
+            if(!IsUnlocked(kv.Key))continue;
+            spawner.OnClickStage(kv.Key, CurrentDay);          // 그 지역의 현재 날짜 웨이브 정보 표시
+            return;                                            // 맞는 지역 하나 찾으면 끝
+        }
+    }
+    // GameManager를 지연 해석해 DayCount만 읽는다.
+    // 직접 Construct(GameManager)로 받으면 GameManager↔SpawnerManager 순환이라 컨테이너 빌드가 깨진다.
+    // IObjectResolver는 "나중에 꺼낼 수단"이라 그래프상 사이클로 안 잡히고, GameManager를 수정할 필요도 없다.
+    private IObjectResolver _resolver;
+    [Inject] public void Construct(IObjectResolver resolver) => _resolver = resolver;
+    private GameManager _gameManager;
+    private int CurrentDay
+    {
+        get
+        {
+            if (_gameManager == null && _resolver != null) _gameManager = _resolver.Resolve<GameManager>();
+            return _gameManager != null ? _gameManager.DayCount : 0;
+        }
+    }
     private void BuildRegistry()
     {
         _byRegion.Clear();
@@ -65,9 +112,12 @@ public class SpawnerManager : MonoBehaviour
             IsUnlockregion[region] = true;
     }
 
-    public void UnlockRegion(int region)
+    public void UnlockRegion(int region,ModuleState state)
     {
+        if(state!=ModuleState.Locked)
         IsUnlockregion[region] = true; //해금 할때 씀
+        else
+        IsUnlockregion[region] = false;
     }
 
     public bool IsUnlocked(int region)
@@ -78,6 +128,7 @@ public class SpawnerManager : MonoBehaviour
         foreach (var kv in _byRegion)
         {
             if (!IsUnlocked(kv.Key)) continue;
+
             kv.Value.SpawnWave(kv.Key,round);
         }
     }
