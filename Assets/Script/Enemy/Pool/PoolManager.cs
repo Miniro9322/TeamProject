@@ -7,7 +7,6 @@ using VContainer.Unity;
 
 public class PoolManager : MonoBehaviour
 {
-    // VContainer 등록 시 주입됨. 아직 스코프에 등록 안 됐으면 null → createFunc가 일반 Instantiate로 폴백.
     private IObjectResolver _resolver;
     [Inject] public void Construct(IObjectResolver resolver) => _resolver = resolver;
 

@@ -9,15 +9,12 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 986b4949d34ab674aa975fa345b8d267, type: 3}
-  m_Name: Spider_Split
-  m_EditorClassIdentifier: Assembly-CSharp::SplitSkillDataSO
-  skillName: Skill_SpiderSplitSkill
+  m_Script: {fileID: 11500000, guid: bf0c3eab65d35774cb5cb8b750efe53b, type: 3}
+  m_Name: Explosived
+  m_EditorClassIdentifier: Assembly-CSharp::ExplosiveSkillSO
+  skillName: Skill_ExplosiveSkill
   cooldown: 0
   duration: 0
-  range: 0
+  range: 3
   tickInterval: 0
-  value: 3
-  hpPercent: 0.5
-  maxGeneration: 1
-  stateName: Spawn
+  damage: 20

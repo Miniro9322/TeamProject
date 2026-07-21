@@ -1,5 +1,7 @@
+using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using Unity.VisualScripting;
 using UnityEngine;
 
 // 분열 스킬 — 유닛이 죽을 때(TriggerOnDeath) 자신과 같은 적을 value마리 스폰한다.
@@ -12,6 +14,7 @@ public class SplitSkillDataSO : UtilitySkillDataSO
 
     [Tooltip("분열 최대 세대. 1이면 원본만 분열하고 분열체는 다시 분열하지 않음(무한 방지).")]
     public int maxGeneration = 1;
+    public string stateName = "Spawn";
 
     public override bool TriggerOnDeath => true; // 쿨다운이 아니라 죽을 때 발동
 
@@ -24,11 +27,12 @@ public class SplitSkillDataSO : UtilitySkillDataSO
         int nextGen = owner.SplitGeneration + 1;
         float childHp = owner.MaxHp * hpPercent;
 
-        // 죽는 시점의 위치/보드/경로를 캡처(스폰 도중 owner가 디스폰돼도 안전).
+        // 분열체를 소유 레인 카운트에 미리 더한다(각자 죽을 때 EnemyDieEvent 감소와 상쇄 → 전멸 시 정확히 0).
+        owner.Owner?.AddSpawnCount(count);
+
         Vector3 center = owner.transform.position;
         var board = owner.Board;
         var path = owner.Path;
-        // 풀은 넘긴 prefab을 키로 쓴다 → 인스턴스(owner.gameObject) 대신 원본 프리팹을 넘겨야 풀이 올바르게 재사용됨.
         var prefab = owner.TryGetComponent(out PooledObject po) ? po.SourcePrefab : owner.gameObject;
         for (int i = 0; i < count; i++)
         {
@@ -37,11 +41,43 @@ public class SplitSkillDataSO : UtilitySkillDataSO
             if (go.TryGetComponent(out EnemyBase enemy))
             {
                 enemy.SetSplitGeneration(nextGen);            // 세대 부여(무한 분열 차단)
+                enemy.SetOwner(owner.Owner);                  // 부모와 같은 레인 소속 → 이 분열체 죽을 때 같은 카운트 감소
                 enemy.EnterMap(board, path, snapToStart: false);
                 enemy.SetCurrentHp(childHp);                  // OnEnable 풀피 리셋을 현재 체력으로 덮어씀
                 enemy.SetScaleMul(0.6f);                      // 분열체는 0.6 크기(인스턴스에만 적용, 풀 재사용 시 원복)
             }
+            WaitForAnimationEnd(enemy,stateName,5,token).Forget();
         }
+        
         await UniTask.CompletedTask;
+    }
+    private static async UniTask WaitForAnimationEnd(EnemyBase owner, string stateName, float timeout, CancellationToken token)
+    {
+        owner.MovementSuspended = true;
+        owner.IsSpawnInvincible = true;
+        owner.animator.SetTrigger("IsSpawn");
+        owner.Board.RemoveEnemy(owner.gameObject);
+        var anim = owner.animator;
+        const int layer = 0;
+        float elapsed = 0f;
+        while (owner != null && !anim.GetCurrentAnimatorStateInfo(layer).IsName(stateName))
+        {
+            if (owner.IsDead) return;
+            elapsed += Time.deltaTime;
+            if (elapsed >= timeout)
+            {
+                Debug.LogWarning($"SplitSkill: Animator에서 '{stateName}' 스테이트를 찾지 못함 — 이름/전이 확인.", owner);
+                return;
+            }
+            await UniTask.Yield(token);
+        }
+        if (owner == null) return;
+
+        var info = anim.GetCurrentAnimatorStateInfo(layer);
+        float wait = info.length / Mathf.Max(0.01f, anim.speed);
+        await UniTask.Delay(TimeSpan.FromSeconds(wait), cancellationToken: token);
+        owner.MovementSuspended = false;
+        owner.IsSpawnInvincible = false;
+        owner.Board.MoveEnemy(owner.gameObject, owner.transform.position); // 애니 끝 → 현재 칸에 다시 등록 → 타겟 대상 복귀
     }
 }
