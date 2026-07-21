@@ -15,7 +15,10 @@ public class MapRegistry : MonoBehaviour
     {
         foreach (ModuleLogic logic in _sceneModules)
         {
-            RegisterModuleLogic(logic);
+            if (logic != null)
+            {
+                RegisterModuleLogic(logic);
+            }
         }
     }
      // 등록된 모든 모듈 
@@ -25,6 +28,7 @@ public class MapRegistry : MonoBehaviour
 
     public void RegisterModuleLogic(ModuleLogic logic)
     {
+         
         _ModuleLogicId[logic.ModuleId] = logic;
     }
     
@@ -39,5 +43,3 @@ public class MapRegistry : MonoBehaviour
     }
  
 }
-
- 

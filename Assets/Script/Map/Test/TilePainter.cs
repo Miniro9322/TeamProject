@@ -20,7 +20,7 @@ public class TilePainter : MonoBehaviour
     private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
     private MaterialPropertyBlock _mpb;
     private readonly Dictionary<Tile, Renderer[]> _rends = new();
-
+ 
     public void SetColor(Vector2Int coord, Color color)
     {
         if (board != null && board.TryGetCell(coord, out Tile tile)) Paint(tile, color);

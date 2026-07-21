@@ -35,7 +35,6 @@ public class MapDebug : MonoBehaviour
     {
         board = GetComponent<MapBoard>();
     }
-
     private void OnDrawGizmos()
     {
         if (board == null)
