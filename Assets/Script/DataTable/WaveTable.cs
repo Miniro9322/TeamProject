@@ -5,6 +5,7 @@ public class WaveTable : DataTable
 {
     public class Data
     {
+        public int Region { get; set; } // 몬스터가 속한 지역(독립 레인). 지역 해금 시 그 지역 행만 스폰.
         public int ID { get; set; }
         public string MonsterName { get; set; }
         public string Prefab { get; set; }
@@ -43,6 +44,12 @@ public class WaveTable : DataTable
     public List<Data> GetWave(int id)
     {
         return waves.FindAll(w => w.ID == id);
+    }
+
+    // 지역(레인)별 웨이브: 해당 region의 해당 round(id) 행만. 지역 스포너가 자기 region으로 호출.
+    public List<Data> GetWave(int region, int id)
+    {
+        return waves.FindAll(w => w.Region == region && w.ID == id);
     }
 
     public GameObject GetMonsterPrefab(Data data)

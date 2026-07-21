@@ -4,6 +4,17 @@ using VContainer;
 
 public class GameManager : MonoBehaviour
 {
+    // DI Construct가 아직 안 돌았을 때(풀에서 컨테이너 리졸버 없이 스폰된 적 등)를 위한 폴백 접근자.
+    // PoolManager/SpawnerManager와 동일한 패턴.
+    private static GameManager instance;
+    public static GameManager Instance => instance;
+
+    private void Awake()
+    {
+        if (instance != null && instance != this) { Destroy(gameObject); return; }
+        instance = this;
+    }
+
     private FSM fsm = new();
 
     private IState day;
@@ -14,7 +25,7 @@ public class GameManager : MonoBehaviour
     private bool canBuild = false;
     private FacilityManager facilityManager;
     private UiManager uiManager;
-    private WaveSpawner waveSpawner;
+    private SpawnerManager waveSpawner;
     private int dayCount = 0;
     [SerializeField] private int hp = 20;
     private bool requestSupport = false;
@@ -29,7 +40,7 @@ public class GameManager : MonoBehaviour
     public event Action ExpandMap;
 
     [Inject]
-    private void Construct(FacilityManager facilityManager, UiManager uiManager, WaveSpawner waveSpawner)
+    private void Construct(FacilityManager facilityManager, UiManager uiManager, SpawnerManager waveSpawner)
     {
         this.facilityManager = facilityManager;
         this.uiManager = uiManager;
@@ -42,13 +53,13 @@ public class GameManager : MonoBehaviour
         night = new NightState(this);
         result = new ResultState(this, uiManager);
         gameover = new GameOverState(this);
-        waveSpawner.EnemyAllClear += OnResult;
+        waveSpawner.AllRegionsClear += OnResult;
         fsm.ChangeState(day);
     }
 
     private void OnDestroy()
     {
-        waveSpawner.EnemyAllClear -= OnResult;
+        waveSpawner.AllRegionsClear -= OnResult;
     }
 
     public void OnNight()

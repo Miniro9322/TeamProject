@@ -39,7 +39,7 @@ public class GameLifeTimeScope : LifetimeScope
         builder.RegisterComponentInHierarchy<TopBar>();
         builder.RegisterComponentInHierarchy<DayNightButton>();
         builder.RegisterComponentInHierarchy<MapGame>();
-        builder.RegisterComponentInHierarchy<WaveSpawner>().AsSelf();
+        builder.RegisterComponentInHierarchy<SpawnerManager>().AsSelf();
         builder.RegisterBuildCallback(resolver =>
         {
             var testObjects = FindObjectsByType<StatContainerTest>(FindObjectsSortMode.None);

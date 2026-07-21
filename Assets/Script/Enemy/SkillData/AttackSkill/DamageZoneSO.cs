@@ -30,7 +30,6 @@ public class DamageZoneSO : AttackSkillDataSO
                 int d = Mathf.RoundToInt(damage);
                 foreach(var g in target)
                 {
-                    // 점유 오브젝트가 항상 피격 가능한 건 아님(건물 등) — 있을 때만 데미지.
                     if (g.GetComponentInParent<IDamageAble>() is IDamageAble dmg)
                         dmg.TakeDamage(d);
                 }

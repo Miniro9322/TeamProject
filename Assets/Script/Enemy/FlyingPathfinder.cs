@@ -15,8 +15,6 @@ public static class FlyingPathfinder
 
         Vector2Int goalCell = board.WorldToCell(goalWorld);
         if (!board.TryGetCell(board.WorldToCell(startWorld), out Tile startTile)) return list;
-
-        // WalkableNeighbors 대신 AllNeighbors — 통행 지형 제약만 뺀 동일 A*. 목표는 본진 칸.
         List<Tile> path = Pathfinder.FindPath(
             new[] { startTile },
             t => t.Coord == goalCell,
@@ -24,8 +22,6 @@ public static class FlyingPathfinder
             t => GridCalculator.GetDistance(t.Coord, goalCell));
 
         if (path == null) return list;
-
-        // 모든 웨이포인트의 Y를 일정 고도로 고정(XZ만 타일 위치 사용) → 언덕 위에서도 평탄하게 비행.
         float flightY = startWorld.y + flightHeight;
         foreach (Tile t in path)
         {
@@ -34,8 +30,7 @@ public static class FlyingPathfinder
         }
         return list;
     }
-
-    // 그리드 내 모든 이웃(통행 지형 여부 무시).
+    
     private static IEnumerable<Tile> AllNeighbors(MapBoard board, Tile tile)
     {
         foreach (Vector2Int dir in GridCalculator.Directions)
