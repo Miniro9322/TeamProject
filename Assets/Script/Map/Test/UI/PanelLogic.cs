@@ -28,6 +28,7 @@ public class PanelLogic : MonoBehaviour
         panel.PathClicked += PathClick;
         panel.PathToggle += PathToggle;
         panel.UnitCleared += UnitClear;
+        panel.ReplaceClicked += ReplaceClick;
         panel.RemoveClicked += RemoveClick;
         panel.ModeCleared += ModeClear;
         panel.UnitClicked += UnitClick;
@@ -43,6 +44,7 @@ public class PanelLogic : MonoBehaviour
         panel.PathClicked -= PathClick;
         panel.PathToggle -= PathToggle;
         panel.UnitCleared -= UnitClear;
+        panel.ReplaceClicked -= ReplaceClick;
         panel.RemoveClicked -= RemoveClick;
         panel.ModeCleared -= ModeClear;
         panel.UnitClicked -= UnitClick;
@@ -82,6 +84,11 @@ public class PanelLogic : MonoBehaviour
     private void RemoveClick()
     {
         game.SetRemove();
+    }
+
+    private void ReplaceClick()
+    {
+        game.SetReplace();
     }
 
     private void ModeClear()

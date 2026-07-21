@@ -3,7 +3,15 @@ using UnityEngine;
 
 public class MapPanel : MonoBehaviour
 {
-    private const float PanelWidth = 230f;
+    [Header("패널 크기")]
+    [SerializeField, Min(200f)] private float panelWidth = 360f;
+    [SerializeField, Min(100f)] private float infoHeight = 420f;
+    [SerializeField, Min(100f)] private float testHeight = 760f;
+    [SerializeField, Min(0f)] private float panelMargin = 20f;
+
+    [Header("패널 스타일")]
+    [SerializeField, Range(12, 32)] private int fontSize = 18;
+    [SerializeField] private GUISkin panelSkin;
 
     private PanelData data;
 
@@ -15,6 +23,7 @@ public class MapPanel : MonoBehaviour
     public event Action RemoveClicked;
     public event Action ModeCleared;
     public event Action<int> UnitClicked;
+    public event Action ReplaceClicked;
     public event Action ModuleUnlockClicked;
 
     public void SetData(PanelData value)
@@ -30,12 +39,31 @@ public class MapPanel : MonoBehaviour
             return;
         }
 
-        Rect info = new(10f, 10f, PanelWidth, 300f);
-        Rect test = new(Screen.width - PanelWidth - 10f, 10f, PanelWidth, 560f);
+        GUISkin oldSkin = GUI.skin;
+        if (panelSkin != null)
+        {
+            GUI.skin = panelSkin;
+        }
+
+        int labelSize = GUI.skin.label.fontSize;
+        int buttonSize = GUI.skin.button.fontSize;
+        GUI.skin.label.fontSize = fontSize;
+        GUI.skin.button.fontSize = fontSize;
+
+        Rect info = new(panelMargin, panelMargin, panelWidth, infoHeight);
+        Rect test = new(
+            Screen.width - panelWidth - panelMargin,
+            panelMargin,
+            panelWidth,
+            testHeight);
         HasPointer = info.Contains(Event.current.mousePosition) || test.Contains(Event.current.mousePosition);
 
         DrawInfo(info);
         DrawTest(test);
+
+        GUI.skin.label.fontSize = labelSize;
+        GUI.skin.button.fontSize = buttonSize;
+        GUI.skin = oldSkin;
     }
 
     private void DrawInfo(Rect rect)
@@ -96,6 +124,11 @@ public class MapPanel : MonoBehaviour
             {
                 UnitClicked?.Invoke(i);
             }
+        }
+
+        if (GUILayout.Button("재배치"))
+        {
+            ReplaceClicked?.Invoke();
         }
 
         GUILayout.BeginHorizontal();

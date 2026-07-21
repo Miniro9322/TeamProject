@@ -74,6 +74,10 @@ public class PlacePalette : MonoBehaviour
 
         return null;
     }
+    public void SelectReplace()
+    {
+        _mode = PlaceMode.Replace;
+    }
 
     public void SelectRemove()
     {

@@ -25,7 +25,7 @@ public class ModuleLogic : MonoBehaviour
     {
         moduleId = ModuleId;
     }
-
+    //배치 가능 여부 전환(배치 가능 == 구역 해금으로 판단)
     public void SetState(ModuleState newState)
     {
         if (_currentState == newState) return;
@@ -33,7 +33,7 @@ public class ModuleLogic : MonoBehaviour
         _currentState = newState;
         OnStateChanged?.Invoke(newState);
     }
-
+    //구역 상태를 Locked -> Preparing으로 전환. 이미 해금 상태면 무시.
     public void Unlock()
     {
         if (IsUnlocked) return;

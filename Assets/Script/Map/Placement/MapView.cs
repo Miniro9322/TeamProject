@@ -57,6 +57,10 @@ public class MapView : MonoBehaviour
 
     public void SetUnit(int index) { palette.SelectSlot(index); }
     public void SetUnit(string label) { palette.SelectSlot(label); }
+    public void SetReplace()
+    {
+        palette.SelectReplace();
+    }
     public void SetRemove() { palette.SelectRemove(); }
     public void ClearMode() { palette.ClearMode(); }
     public void SetBlock(bool value) { input.SetBlock(value); }
