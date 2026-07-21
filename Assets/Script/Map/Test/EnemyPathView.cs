@@ -19,7 +19,6 @@ public class EnemyPathView : MonoBehaviour
     public bool IsOnPath(Vector2Int coord) => pathCoords.Contains(coord);
 
     public event Action OnPathChanged;
-
     private void Start()
     {
         RebuildPath();

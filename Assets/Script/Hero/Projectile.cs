@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Threading;
 using UnityEngine;
 using UnityEngine.Pool;
 
@@ -12,6 +13,11 @@ public struct ProjectileAoEConfig
     public float chainFalloff;
     public System.Func<Vector3, int, RangeShape, List<IDamageAble>> getEnemiesInRange;
     public System.Func<Vector3, int, RangeShape, List<GameObject>> getEnemyObjectsInRange;
+    public List<BuffEffect> buffList;
+    public BuffManager buffManager;
+    public object source; // 보통 발사한 AttackDataSO 인스턴스
+    public GroundZoneDataSO groundZone;
+    public StatContainer attackerStats;
 }
 
 public class Projectile : MonoBehaviour
@@ -96,18 +102,28 @@ public class Projectile : MonoBehaviour
 
         if (cfg.attackType == AttackType.Area && cfg.areaShape == AreaShape.Chain)
         {
-            ChainResolver.Resolve(target.gameObject, damage, cfg.chainRange, cfg.chainCount, cfg.chainFalloff, cfg.getEnemyObjectsInRange);
+            List<GameObject> hits = ChainResolver.Resolve(target.gameObject, damage, cfg.chainRange, cfg.chainCount, cfg.chainFalloff, cfg.getEnemyObjectsInRange);
+            foreach (GameObject go in hits)
+                AttackDamageUtil.ApplyTargetDebuffs(go.GetComponentInParent<IUnit>(), cfg.buffList, cfg.buffManager, cfg.source);
         }
         else if (cfg.attackType == AttackType.Area)
         {
             foreach (IDamageAble enemy in cfg.getEnemiesInRange(transform.position, cfg.areaRange, aoeShape))
+            {
                 enemy.TakeDamage((int)damage);
+                AttackDamageUtil.ApplyTargetDebuffs(enemy as IUnit, cfg.buffList, cfg.buffManager, cfg.source);
+            }
             SplashHighlighter.Instance?.Flash(transform.position, cfg.areaRange, aoeShape);
         }
         else if (target != null && target.GetComponentInParent<IDamageAble>() is IDamageAble damageable)
         {
             damageable.TakeDamage((int)damage);
+            AttackDamageUtil.ApplyTargetDebuffs(target.GetComponentInParent<IUnit>(), cfg.buffList, cfg.buffManager, cfg.source);
         }
+
+        AttackDamageUtil.SpawnGroundZone(cfg.groundZone, transform.position,
+            cfg.getEnemyObjectsInRange, cfg.attackerStats, cfg.buffManager, CancellationToken.None);
+
         Return();
     }
 

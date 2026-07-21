@@ -25,12 +25,6 @@ public class BuildingPool : IBuildingPool
             return null;
         }
 
-        if (!resourcesManager.CheckResources(prefab.GetComponent<ProductionFacility>().BasicValue.ConstructProduct))
-        {
-            Debug.LogWarning("자원이 부족합니다.");
-            return null;
-        }
-
         GameObject instance;
         if (_pools.TryGetValue(type, out var stack) && stack.Count > 0)
         {

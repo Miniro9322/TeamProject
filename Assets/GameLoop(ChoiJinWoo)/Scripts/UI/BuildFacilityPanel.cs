@@ -3,6 +3,7 @@ using UnityEngine.UI;
 
 public class BuildFacilityPanel : MonoBehaviour
 {
+    [SerializeField] private MapView view;
     [SerializeField] private MapGame game;
     [SerializeField] private Button foodFacility;
     [SerializeField] private Button goldFacility;
@@ -13,28 +14,31 @@ public class BuildFacilityPanel : MonoBehaviour
 
     private void OnEnable()
     {
-        game.OnPlaced += ButtonUpdate;
+        game.Placer.resourcesManager.ProductUpdate += ButtonUpdate; 
 
         ButtonUpdate();
     }
 
     private void OnDisable()
     {
-        game.OnPlaced -= ButtonUpdate;
+        game.Placer.resourcesManager.ProductUpdate -= ButtonUpdate;
     }
 
     public void OnBuild(string label)
     {
-        game.SetUnit(label);
+        view.SetUnit(label);
     }
 
     private void ButtonUpdate()
     {
-        foodFacility.interactable = game.CheckCanBuild("food");
-        goldFacility.interactable = game.CheckCanBuild("gold");
-        stoneFacility.interactable = game.CheckCanBuild("stone");
-        woodFacility.interactable = game.CheckCanBuild("wood");
-        ironFacility.interactable = game.CheckCanBuild("iron");
-        house.interactable = game.CheckCanBuild("house");
+        foodFacility.interactable = view.CheckCanBuild("food");
+        goldFacility.interactable = view.CheckCanBuild("gold");
+        stoneFacility.interactable = view.CheckCanBuild("stone");
+        woodFacility.interactable = view.CheckCanBuild("wood");
+        ironFacility.interactable = view.CheckCanBuild("iron");
+        house.interactable = view.CheckCanBuild("house");
+
+        if (view.IsPlacing && !view.CheckCanBuild(view.PlacingLabel))
+            view.ClearMode();
     }
 }

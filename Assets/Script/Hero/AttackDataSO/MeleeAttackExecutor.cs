@@ -13,7 +13,11 @@ public class MeleeAttackExecutor : IAttackExecutor
         AttackAnimSpeedUtil.SetSpeed(ctx.anim, AttackAnimSpeedUtil.ComputeScale(data, interval));
 
         ctx.anim.SetTrigger(PickTrigger(data));
-        
+
+        if (data.groundZone != null && ctx.target != null)
+            AttackDamageUtil.SpawnGroundZone(data.groundZone, ctx.target.position,
+                ctx.getEnemyObjectsInRange, ctx.sc, ctx.buffManager, ct);
+
         try
         {
             float windowDuration = AttackAnimSpeedUtil.ComputeWindowDuration(data, interval);

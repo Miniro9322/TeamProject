@@ -1,11 +1,12 @@
 using Cysharp.Threading.Tasks;
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using UnityEngine;
 using UnityEngine.Rendering;
 using VContainer;
 
-public class Hero : MonoBehaviour, IDamageAble, IPlaceAble
+public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
 {
     [SerializeField] private AttackDataSO[] basePattern;
     public AttackDataSO[] BasePattern => basePattern;
@@ -50,8 +51,13 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble
     [SerializeField] protected int range = 1;
     [SerializeField] protected RangeShape rangeShape = RangeShape.Diamond;
 
+    [SerializeField] private List<GroundZoneDataSO> auraZones = new();
+    private CancellationTokenSource _auraCts;
+
     private StatContainer sc = new();
     public StatContainer SC => sc;
+    public StatContainer Stats => sc;
+
     public int BlockCount => IsDead ? 0 : (int)SC[StatType.BLK];
     private float currentHp;
     public float Hp => currentHp;
@@ -59,16 +65,21 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble
     private bool isDead = false;
     public bool IsDead => isDead;
 
+    [SerializeField] private EnemyAttribute unattackableTarget = EnemyAttribute.Fly | EnemyAttribute.Cloaking;
+
     //테스트용 코드
     private GameManager gameManager;
+    protected BuffManager buffManager;
     private CitizenManager citizenManager;
+    [SerializeField] private int citizenAmount = 2;
+    public int CitizenAmount => citizenAmount;
     [Inject]
-    private void Construct(GameManager gameManager, CitizenManager citizenManager)
+    private void Construct(GameManager gameManager, BuffManager buffManager, CitizenManager citizenManager))
     {
         this.gameManager = gameManager;
+        this.buffManager = buffManager;
         this.citizenManager = citizenManager;
     }
-    //끝
 
     public void Die()
     {
@@ -105,8 +116,9 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble
         sc.AddStat(StatType.BLK, statData.blockCount);
         sc.AddStat(StatType.AS, statData.attackSpeed);
         currentHp = sc[StatType.HP];
+        OnResur += StartAuras;
         //테스트용 코드
-        citizenManager.UseCitizen(2);
+        citizenManager.UseCitizen(citizenAmount);
         //끝
     }
 
@@ -122,18 +134,39 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble
             gameManager.ChangeToDay += Resurrection;
         }
         //끝
+        StartAuras();
     }
 
     //테스트용 코드
     protected virtual void OnDestroy()
     {
-        
+
         if (gameManager != null)
         {
             gameManager.ChangeToDay -= Resurrection;
         }
+        OnResur -= StartAuras;
+        _auraCts?.Cancel();
+        _auraCts?.Dispose();
     }
     //끝
+
+    // 영웅 주위에 항상 존재하는 오라형 장판을 (재)시작한다. 사망 시 각 장판 루프가 스스로 멈추고,
+    // 부활(OnResur)하면 여기가 다시 불려 새 토큰으로 재시작한다.
+    private void StartAuras()
+    {
+        _auraCts?.Cancel();
+        _auraCts?.Dispose();
+        _auraCts = new CancellationTokenSource();
+        foreach (GroundZoneDataSO zone in auraZones)
+        {
+            if (zone == null) continue;
+            // AttackDamageUtil.SpawnGroundZone은 항상 keepAlive=true를 넘겨 임시 장판용이므로,
+            // 사망 시 멈춰야 하는 오라는 GroundZoneRunner.Run을 직접 호출해 !IsDead를 넘긴다.
+            GroundZoneRunner.Run(transform.position, zone, GetEnemyObjectsInRange, sc, buffManager,
+                () => !IsDead, _auraCts.Token).Forget();
+        }
+    }
     protected virtual void Update()
     {
         stateMachine.CurrentState.Update();
@@ -150,6 +183,8 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble
             foreach (GameObject enemy in tile.Enemies)
             {
                 if (enemy == null) continue;
+                var eb = enemy.GetComponent<EnemyBase>();
+                if (eb == null || (eb.Attribute & unattackableTarget) != 0) continue;
                 target = enemy;
                 context.target = target.transform;
                 return;
@@ -266,4 +301,5 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble
         await UniTask.Delay(TimeSpan.FromSeconds(10));
         Resurrection();
     }
+
 }

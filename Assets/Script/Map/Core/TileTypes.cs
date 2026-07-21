@@ -8,12 +8,6 @@ public enum TerrainType
     Special // 특수 타일. 이벤트/보상/장식용. 배치 불가
 }
 
-public enum TerritoryState
-{
-    Unclaimed, // 배치·건설 불가
-    Claimed    // 배치·건설 가능
-}
-
 /// <summary>기존 씬 데이터 호환용 값. 새 코드는 TileState의 명시 필드를 사용한다.</summary>
 public enum TileFlags
 {
