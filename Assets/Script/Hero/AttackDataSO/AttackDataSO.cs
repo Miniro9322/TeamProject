@@ -33,17 +33,6 @@ public class AttackDataSO : ScriptableObject
     // 클립이 정확히 간격 안에서 끝나도록 맞춘다.
     public float clipLength = 0f;
     public List<BuffEffect> buffList;
-    public List<Modifier> modList;
-
-    public AttackDataSO()
-    {
-        modList = new();
-        foreach (BuffEffect effect in buffList)
-        {
-            var mod = new Modifier(effect.modifierType, effect.value, effect.duration, StatLayer.Buff, this);
-            modList.Add(mod);
-        }
-    }
 }
 
 // Single: 대상 하나(또는 targetMode==DifferentEnemies면 서로 다른 적)에게 비범위 피해.
@@ -77,5 +66,6 @@ public struct BuffEffect
     public ModifierType modifierType;
     public float value;
     public float duration;
-    public bool isTargetToOther;
+    public bool isTargetToOther; // false = 공격자 자신, true = 맞은 적
+    public int maxStacks;        // 1 = 스택 없이 지속시간만 갱신, N>1 = 스택형. Unity 역직렬화 기본값은 0 — 적용부에서 Mathf.Max(1, maxStacks)로 보정
 }

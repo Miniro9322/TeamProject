@@ -6,58 +6,41 @@ public class BuffManager : ITickable
 {
     private readonly List<ActiveBuff> activeBuffs = new();
 
-    public void ApplyTimedModifier(IUnit target, StatType type, Modifier modifier, float duration)
+    public void ApplyStackingModifier(IUnit target, StatType type, ModifierType modType, float value, float duration, int maxStacks, object source)
     {
+        maxStacks = Mathf.Max(1, maxStacks);
+
         var existing = activeBuffs.Find(b =>
         b.Target == target &&
         b.StatType == type &&
-        b.Source == modifier.Source);
+        b.Source == source);
 
-        if (existing != null)
+        if (existing == null)
         {
-            existing.RemainingTime = duration;
+            var modifier = new Modifier(modType, value, duration, StatLayer.Buff, source);
+            target.Stats.AddModifier(type, modifier);
+
+            activeBuffs.Add(new ActiveBuff
+            {
+                Target = target,
+                StatType = type,
+                Modifiers = new List<Modifier> { modifier },
+                Stacks = 1,
+                RemainingTime = duration,
+                Source = source
+            });
             return;
         }
 
-        target.Stats.AddModifier(type, modifier);
-
-        Debug.Log($"{target.Stats[type]}");
-
-        activeBuffs.Add(new ActiveBuff
+        if (existing.Stacks < maxStacks)
         {
-            Target = target,
-            StatType = type,
-            Modifier = modifier,
-            RemainingTime = duration,
-            Source = modifier.Source
-        });
-    }
-
-    public void ApplyTimedModifier(IUnit target, StatType type, Modifier modifier)
-    {
-        var existing = activeBuffs.Find(b =>
-        b.Target == target &&
-        b.StatType == type &&
-        b.Source == modifier.Source);
-
-        if (existing != null)
-        {
-            existing.RemainingTime = modifier.Duration;
-            return;
+            var modifier = new Modifier(modType, value, duration, StatLayer.Buff, source);
+            target.Stats.AddModifier(type, modifier);
+            existing.Modifiers.Add(modifier);
+            existing.Stacks++;
         }
 
-        target.Stats.AddModifier(type, modifier);
-
-        Debug.Log($"{target.Stats[type]}");
-
-        activeBuffs.Add(new ActiveBuff
-        {
-            Target = target,
-            StatType = type,
-            Modifier = modifier,
-            RemainingTime = modifier.Duration,
-            Source = modifier.Source
-        });
+        existing.RemainingTime = duration;
     }
 
     public void Tick()
@@ -68,8 +51,8 @@ public class BuffManager : ITickable
             buff.RemainingTime -= Time.deltaTime;
             if (buff.RemainingTime <= 0f)
             {
-                buff.Target.Stats.RemoveModifier(buff.StatType, buff.Modifier);
-                Debug.Log($"{buff.StatType} (디)버프 제거됨 {buff.StatType}: {buff.Target.Stats[buff.StatType]}");
+                foreach (var modifier in buff.Modifiers)
+                    buff.Target.Stats.RemoveModifier(buff.StatType, modifier);
                 activeBuffs.RemoveAt(i);
             }
         }
@@ -81,7 +64,8 @@ public class BuffManager : ITickable
         {
             if (b.Target == target)
             {
-                target.Stats.RemoveModifier(b.StatType, b.Modifier);
+                foreach (var modifier in b.Modifiers)
+                    target.Stats.RemoveModifier(b.StatType, modifier);
                 return true;
             }
             return false;

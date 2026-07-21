@@ -22,6 +22,7 @@ public struct AttackContext
     public System.Func<Vector3, Vector2Int, int, Vector3> getLineEndPoint;
     public BuffManager buffManager;
     public StatContainer sc;
+    public IUnit selfUnit;
 
     public async UniTask WaitForAnimEvent(string eventName, CancellationToken ct)
     {
