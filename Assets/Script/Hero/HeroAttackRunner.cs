@@ -81,7 +81,7 @@ public class HeroAttackRunner
                     pendingOverride = proc.GetProcAttack(attack);
                     break;
                 case ProcEffectType.BonusDamage:
-                    AttackDamageUtil.ApplyInstantDamage(proc.GetProcAttack(attack), ctx);
+                    AttackDamageUtil.ApplyInstantDamage(proc.GetProcAttack(attack), ctx, ct).Forget();
                     break;
             }
         }

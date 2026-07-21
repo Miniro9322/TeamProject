@@ -14,15 +14,27 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::AttackDataSO
   attackPer: 1
   range: 10
-  square: 0
+  rangeShape: 0
   attackType: 0
+  targetMode: 0
   attackCount: 1
   targetCount: 1
   shotInterval: 0.1
-  splashRange: 1
-  splashSquare: 0
+  areaShape: 0
+  areaRange: 1
+  lineLength: 2
+  chainRange: 2
+  chainCount: 3
+  chainFalloff: 0.8
   selectMode: 0
   animTriggers:
   - Attack
   projectilePrefab: {fileID: 607833191716554269, guid: 9a655c0bc584fd949b6d31f3804c9433, type: 3}
   clipLength: 0.6666667
+  buffList:
+  - statType: 5
+    modifierType: 1
+    value: -0.5
+    duration: 5
+    isTargetToOther: 1
+    maxStacks: 1

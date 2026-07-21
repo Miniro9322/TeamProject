@@ -1,30 +1,120 @@
+using System;
 using System.Collections.Generic;
-using System.Diagnostics;
+using System.Threading;
+using Cysharp.Threading.Tasks;
+using UnityEngine;
 
 public static class AttackDamageUtil
 {
-    public static void ApplyInstantDamage(AttackDataSO data, AttackContext ctx)
+    public static async UniTask ApplyInstantDamage(AttackDataSO data, AttackContext ctx, CancellationToken ct)
     {
-        int damage = (int)(ctx.sc[StatType.ATK] * data.attackPer);
+        float baseDamage = ctx.sc[StatType.ATK] * data.attackPer;
 
-        if (data.attackType == AttackType.Splash)
+        ApplySelfBuffs(ctx.selfUnit, data.buffList, ctx.buffManager, data); // 공격 1회당 1회, 맞은 대상 수와 무관하게 적용(스택형 자기 버프용)
+
+        // Line/Chain은 targetMode와 무관하게 자체 타겟팅 모델로 처리한다.
+        if (data.attackType == AttackType.Area && data.areaShape == AreaShape.Line)
         {
-            foreach (IDamageAble enemy in ctx.getEnemiesInRange(ctx.self.position, data.splashRange, data.splashSquare))
-                enemy.TakeDamage(damage);
-            SplashHighlighter.Instance?.Flash(ctx.self.position, data.splashRange, data.splashSquare);
+            foreach (IDamageAble e in ctx.getEnemiesInLine(ctx.self.position, ctx.target.position, data.lineLength))
+            {
+                e.TakeDamage((int)baseDamage);
+                ApplyTargetDebuffs(e as IUnit, data.buffList, ctx.buffManager, data);
+            }
+            return;
         }
-        else if (data.attackType == AttackType.Multiple)
+
+        if (data.attackType == AttackType.Area && data.areaShape == AreaShape.Chain)
         {
-            List<IDamageAble> enemies = ctx.getEnemiesInRange(ctx.self.position, data.range, data.square);
-            int count = data.targetCount < enemies.Count ? data.targetCount : enemies.Count;
-            for (int i = 0; i < count; i++)
-                enemies[i].TakeDamage(damage);
+            List<GameObject> hits = ChainResolver.Resolve(ctx.target.gameObject, baseDamage, data.chainRange, data.chainCount,
+                data.chainFalloff, ctx.getEnemyObjectsInRange);
+            foreach (GameObject go in hits)
+                ApplyTargetDebuffs(go.GetComponentInParent<IUnit>(), data.buffList, ctx.buffManager, data);
+            return;
         }
-        else
+
+        if (data.attackType == AttackType.Single && data.targetMode == TargetMode.SameTarget)
         {
-            IDamageAble target = ctx.target.GetComponent<IDamageAble>();
-            if (target != null)
-                target.TakeDamage(damage);
+            if (ctx.target.GetComponent<IDamageAble>() is IDamageAble d)
+            {
+                d.TakeDamage((int)baseDamage);
+                ApplyTargetDebuffs(d as IUnit, data.buffList, ctx.buffManager, data);
+            }
+            return;
+        }
+
+        if (data.attackType == AttackType.Single && data.targetMode == TargetMode.DifferentEnemies)
+        {
+            List<IDamageAble> enemies = ctx.getEnemiesInRange(ctx.self.position, data.range, data.rangeShape);
+            List<IDamageAble> targets = AttackTargetSelector.SelectTargets(enemies, data.attackCount, data.targetCount);
+            await FireEach(targets, t =>
+            {
+                t.TakeDamage((int)baseDamage);
+                ApplyTargetDebuffs(t as IUnit, data.buffList, ctx.buffManager, data);
+            }, data.shotInterval, ct);
+            return;
+        }
+
+        RangeShape aoeShape = data.areaShape == AreaShape.Square ? RangeShape.Square : RangeShape.Diamond;
+
+        if (data.attackType == AttackType.Area && data.targetMode == TargetMode.SameTarget)
+        {
+            for (int i = 0; i < data.attackCount; i++)
+            {
+                foreach (IDamageAble e in ctx.getEnemiesInRange(ctx.self.position, data.areaRange, aoeShape))
+                {
+                    e.TakeDamage((int)baseDamage);
+                    ApplyTargetDebuffs(e as IUnit, data.buffList, ctx.buffManager, data);
+                }
+                SplashHighlighter.Instance?.Flash(ctx.self.position, data.areaRange, aoeShape);
+                if (i < data.attackCount - 1)
+                    await UniTask.Delay(TimeSpan.FromSeconds(data.shotInterval), cancellationToken: ct);
+            }
+            return;
+        }
+
+        // Area + DifferentEnemies: 서로 다른 적 최대 targetCount명, 각각을 중심으로 AOE 캐스트.
+        List<GameObject> enemyObjects = ctx.getEnemyObjectsInRange(ctx.self.position, data.range, data.rangeShape);
+        List<GameObject> centers = AttackTargetSelector.SelectTargets(enemyObjects, data.attackCount, data.targetCount);
+        await FireEach(centers, go =>
+        {
+            foreach (IDamageAble e in ctx.getEnemiesInRange(go.transform.position, data.areaRange, aoeShape))
+            {
+                e.TakeDamage((int)baseDamage);
+                ApplyTargetDebuffs(e as IUnit, data.buffList, ctx.buffManager, data);
+            }
+            //SplashHighlighter.Instance?.Flash(go.transform.position, data.areaRange, aoeShape);
+        }, data.shotInterval, ct);
+    }
+
+    public static void ApplySelfBuffs(IUnit selfUnit, List<BuffEffect> buffList, BuffManager buffManager, object source)
+    {
+        if (buffList == null || selfUnit == null) return;
+        foreach (BuffEffect effect in buffList)
+        {
+            if (effect.isTargetToOther) continue;
+            buffManager.ApplyStackingModifier(selfUnit, effect.statType, effect.modifierType,
+                effect.value, effect.duration, effect.maxStacks, source);
+        }
+    }
+
+    public static void ApplyTargetDebuffs(IUnit target, List<BuffEffect> buffList, BuffManager buffManager, object source)
+    {
+        if (target == null || buffList == null) return;
+        foreach (BuffEffect effect in buffList)
+        {
+            if (!effect.isTargetToOther) continue;
+            buffManager.ApplyStackingModifier(target, effect.statType, effect.modifierType,
+                effect.value, effect.duration, effect.maxStacks, source);
+        }
+    }
+
+    private static async UniTask FireEach<T>(List<T> items, Action<T> apply, float interval, CancellationToken ct)
+    {
+        for (int i = 0; i < items.Count; i++)
+        {
+            apply(items[i]);
+            if (i < items.Count - 1)
+                await UniTask.Delay(TimeSpan.FromSeconds(interval), cancellationToken: ct);
         }
     }
 }

@@ -2,6 +2,21 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Pool;
 
+public struct ProjectileAoEConfig
+{
+    public AttackType attackType;
+    public AreaShape areaShape;
+    public int areaRange;
+    public int chainRange;
+    public int chainCount;
+    public float chainFalloff;
+    public System.Func<Vector3, int, RangeShape, List<IDamageAble>> getEnemiesInRange;
+    public System.Func<Vector3, int, RangeShape, List<GameObject>> getEnemyObjectsInRange;
+    public List<BuffEffect> buffList;
+    public BuffManager buffManager;
+    public object source; // 보통 발사한 AttackDataSO 인스턴스
+}
+
 public class Projectile : MonoBehaviour
 {
     [SerializeField] private float speed = 15f;
@@ -10,44 +25,54 @@ public class Projectile : MonoBehaviour
     [SerializeField] private float turnSpeed = 720f;
 
     private Transform target;
+    private Vector3 destination;
+    private bool visualOnly;
     private float damage;
     private float elapsed;
     private IObjectPool<Projectile> pool;
-    private System.Func<Vector3, int, bool, List<IDamageAble>> getEnemiesInRange;
-    private AttackType attackType;
-    private int aoeRange;
-    private bool aoeSquare;
+    private ProjectileAoEConfig cfg;
 
-    public void Launch(Transform target, float damage, IObjectPool<Projectile> pool,
-        System.Func<Vector3, int, bool, List<IDamageAble>> getEnemiesInRange,
-        AttackType attackType, int aoeRange, bool aoeSquare)
+    public void Launch(Transform target, float damage, IObjectPool<Projectile> pool, ProjectileAoEConfig cfg)
     {
         this.target = target;
         this.damage = damage;
         this.pool = pool;
-        this.getEnemiesInRange = getEnemiesInRange;
-        this.attackType = attackType;
-        this.aoeRange = aoeRange;
-        this.aoeSquare = aoeSquare;
+        this.cfg = cfg;
+        this.visualOnly = false;
         elapsed = 0f;
 
         if (target != null && TryLook(target.position - transform.position, out Quaternion look))
             transform.rotation = look;
     }
 
+    // 관통(Line) 화살: 피해는 발사 시점에 이미 적용됐으므로, 명중 판정 없이 destination까지 날아가 사라진다.
+    public void LaunchVisualOnly(Vector3 destination, IObjectPool<Projectile> pool)
+    {
+        this.destination = destination;
+        this.pool = pool;
+        this.visualOnly = true;
+        this.target = null;
+        elapsed = 0f;
+
+        if (TryLook(destination - transform.position, out Quaternion look))
+            transform.rotation = look;
+    }
+
     private void Update()
     {
         elapsed += Time.deltaTime;
-        if (elapsed >= maxLifetime || target == null)
+        if (elapsed >= maxLifetime || (!visualOnly && target == null))
         {
             Return();
             return;
         }
 
-        Vector3 toTarget = target.position - transform.position;
+        Vector3 dest = visualOnly ? destination : target.position;
+        Vector3 toTarget = dest - transform.position;
         if (toTarget.sqrMagnitude <= hitDistance * hitDistance)
         {
-            Hit();
+            if (visualOnly) Return();
+            else Hit();
             return;
         }
 
@@ -70,15 +95,27 @@ public class Projectile : MonoBehaviour
 
     private void Hit()
     {
-        if (attackType == AttackType.Splash)
+        RangeShape aoeShape = cfg.areaShape == AreaShape.Square ? RangeShape.Square : RangeShape.Diamond;
+
+        if (cfg.attackType == AttackType.Area && cfg.areaShape == AreaShape.Chain)
         {
-            foreach (IDamageAble enemy in getEnemiesInRange(transform.position, aoeRange, aoeSquare))
+            List<GameObject> hits = ChainResolver.Resolve(target.gameObject, damage, cfg.chainRange, cfg.chainCount, cfg.chainFalloff, cfg.getEnemyObjectsInRange);
+            foreach (GameObject go in hits)
+                AttackDamageUtil.ApplyTargetDebuffs(go.GetComponentInParent<IUnit>(), cfg.buffList, cfg.buffManager, cfg.source);
+        }
+        else if (cfg.attackType == AttackType.Area)
+        {
+            foreach (IDamageAble enemy in cfg.getEnemiesInRange(transform.position, cfg.areaRange, aoeShape))
+            {
                 enemy.TakeDamage((int)damage);
-            SplashHighlighter.Instance?.Flash(transform.position, aoeRange, aoeSquare);
+                AttackDamageUtil.ApplyTargetDebuffs(enemy as IUnit, cfg.buffList, cfg.buffManager, cfg.source);
+            }
+            SplashHighlighter.Instance?.Flash(transform.position, cfg.areaRange, aoeShape);
         }
         else if (target != null && target.GetComponentInParent<IDamageAble>() is IDamageAble damageable)
         {
             damageable.TakeDamage((int)damage);
+            AttackDamageUtil.ApplyTargetDebuffs(target.GetComponentInParent<IUnit>(), cfg.buffList, cfg.buffManager, cfg.source);
         }
         Return();
     }

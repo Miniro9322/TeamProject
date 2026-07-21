@@ -13,7 +13,14 @@ public class SwordMan : Hero
             anim = Anim,
             animEvents = AnimEvents,
             getEnemiesInRange = GetEnemiesInRange,
-            sc = SC
+            getEnemyTargetsInRange = GetEnemyTransformsInRange,
+            getEnemyObjectsInRange = GetEnemyObjectsInRange,
+            getEnemiesInLine = GetEnemiesInLine,
+            getCardinalDirection = GetCardinalDirection,
+            getLineEndPoint = GetLineEndPoint,
+            buffManager = buffManager,
+            sc = SC,
+            selfUnit = this
         };
         occupantKind = OccupantKind.MeleeHero;
     }
