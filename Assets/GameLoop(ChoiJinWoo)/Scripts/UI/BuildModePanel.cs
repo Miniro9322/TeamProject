@@ -7,6 +7,8 @@ public class BuildModePanel : MonoBehaviour
     [SerializeField] private GameObject heroPanel;
     [SerializeField] private Button facilityButton;
     [SerializeField] private Button heroButton;
+    [SerializeField] private Button removeButton;
+    [SerializeField] private MapGame game;
 
     private void Awake()
     {
@@ -26,5 +28,14 @@ public class BuildModePanel : MonoBehaviour
         if (facilityPanel.activeSelf == true)
             facilityPanel.SetActive(false);
         heroPanel.SetActive(true);
+    }
+
+    public void OnRemoveButton()
+    {
+        if (facilityPanel.activeSelf == true)
+            facilityPanel.SetActive(false);
+        if (heroPanel.activeSelf == true)
+            heroPanel.SetActive(false);
+        game.SetRemove();
     }
 }

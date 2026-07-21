@@ -6,15 +6,17 @@ public class GameManager : MonoBehaviour
 {
     private FSM fsm = new();
 
-    IState day;
-    IState night;
-    IState result;
+    private IState day;
+    private IState night;
+    private IState result;
+    private IState gameover;
 
     private bool canBuild = false;
     private FacilityManager facilityManager;
     private UiManager uiManager;
     private WaveSpawner waveSpawner;
     private int dayCount = 0;
+    [SerializeField] private int hp = 20;
     private bool requestSupport = false;
     public int DayCount => dayCount;
     public bool CanBuild => canBuild;
@@ -39,13 +41,14 @@ public class GameManager : MonoBehaviour
         day = new DayState(this, facilityManager);
         night = new NightState(this);
         result = new ResultState(this, uiManager);
-        //waveSpawner.EnemyAllClear += OnResult;
+        gameover = new GameOverState(this);
+        waveSpawner.EnemyAllClear += OnResult;
         fsm.ChangeState(day);
     }
 
     private void OnDestroy()
     {
-        //waveSpawner.EnemyAllClear -= OnResult;
+        waveSpawner.EnemyAllClear -= OnResult;
     }
 
     public void OnNight()
@@ -93,5 +96,16 @@ public class GameManager : MonoBehaviour
     public void ChangeCanSpawnEnemy(bool value)
     {
         canSpawnEnemy = value;
+    }
+
+    public void HpDamage()
+    {
+        hp--;
+        Debug.Log($"현재 체력: {hp}");
+        if(hp <= 0)
+        {
+            hp = 0;
+            fsm.ChangeState(gameover);
+        }
     }
 }

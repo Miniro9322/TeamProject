@@ -523,7 +523,6 @@ public class MapGame : MonoBehaviour
                     return true;
                 else
                 {
-                    Debug.Log("집 호출");
                     return false;
                 }
             case OccupantKind.RangedHero:
@@ -534,7 +533,6 @@ public class MapGame : MonoBehaviour
                     return true;
                 else
                 {
-                    Debug.Log("집 호출");
                     return false;
                 }
             case OccupantKind.Building:
@@ -545,15 +543,12 @@ public class MapGame : MonoBehaviour
                     return true;
                 else
                 {
-                    Debug.Log("집 호출");
                     return false;
                 }
             case OccupantKind.Resource:
                 var facility = slot.prefab.GetComponent<ProductionFacility>();
                 if (facility == null) return true;
 
-                if (resourcesManager == null)
-                    Debug.Log("자원 관리자 없음");
                 if (resourcesManager.CheckResources(facility.BasicValue.ConstructProduct))
                     return true;
                 else

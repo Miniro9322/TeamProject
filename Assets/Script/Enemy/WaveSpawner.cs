@@ -74,9 +74,11 @@ public class WaveSpawner : MonoBehaviour
     public void EnemyDieEvent()
     {
         Enemycount--;
+        Debug.Log(Enemycount);
         if(Enemycount<=0)
         {
             EnemyAllClear?.Invoke();
+            Debug.Log("적 전멸 이벤트 발생");
         }
     }
 }

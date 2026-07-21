@@ -11,15 +11,13 @@ public class GameLifeTimeScope : LifetimeScope
     [SerializeField] private GameManager GameManagerPrefab;
     [SerializeField] private FacilityManager FacilityManager;
     [SerializeField] private BuildingPrefabRegistry buildingPrefabRegistry;
-    [SerializeField] private Canvas UiManagerParent;
     [SerializeField] private Light sunLight;
 
     protected override void Configure(IContainerBuilder builder)
     {
         builder.RegisterComponentInNewPrefab(resourcesManagerPrefab, Lifetime.Singleton).AsSelf();
         builder.RegisterComponentInNewPrefab(citizenManagerPrefab, Lifetime.Singleton).AsSelf();
-        if(UiManagerParent != null)
-            builder.RegisterComponentInNewPrefab(UiManagerPrefab, Lifetime.Singleton).UnderTransform(UiManagerParent.transform).AsSelf();
+        builder.RegisterComponentInNewPrefab(UiManagerPrefab, Lifetime.Singleton).AsSelf();
         builder.RegisterComponentInNewPrefab(EnviromentManagerPrefab, Lifetime.Singleton).AsSelf();
         builder.RegisterComponentInNewPrefab(GameManagerPrefab, Lifetime.Singleton).AsSelf();
         builder.RegisterInstance(buildingPrefabRegistry);

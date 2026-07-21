@@ -156,7 +156,8 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
 
     protected virtual void OnArrivedAtCore()
     {
-        // waveSpawner.EnemyDieEvent();
+        waveSpawner.EnemyDieEvent();
+        gameManager.HpDamage();
         Board.RemoveEnemy(gameObject);
     }
     private async UniTask RunSkillLoop(CancellationToken token)
@@ -376,7 +377,8 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
         TriggerDeathSkills();          // 분열 등 온데스 스킬 — 이동 정지/보드 제거 전이라 위치·경로가 유효
         _move.Stop();
         if (Board != null) Board.RemoveEnemy(gameObject); // 죽는 즉시 칸에서 빠져 저지·타겟 대상서 제외
-        // waveSpawner.EnemyDieEvent();                 // 이동 정지 + Suspended 해제
+        Debug.Log("사망 플래그 발동");
+        waveSpawner.EnemyDieEvent();                 // 이동 정지 + Suspended 해제
 
         // skillCts가 없으면(이미 비활성) 연출 없이 바로 디스폰.
         if (skillCts == null) { Despawn(); return; }

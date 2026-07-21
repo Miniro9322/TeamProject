@@ -12,7 +12,7 @@ public class NightState : IState
 
     public void Enter()
     {
-        TestCode().Forget();
+        Night().Forget();
     }
 
     public void Exit()
@@ -25,11 +25,9 @@ public class NightState : IState
         
     }
 
-    private async UniTaskVoid TestCode()
+    private async UniTaskVoid Night()
     {
         await UniTask.WaitUntil(() => gameManager.CanSpawnEnemy);
         gameManager.SpawnEnemy();
-        await UniTask.WaitForSeconds(3);
-        gameManager.OnResult();
     }
 }
