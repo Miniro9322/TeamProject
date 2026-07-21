@@ -31,13 +31,17 @@ public class RangedAttackExecutor : IAttackExecutor
             int hits = 0;
             while (await window.MoveNextHit(ct))
             {
+                AttackDamageUtil.ApplySelfBuffs(ctx.selfUnit, data.buffList, ctx.buffManager, data);
                 await FireVolley(data, ctx, pool, damage, ct);
                 hits++;
             }
             // 고속 공격속도로 "Attack" 애니메이션 이벤트가 유실되면 발사가 0회가 될 수 있다.
             // window가 취소 없이 정상 종료됐다면 최소 1회는 보장 발사한다.
             if (hits == 0)
+            {
+                AttackDamageUtil.ApplySelfBuffs(ctx.selfUnit, data.buffList, ctx.buffManager, data);
                 await FireVolley(data, ctx, pool, damage, ct);
+            }
         }
         finally
         {
@@ -80,7 +84,12 @@ public class RangedAttackExecutor : IAttackExecutor
             // 관통: 발사 즉시 라인상의 모든 적에게 피해를 적용하고, 화살은 시각 전용으로 라인 끝까지 날린다.
             Vector2Int dir = ctx.getCardinalDirection(ctx.self.position, target.position);
             foreach (IDamageAble e in ctx.getEnemiesInLine(ctx.self.position, target.position, data.lineLength))
+            {
                 e.TakeDamage(damage);
+                AttackDamageUtil.ApplyTargetDebuffs(e as IUnit, data.buffList, ctx.buffManager, data);
+            }
+            AttackDamageUtil.SpawnGroundZone(data.groundZone, target.position,
+                ctx.getEnemyObjectsInRange, ctx.sc, ctx.buffManager, CancellationToken.None);
             Vector3 endPoint = ctx.getLineEndPoint(ctx.self.position, dir, data.lineLength);
             arrow.LaunchVisualOnly(endPoint, pool);
             return;
@@ -96,6 +105,11 @@ public class RangedAttackExecutor : IAttackExecutor
             chainFalloff = data.chainFalloff,
             getEnemiesInRange = ctx.getEnemiesInRange,
             getEnemyObjectsInRange = ctx.getEnemyObjectsInRange,
+            buffList = data.buffList,
+            buffManager = ctx.buffManager,
+            source = data,
+            groundZone = data.groundZone,
+            attackerStats = ctx.sc,
         };
         arrow.Launch(target, damage, pool, cfg);
     }

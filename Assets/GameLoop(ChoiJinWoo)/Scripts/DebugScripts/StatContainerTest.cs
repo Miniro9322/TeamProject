@@ -51,7 +51,7 @@ public class StatContainerTest : MonoBehaviour, IUnit
     {
         if (keyboard != null && keyboard.digit1Key.wasPressedThisFrame)
         {
-            buffManager.ApplyTimedModifier(this, StatType.ATK, atkBuff, 5f);
+            buffManager.ApplyStackingModifier(this, StatType.ATK, ModifierType.Flat, 10f, 5f, 1, this);
             Debug.Log($"ATK: {stat[StatType.ATK]}, DEF: {stat[StatType.DEF]}");
         }
         if (keyboard != null && keyboard.digit2Key.wasPressedThisFrame)
@@ -81,7 +81,7 @@ public class StatContainerTest : MonoBehaviour, IUnit
 
         if (enemy != null)
         {
-            buffManager.ApplyTimedModifier(enemy, StatType.ATK, atkBuff, 3f);
+            buffManager.ApplyStackingModifier(enemy, StatType.ATK, ModifierType.Flat, 10f, 3f, 1, this);
         }
     }
 }

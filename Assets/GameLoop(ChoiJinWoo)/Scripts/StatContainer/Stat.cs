@@ -60,12 +60,11 @@ public class Stat
                 foreach (var mod in modifiers.Where(x => x.Type == ModifierType.Flat))
                     value += mod.Value;
 
-                float additive = modifiers.Where(x => x.Type == ModifierType.Additive).Sum(x => x.Value);
-
-                value *= (1 + additive);
+                value *= (1f + modifiers.Where(x => x.Layer == StatLayer.Equip && x.Type == ModifierType.Additive).Sum(x => x.Value)); // 장착
+                value *= (1f + modifiers.Where(x => x.Layer == StatLayer.Buff && x.Type == ModifierType.Additive).Sum(x => x.Value));  // 버프
 
                 foreach (var mod in modifiers.Where(x => x.Type == ModifierType.Multiplier))
-                    value *= mod.Value;
+                    value *= (1f + mod.Value);
 
                 isModifierChanged = false;
                 return value;
