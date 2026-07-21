@@ -31,7 +31,6 @@ public class MapAssemble : MonoBehaviour
         view.citizenManager = mapGame.CitizenManager;
         view.resourcesManager = mapGame.ResourcesManager;
 
-
         PlaceAction action = new PlaceAction();
         action.palette = palette;
         action.placer = mapGame.Placer;

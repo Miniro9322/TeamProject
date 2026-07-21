@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Resources;
 using UnityEngine;
 
 // UI가 읽을 맵 상태(선택 타일·상태 문구·현재 모드·사거리)를 보관하고 내준다.
@@ -13,7 +14,6 @@ public class MapView : MonoBehaviour
     public RangeInfo rangeInfo;
     public CitizenManager citizenManager;
     public ResourcesManager resourcesManager;
-
 
     private readonly TileSelect tileSelect = new();
     private readonly StatusText statusText = new();

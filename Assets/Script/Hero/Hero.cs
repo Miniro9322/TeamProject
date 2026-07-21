@@ -120,7 +120,6 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
         //테스트용 코드
         citizenManager.UseCitizen(citizenAmount);
         //끝
-
     }
 
     protected virtual void Start()

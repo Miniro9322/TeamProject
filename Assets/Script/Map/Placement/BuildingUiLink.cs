@@ -15,7 +15,6 @@ public class BuildingUiLink
     public bool OpenIfBuilding(Tile tile, PlaceMode mode)
     {
         if (ui != null && tile.State.Occupant == OccupantKind.Resource && mode != PlaceMode.Remove && CanBuild())
-
         {
             ui.OpenBuildingUi(tile.OccupantObject.GetComponent<ProductionFacility>());
             return true;
