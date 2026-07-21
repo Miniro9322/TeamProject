@@ -12,13 +12,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 412860ab14a7daf4dbfe0d34aa3084d1, type: 3}
   m_Name: ArcherStatData
   m_EditorClassIdentifier: Assembly-CSharp::StatDataSO
-  maxHp: 200
-  attackPower: 30
+  maxHp: 800
+  attackPower: 80
   defence: 0
   maxSp: 100
   attackSpeed: 2
   spRecover: 5
   blockCount: 1
   coolDownPer: 0
-  criticalPer: 0.01
+  criticalPer: 0.1
   criticalDmg: 2

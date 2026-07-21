@@ -1,6 +1,7 @@
 using Cysharp.Threading.Tasks;
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using UnityEngine;
 using UnityEngine.Rendering;
 using VContainer;
@@ -49,6 +50,9 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
     //private List<Tile> attackRangedTiles;
     [SerializeField] protected int range = 1;
     [SerializeField] protected RangeShape rangeShape = RangeShape.Diamond;
+
+    [SerializeField] private List<GroundZoneDataSO> auraZones = new();
+    private CancellationTokenSource _auraCts;
 
     private StatContainer sc = new();
     public StatContainer SC => sc;
@@ -108,6 +112,7 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
         sc.AddStat(StatType.BLK, statData.blockCount);
         sc.AddStat(StatType.AS, statData.attackSpeed);
         currentHp = sc[StatType.HP];
+        OnResur += StartAuras;
     }
 
     protected virtual void Start()
@@ -122,18 +127,39 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
             gameManager.ChangeToDay += Resurrection;
         }
         //끝
+        StartAuras();
     }
 
     //테스트용 코드
     protected virtual void OnDestroy()
     {
-        
+
         if (gameManager != null)
         {
             gameManager.ChangeToDay -= Resurrection;
         }
+        OnResur -= StartAuras;
+        _auraCts?.Cancel();
+        _auraCts?.Dispose();
     }
     //끝
+
+    // 영웅 주위에 항상 존재하는 오라형 장판을 (재)시작한다. 사망 시 각 장판 루프가 스스로 멈추고,
+    // 부활(OnResur)하면 여기가 다시 불려 새 토큰으로 재시작한다.
+    private void StartAuras()
+    {
+        _auraCts?.Cancel();
+        _auraCts?.Dispose();
+        _auraCts = new CancellationTokenSource();
+        foreach (GroundZoneDataSO zone in auraZones)
+        {
+            if (zone == null) continue;
+            // AttackDamageUtil.SpawnGroundZone은 항상 keepAlive=true를 넘겨 임시 장판용이므로,
+            // 사망 시 멈춰야 하는 오라는 GroundZoneRunner.Run을 직접 호출해 !IsDead를 넘긴다.
+            GroundZoneRunner.Run(transform.position, zone, GetEnemyObjectsInRange, sc, buffManager,
+                () => !IsDead, _auraCts.Token).Forget();
+        }
+    }
     protected virtual void Update()
     {
         stateMachine.CurrentState.Update();

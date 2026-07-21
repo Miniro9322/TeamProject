@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Threading;
 using UnityEngine;
 using UnityEngine.Pool;
 
@@ -15,6 +16,8 @@ public struct ProjectileAoEConfig
     public List<BuffEffect> buffList;
     public BuffManager buffManager;
     public object source; // 보통 발사한 AttackDataSO 인스턴스
+    public GroundZoneDataSO groundZone;
+    public StatContainer attackerStats;
 }
 
 public class Projectile : MonoBehaviour
@@ -117,6 +120,10 @@ public class Projectile : MonoBehaviour
             damageable.TakeDamage((int)damage);
             AttackDamageUtil.ApplyTargetDebuffs(target.GetComponentInParent<IUnit>(), cfg.buffList, cfg.buffManager, cfg.source);
         }
+
+        AttackDamageUtil.SpawnGroundZone(cfg.groundZone, transform.position,
+            cfg.getEnemyObjectsInRange, cfg.attackerStats, cfg.buffManager, CancellationToken.None);
+
         Return();
     }
 
