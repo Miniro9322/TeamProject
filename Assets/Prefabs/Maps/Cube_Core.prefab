@@ -28,7 +28,7 @@ Transform:
   m_GameObject: {fileID: 4733046470636387550}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -20.81519, y: 0, z: -26.91618}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -108,6 +108,12 @@ MonoBehaviour:
     Row: 0
     Terrain: 0
     Territory: 1
+    EnemyLane: 0
+    CanMelee: 0
+    CanRanged: 0
+    CanBuild: 0
     Flags: 0
     Occupant: 0
   isEnemySpawn: 0
+  UnitPrefab: {fileID: 0}
+  UnitKind: 1

@@ -9,7 +9,6 @@ public class TileState
     public int Row;
 
     public TerrainType Terrain = TerrainType.Ground;
-    public TerritoryState Territory = TerritoryState.Unclaimed;
 
     public bool EnemyLane;
     public bool CanMelee;
@@ -75,7 +74,7 @@ public class TileState
         return value / flag % 2 == 1;
     }
 
-    public override string ToString() => $"{Label} ({Col},{Row}) {Terrain}/{Territory}";
+    public override string ToString() => $"{Label} ({Col},{Row}) {Terrain}";
 }
 
 /// <summary>타일을 점유하는 주요 오브젝트 종류. 한 타일에 하나만(설계 §4).</summary>

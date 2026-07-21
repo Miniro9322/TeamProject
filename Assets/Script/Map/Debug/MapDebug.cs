@@ -10,7 +10,6 @@ public class MapDebug : MonoBehaviour
     public enum View
     {
         Terrain,
-        Territory,
         Place,
         Lane,
         Unit,
@@ -36,7 +35,6 @@ public class MapDebug : MonoBehaviour
     {
         board = GetComponent<MapBoard>();
     }
-
     private void OnDrawGizmos()
     {
         if (board == null)
@@ -88,7 +86,6 @@ public class MapDebug : MonoBehaviour
         return view switch
         {
             View.Terrain => TerrainColor(tile),
-            View.Territory => tile.State.Territory == TerritoryState.Claimed ? new Color(0.2f, 0.75f, 1f, 0.45f) : new Color(0.25f, 0.25f, 0.25f, 0.35f),
             View.Place => PlaceColor(tile),
             View.Lane => tile.IsEnemyLane ? new Color(1f, 0.55f, 0.1f, 0.55f) : new Color(0.25f, 0.25f, 0.25f, 0.2f),
             View.Unit => UnitColor(tile),
@@ -153,7 +150,6 @@ public class MapDebug : MonoBehaviour
         return view switch
         {
             View.Terrain => $"{board.IndexOf(tile)}\n{tile.Coord}\n{tile.Terrain}",
-            View.Territory => $"{tile.State.Label}\n{tile.State.Territory}",
             View.Place => PlaceText(tile),
             View.Lane => tile.IsEnemyLane ? $"{tile.State.Label}\nLane" : tile.State.Label,
             View.Unit => $"U:{tile.State.Occupant}\nE:{tile.EnemyCount}\nB:{tile.BlockedCount}/{tile.BlockCapacity}",
