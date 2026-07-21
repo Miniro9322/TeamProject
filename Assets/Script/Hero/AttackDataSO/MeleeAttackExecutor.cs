@@ -21,14 +21,14 @@ public class MeleeAttackExecutor : IAttackExecutor
             int hits = 0;
             while (await window.MoveNextHit(ct))
             {
-                AttackDamageUtil.ApplyInstantDamage(data, ctx);
+                await AttackDamageUtil.ApplyInstantDamage(data, ctx, ct);
                 hits++;
             }
             // 고속 공격속도로 인해 애니메이터가 "Attack" 이벤트를 유실하면(재트리거/전이 도중)
             // 타격이 0회가 되어 데미지가 통째로 사라진다. window가 취소 없이 정상 종료됐다면
             // 최소 1회는 보장 적용한다. (취소 시엔 MoveNextHit가 예외를 던져 여기 도달하지 않음)
             if (hits == 0)
-                AttackDamageUtil.ApplyInstantDamage(data, ctx);
+                await AttackDamageUtil.ApplyInstantDamage(data, ctx, ct);
         }
         finally
         {

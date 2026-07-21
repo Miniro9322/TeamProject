@@ -48,6 +48,10 @@ public class Archer : Hero
             getProjectilePool = GetProjectilePool,
             getEnemiesInRange = GetEnemiesInRange,
             getEnemyTargetsInRange = GetEnemyTransformsInRange,
+            getEnemyObjectsInRange = GetEnemyObjectsInRange,
+            getEnemiesInLine = GetEnemiesInLine,
+            getCardinalDirection = GetCardinalDirection,
+            getLineEndPoint = GetLineEndPoint,
             sc = SC
         };
         occupantKind = OccupantKind.RangedHero;

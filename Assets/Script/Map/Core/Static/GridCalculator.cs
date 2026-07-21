@@ -55,11 +55,9 @@ public static class GridCalculator
     {
         int dx = to.x - from.x;
         int dy = to.y - from.y;
-        if (Mathf.Abs(dx) >= Mathf.Abs(dy)) return dx >= 0 ? Right : Left;
+        if (Mathf.Abs(dx) >= Mathf.Abs(dy))
+            return dx >= 0 ? Right : Left;
         return dy >= 0 ? Up : Down;
     }
-   
-    
-
 
 }
