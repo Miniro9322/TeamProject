@@ -10,11 +10,17 @@ public class ResourcesManager : MonoBehaviour
     [SerializeField] private int iron = 500;
     [SerializeField] private int stone = 500;
 
-    public event Action<int, int, int, int, int> ProductUpdate;
+    public int Wood => wood;
+    public int Food => food;
+    public int Gold => gold;
+    public int Iron => iron;
+    public int Stone => stone;
+
+    public event Action ProductUpdate;
 
     private void Start()
     {
-        ProductUpdate?.Invoke(wood, stone, iron, gold, food);
+        ProductUpdate?.Invoke();
     }
 
     public void ProductChanged(Dictionary<ProductionType, int> products)
@@ -40,7 +46,7 @@ public class ResourcesManager : MonoBehaviour
         if (products.ContainsKey(ProductionType.Stone))
             stone += products[ProductionType.Stone];
 
-        ProductUpdate?.Invoke(wood, stone, iron, gold, food);
+        ProductUpdate?.Invoke();
     }
 
     public bool CheckResources(Dictionary<ProductionType, int> resources)

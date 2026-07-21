@@ -62,6 +62,8 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble
     //테스트용 코드
     private GameManager gameManager;
     private CitizenManager citizenManager;
+    [SerializeField] private int citizenAmount = 2;
+    public int CitizenAmount => citizenAmount;
     [Inject]
     private void Construct(GameManager gameManager, CitizenManager citizenManager)
     {
@@ -106,7 +108,7 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble
         sc.AddStat(StatType.AS, statData.attackSpeed);
         currentHp = sc[StatType.HP];
         //테스트용 코드
-        citizenManager.UseCitizen(2);
+        citizenManager.UseCitizen(citizenAmount);
         //끝
     }
 

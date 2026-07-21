@@ -15,6 +15,7 @@ public class MapPanel : MonoBehaviour
     public event Action RemoveClicked;
     public event Action ModeCleared;
     public event Action<int> UnitClicked;
+    public event Action ModuleUnlockClicked;
 
     public void SetData(PanelData value)
     {

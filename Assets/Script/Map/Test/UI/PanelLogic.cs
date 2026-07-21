@@ -4,7 +4,8 @@ using UnityEngine;
 public class PanelLogic : MonoBehaviour
 {
     [SerializeField] private MapPanel panel;
-    [SerializeField] private MapGame game;
+    [SerializeField] private MapView game;
+    [SerializeField] private MapCommand command;
     [SerializeField] private EnemyPathView enemyPath; // 경로 소유자(표시/재계산은 여기로)
 
     private readonly PanelData data = new();
@@ -75,7 +76,7 @@ public class PanelLogic : MonoBehaviour
 
     private void UnitClear()
     {
-        game.ClearAllPlacedUnit();
+        command.action.ClearAllPlacedUnit();
     }
 
     private void RemoveClick()
@@ -124,7 +125,7 @@ public class PanelLogic : MonoBehaviour
                $"저지: {tile.BlockedCount}/{tile.BlockCapacity}";
     }
 
-    private static string[] UnitLabels(IReadOnlyList<MapGame.Placeable> items)
+    private static string[] UnitLabels(IReadOnlyList<Placeable> items)
     {
         string[] labels = new string[items.Count];
         for (int i = 0; i < items.Count; i++)

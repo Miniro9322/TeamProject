@@ -17,18 +17,10 @@ public static class GridCalculator
 
     public static readonly Vector2Int[] Directions = { Right, Left, Up, Down };
 
-    //월드 좌표 -> 칸 좌표 
+    // 월드↔칸 변환은 여기 없다 — 씬 Grid(MapBoard.WorldToCell)가 담당한다.
+    // 셀 크기·원점·Swizzle을 Grid가 쥐고 있어, 코드가 따로 알면 어긋날 뿐이다.
 
-    public static Vector2Int GetCellFromWorldPos(Vector3 worldPos, float originX, float originZ, float cellSize)
-    {
-        // 월드 좌표를 칸 좌표로 변환하는 공식
-        return new Vector2Int(
-            Mathf.RoundToInt((worldPos.x - originX) / cellSize),
-            Mathf.RoundToInt((worldPos.z - originZ) / cellSize)
-        );
-    }
-
-    //WorldToCell로 변환한 칸 좌표를 1차원 배열 인덱스로 변환
+    //칸 좌표를 1차원 배열 인덱스로 변환
     public static int GetIndexFromCell(int col, int row, int width)
     {
         return row * width + col;
