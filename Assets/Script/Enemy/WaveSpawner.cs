@@ -79,8 +79,8 @@ public class WaveSpawner : MonoBehaviour
             var go = (_pool ??= PoolManager.Instance).Spawn(prefab, Vector3.zero, Quaternion.identity);
             if (go.TryGetComponent(out EnemyBase enemy))
             {
-                enemy.SetOwner(this);              // 이 레인 소속으로 지정 → 죽을 때 이 스포너 카운트 감소
-                enemy.EnterMap(board, waypoints);  // 보드 주입 + 스폰→본진 이동 시작
+                enemy.SetOwner(this);
+                enemy.EnterMap(board, waypoints);
             }
 
             if (i < wave.Count - 1 && wave.Delay > 0f)
@@ -90,6 +90,7 @@ public class WaveSpawner : MonoBehaviour
     public void EnemyDieEvent()
     {
         Enemycount--;
+        Debug.Log($"남은 마릿수 : {Enemycount}");
         if(Enemycount<=0)
         {
             EnemyAllClear?.Invoke();
