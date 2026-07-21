@@ -33,3 +33,10 @@ MonoBehaviour:
   - Attack3
   projectilePrefab: {fileID: 0}
   clipLength: 0.5333334
+  buffList:
+  - statType: 4
+    modifierType: 1
+    value: 0.1
+    duration: 5
+    isTargetToOther: 0
+    maxStacks: 5
