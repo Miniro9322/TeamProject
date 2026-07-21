@@ -5,8 +5,7 @@ using UnityEngine;
 
 // 모듈 개방 상태를 안개 셰이더 전역값(_FogAreas/_FogOpens/_FogCount)으로 밀어준다.
 // 각 모듈의 월드 사각형은 그 모듈 보드의 WorldBounds(격자 기반)에서 얻는다.
-// 한 번 열린 구역은 _opens[i]=1로 고정되어 카메라를 움직여도 다시 덮이지 않는다.
-public class FogView : MonoBehaviour
+public class FogController : MonoBehaviour
 {
     [SerializeField] private MapRegistry registry;
     [SerializeField] private float openDuration = 1.2f;
@@ -31,14 +30,14 @@ public class FogView : MonoBehaviour
     private void Start()
     {
         BuildAreas();
-        PushMargin();
-        PushGlobals();
+        ApplyEdgeMargin();
+        ApplyAreas();
         BindModules();
     }
 
     private void OnValidate()
     {
-        PushMargin();
+        ApplyEdgeMargin();
     }
 
     // 등록된 모듈마다 보드 경계를 사각형(xy=중심XZ, zw=반크기XZ)으로 담는다.
@@ -153,19 +152,19 @@ public class FogView : MonoBehaviour
                 amount = 1f;
             }
             _opens[index] = amount;
-            PushOpens();
+            ApplyOpenState();
             await UniTask.Yield(token);
         }
     }
 
-    private void PushGlobals()
+    private void ApplyAreas()
     {
         Shader.SetGlobalVectorArray(AreasId, _areas);
         Shader.SetGlobalFloatArray(OpensId, _opens);
         Shader.SetGlobalInt(CountId, _count);
     }
 
-    private void PushMargin()
+    private void ApplyEdgeMargin()
     {
         if (_cellSize <= 0f)
         {
@@ -174,7 +173,7 @@ public class FogView : MonoBehaviour
         Shader.SetGlobalFloat(MarginId, revealCells * _cellSize);
     }
 
-    private void PushOpens()
+    private void ApplyOpenState()
     {
         Shader.SetGlobalFloatArray(OpensId, _opens);
     }

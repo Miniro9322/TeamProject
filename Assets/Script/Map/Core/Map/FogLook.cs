@@ -29,15 +29,15 @@ public class FogLook : MonoBehaviour
 
     private void Start()
     {
-        PushLook();
+        ApplyFogLook();
     }
 
     private void OnValidate()
     {
-        PushLook();
+        ApplyFogLook();
     }
 
-    private void PushLook()
+    private void ApplyFogLook()
     {
         Shader.SetGlobalColor(ColorId, fogColor);
         Shader.SetGlobalFloat(DensityId, density);
