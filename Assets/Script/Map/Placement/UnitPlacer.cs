@@ -1,4 +1,3 @@
-using System;
 using UnityEngine;
 using VContainer;
 using VContainer.Unity;
@@ -39,7 +38,7 @@ public class UnitPlacer
 
         // 실패 → 만든 오브젝트 파괴.
         // (보존 결함) 풀에서 대여한 생산건물도 여기선 반납 없이 Destroy → 풀 오염. 원래 동작이라 그대로 둠.
-        if (unit != null) UnityEngine.Object.Destroy(unit);
+        if (unit != null) Object.Destroy(unit);
         return false;
     }
 
