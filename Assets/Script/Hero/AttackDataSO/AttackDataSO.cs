@@ -33,6 +33,7 @@ public class AttackDataSO : ScriptableObject
     // 클립이 정확히 간격 안에서 끝나도록 맞춘다.
     public float clipLength = 0f;
     public List<BuffEffect> buffList;
+    public GroundZoneDataSO groundZone; // null이면 이 공격은 장판을 깔지 않음
 }
 
 // Single: 대상 하나(또는 targetMode==DifferentEnemies면 서로 다른 적)에게 비범위 피해.

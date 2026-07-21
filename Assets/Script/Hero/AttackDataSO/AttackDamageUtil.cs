@@ -108,6 +108,14 @@ public static class AttackDamageUtil
         }
     }
 
+    public static void SpawnGroundZone(GroundZoneDataSO zoneData, Vector3 center,
+        Func<Vector3, int, RangeShape, List<GameObject>> getEnemyObjectsInRange,
+        StatContainer attackerStats, BuffManager buffManager, CancellationToken ct)
+    {
+        if (zoneData == null) return;
+        GroundZoneRunner.Run(center, zoneData, getEnemyObjectsInRange, attackerStats, buffManager, () => true, ct).Forget();
+    }
+
     private static async UniTask FireEach<T>(List<T> items, Action<T> apply, float interval, CancellationToken ct)
     {
         for (int i = 0; i < items.Count; i++)

@@ -88,6 +88,8 @@ public class RangedAttackExecutor : IAttackExecutor
                 e.TakeDamage(damage);
                 AttackDamageUtil.ApplyTargetDebuffs(e as IUnit, data.buffList, ctx.buffManager, data);
             }
+            AttackDamageUtil.SpawnGroundZone(data.groundZone, target.position,
+                ctx.getEnemyObjectsInRange, ctx.sc, ctx.buffManager, CancellationToken.None);
             Vector3 endPoint = ctx.getLineEndPoint(ctx.self.position, dir, data.lineLength);
             arrow.LaunchVisualOnly(endPoint, pool);
             return;
@@ -106,6 +108,8 @@ public class RangedAttackExecutor : IAttackExecutor
             buffList = data.buffList,
             buffManager = ctx.buffManager,
             source = data,
+            groundZone = data.groundZone,
+            attackerStats = ctx.sc,
         };
         arrow.Launch(target, damage, pool, cfg);
     }
