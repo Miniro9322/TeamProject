@@ -37,7 +37,12 @@ public class AttackDataSO : ScriptableObject
 
     public AttackDataSO()
     {
-        
+        modList = new();
+        foreach (BuffEffect effect in buffList)
+        {
+            var mod = new Modifier(effect.modifierType, effect.value, effect.duration, StatLayer.Buff, this);
+            modList.Add(mod);
+        }
     }
 }
 

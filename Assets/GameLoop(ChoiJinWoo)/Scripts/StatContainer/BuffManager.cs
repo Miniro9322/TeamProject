@@ -33,6 +33,33 @@ public class BuffManager : ITickable
         });
     }
 
+    public void ApplyTimedModifier(IUnit target, StatType type, Modifier modifier)
+    {
+        var existing = activeBuffs.Find(b =>
+        b.Target == target &&
+        b.StatType == type &&
+        b.Source == modifier.Source);
+
+        if (existing != null)
+        {
+            existing.RemainingTime = modifier.Duration;
+            return;
+        }
+
+        target.Stats.AddModifier(type, modifier);
+
+        Debug.Log($"{target.Stats[type]}");
+
+        activeBuffs.Add(new ActiveBuff
+        {
+            Target = target,
+            StatType = type,
+            Modifier = modifier,
+            RemainingTime = modifier.Duration,
+            Source = modifier.Source
+        });
+    }
+
     public void Tick()
     {
         for (int i = activeBuffs.Count - 1; i >= 0; i--)
