@@ -32,13 +32,13 @@ public class TopBar : MonoBehaviour
         citizenManager.CitizenChanged -= UpdateCitizenUi;
     }
 
-    private void UpdateResourcesUI(int wood, int stone, int iron, int gold, int food)
+    private void UpdateResourcesUI()
     {
-        woodText.text = $"{wood}";
-        stoneText.text = $"{stone}";
-        ironText.text = $"{iron}";
-        goldText.text = $"{gold}";
-        foodText.text = $"{food}";
+        woodText.text = $"{resourcesManager.Wood}";
+        stoneText.text = $"{resourcesManager.Stone}";
+        ironText.text = $"{resourcesManager.Iron}";
+        goldText.text = $"{resourcesManager.Gold}";
+        foodText.text = $"{resourcesManager.Food}";
     }
 
     private void UpdateCitizenUi(int max, int cur, int used, int canUse)

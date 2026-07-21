@@ -49,6 +49,31 @@ public class PlacePalette : MonoBehaviour
         _mode = PlaceMode.Place;
     }
 
+    public void SelectSlot(string label)
+    {
+        foreach(var slot in _slots)
+        {
+            if(slot.label == label)
+            {
+                _index = _slots.IndexOf(slot);
+                _mode = PlaceMode.Place;
+                break;
+            }
+        }
+    }
+
+    public Placeable GetSlot(string label)
+    {
+        foreach (var slot in _slots)
+        {
+            if (slot.label == label)
+            {
+                return slot;
+            }
+        }
+
+        return null;
+    }
     public void SelectReplace()
     {
         _mode = PlaceMode.Replace;

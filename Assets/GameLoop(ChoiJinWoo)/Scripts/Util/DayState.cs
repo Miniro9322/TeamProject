@@ -13,18 +13,12 @@ public class DayState : IState
 
     public void Enter()
     {
-        if(gameManager.DayCount == 0)
-        {
-            gameManager.IncreaseDayCount();
-            gameManager.ChangeCanBuild(true);
-            Debug.Log($"{gameManager.DayCount}일차");
-            return;
-        }
-
         gameManager.ChangeCanBuild(true);
         gameManager.IncreaseDayCount();
         Debug.Log($"{gameManager.DayCount}일차");
         facilityManager.SumProduct();
+        if (gameManager.DayCount % 5 == 0)
+            gameManager.ChangeRequest(true);
     }
 
     public void Exit()

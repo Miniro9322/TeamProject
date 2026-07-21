@@ -4,24 +4,43 @@ using VContainer;
 
 public class GameManager : MonoBehaviour
 {
-    FSM fsm = new();
+    // DI Construct가 아직 안 돌았을 때(풀에서 컨테이너 리졸버 없이 스폰된 적 등)를 위한 폴백 접근자.
+    // PoolManager/SpawnerManager와 동일한 패턴.
+    private static GameManager instance;
+    public static GameManager Instance => instance;
 
-    IState day;
-    IState night;
-    IState result;
+    private void Awake()
+    {
+        if (instance != null && instance != this) { Destroy(gameObject); return; }
+        instance = this;
+    }
+
+    private FSM fsm = new();
+
+    private IState day;
+    private IState night;
+    private IState result;
+    private IState gameover;
 
     private bool canBuild = false;
     private FacilityManager facilityManager;
     private UiManager uiManager;
-    private WaveSpawner waveSpawner;
+    private SpawnerManager waveSpawner;
     private int dayCount = 0;
+    [SerializeField] private int hp = 20;
+    private bool requestSupport = false;
     public int DayCount => dayCount;
     public bool CanBuild => canBuild;
+    public bool RequestSupport => requestSupport;
+    private bool canSpawnEnemy = false;
+    public bool CanSpawnEnemy => canSpawnEnemy;
 
     public event Action ChangeToDay;
+    public event Action ChangeToNight;
+    public event Action ExpandMap;
 
     [Inject]
-    private void Construct(FacilityManager facilityManager, UiManager uiManager, WaveSpawner waveSpawner)
+    private void Construct(FacilityManager facilityManager, UiManager uiManager, SpawnerManager waveSpawner)
     {
         this.facilityManager = facilityManager;
         this.uiManager = uiManager;
@@ -33,18 +52,20 @@ public class GameManager : MonoBehaviour
         day = new DayState(this, facilityManager);
         night = new NightState(this);
         result = new ResultState(this, uiManager);
-        //waveSpawner.EnemyAllClear += OnResult;
+        gameover = new GameOverState(this);
+        waveSpawner.AllRegionsClear += OnResult;
         fsm.ChangeState(day);
     }
 
     private void OnDestroy()
     {
-        //waveSpawner.EnemyAllClear -= OnResult;
+        waveSpawner.AllRegionsClear -= OnResult;
     }
 
     public void OnNight()
     {
         fsm.ChangeState(night);
+        ChangeToNight?.Invoke();
     }
 
     public void OnDay()
@@ -71,5 +92,31 @@ public class GameManager : MonoBehaviour
     public void IncreaseDayCount()
     {
         dayCount++;
+    }
+
+    public void ChangeRequest(bool value)
+    {
+        requestSupport = value;
+    }
+
+    public void ExpandMapForce()
+    {
+        ExpandMap?.Invoke();
+    }
+
+    public void ChangeCanSpawnEnemy(bool value)
+    {
+        canSpawnEnemy = value;
+    }
+
+    public void HpDamage()
+    {
+        hp--;
+        Debug.Log($"현재 체력: {hp}");
+        if(hp <= 0)
+        {
+            hp = 0;
+            fsm.ChangeState(gameover);
+        }
     }
 }

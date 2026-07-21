@@ -14,7 +14,7 @@ public class BuildingUiLink
     // 빌딩 UI 처리 후 계속 진행하면 true, UI 위 클릭이라 멈춰야 하면 false.
     public bool OpenIfBuilding(Tile tile, PlaceMode mode)
     {
-        if (ui != null && tile.State.Occupant == OccupantKind.Building && mode != PlaceMode.Remove && CanBuild())
+        if (ui != null && tile.State.Occupant == OccupantKind.Resource && mode != PlaceMode.Remove && CanBuild())
         {
             ui.OpenBuildingUi(tile.OccupantObject.GetComponent<ProductionFacility>());
             return true;

@@ -98,6 +98,7 @@ public class WaveSpawner : MonoBehaviour
         if(Enemycount<=0)
         {
             EnemyAllClear?.Invoke();
+            Debug.Log("적 전멸 이벤트 발생");
         }
     }
 

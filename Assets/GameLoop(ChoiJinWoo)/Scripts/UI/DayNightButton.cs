@@ -6,11 +6,13 @@ public class DayNightButton : MonoBehaviour
 {
     [SerializeField] private Button button;
     private EnviromentManager enviromentManager;
+    private GameManager gameManager;
 
     [Inject]
-    private void Construct(EnviromentManager enviromentManager)
+    private void Construct(EnviromentManager enviromentManager, GameManager gameManager)
     {
         this.enviromentManager = enviromentManager;
+        this.gameManager = gameManager;
     }
 
     private void Start()
@@ -20,7 +22,8 @@ public class DayNightButton : MonoBehaviour
 
     private void OnButton()
     {
-        enviromentManager.ToggleDayNight();
+        //enviromentManager.ToggleDayNight();
+        gameManager.OnNight();
     }
 
     private void OnDestroy()

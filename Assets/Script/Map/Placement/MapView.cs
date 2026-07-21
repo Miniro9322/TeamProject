@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Resources;
 using UnityEngine;
 
 // UI가 읽을 맵 상태(선택 타일·상태 문구·현재 모드·사거리)를 보관하고 내준다.
@@ -11,6 +12,8 @@ public class MapView : MonoBehaviour
     public PointerPick pointerPick;
     public UnitReplace replace;
     public RangeInfo rangeInfo;
+    public CitizenManager citizenManager;
+    public ResourcesManager resourcesManager;
 
     private readonly TileSelect tileSelect = new();
     private readonly StatusText statusText = new();
@@ -29,6 +32,7 @@ public class MapView : MonoBehaviour
     public Tile HoverTile { get { return pointerPick.UnderPointer(); } }
     public bool IsPlacing { get { return palette.Mode == PlaceMode.Place; } }
     public OccupantKind PlacingKind { get { return palette.CurrentSlot().kind; } }
+    public string PlacingLabel { get { return palette.CurrentSlot().label; } }
     public int PlacingRange { get { return palette.PreviewRange(); } }
     public string Status { get { return statusText.Text; } }
     public Tile Selected { get { return tileSelect.Selected; } }
@@ -52,6 +56,7 @@ public class MapView : MonoBehaviour
     // ---- 모드 전환(PanelLogic 버튼이 부른다) ----
 
     public void SetUnit(int index) { palette.SelectSlot(index); }
+    public void SetUnit(string label) { palette.SelectSlot(label); }
     public void SetReplace()
     {
         palette.SelectReplace();
@@ -59,4 +64,37 @@ public class MapView : MonoBehaviour
     public void SetRemove() { palette.SelectRemove(); }
     public void ClearMode() { palette.ClearMode(); }
     public void SetBlock(bool value) { input.SetBlock(value); }
+
+    public bool CheckCanBuild(string label)
+    {
+        var slot = palette.GetSlot(label);
+
+        switch (slot.kind)
+        {
+            case OccupantKind.None:
+                return false;
+            case OccupantKind.MeleeHero:
+                if (citizenManager.CheckCanUseCitizen(slot.prefab.GetComponent<Hero>().CitizenAmount))
+                    return true;
+                else
+                    return false;
+            case OccupantKind.RangedHero:
+                if (citizenManager.CheckCanUseCitizen(slot.prefab.GetComponent<Hero>().CitizenAmount))
+                    return true;
+                else
+                    return false;
+            case OccupantKind.Building:
+                if (resourcesManager.CheckResources(slot.prefab.GetComponent<House>().Resources))
+                    return true;
+                else
+                    return false;
+            case OccupantKind.Resource:
+                if (resourcesManager.CheckResources(slot.prefab.GetComponent<ProductionFacility>().BasicValue.ConstructProduct))
+                    return true;
+                else
+                    return false;
+            default:
+                return false;
+        }
+    }
 }

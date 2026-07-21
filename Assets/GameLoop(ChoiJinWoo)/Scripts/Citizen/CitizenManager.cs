@@ -29,10 +29,22 @@ public class CitizenManager : MonoBehaviour
         return canUseCitizen > 0;
     }
 
+    public bool CheckCanUseCitizen(int amount)
+    {
+        return canUseCitizen - amount >= 0;
+    }
+
     public void UseCitizen()
     {
         canUseCitizen--;
         usedCitizen++;
+        UpdateCitizen();
+    }
+
+    public void UseCitizen(int amount)
+    {
+        canUseCitizen -= amount;
+        usedCitizen += amount;
         UpdateCitizen();
     }
 

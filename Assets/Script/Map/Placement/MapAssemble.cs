@@ -28,6 +28,8 @@ public class MapAssemble : MonoBehaviour
         view.pointerPick = pointerPick;
         view.replace = replace;
         view.rangeInfo = new RangeInfo(mapGame.Units);
+        view.citizenManager = mapGame.CitizenManager;
+        view.resourcesManager = mapGame.ResourcesManager;
 
         PlaceAction action = new PlaceAction();
         action.palette = palette;

@@ -278,8 +278,13 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
 
     protected virtual void OnArrivedAtCore()
     {
-        waveSpawner?.EnemyDieEvent(); // 본진 도달로 필드에서 사라짐 → 소유 레인 카운트 감소
-        Board.RemoveEnemy(gameObject);
+        waveSpawner?.EnemyDieEvent();
+        var gm = gameManager ??= GameManager.Instance; // DI 미경유 스폰 대비 폴백(PoolManager.Instance와 동일 패턴)
+        if (gm == null)
+            Debug.LogWarning($"[{name}] GameManager를 찾을 수 없음 — HpDamage 스킵.", this);
+        else
+            gm.HpDamage();
+        if (Board != null) Board.RemoveEnemy(gameObject);
     }
     private async UniTask RunSkillLoop(CancellationToken token)
     {
@@ -352,6 +357,7 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
         AttackPower = data.Attack;
         AttackSpeed = data.AttackSpeed;
         Range = data.Range;
+        gameManager ??= GameManager.Instance; // DI 미경유 스폰 대비 폴백
         if(gameManager ==null)
         {
             Defense = data.Defense;
@@ -521,7 +527,11 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
         IsDead = true;
         _move.Stop();
         if (Board != null) Board.RemoveEnemy(gameObject); // 죽는 즉시 칸에서 빠져 저지·타겟 대상서 제외
-        waveSpawner?.EnemyDieEvent();
+
+        Debug.Log("사망 플래그 발동");
+        waveSpawner.EnemyDieEvent();                 // 이동 정지 + Suspended 해제
+
+        // skillCts가 없으면(이미 비활성) 연출 없이 바로 디스폰.
         if (skillCts == null) { Despawn(); return; }
         DieRoutine(skillCts.Token).Forget();
     }

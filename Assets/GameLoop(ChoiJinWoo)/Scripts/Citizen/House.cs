@@ -1,8 +1,9 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using VContainer;
 
-public class House : MonoBehaviour
+public class House : MonoBehaviour, IPlaceAble
 {
     [SerializeField] private int maxCitizenAmount;
     [Header("건설에 필요한 자원 종류")]
@@ -11,6 +12,7 @@ public class House : MonoBehaviour
     [SerializeField] private List<int> amount;
     private CitizenManager manager;
     private ResourcesManager resourcesManager;
+    private MapBoard board;
     public Dictionary<ProductionType, int> Resources
     {
         get
@@ -32,6 +34,16 @@ public class House : MonoBehaviour
                 return temp;
             }
         }
+    }
+
+    public MapBoard Board => board;
+
+    public event Action OnBreak;
+    public event Action OnResur;
+
+    public void SetBoard(MapBoard board)
+    {
+        this.board = board;
     }
 
     [Inject]

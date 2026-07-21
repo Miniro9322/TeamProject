@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using VContainer;
 using VContainer.Unity;
@@ -20,6 +21,13 @@ public class UnitPlacer
         placedUnit = null;
 
         GameObject unit = Create(slot);      // 배치할 오브젝트 생성
+        Debug.Log(unit == null);
+        if (unit == null)
+        {
+            failReason = "오브젝트 생성 실패";
+            return false;
+        }
+
         BindBoard(unit, tile.Board);         // 생성한 오브젝트에 "놓이는 타일의" 모듈 보드 참조 전달
 
         if (tile.Board.TryPlace(tile.Coord, unit, slot.kind, yOffset, out failReason))
@@ -31,7 +39,7 @@ public class UnitPlacer
 
         // 실패 → 만든 오브젝트 파괴.
         // (보존 결함) 풀에서 대여한 생산건물도 여기선 반납 없이 Destroy → 풀 오염. 원래 동작이라 그대로 둠.
-        if (unit != null) Object.Destroy(unit);
+        if (unit != null) UnityEngine.Object.Destroy(unit);
         return false;
     }
 
@@ -40,16 +48,21 @@ public class UnitPlacer
     {
         CheckPrefab(slot);
 
-        if (slot.kind == OccupantKind.Building)
+        if (slot.kind == OccupantKind.Resource)
         {
             ProductionFacility facility = slot.prefab.GetComponent<ProductionFacility>();
-            if (resourcesManager.CheckResources(facility.BasicValue.ConstructProduct))
+            if (facility != null)
             {
                 return pool.Rent(facility.ProductionType);
+
             }
+            else return null;
             // (보존 결함) 자원이 모자라도 아래로 떨어져 프리팹을 그냥 생성함. 원래 동작이라 그대로 둠.
         }
-        return resolver.Instantiate(slot.prefab);
+        else
+        {
+            return resolver.Instantiate(slot.prefab);
+        }
     }
 
     // 생성한 오브젝트에 보드 참조를 넘긴다(유닛이 스스로 보드를 알아야 하는 경우).
