@@ -52,6 +52,10 @@ public class MapView : MonoBehaviour
     // ---- 모드 전환(PanelLogic 버튼이 부른다) ----
 
     public void SetUnit(int index) { palette.SelectSlot(index); }
+    public void SetReplace()
+    {
+        palette.SelectReplace();
+    }
     public void SetRemove() { palette.SelectRemove(); }
     public void ClearMode() { palette.ClearMode(); }
     public void SetBlock(bool value) { input.SetBlock(value); }
