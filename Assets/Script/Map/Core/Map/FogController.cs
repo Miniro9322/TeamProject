@@ -33,6 +33,7 @@ public class FogController : MonoBehaviour
         ApplyEdgeMargin();
         ApplyAreas();
         BindModules();
+        RevealUnlocked();
     }
 
     private void OnValidate()
@@ -66,16 +67,8 @@ public class FogController : MonoBehaviour
 
             _areas[_count] = MeasureCellArea(board);
 
-            if (module.IsUnlocked)
-            {
-                _opens[_count] = 1f;
-                _revealed[_count] = true;
-            }
-            else
-            {
-                _opens[_count] = 0f;
-                _revealed[_count] = false;
-            }
+            _opens[_count] = 0f;
+            _revealed[_count] = false;
 
             _modules.Add(module);
             _count++;
@@ -111,6 +104,18 @@ public class FogController : MonoBehaviour
         float extentX = (maxX - minX) * 0.5f + half;
         float extentZ = (maxZ - minZ) * 0.5f + half;
         return new Vector4(centerX, centerZ, extentX, extentZ);
+    }
+
+    private void RevealUnlocked()
+    {
+        for (int i = 0; i < _count; i++)
+        {
+            if (_modules[i].IsUnlocked)
+            {
+                _revealed[i] = true;
+                RevealArea(i).Forget();
+            }
+        }
     }
 
     private void BindModules()

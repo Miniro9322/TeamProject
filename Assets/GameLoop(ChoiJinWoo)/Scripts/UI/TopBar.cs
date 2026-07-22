@@ -43,6 +43,6 @@ public class TopBar : MonoBehaviour
 
     private void UpdateCitizenUi()
     {
-        citizenText.text = $"{citizenManager.CurrentCitizen}/{citizenManager.MaxCitizen}/{citizenManager.UsedCitizen}/{citizenManager.CanUseCitizen}";
+        citizenText.text = $"ÃÑ ½Ã¹Î ¼ö: {citizenManager.CurrentCitizen}/ÃÖ´ë ½Ã¹Î ¼ö: {citizenManager.MaxCitizen}\n¹èÄ¡ÇÑ ½Ã¹Î: {citizenManager.UsedCitizen}/¹èÄ¡ °¡´É ½Ã¹Î: {citizenManager.CanUseCitizen}";
     }
 }

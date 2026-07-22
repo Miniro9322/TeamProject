@@ -41,7 +41,7 @@ public class AddCitizen : MonoBehaviour
     {
         if (int.TryParse(amount, out this.amount))
         {
-            this.amount = Mathf.Clamp(this.amount, 0, citizenManager.MaxCitizen - citizenManager.CanUseCitizen - citizenManager.UsedCitizen);
+            this.amount = Mathf.Clamp(this.amount, 0, citizenManager.MaxCitizen - citizenManager.CurrentCitizen);
             amountInput.text = $"{this.amount}";
         }
         else
@@ -52,13 +52,15 @@ public class AddCitizen : MonoBehaviour
 
     public void IncreaseAmount()
     {
-        amount++;
+        if(amount + citizenManager.CurrentCitizen < citizenManager.MaxCitizen)
+            amount++;
         amountInput.text = $"{this.amount}";
     }
 
     public void DecreaseAmount()
     {
-        amount--;
+        if(amount > 0)
+            amount--;
         amountInput.text = $"{this.amount}";
     }
 

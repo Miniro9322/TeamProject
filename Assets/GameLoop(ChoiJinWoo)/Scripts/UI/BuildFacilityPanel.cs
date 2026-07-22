@@ -31,12 +31,12 @@ public class BuildFacilityPanel : MonoBehaviour
 
     private void ButtonUpdate()
     {
-        foodFacility.interactable = view.CheckCanBuild("food");
-        goldFacility.interactable = view.CheckCanBuild("gold");
-        stoneFacility.interactable = view.CheckCanBuild("stone");
-        woodFacility.interactable = view.CheckCanBuild("wood");
-        ironFacility.interactable = view.CheckCanBuild("iron");
-        house.interactable = view.CheckCanBuild("house");
+        foodFacility.interactable = view.CheckCanBuild("Food");
+        goldFacility.interactable = view.CheckCanBuild("Gold");
+        stoneFacility.interactable = view.CheckCanBuild("Stone");
+        woodFacility.interactable = view.CheckCanBuild("Wood");
+        ironFacility.interactable = view.CheckCanBuild("Iron");
+        house.interactable = view.CheckCanBuild("House");
 
         if (view.IsPlacing && !view.CheckCanBuild(view.PlacingLabel))
             view.ClearMode();

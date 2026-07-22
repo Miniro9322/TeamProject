@@ -7,6 +7,8 @@ public class HeroSetPanel : MonoBehaviour
     [SerializeField] private MapGame game;
     [SerializeField] private Button meleeButton;
     [SerializeField] private Button rangeButton;
+    [SerializeField] private Button dualBladerButton;
+    [SerializeField] private Button spearManButton;
 
     private void OnEnable()
     {
@@ -31,6 +33,8 @@ public class HeroSetPanel : MonoBehaviour
     {
         meleeButton.interactable = view.CheckCanBuild("melee");
         rangeButton.interactable = view.CheckCanBuild("Ranged");
+        dualBladerButton.interactable = view.CheckCanBuild("DualBlader");
+        spearManButton.interactable = view.CheckCanBuild("SpearMan");
 
         if (view.IsPlacing && !view.CheckCanBuild(view.PlacingLabel))
             view.ClearMode();   

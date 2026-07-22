@@ -17,7 +17,6 @@ public class ResultState : IState
     {
         if(Time.timeScale > 0f)
             Time.timeScale = 0f;
-
         OpenPanel().Forget();
 
     }

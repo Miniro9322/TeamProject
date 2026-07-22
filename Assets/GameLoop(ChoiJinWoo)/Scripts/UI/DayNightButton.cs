@@ -5,20 +5,20 @@ using VContainer;
 public class DayNightButton : MonoBehaviour
 {
     [SerializeField] private Button button;
-    private EnviromentManager enviromentManager;
     private GameManager gameManager;
+    private EnviromentManager enviromentManager;
 
     [Inject]
-    private void Construct(EnviromentManager enviromentManager, GameManager gameManager)
+    private void Construct(GameManager gameManager, EnviromentManager enviromentManager)
     {
-        this.enviromentManager = enviromentManager;
         this.gameManager = gameManager;
+        this.enviromentManager = enviromentManager;
     }
 
     private void Start()
     {
         button.onClick.AddListener(OnButton);
-        gameManager.ChangeToDay += EnableButton;
+        enviromentManager.OnDay += EnableButton;
     }
 
     private void OnButton()
