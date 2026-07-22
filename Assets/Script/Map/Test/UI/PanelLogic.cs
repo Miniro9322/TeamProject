@@ -3,66 +3,17 @@ using UnityEngine;
 
 public class PanelLogic : MonoBehaviour
 {
-    [SerializeField] private MapPanel panel;
     [SerializeField] private MapView game;
     [SerializeField] private MapCommand command;
-    [SerializeField] private EnemyPathView enemyPath; // 경로 소유자(표시/재계산은 여기로)
-
-    private readonly PanelData data = new();
-
-    private void Awake()
-    {
-        if (panel != null)
-        {
-            panel.SetData(data);
-        }
-    }
-
-    private void OnEnable()
-    {
-        if (panel == null)
-        {
-            return;
-        }
-
-        panel.PathClicked += PathClick;
-        panel.PathToggle += PathToggle;
-        panel.UnitCleared += UnitClear;
-        panel.ReplaceClicked += ReplaceClick;
-        panel.RemoveClicked += RemoveClick;
-        panel.ModeCleared += ModeClear;
-        panel.UnitClicked += UnitClick;
-    }
-
-    private void OnDisable()
-    {
-        if (panel == null)
-        {
-            return;
-        }
-
-        panel.PathClicked -= PathClick;
-        panel.PathToggle -= PathToggle;
-        panel.UnitCleared -= UnitClear;
-        panel.ReplaceClicked -= ReplaceClick;
-        panel.RemoveClicked -= RemoveClick;
-        panel.ModeCleared -= ModeClear;
-        panel.UnitClicked -= UnitClick;
-
-        if (game != null)
-        {
-            game.SetBlock(false);
-        }
-    }
+    [SerializeField] private EnemyPathView enemyPath;
 
     private void Update()
     {
-        if (panel == null || game == null)
+        if (game == null)
         {
             return;
         }
 
-        game.SetBlock(panel.HasPointer);
         Refresh();
     }
 
@@ -103,13 +54,7 @@ public class PanelLogic : MonoBehaviour
 
     private void Refresh()
     {
-        data.Status = game.Status;
-        data.TileText = TileInfo(game.Selected);
-        data.Mode = game.Mode;
-        data.ShowPath = enemyPath != null && enemyPath.PathVisible;
-        data.UnitIndex = game.UnitIndex;
-        data.Units = UnitLabels(game.Items);
-        data.Holding = game.IsHolding;
+        TileInfo(game.Selected);
     }
 
     private static string TileInfo(Tile tile)
