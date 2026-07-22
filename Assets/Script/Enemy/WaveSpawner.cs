@@ -115,4 +115,15 @@ public class WaveSpawner : MonoBehaviour
             text.text += $"{DataTableManager.StringTable.Get(w.MonsterName)} {w.Count}마리 \n";
         }
     }
+
+    public static int GetScaleCount(int baseCount,int currentStage)
+    {
+        if(currentStage<=10)return baseCount;
+        int loops = (currentStage-6)/5;
+        return Mathf.RoundToInt(baseCount*(1f+loops*0.3f));
+    }
+    public static int GetStageLookupId(int stage)
+    {
+        return stage > 10 ? ((stage-6)%5)+1001 : stage;
+    }
 }

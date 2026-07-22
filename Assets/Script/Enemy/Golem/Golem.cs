@@ -9,9 +9,9 @@ public class Golem : EnemyBase
 
     private void Start()
     {
-        hp = Hp;
-        speed = MoveSpeed;
-        attack = AttackPower;
-        def = Defense; //테스트용
+        hp = Stats[StatType.HP];
+        speed = Stats[StatType.SPD];
+        attack =Mathf.FloorToInt(Stats[StatType.ATK]);
+        def = Mathf.FloorToInt(Stats[StatType.DEF]);
     }
 }

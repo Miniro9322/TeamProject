@@ -44,7 +44,7 @@ public class Bat : EnemyBase
             attackprefab.transform.position = end;
             // 도착 시점에 대상이 살아있으면 데미지. 영웅은 IDamageAble이 부모에 있을 수 있어 InParent로 탐색.
             if (target != null && target.GetComponentInParent<IDamageAble>() is IDamageAble dmg)
-                dmg.TakeDamage(AttackPower);
+                dmg.TakeDamage(Mathf.FloorToInt(Stats[StatType.ATK]));
         }
         catch(System.OperationCanceledException)
         {
