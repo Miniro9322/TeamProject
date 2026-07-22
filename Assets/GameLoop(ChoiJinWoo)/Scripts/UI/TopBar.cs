@@ -41,8 +41,8 @@ public class TopBar : MonoBehaviour
         foodText.text = $"{resourcesManager.Food}";
     }
 
-    private void UpdateCitizenUi(int max, int cur, int used, int canUse)
+    private void UpdateCitizenUi()
     {
-        citizenText.text = $"{cur}/{max}/{used}/{canUse}";
+        citizenText.text = $"{citizenManager.CurrentCitizen}/{citizenManager.MaxCitizen}/{citizenManager.UsedCitizen}/{citizenManager.CanUseCitizen}";
     }
 }
