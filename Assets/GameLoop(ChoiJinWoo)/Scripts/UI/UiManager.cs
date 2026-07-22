@@ -41,6 +41,7 @@ public class UiManager : MonoBehaviour
     public async UniTask OpenRequestSupportUi()
     {
         requestSupportUi.gameObject.SetActive(true);
+        Debug.Log(requestSupportUi.gameObject.activeSelf);
         await UniTask.WaitUntil(() => requestSupportUi.gameObject.activeSelf == false);
     }
 }

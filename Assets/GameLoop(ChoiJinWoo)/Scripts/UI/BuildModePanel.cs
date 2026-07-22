@@ -6,15 +6,25 @@ public class BuildModePanel : MonoBehaviour
 {
     [SerializeField] private GameObject facilityPanel;
     [SerializeField] private GameObject heroPanel;
-    [SerializeField] private Button facilityButton;
-    [SerializeField] private Button heroButton;
-    [SerializeField] private Button removeButton;
     [SerializeField] private MapView view;
+    [SerializeField] private MapGame game;
 
     private void Awake()
     {
         facilityPanel.SetActive(false);
         heroPanel.SetActive(false);
+    }
+
+    private void Start()
+    {
+        game.Rule.ChangeToNight += DisablePanels;
+        game.EnviromentManager.OnDay += EnablePanel;
+    }
+
+    private void OnDestroy()
+    {
+        game.Rule.ChangeToNight -= DisablePanels;
+        game.EnviromentManager.OnDay -= EnablePanel;
     }
 
     private void Update()
@@ -30,6 +40,24 @@ public class BuildModePanel : MonoBehaviour
             facilityPanel.SetActive(false);
             heroPanel.SetActive(false);
         }
+    }
+
+    private void DisablePanels()
+    {
+        if (facilityPanel.activeSelf)
+        {
+            facilityPanel.SetActive(false);
+        }
+        if (heroPanel.activeSelf)
+        {
+            heroPanel.SetActive(false);
+        }
+        gameObject.SetActive(false);
+    }
+
+    private void EnablePanel()
+    {
+        gameObject.SetActive(true);
     }
 
     public void OnFacilityButton()
@@ -53,5 +81,23 @@ public class BuildModePanel : MonoBehaviour
         if (heroPanel.activeSelf == true)
             heroPanel.SetActive(false);
         view.SetRemove();
+    }
+
+    public void OnReplaceButton()
+    {
+        if (facilityPanel.activeSelf == true)
+            facilityPanel.SetActive(false);
+        if (heroPanel.activeSelf == true)
+            heroPanel.SetActive(false);
+        view.SetReplace();
+    }
+
+    public void OnOffButton()
+    {
+        if (facilityPanel.activeSelf == true)
+            facilityPanel.SetActive(false);
+        if (heroPanel.activeSelf == true)
+            heroPanel.SetActive(false);
+        view.ClearMode();
     }
 }

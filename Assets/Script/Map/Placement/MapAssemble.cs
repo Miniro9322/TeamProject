@@ -52,6 +52,13 @@ public class MapAssemble : MonoBehaviour
             { PlaceMode.Place, action.PlaceUnit },
             { PlaceMode.Remove, action.RemoveUnit },
         };
+
+        mapGame.Rule.ChangeToNight += view.ClearMode;
+    }
+
+    private void OnDestroy()
+    {
+        mapGame.Rule.ChangeToNight -= view.ClearMode;
     }
 
     // 레지스트리에 등록된 모듈들의 보드 목록. 모듈 루트에 ModuleLogic과 MapBoard가 함께 산다.

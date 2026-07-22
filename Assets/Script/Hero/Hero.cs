@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using UnityEngine;
-using UnityEngine.Rendering;
 using VContainer;
 
 public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
@@ -47,10 +46,10 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
     protected Vector2Int origin;
     protected Tile currentTile;
     public Tile CurrentTile => currentTile;
-    //private List<Tile> attackRangedTiles;
+
     [SerializeField] protected int range = 1;
     [SerializeField] protected RangeShape rangeShape = RangeShape.Diamond;
-
+    public int Range => range;
     [SerializeField] private List<GroundZoneDataSO> auraZones = new();
     private CancellationTokenSource _auraCts;
 

@@ -10,6 +10,7 @@ public class MapGame : MonoBehaviour
     private GameManager gameManager;
     private ResourcesManager resourcesManager;
     private CitizenManager citizenManager;
+    private EnviromentManager enviromentManager;
 
     public UnitList Units { get { return unitList; } }
     public UnitPlacer Placer { get { return unitPlacer; } }
@@ -17,19 +18,22 @@ public class MapGame : MonoBehaviour
     public GameManager Rule { get { return gameManager; } }
     public ResourcesManager ResourcesManager { get { return resourcesManager; } }
     public CitizenManager CitizenManager { get { return citizenManager; } }
+    public EnviromentManager EnviromentManager { get { return enviromentManager; } }
+
 
     [Inject]
-    private void Construct(IObjectResolver resolver, ResourcesManager resourcesManager, BuildingPool buildingPool, UiManager uiManager, GameManager gameManager, CitizenManager citizenManager)
+    private void Construct(IObjectResolver resolver, ResourcesManager resourcesManager, BuildingPool buildingPool, UiManager uiManager, GameManager gameManager, CitizenManager citizenManager, EnviromentManager enviromentManager)
     {
         this.uiManager = uiManager;
         this.gameManager = gameManager;
         this.resourcesManager = resourcesManager;
         this.citizenManager = citizenManager;
+        this.enviromentManager = enviromentManager;
         unitPlacer = new UnitPlacer();
         unitPlacer.unitList = unitList;
         unitPlacer.resolver = resolver;
         unitPlacer.resourcesManager = resourcesManager;
-        unitPlacer.pool = buildingPool;
         unitPlacer.citizenManager = citizenManager;
+        unitPlacer.pool = buildingPool;
     }
 }

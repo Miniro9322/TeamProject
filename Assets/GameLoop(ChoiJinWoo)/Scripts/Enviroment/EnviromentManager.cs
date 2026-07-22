@@ -108,6 +108,7 @@ public class EnviromentManager : MonoBehaviour
         else
         {
             SetDay();
+            gameManager.ChangeCanBuild(true);
             OnDay?.Invoke();
         }
     }
