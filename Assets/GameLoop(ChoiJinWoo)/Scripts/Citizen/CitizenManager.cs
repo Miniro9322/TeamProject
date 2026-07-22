@@ -8,13 +8,18 @@ public class CitizenManager : MonoBehaviour
     private int usedCitizen;
     private int canUseCitizen;
 
-    public event Action<int, int, int, int> CitizenChanged;
+    public int MaxCitizen => maxCitizen;
+    public int CurrentCitizen => currentCitizen;
+    public int UsedCitizen => usedCitizen;
+    public int CanUseCitizen => canUseCitizen;
+
+    public event Action CitizenChanged;
 
     private void Start()
     {
         usedCitizen = 0;
         canUseCitizen = currentCitizen - usedCitizen;
-        CitizenChanged?.Invoke(maxCitizen, currentCitizen, usedCitizen, canUseCitizen);
+        CitizenChanged?.Invoke();
     }
 
     public void IncreaseMaxCitizen(int amount)
@@ -75,6 +80,6 @@ public class CitizenManager : MonoBehaviour
 
     private void UpdateCitizen()
     {
-        CitizenChanged?.Invoke(maxCitizen, currentCitizen, usedCitizen, canUseCitizen);
+        CitizenChanged?.Invoke();
     }
 }

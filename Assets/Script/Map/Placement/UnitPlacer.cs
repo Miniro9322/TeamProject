@@ -12,6 +12,7 @@ public class UnitPlacer
     public UnitList unitList;
     public IObjectResolver resolver;
     public ResourcesManager resourcesManager;
+    public CitizenManager citizenManager;
     public BuildingPool pool;
 
     // 슬롯을 칸에 놓는다: 생성→보드 배치→(성공 시)장부·커버 등록.
