@@ -234,38 +234,6 @@ public class MapBoard : MonoBehaviour
         get { foreach (Tile t in _cells.Values) if (t.Terrain == TerrainType.Ground) yield return t; }
     }
 
-    /// <summary>길찾기가 보는 논리 격자를 ASCII로 콘솔에 출력. 화면 배치와 대조하면 좌표 어긋남/미로 구멍을 바로 판별.</summary>
-    [ContextMenu("Debug: Log Grid Map")]
-    public void DebugLogGridMap()
-    {
-        if (_cells.Count == 0) Build();
-
-        var pathSet = new HashSet<Vector2Int>();
-        List<Tile> path = GetPath();
-        if (path != null) foreach (Tile t in path) pathSet.Add(t.Coord);
-
-        var sb = new System.Text.StringBuilder();
-        sb.AppendLine($"[MapBoard] 논리격자 {Cols}×{Rows}  (S=스폰 C=본진 #=고지(벽) .=지상 *=경로 (공백)=없음/Empty)");
-        sb.AppendLine($"경로: {(path == null ? "없음" : path.Count + "칸")}");
-        for (int row = Rows - 1; row >= 0; row--) // 위(먼 쪽 row 큰 값)부터 아래로
-        {
-            var line = new System.Text.StringBuilder();
-            for (int col = 0; col < Cols; col++)
-            {
-                Tile t = ByIndex(Index(col, row));
-                char ch;
-                if (t == null) ch = ' ';
-                else if (t.isEnemySpawn) ch = 'S';
-                else if (t.Terrain == TerrainType.Core) ch = 'C';
-                else if (t.Terrain == TerrainType.High) ch = '#';
-                else if (t.Terrain == TerrainType.Empty) ch = ' ';
-                else ch = pathSet.Contains(t.Coord) ? '*' : '.';
-                line.Append(ch);
-            }
-            sb.Append("row ").Append(row.ToString("00")).Append(" : ").AppendLine(line.ToString());
-        }
-        //Debug.Log(sb.ToString(), this);
-    }
 
     // ---- 인덱스 관리 (index = Row * Cols + Col) ----
     // 좌표 딕셔너리(_cells)와 같은 Tile을 가리키는 1차원 배열. 순회·저장·경로/영토 참조·이웃에 유리.
