@@ -18,16 +18,23 @@ public class DayNightButton : MonoBehaviour
     private void Start()
     {
         button.onClick.AddListener(OnButton);
+        gameManager.ChangeToDay += EnableButton;
     }
 
     private void OnButton()
     {
-        //enviromentManager.ToggleDayNight();
         gameManager.OnNight();
+        gameObject.SetActive(false);
+    }
+
+    private void EnableButton()
+    {
+        gameObject.SetActive(true);
     }
 
     private void OnDestroy()
     {
         button.onClick.RemoveAllListeners();
+        gameManager.ChangeToDay -= EnableButton;
     }
 }

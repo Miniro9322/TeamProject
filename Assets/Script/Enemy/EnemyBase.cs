@@ -418,8 +418,10 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
         if (!_berserkOn && Hp < MaxHp * 0.5f && IsBerserk)
         {
             _berserkOn = true;
-            MoveSpeed += 3f;
-            AttackPower += 10;
+            //MoveSpeed += 3f;
+            sc.AddModifier(StatType.SPD, new Modifier(ModifierType.Flat, 3f, 0f, StatLayer.Equip, this));
+            //AttackPower += 10;
+            sc.AddModifier(StatType.ATK, new Modifier(ModifierType.Flat, 10, 0f, StatLayer.Equip, this));
         }
         if(Hp<=0)Die();
     }
@@ -526,6 +528,7 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
         IsDead = true;
         _move.Stop();
         if (Board != null) Board.RemoveEnemy(gameObject); // 죽는 즉시 칸에서 빠져 저지·타겟 대상서 제외
+        sc.RemoveModifier(this);
 
         Debug.Log("사망 플래그 발동");
         waveSpawner.EnemyDieEvent();                 // 이동 정지 + Suspended 해제

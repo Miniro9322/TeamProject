@@ -29,6 +29,7 @@ public class MapGame : MonoBehaviour
         unitPlacer.unitList = unitList;
         unitPlacer.resolver = resolver;
         unitPlacer.resourcesManager = resourcesManager;
+        unitPlacer.citizenManager = citizenManager;
         unitPlacer.pool = buildingPool;
         unitPlacer.citizenManager = citizenManager;
     }

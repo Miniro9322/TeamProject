@@ -54,15 +54,43 @@ public class UnitPlacer
             ProductionFacility facility = slot.prefab.GetComponent<ProductionFacility>();
             if (facility != null)
             {
-                return pool.Rent(facility.ProductionType);
+                if (!resourcesManager.CheckResources(facility.BasicValue.ConstructProduct))
+                {
+                    return null;   // 자원 부족 → 생성하지 않음
+                }
 
+                return pool.Rent(facility.ProductionType);
             }
             else return null;
             // (보존 결함) 자원이 모자라도 아래로 떨어져 프리팹을 그냥 생성함. 원래 동작이라 그대로 둠.
         }
+        else if(slot.kind == OccupantKind.Building)
+        {
+            House house = slot.prefab.GetComponent<House>();
+            if (house != null)
+            {
+                if (!resourcesManager.CheckResources(house.Resources))
+                {
+                    return null;   // 자원 부족 → 생성하지 않음
+                }
+
+                return resolver.Instantiate(slot.prefab);
+            }
+            else return null;
+        }
         else
         {
-            return resolver.Instantiate(slot.prefab);
+            var hero = slot.prefab.GetComponent<Hero>();
+            if (hero != null)
+            {
+                if (!citizenManager.CheckCanUseCitizen(hero.CitizenAmount))
+                {
+                    return null;   // 자원 부족 → 생성하지 않음
+                }
+
+                return resolver.Instantiate(slot.prefab);
+            }
+            else return null;
         }
     }
 

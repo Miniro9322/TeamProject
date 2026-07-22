@@ -11,8 +11,10 @@ public class HeroSetPanel : MonoBehaviour
     private void OnEnable()
     {
         game.Placer.citizenManager.CitizenChanged += ButtonUpdate;
-
-        ButtonUpdate();
+        if(view != null)
+        {
+            ButtonUpdate();
+        }
     }
 
     private void OnDisable()
@@ -31,6 +33,6 @@ public class HeroSetPanel : MonoBehaviour
         rangeButton.interactable = view.CheckCanBuild("Ranged");
 
         if (view.IsPlacing && !view.CheckCanBuild(view.PlacingLabel))
-            view.ClearMode();
+            view.ClearMode();   
     }
 }
