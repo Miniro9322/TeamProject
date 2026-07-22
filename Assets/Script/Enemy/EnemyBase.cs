@@ -120,16 +120,15 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit
     }
     protected virtual void OnDisable()
     {
-        EnemyRegistry.Unregister(this);
         ResetCloak();
         _move.Pause();
         _move.LeaveBoard(); // 어떤 경로로 사라지든 현재 칸에서 빠진다
         _move.ArrivedAtCore -= HandleArrivedAtCore;
+        sc.RemoveModifier(this);
         skillCts?.Cancel();
         skillCts?.Dispose();
         skillCts = null;
     }
-
     public void EnterMap(MapBoard board, IReadOnlyList<Vector3> waypoints = null, bool snapToStart = true)
     {
         _move.Flying = IsFly; // 공중 특성이면 지형 무시(본진으로 직선). Map/길찾기는 건드리지 않음

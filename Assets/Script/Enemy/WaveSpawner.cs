@@ -49,25 +49,29 @@ public class WaveSpawner : MonoBehaviour
     public void SpawnWave(int currentStage)
     {
         Enemycount =0;
-        foreach(var wave in waveTable.GetWave(1,currentStage))
+        int lookupId = GetStageLookupId(currentStage); // 10일차 초과는 1001~1005 라운드로 순환 조회
+        foreach(var wave in waveTable.GetWave(1,lookupId))
         {
-            SpawnWaveRout(wave).Forget();
-            Enemycount += wave.Count;
+            int count = GetScaleCount(wave.Count, currentStage); // 라운드가 돌수록 마릿수 스케일업
+            SpawnWaveRout(wave, count).Forget();
+            Enemycount += count;
         }
         Debug.Log($"{region}지역 : {Enemycount}");
     }
     public void SpawnWave(int region,int currentStage)
     {
         Enemycount =0;
-        foreach(var wave in waveTable.GetWave(region,currentStage))
+        int lookupId = GetStageLookupId(currentStage); // 10일차 초과는 1001~1005 라운드로 순환 조회
+        foreach(var wave in waveTable.GetWave(region,lookupId))
         {
-            SpawnWaveRout(wave).Forget();
-            Enemycount += wave.Count;
+            int count = GetScaleCount(wave.Count, currentStage); // 라운드가 돌수록 마릿수 스케일업
+            SpawnWaveRout(wave, count).Forget();
+            Enemycount += count;
         }
         Debug.Log($"{region}지역 총마릿수 : {Enemycount}");
     }
 
-    private async UniTask SpawnWaveRout(WaveTable.Data wave)
+    private async UniTask SpawnWaveRout(WaveTable.Data wave, int count)
     {
         var prefab = waveTable.GetMonsterPrefab(wave);
         if (prefab == null)
@@ -77,9 +81,9 @@ public class WaveSpawner : MonoBehaviour
         }
         if (wave.SpawnTime > 0f) await UniTask.Delay(TimeSpan.FromSeconds(wave.SpawnTime));
 
-        for (int i = 0; i < wave.Count; i++)
+        for (int i = 0; i < count; i++)
         {
-            
+
             var go = (_pool ??= PoolManager.Instance).Spawn(prefab, Vector3.zero, Quaternion.identity);
             if (go.TryGetComponent(out EnemyBase enemy))
             {
@@ -87,7 +91,7 @@ public class WaveSpawner : MonoBehaviour
                 enemy.EnterMap(board, waypoints);
             }
 
-            if (i < wave.Count - 1 && wave.Delay > 0f)
+            if (i < count - 1 && wave.Delay > 0f)
             await UniTask.Delay(TimeSpan.FromSeconds(wave.Delay));
         }
     }
@@ -110,9 +114,11 @@ public class WaveSpawner : MonoBehaviour
     {
         if (waveTable == null || text == null) return; // Start 전 클릭/텍스트 미할당 방어
         text.text = $"{region}지역 {currentstage}일차\n";
-        foreach(var w in waveTable.GetWave(region,currentstage))
+        int lookupId = GetStageLookupId(currentstage);
+        foreach(var w in waveTable.GetWave(region,lookupId))
         {
-            text.text += $"{DataTableManager.StringTable.Get(w.MonsterName)} {w.Count}마리 \n";
+            int count = GetScaleCount(w.Count, currentstage);
+            text.text += $"{DataTableManager.StringTable.Get(w.MonsterName)} {count}마리 \n";
         }
     }
 
