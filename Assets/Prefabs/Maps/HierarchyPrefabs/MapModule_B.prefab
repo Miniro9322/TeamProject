@@ -782,6 +782,7 @@ GameObject:
   - component: {fileID: 8634429776923064968}
   - component: {fileID: 8719301790896272070}
   - component: {fileID: -3547879118163182433}
+  - component: {fileID: 7423437774529506930}
   m_Layer: 0
   m_Name: MapModule_B
   m_TagString: Untagged
@@ -845,7 +846,23 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WaveSpawner
   board: {fileID: 8719301790896272070}
+  region: 2
   Enemycount: 12
+  text: {fileID: 0}
+--- !u!114 &7423437774529506930
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8328397223932432046}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 31478ffa6d3e4dd4a8b4e366106fa1a8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyPathView
+  board: {fileID: 8719301790896272070}
+  pathVisible: 1
 --- !u!1001 &13758153371390538
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -945,12 +962,16 @@ PrefabInstance:
       value: 23
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -1039,8 +1060,12 @@ PrefabInstance:
       value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -1215,8 +1240,12 @@ PrefabInstance:
       value: 7
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -1309,8 +1338,12 @@ PrefabInstance:
       value: 10
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -1403,8 +1436,12 @@ PrefabInstance:
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -1497,12 +1534,16 @@ PrefabInstance:
       value: 19
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -1591,8 +1632,12 @@ PrefabInstance:
       value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -1685,8 +1730,12 @@ PrefabInstance:
       value: 13
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -2025,12 +2074,16 @@ PrefabInstance:
       value: 24
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -2119,8 +2172,12 @@ PrefabInstance:
       value: 7
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -2381,8 +2438,12 @@ PrefabInstance:
       value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -2557,8 +2618,12 @@ PrefabInstance:
       value: 9
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -2729,8 +2794,12 @@ PrefabInstance:
       value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -2905,8 +2974,12 @@ PrefabInstance:
       value: 10
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -2999,12 +3072,16 @@ PrefabInstance:
       value: 19
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -3093,8 +3170,12 @@ PrefabInstance:
       value: 11
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -3187,8 +3268,12 @@ PrefabInstance:
       value: 13
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -3281,8 +3366,12 @@ PrefabInstance:
       value: 9
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -3375,12 +3464,16 @@ PrefabInstance:
       value: 23
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -3719,8 +3812,12 @@ PrefabInstance:
       value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -3813,12 +3910,16 @@ PrefabInstance:
       value: 23
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -3907,8 +4008,12 @@ PrefabInstance:
       value: 11
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -4243,8 +4348,12 @@ PrefabInstance:
       value: 9
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -4337,12 +4446,16 @@ PrefabInstance:
       value: 24
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -4517,8 +4630,12 @@ PrefabInstance:
       value: 6
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -4697,12 +4814,16 @@ PrefabInstance:
       value: 21
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -4963,8 +5084,12 @@ PrefabInstance:
       value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -5225,8 +5350,12 @@ PrefabInstance:
       value: 12
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -5319,8 +5448,12 @@ PrefabInstance:
       value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -5413,8 +5546,12 @@ PrefabInstance:
       value: 12
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -5585,12 +5722,16 @@ PrefabInstance:
       value: 22
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -5679,12 +5820,16 @@ PrefabInstance:
       value: 25
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -5773,8 +5918,12 @@ PrefabInstance:
       value: 7
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -5867,12 +6016,16 @@ PrefabInstance:
       value: 22
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -5961,8 +6114,12 @@ PrefabInstance:
       value: 10
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -6055,8 +6212,12 @@ PrefabInstance:
       value: 4
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -6227,8 +6388,12 @@ PrefabInstance:
       value: 4
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -6321,8 +6486,12 @@ PrefabInstance:
       value: 4
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -6497,12 +6666,16 @@ PrefabInstance:
       value: 21
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -6673,12 +6846,16 @@ PrefabInstance:
       value: 25
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -6767,8 +6944,12 @@ PrefabInstance:
       value: 6
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -6861,8 +7042,12 @@ PrefabInstance:
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -6955,12 +7140,16 @@ PrefabInstance:
       value: 22
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -7127,8 +7316,12 @@ PrefabInstance:
       value: 6
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -7221,8 +7414,12 @@ PrefabInstance:
       value: 10
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -7397,12 +7594,16 @@ PrefabInstance:
       value: 22
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -7655,8 +7856,12 @@ PrefabInstance:
       value: 12
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -7749,8 +7954,12 @@ PrefabInstance:
       value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -7843,8 +8052,12 @@ PrefabInstance:
       value: 4
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -7937,8 +8150,12 @@ PrefabInstance:
       value: 9
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -8031,8 +8248,12 @@ PrefabInstance:
       value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -8125,8 +8346,12 @@ PrefabInstance:
       value: 13
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -8219,8 +8444,12 @@ PrefabInstance:
       value: 4
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -8473,12 +8702,16 @@ PrefabInstance:
       value: 21
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -8645,8 +8878,12 @@ PrefabInstance:
       value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -9059,8 +9296,12 @@ PrefabInstance:
       value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -9309,8 +9550,12 @@ PrefabInstance:
       value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -9403,12 +9648,16 @@ PrefabInstance:
       value: 19
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -9497,12 +9746,16 @@ PrefabInstance:
       value: 20
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -9673,12 +9926,16 @@ PrefabInstance:
       value: 19
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -9767,8 +10024,12 @@ PrefabInstance:
       value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -9861,12 +10122,16 @@ PrefabInstance:
       value: 21
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -9955,8 +10220,12 @@ PrefabInstance:
       value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -10049,8 +10318,12 @@ PrefabInstance:
       value: 11
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -10143,8 +10416,12 @@ PrefabInstance:
       value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -10561,12 +10838,16 @@ PrefabInstance:
       value: 22
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -10733,8 +11014,12 @@ PrefabInstance:
       value: 12
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -10827,8 +11112,12 @@ PrefabInstance:
       value: 6
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -10921,12 +11210,16 @@ PrefabInstance:
       value: 19
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -11015,12 +11308,16 @@ PrefabInstance:
       value: 20
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -11269,8 +11566,12 @@ PrefabInstance:
       value: 10
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -11363,8 +11664,12 @@ PrefabInstance:
       value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -11457,8 +11762,12 @@ PrefabInstance:
       value: 4
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -11633,8 +11942,12 @@ PrefabInstance:
       value: 4
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -11727,8 +12040,12 @@ PrefabInstance:
       value: 6
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -11821,7 +12138,15 @@ PrefabInstance:
       value: 13
       objectReference: {fileID: 0}
     - target: {fileID: 869652688361003121, guid: da0d83a80d6ddfa498ccd16deb4a7190, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 869652688361003121, guid: da0d83a80d6ddfa498ccd16deb4a7190, type: 3}
       propertyPath: isEnemySpawn
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 869652688361003121, guid: da0d83a80d6ddfa498ccd16deb4a7190, type: 3}
+      propertyPath: State.CanMelee
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 869652688361003121, guid: da0d83a80d6ddfa498ccd16deb4a7190, type: 3}
@@ -11911,8 +12236,12 @@ PrefabInstance:
       value: 13
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -12005,12 +12334,16 @@ PrefabInstance:
       value: 21
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -12345,8 +12678,12 @@ PrefabInstance:
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -12525,8 +12862,12 @@ PrefabInstance:
       value: 13
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -12619,8 +12960,12 @@ PrefabInstance:
       value: 7
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -12963,12 +13308,16 @@ PrefabInstance:
       value: 21
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -13225,12 +13574,16 @@ PrefabInstance:
       value: 25
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -13397,12 +13750,16 @@ PrefabInstance:
       value: 22
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -13573,8 +13930,12 @@ PrefabInstance:
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -13749,8 +14110,12 @@ PrefabInstance:
       value: 7
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -14007,12 +14372,16 @@ PrefabInstance:
       value: 23
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -14101,8 +14470,12 @@ PrefabInstance:
       value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -14277,12 +14650,16 @@ PrefabInstance:
       value: 21
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -14453,12 +14830,16 @@ PrefabInstance:
       value: 24
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -14629,12 +15010,16 @@ PrefabInstance:
       value: 23
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -14723,8 +15108,12 @@ PrefabInstance:
       value: 9
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -14817,12 +15206,16 @@ PrefabInstance:
       value: 20
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -14911,8 +15304,12 @@ PrefabInstance:
       value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -15005,8 +15402,12 @@ PrefabInstance:
       value: 9
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -15181,12 +15582,16 @@ PrefabInstance:
       value: 25
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -15275,8 +15680,12 @@ PrefabInstance:
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -15369,8 +15778,12 @@ PrefabInstance:
       value: 11
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -15709,12 +16122,16 @@ PrefabInstance:
       value: 24
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -15889,8 +16306,12 @@ PrefabInstance:
       value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -15983,8 +16404,12 @@ PrefabInstance:
       value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -16077,8 +16502,12 @@ PrefabInstance:
       value: 7
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -16253,12 +16682,16 @@ PrefabInstance:
       value: 19
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -16347,8 +16780,12 @@ PrefabInstance:
       value: 7
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -16441,8 +16878,12 @@ PrefabInstance:
       value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -16625,12 +17066,16 @@ PrefabInstance:
       value: 19
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -16797,8 +17242,12 @@ PrefabInstance:
       value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -16891,8 +17340,12 @@ PrefabInstance:
       value: 7
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -17149,8 +17602,12 @@ PrefabInstance:
       value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -17243,12 +17700,16 @@ PrefabInstance:
       value: 23
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -17337,12 +17798,16 @@ PrefabInstance:
       value: 24
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -17431,8 +17896,12 @@ PrefabInstance:
       value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -17685,8 +18154,12 @@ PrefabInstance:
       value: 10
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -17857,8 +18330,12 @@ PrefabInstance:
       value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -18361,12 +18838,16 @@ PrefabInstance:
       value: 19
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -18623,12 +19104,16 @@ PrefabInstance:
       value: 24
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -18799,8 +19284,12 @@ PrefabInstance:
       value: 12
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -19213,8 +19702,12 @@ PrefabInstance:
       value: 10
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -19307,8 +19800,12 @@ PrefabInstance:
       value: 7
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -19643,8 +20140,12 @@ PrefabInstance:
       value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -19819,8 +20320,12 @@ PrefabInstance:
       value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -19913,8 +20418,12 @@ PrefabInstance:
       value: 9
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -20007,12 +20516,16 @@ PrefabInstance:
       value: 21
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -20101,8 +20614,12 @@ PrefabInstance:
       value: 6
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -20195,8 +20712,12 @@ PrefabInstance:
       value: 4
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -20289,12 +20810,16 @@ PrefabInstance:
       value: 22
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -20383,12 +20908,16 @@ PrefabInstance:
       value: 19
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -20723,8 +21252,12 @@ PrefabInstance:
       value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -20899,8 +21432,12 @@ PrefabInstance:
       value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -20993,8 +21530,12 @@ PrefabInstance:
       value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -21169,12 +21710,16 @@ PrefabInstance:
       value: 25
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -21263,12 +21808,16 @@ PrefabInstance:
       value: 21
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -21677,12 +22226,16 @@ PrefabInstance:
       value: 23
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -22013,12 +22566,16 @@ PrefabInstance:
       value: 19
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -22107,12 +22664,16 @@ PrefabInstance:
       value: 23
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -22201,12 +22762,16 @@ PrefabInstance:
       value: 22
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -22295,8 +22860,12 @@ PrefabInstance:
       value: 4
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -22471,8 +23040,12 @@ PrefabInstance:
       value: 6
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -22565,8 +23138,12 @@ PrefabInstance:
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -22741,12 +23318,16 @@ PrefabInstance:
       value: 24
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -22835,8 +23416,12 @@ PrefabInstance:
       value: 12
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -23011,8 +23596,12 @@ PrefabInstance:
       value: 9
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -23105,8 +23694,12 @@ PrefabInstance:
       value: 12
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -23281,8 +23874,12 @@ PrefabInstance:
       value: 9
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -23375,8 +23972,12 @@ PrefabInstance:
       value: 12
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -23551,12 +24152,16 @@ PrefabInstance:
       value: 23
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -23645,8 +24250,12 @@ PrefabInstance:
       value: 6
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -23739,12 +24348,16 @@ PrefabInstance:
       value: 25
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -23833,8 +24446,12 @@ PrefabInstance:
       value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -24411,12 +25028,16 @@ PrefabInstance:
       value: 23
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -24587,8 +25208,12 @@ PrefabInstance:
       value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -24681,12 +25306,16 @@ PrefabInstance:
       value: 25
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -24775,12 +25404,16 @@ PrefabInstance:
       value: 24
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -24869,8 +25502,12 @@ PrefabInstance:
       value: 6
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -25041,8 +25678,12 @@ PrefabInstance:
       value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -25135,8 +25776,12 @@ PrefabInstance:
       value: 13
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -25229,8 +25874,12 @@ PrefabInstance:
       value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -25323,8 +25972,12 @@ PrefabInstance:
       value: 13
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -25417,8 +26070,12 @@ PrefabInstance:
       value: 9
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -25511,12 +26168,16 @@ PrefabInstance:
       value: 24
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -25605,8 +26266,12 @@ PrefabInstance:
       value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -25699,8 +26364,12 @@ PrefabInstance:
       value: 10
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -25961,8 +26630,12 @@ PrefabInstance:
       value: 9
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -26133,12 +26806,16 @@ PrefabInstance:
       value: 23
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -26555,12 +27232,16 @@ PrefabInstance:
       value: 25
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -26895,8 +27576,12 @@ PrefabInstance:
       value: 10
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -27149,8 +27834,12 @@ PrefabInstance:
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -27243,8 +27932,12 @@ PrefabInstance:
       value: 12
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -27419,8 +28112,12 @@ PrefabInstance:
       value: 11
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -27513,8 +28210,12 @@ PrefabInstance:
       value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -27607,8 +28308,12 @@ PrefabInstance:
       value: 13
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -28025,12 +28730,16 @@ PrefabInstance:
       value: 24
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -28119,12 +28828,16 @@ PrefabInstance:
       value: 23
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -28373,8 +29086,12 @@ PrefabInstance:
       value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -28467,12 +29184,16 @@ PrefabInstance:
       value: 20
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -28561,8 +29282,12 @@ PrefabInstance:
       value: 12
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -28655,8 +29380,12 @@ PrefabInstance:
       value: 7
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -28827,12 +29556,16 @@ PrefabInstance:
       value: 20
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -28921,8 +29654,12 @@ PrefabInstance:
       value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -29171,8 +29908,12 @@ PrefabInstance:
       value: 10
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -29351,12 +30092,16 @@ PrefabInstance:
       value: 20
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -29531,12 +30276,16 @@ PrefabInstance:
       value: 25
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -29625,12 +30374,16 @@ PrefabInstance:
       value: 24
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -29719,8 +30472,12 @@ PrefabInstance:
       value: 9
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -29813,12 +30570,16 @@ PrefabInstance:
       value: 21
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -29907,8 +30668,12 @@ PrefabInstance:
       value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -30001,12 +30766,16 @@ PrefabInstance:
       value: 20
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -30173,12 +30942,16 @@ PrefabInstance:
       value: 21
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -30427,8 +31200,12 @@ PrefabInstance:
       value: 6
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -30521,8 +31298,12 @@ PrefabInstance:
       value: 4
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -30861,8 +31642,12 @@ PrefabInstance:
       value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -30955,12 +31740,16 @@ PrefabInstance:
       value: 19
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -31135,8 +31924,12 @@ PrefabInstance:
       value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -31229,8 +32022,12 @@ PrefabInstance:
       value: 13
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -31491,12 +32288,16 @@ PrefabInstance:
       value: 19
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -31913,8 +32714,12 @@ PrefabInstance:
       value: 13
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -32007,8 +32812,12 @@ PrefabInstance:
       value: 9
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -32183,8 +32992,12 @@ PrefabInstance:
       value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -32519,8 +33332,12 @@ PrefabInstance:
       value: 13
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -32613,8 +33430,12 @@ PrefabInstance:
       value: 11
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -32957,12 +33778,16 @@ PrefabInstance:
       value: 20
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -33051,12 +33876,16 @@ PrefabInstance:
       value: 24
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -33227,8 +34056,12 @@ PrefabInstance:
       value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -33407,12 +34240,16 @@ PrefabInstance:
       value: 21
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -33501,12 +34338,16 @@ PrefabInstance:
       value: 19
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -33595,12 +34436,16 @@ PrefabInstance:
       value: 25
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -33771,8 +34616,12 @@ PrefabInstance:
       value: 12
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -34029,8 +34878,12 @@ PrefabInstance:
       value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -34205,12 +35058,16 @@ PrefabInstance:
       value: 22
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -34299,12 +35156,16 @@ PrefabInstance:
       value: 22
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -34475,12 +35336,16 @@ PrefabInstance:
       value: 25
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -34569,12 +35434,16 @@ PrefabInstance:
       value: 23
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -34987,8 +35856,12 @@ PrefabInstance:
       value: 12
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -35569,8 +36442,12 @@ PrefabInstance:
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -36077,8 +36954,12 @@ PrefabInstance:
       value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -36331,12 +37212,16 @@ PrefabInstance:
       value: 21
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -36507,8 +37392,12 @@ PrefabInstance:
       value: 11
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -36601,8 +37490,12 @@ PrefabInstance:
       value: 11
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -36859,8 +37752,12 @@ PrefabInstance:
       value: 4
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -37035,8 +37932,12 @@ PrefabInstance:
       value: 11
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -37129,8 +38030,12 @@ PrefabInstance:
       value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -37383,8 +38288,12 @@ PrefabInstance:
       value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -37641,12 +38550,16 @@ PrefabInstance:
       value: 22
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -37907,8 +38820,12 @@ PrefabInstance:
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -38001,8 +38918,12 @@ PrefabInstance:
       value: 6
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -38095,8 +39016,12 @@ PrefabInstance:
       value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -38189,8 +39114,12 @@ PrefabInstance:
       value: 7
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -38283,12 +39212,16 @@ PrefabInstance:
       value: 20
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -38377,12 +39310,16 @@ PrefabInstance:
       value: 20
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -38549,12 +39486,16 @@ PrefabInstance:
       value: 22
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -38885,8 +39826,12 @@ PrefabInstance:
       value: 4
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -38979,8 +39924,12 @@ PrefabInstance:
       value: 4
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -39073,12 +40022,16 @@ PrefabInstance:
       value: 20
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -39249,12 +40202,16 @@ PrefabInstance:
       value: 25
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -39507,8 +40464,12 @@ PrefabInstance:
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -39601,8 +40562,12 @@ PrefabInstance:
       value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -39851,12 +40816,16 @@ PrefabInstance:
       value: 20
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -40027,12 +40996,16 @@ PrefabInstance:
       value: 24
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -40285,8 +41258,12 @@ PrefabInstance:
       value: 4
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -40691,8 +41668,12 @@ PrefabInstance:
       value: 7
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -40953,8 +41934,12 @@ PrefabInstance:
       value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -41047,12 +42032,16 @@ PrefabInstance:
       value: 21
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -41309,12 +42298,16 @@ PrefabInstance:
       value: 25
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -41403,8 +42396,12 @@ PrefabInstance:
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -41661,8 +42658,12 @@ PrefabInstance:
       value: 11
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -41837,12 +42838,16 @@ PrefabInstance:
       value: 20
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -42091,8 +43096,12 @@ PrefabInstance:
       value: 7
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -42263,8 +43272,12 @@ PrefabInstance:
       value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -42439,8 +43452,12 @@ PrefabInstance:
       value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -42533,8 +43550,12 @@ PrefabInstance:
       value: 10
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -42791,12 +43812,16 @@ PrefabInstance:
       value: 25
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -42967,8 +43992,12 @@ PrefabInstance:
       value: 12
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -43061,8 +44090,12 @@ PrefabInstance:
       value: 13
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -43155,8 +44188,12 @@ PrefabInstance:
       value: 10
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -43249,12 +44286,16 @@ PrefabInstance:
       value: 19
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -43581,8 +44622,12 @@ PrefabInstance:
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -43675,8 +44720,12 @@ PrefabInstance:
       value: 11
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -43769,8 +44818,12 @@ PrefabInstance:
       value: 11
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -43863,12 +44916,16 @@ PrefabInstance:
       value: 22
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -43957,8 +45014,12 @@ PrefabInstance:
       value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -44051,8 +45112,12 @@ PrefabInstance:
       value: 10
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -44313,8 +45378,12 @@ PrefabInstance:
       value: 11
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -44407,8 +45476,12 @@ PrefabInstance:
       value: 12
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -44665,8 +45738,12 @@ PrefabInstance:
       value: 11
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -44759,12 +45836,16 @@ PrefabInstance:
       value: 24
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -45099,8 +46180,12 @@ PrefabInstance:
       value: 7
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -45439,12 +46524,16 @@ PrefabInstance:
       value: 20
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -45533,8 +46622,12 @@ PrefabInstance:
       value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -45627,8 +46720,12 @@ PrefabInstance:
       value: 9
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -45881,12 +46978,16 @@ PrefabInstance:
       value: 23
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -45975,8 +47076,12 @@ PrefabInstance:
       value: 6
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -46151,8 +47256,12 @@ PrefabInstance:
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -46245,8 +47354,12 @@ PrefabInstance:
       value: 13
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -46339,12 +47452,16 @@ PrefabInstance:
       value: 22
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.EnemyLane
@@ -46827,8 +47944,12 @@ PrefabInstance:
       value: 10
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -47003,8 +48124,12 @@ PrefabInstance:
       value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -47257,8 +48382,12 @@ PrefabInstance:
       value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -47351,8 +48480,12 @@ PrefabInstance:
       value: 6
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee
@@ -47613,8 +48746,12 @@ PrefabInstance:
       value: 6
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
+      propertyPath: State.Flags
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanBuild
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2326579039240516341, guid: 76b02662ccbce9842aaaa1a568f48cbd, type: 3}
       propertyPath: State.CanMelee

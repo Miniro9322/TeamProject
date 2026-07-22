@@ -4,25 +4,35 @@ using System.Collections.Generic;
 /// <summary>타일 색칠(viz) 전담 — 검증용, 게임 로직 아님. 매 프레임 지우고 다시 그린다.</summary>
 public class TilePaintView : MonoBehaviour
 {
-    [SerializeField] private MapBoard board;
-    [SerializeField] private EnemyPathView enemyPath; // 경로 데이터
+    [SerializeField] private MapRegistry registry;
     [SerializeField] private MapView game;            // 호버·배치 상태(읽기 전용)
     [SerializeField] private TilePainter painter;
     [SerializeField] private bool showEnemyTiles = true;
     [SerializeField] private bool showBlocking = true;
 
-    private readonly List<Tile> cellPainted = new(); // 이번 프레임 칠한 칸(좌표는 모듈 로컬이라 타일로 기억)
+    private readonly List<Tile> cellPainted = new();
 
     private void Update()
     {
-        if (board == null || painter == null)
+        if (registry == null || painter == null)
         {
             return;
         }
 
         RestoreCells();
-        PaintPath();
-        PaintState();
+
+        foreach (ModuleLogic module in registry.AllModules.Values)
+        {
+            MapBoard board = module.GetComponent<MapBoard>();
+            if (board == null)
+            {
+                continue;
+            }
+
+            PaintPath(module.GetComponent<EnemyPathView>());
+            PaintState(board);
+        }
+
         PaintHover();
     }
 
@@ -35,20 +45,20 @@ public class TilePaintView : MonoBehaviour
         cellPainted.Clear();
     }
 
-    private void PaintPath()
+    private void PaintPath(EnemyPathView pathView)
     {
-        if (enemyPath == null || !enemyPath.PathVisible)
+        if (pathView == null || !pathView.PathVisible)
         {
             return;
         }
 
-        foreach (Tile tile in enemyPath.PathTiles)
+        foreach (Tile tile in pathView.PathTiles)
         {
             Paint(tile, painter.pathColor);
         }
     }
 
-    private void PaintState()
+    private void PaintState(MapBoard board)
     {
         foreach (Tile tile in board.Cells.Values)
         {
