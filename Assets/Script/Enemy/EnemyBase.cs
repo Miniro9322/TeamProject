@@ -6,7 +6,7 @@ using Cysharp.Threading.Tasks;
 using UnityEngine;
 using VContainer;
 
-public abstract class EnemyBase : MonoBehaviour,IDamageAble
+public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit
 {
     [SerializeField] protected string enemyKey;
     [SerializeField] protected List<SkillDataSO> skills = new();
@@ -36,12 +36,13 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
     public bool IsDead { get; protected set; }
     public bool IsSpawnInvincible = false;
     private StatContainer sc = new();
-    public StatContainer SC => sc;
+    public StatContainer Stats => sc;
     public Animator animator;
     private bool _attacking; // 공격 모션 재생 중 — 이 동안 스킬 시전을 막아 애니메이터 충돌 방지
     private EnemyMovement _move; // 경로 추종 이동 — Awake에서 생성, 아래 API는 여기로 위임
     private PoolManager _pool;
     private GameManager gameManager;
+    private bool firstEnable =false;
     [Inject] 
     public void Construct(PoolManager pool,WaveSpawner waveSpawner,GameManager gameManager)
     {
@@ -90,14 +91,12 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
         LoadStats();
         animator = GetComponent<Animator>();
         _move = new EnemyMovement(gameObject, animator, arriveSqr);
-        LoadStatContainer();
         SetupCloak();
     }
 
     protected virtual void OnEnable()
     {
         LoadStats();
-        LoadStatContainer();
         _attacking = false;
         _shieldExpiry = 0f; 
         _berserkOn = false;             
@@ -136,14 +135,6 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
         _move.EnterMap(board, waypoints, snapToStart, MoveSpeed, enemyKey);
     }
 
-    public void LoadStatContainer()
-    {
-        sc.AddStat(StatType.HP,Hp);
-        sc.AddStat(StatType.ATK,AttackPower);
-        sc.AddStat(StatType.DEF,Defense);
-        sc.AddStat(StatType.AS,AttackSpeed);
-        sc.AddStat(StatType.SPD,MoveSpeed);
-    }
     // 재생 특성 회복량(초당 최대체력 비율). 매 프레임 deltaTime만큼 나눠 채워 부드럽게 차오른다.
     private const float RegenPerSecond = 0.01f; // 초당 1%
     // ── 은신(Cloaking) 렌더링 ────────────────────────────────
@@ -354,10 +345,28 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
     
     protected virtual void ApplyData(EnemyTable.Data data)
     {
+        gameManager ??= GameManager.Instance; // DI 미경유 스폰 대비 폴백
+        if(!firstEnable)
+        {
+            firstEnable = true;
+            sc.AddStat(StatType.HP,data.Health);
+            sc.AddStat(StatType.ATK,data.Attack);
+            sc.AddStat(StatType.AS,data.AttackSpeed);
+            sc.AddStat(StatType.DEF,data.Defense);
+            sc.AddStat(StatType.SPD,data.MoveSpeed);
+            Type = ParseEnum(data.Type, EnemyType.Melee);     
+            Class = ParseEnum(data.Class, EnemyClass.Normal); 
+            Attribute = ParseAttribute(data.Attribute);
+            Dataattribute = Attribute;
+        }
+        else
+        {
+            sc.SetBaseValue(StatType.HP,data.Health+(gameManager.DayCount*data.UpHealthScale));
+        }
         AttackPower = data.Attack;
         AttackSpeed = data.AttackSpeed;
         Range = data.Range;
-        gameManager ??= GameManager.Instance; // DI 미경유 스폰 대비 폴백
+        
         if(gameManager ==null)
         {
             Defense = data.Defense;
@@ -366,14 +375,9 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
         else
         {
             Defense = data.Defense+(data.UpDefenseScale*(gameManager.DayCount/5));
-            MaxHp = data.Health+(gameManager.DayCount*data.UpHealthScale);
         }
         Hp = MaxHp;
         MoveSpeed = data.MoveSpeed;
-        Type = ParseEnum(data.Type, EnemyType.Melee);     
-        Class = ParseEnum(data.Class, EnemyClass.Normal); 
-        Attribute = ParseAttribute(data.Attribute);
-        Dataattribute = Attribute;
         IsDead = false;
     }
 
@@ -419,8 +423,10 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
         if (!_berserkOn && Hp < MaxHp * 0.5f && IsBerserk)
         {
             _berserkOn = true;
-            MoveSpeed += 3f;
-            AttackPower += 10;
+            // MoveSpeed += 3f;
+            // AttackPower += 10;
+            sc.AddModifier(StatType.SPD,new Modifier(ModifierType.Flat,3f,0f,StatLayer.Equip,this));
+            sc.AddModifier(StatType.ATK,new Modifier(ModifierType.Flat,10f,0f,StatLayer.Equip,this));
         }
         if(Hp<=0)Die();
     }
@@ -446,6 +452,9 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
 
     // 분열 세대. 0=원본, 분열체는 부모+1. 무한 분열 방지용(SplitSkill이 maxGeneration으로 제한).
     public int SplitGeneration { get; private set; }
+
+  
+
     public void SetSplitGeneration(int gen) => SplitGeneration = gen;
 
     // 스폰 직후 인스턴스 스케일을 원래 크기의 mul배로 설정(분열체 축소용). OnEnable에서 매 스폰 원복되므로 풀 재사용 안전.
