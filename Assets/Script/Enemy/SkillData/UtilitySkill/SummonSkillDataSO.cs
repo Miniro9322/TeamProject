@@ -39,12 +39,16 @@ public class SummonSkillDataSO : UtilitySkillDataSO
 
             int count = Mathf.Max(1, Mathf.RoundToInt(value));   // value = 소환 수
             Vector3 center = owner.transform.position;
+            owner.Owner?.AddSpawnCount(count);
             for (int i = 0; i < count; i++)
             {
                 Vector3 pos = center + new Vector3((i - (count - 1) * 0.5f) * 0.6f, 0f, 0f);
                 var go = PoolManager.Instance.Spawn(summonPrefab, pos, Quaternion.identity);
                 if (go.TryGetComponent(out EnemyBase enemy))
+                {
                     enemy.EnterMap(owner.Board, owner.Path, snapToStart: false);
+                    enemy.SetOwner(owner.Owner);
+                }        
                 await UniTask.Delay(TimeSpan.FromSeconds(0.05f));
             }
         }

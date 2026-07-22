@@ -17,12 +17,13 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit
     private bool[] skillRunning;
     private CancellationTokenSource skillCts;
     [field: SerializeField] public float Hp { get; protected set; }   // 인스펙터 표시용(런타임 값 확인). 값은 ApplyData/재생/피격이 갱신.
-    [field: SerializeField] public float MaxHp { get; protected set; }
-    public int Defense { get; protected set; }
-    public int AttackPower { get; protected set; }
-    public float AttackSpeed { get; protected set; }
+    // 아래 스탯들은 StatContainer(sc)에서 파생 — 값/버프는 sc가 단일 소스. ApplyData가 sc를 채운 뒤부터 유효.
+    public float MaxHp => sc[StatType.HP];
+    public int Defense => Mathf.RoundToInt(sc[StatType.DEF]);
+    public int AttackPower => Mathf.RoundToInt(sc[StatType.ATK]);
+    public float AttackSpeed => sc[StatType.AS];
     public int Range { get; protected set; }
-    public float MoveSpeed { get; protected set; }
+    public float MoveSpeed => sc[StatType.SPD];
     public EnemyType Type { get; protected set; }        // 근거리/원거리
     public EnemyClass Class { get; protected set; }      // 일반/엘리트/보스
     public EnemyAttribute Attribute { get; protected set; } // 외부에서 볼수있는 특성
@@ -249,7 +250,6 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit
         return Color.white;
     }
 
-    // 풀 재사용 대비: 은신량 초기화 + 원래 재질로 복귀(또렷 상태로).
     private void ResetCloak()
     {
         _cloakAmount = 0f;
@@ -270,7 +270,7 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit
     protected virtual void OnArrivedAtCore()
     {
         waveSpawner?.EnemyDieEvent();
-        var gm = gameManager ??= GameManager.Instance; // DI 미경유 스폰 대비 폴백(PoolManager.Instance와 동일 패턴)
+        var gm = gameManager;
         if (gm == null)
             Debug.LogWarning($"[{name}] GameManager를 찾을 수 없음 — HpDamage 스킵.", this);
         else
@@ -345,7 +345,6 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit
     
     protected virtual void ApplyData(EnemyTable.Data data)
     {
-        gameManager ??= GameManager.Instance; // DI 미경유 스폰 대비 폴백
         if(!firstEnable)
         {
             firstEnable = true;
@@ -354,7 +353,7 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit
             sc.AddStat(StatType.AS,data.AttackSpeed);
             sc.AddStat(StatType.DEF,data.Defense);
             sc.AddStat(StatType.SPD,data.MoveSpeed);
-            Type = ParseEnum(data.Type, EnemyType.Melee);     
+            Type = ParseEnum(data.Type, EnemyType.Melee);
             Class = ParseEnum(data.Class, EnemyClass.Normal); 
             Attribute = ParseAttribute(data.Attribute);
             Dataattribute = Attribute;
@@ -362,23 +361,15 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit
         else
         {
             sc.SetBaseValue(StatType.HP,data.Health+(gameManager.DayCount*data.UpHealthScale));
+            sc.SetBaseValue(StatType.ATK,data.Attack);
+            sc.SetBaseValue(StatType.AS,data.AttackSpeed);
+            sc.SetBaseValue(StatType.DEF,data.Defense+(data.UpDefenseScale*(gameManager.DayCount/5)));
+            sc.SetBaseValue(StatType.SPD,data.MoveSpeed);
         }
-        AttackPower = data.Attack;
-        AttackSpeed = data.AttackSpeed;
         Range = data.Range;
-        
-        if(gameManager ==null)
-        {
-            Defense = data.Defense;
-            MaxHp = data.Health;
-        }
-        else
-        {
-            Defense = data.Defense+(data.UpDefenseScale*(gameManager.DayCount/5));
-        }
-        Hp = MaxHp;
-        MoveSpeed = data.MoveSpeed;
+        Hp = sc[StatType.HP];
         IsDead = false;
+        //MoveSpeed = data.MoveSpeed;
     }
 
     // CSV 문자열 → enum. 비었거나 못 읽으면 fallback으로 대체(대소문자 무시).
@@ -535,17 +526,11 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit
         if (IsDead) return;
         IsDead = true;
         _move.Stop();
-        if (Board != null) Board.RemoveEnemy(gameObject); // 죽는 즉시 칸에서 빠져 저지·타겟 대상서 제외
-
-        Debug.Log("사망 플래그 발동");
-        waveSpawner.EnemyDieEvent();                 // 이동 정지 + Suspended 해제
-
-        // skillCts가 없으면(이미 비활성) 연출 없이 바로 디스폰.
+        if (Board != null) Board.RemoveEnemy(gameObject);
         if (skillCts == null) { Despawn(); return; }
         DieRoutine(skillCts.Token).Forget();
     }
 
-    // 죽는 순간 TriggerOnDeath 스킬(분열 등)을 발동. 분열은 동기적으로 스폰하므로 즉시 완료된다.
     private void TriggerDeathSkills()
     {
         if (skills == null) return;
@@ -582,9 +567,10 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit
         var info = animator.GetCurrentAnimatorStateInfo(layer);
         await UniTask.Delay(TimeSpan.FromSeconds(info.length / Mathf.Max(0.01f, animator.speed)), cancellationToken: token);
         TriggerDeathSkills();
+        waveSpawner.EnemyDieEvent();   
     }
 
-    // 디스폰 지점. 지금은 파괴. 오브젝트 풀링 도입 시 이 메서드만 override해서 pool.Release(this)로 교체.
+    
     protected virtual void Despawn()
     {
         if (this != null && gameObject != null) Pool.Despawn(gameObject);
