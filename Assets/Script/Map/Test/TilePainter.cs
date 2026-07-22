@@ -59,7 +59,11 @@ public class TilePainter : MonoBehaviour
     {
         foreach (Renderer r in Renderers(tile))
         {
-            if (r == null) continue;
+            if (r == null)
+            {
+                continue;
+            }
+
             r.SetPropertyBlock(null);
         }
     }
