@@ -1,32 +1,36 @@
-//using UnityEngine;
-//using UnityEngine.UI;
+using UnityEngine;
+using UnityEngine.UI;
 
-//public class HeroSetPanel : MonoBehaviour
-//{
-//    [SerializeField] private MapGame game;
-//    [SerializeField] private Button meleeButton;
-//    [SerializeField] private Button rangeButton;
+public class HeroSetPanel : MonoBehaviour
+{
+    [SerializeField] private MapView view;
+    [SerializeField] private MapGame game;
+    [SerializeField] private Button meleeButton;
+    [SerializeField] private Button rangeButton;
 
-//    private void OnEnable()
-//    {
-//        game.OnPlaced += ButtonUpdate;
+    private void OnEnable()
+    {
+        game.Placer.citizenManager.CitizenChanged += ButtonUpdate;
 
-//        ButtonUpdate();
-//    }
+        ButtonUpdate();
+    }
 
-//    private void OnDisable()
-//    {
-//        game.OnPlaced -= ButtonUpdate;
-//    }
+    private void OnDisable()
+    {
+        game.Placer.citizenManager.CitizenChanged -= ButtonUpdate;
+    }
 
-//    public void OnBuild(string label)
-//    {
-//        game.SetUnit(label);
-//    }
+    public void OnBuild(string label)
+    {
+        view.SetUnit(label);
+    }
 
-//    private void ButtonUpdate()
-//    {
-//        meleeButton.interactable = game.CheckCanBuild("melee");
-//        rangeButton.interactable = game.CheckCanBuild("Ranged");
-//    }
-//}
+    private void ButtonUpdate()
+    {
+        meleeButton.interactable = view.CheckCanBuild("melee");
+        rangeButton.interactable = view.CheckCanBuild("Ranged");
+
+        if (view.IsPlacing && !view.CheckCanBuild(view.PlacingLabel))
+            view.ClearMode();
+    }
+}
