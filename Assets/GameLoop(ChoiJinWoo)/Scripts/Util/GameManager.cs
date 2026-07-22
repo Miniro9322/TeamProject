@@ -4,16 +4,16 @@ using VContainer;
 
 public class GameManager : MonoBehaviour
 {
-    // DI Construct가 아직 안 돌았을 때(풀에서 컨테이너 리졸버 없이 스폰된 적 등)를 위한 폴백 접근자.
-    // PoolManager/SpawnerManager와 동일한 패턴.
-    private static GameManager instance;
-    public static GameManager Instance => instance;
+    //// DI Construct가 아직 안 돌았을 때(풀에서 컨테이너 리졸버 없이 스폰된 적 등)를 위한 폴백 접근자.
+    //// PoolManager/SpawnerManager와 동일한 패턴.
+    //private static GameManager instance;
+    //public static GameManager Instance => instance;
 
-    private void Awake()
-    {
-        if (instance != null && instance != this) { Destroy(gameObject); return; }
-        instance = this;
-    }
+    //private void Awake()
+    //{
+    //    if (instance != null && instance != this) { Destroy(gameObject); return; }
+    //    instance = this;
+    //}
 
     private FSM fsm = new();
 

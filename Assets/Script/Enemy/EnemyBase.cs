@@ -279,7 +279,7 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
     protected virtual void OnArrivedAtCore()
     {
         waveSpawner?.EnemyDieEvent();
-        var gm = gameManager ??= GameManager.Instance; // DI 미경유 스폰 대비 폴백(PoolManager.Instance와 동일 패턴)
+        var gm = gameManager;
         if (gm == null)
             Debug.LogWarning($"[{name}] GameManager를 찾을 수 없음 — HpDamage 스킵.", this);
         else
@@ -357,7 +357,6 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble
         AttackPower = data.Attack;
         AttackSpeed = data.AttackSpeed;
         Range = data.Range;
-        gameManager ??= GameManager.Instance; // DI 미경유 스폰 대비 폴백
         if(gameManager ==null)
         {
             Defense = data.Defense;
