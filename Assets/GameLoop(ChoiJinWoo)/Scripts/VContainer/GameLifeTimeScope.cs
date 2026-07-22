@@ -25,6 +25,7 @@ public class GameLifeTimeScope : LifetimeScope
         builder.Register<BuildingPool>(Lifetime.Singleton);
         builder.Register<FacilityManager>(Lifetime.Singleton).AsSelf();
         builder.Register<BuffManager>(Lifetime.Singleton).As<ITickable>().AsSelf();
+        builder.Register<HeroRoster>(Lifetime.Singleton).AsSelf();
 
         if (sunLight != null)
         {

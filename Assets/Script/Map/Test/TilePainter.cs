@@ -57,13 +57,14 @@ public class TilePainter : MonoBehaviour
 
     private void Restore(Tile tile)
     {
-        _mpb ??= new MaterialPropertyBlock();
         foreach (Renderer r in Renderers(tile))
         {
-            if (r == null) continue;
-            r.GetPropertyBlock(_mpb);
-            _mpb.Clear();
-            r.SetPropertyBlock(_mpb);
+            if (r == null)
+            {
+                continue;
+            }
+
+            r.SetPropertyBlock(null);
         }
     }
 

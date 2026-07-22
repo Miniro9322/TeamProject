@@ -12,7 +12,6 @@ public class UnitPlacer
     public UnitList unitList;
     public IObjectResolver resolver;
     public ResourcesManager resourcesManager;
-    public CitizenManager citizenManager;
     public BuildingPool pool;
 
     // 슬롯을 칸에 놓는다: 생성→보드 배치→(성공 시)장부·커버 등록.
@@ -80,14 +79,10 @@ public class UnitPlacer
         }
         else
         {
+            // 영웅은 로스터 "생성" 단계(HeroSetPanel)에서 이미 비용을 치렀으므로 여기선 다시 검사하지 않는다.
             var hero = slot.prefab.GetComponent<Hero>();
             if (hero != null)
             {
-                if (!citizenManager.CheckCanUseCitizen(hero.CitizenAmount))
-                {
-                    return null;   // 자원 부족 → 생성하지 않음
-                }
-
                 return resolver.Instantiate(slot.prefab);
             }
             else return null;
