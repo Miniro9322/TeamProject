@@ -45,7 +45,7 @@ public class PlacePanel : MonoBehaviour
 
         TextMeshProUGUI tmp = txt.GetComponent<TextMeshProUGUI>();
         tmp.text = label;
-        tmp.fontSize = 20;
+        tmp.fontSize = 25;
         tmp.alignment = TextAlignmentOptions.Center;
         tmp.color = Color.black;
 

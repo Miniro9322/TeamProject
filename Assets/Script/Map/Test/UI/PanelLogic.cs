@@ -5,7 +5,7 @@ public class PanelLogic : MonoBehaviour
 {
     [SerializeField] private MapView game;
     [SerializeField] private MapCommand command;
-    [SerializeField] private EnemyPathView enemyPath;
+    [SerializeField] private MapRegistry registry;
 
     private void Update()
     {
@@ -19,12 +19,26 @@ public class PanelLogic : MonoBehaviour
 
     private void PathClick()
     {
-        enemyPath.RebuildPath();
+        foreach (ModuleLogic module in registry.AllModules.Values)
+        {
+            EnemyPathView path = module.GetComponent<EnemyPathView>();
+            if (path != null)
+            {
+                path.RebuildPath();
+            }
+        }
     }
 
     private void PathToggle()
     {
-        enemyPath.ToggleVisibility();
+        foreach (ModuleLogic module in registry.AllModules.Values)
+        {
+            EnemyPathView path = module.GetComponent<EnemyPathView>();
+            if (path != null)
+            {
+                path.ToggleVisibility();
+            }
+        }
     }
 
     private void UnitClear()
