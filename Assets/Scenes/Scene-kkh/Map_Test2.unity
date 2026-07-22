@@ -20,7 +20,7 @@ RenderSettings:
   m_FogDensity: 0.01
   m_LinearFogStart: 0
   m_LinearFogEnd: 300
-  m_AmbientSkyColor: {r: 0.212, g: 0.227, b: 0.259, a: 1}
+  m_AmbientSkyColor: {r: 0.05, g: 0.05, b: 0.1, a: 1}
   m_AmbientEquatorColor: {r: 0.114, g: 0.125, b: 0.133, a: 1}
   m_AmbientGroundColor: {r: 0.047, g: 0.043, b: 0.035, a: 1}
   m_AmbientIntensity: 1
@@ -2427,7 +2427,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlacePalette
   _slots:
   - label: melee
-    prefab: {fileID: 5228687494590014126, guid: c30b2462f1d175a40be298650efb1f87, type: 3}
+    prefab: {fileID: 6360810507945036553, guid: 1c18d546630c46e4a84b6242d3953620, type: 3}
     kind: 1
     attackRange: 1
   - label: Ranged
@@ -2957,8 +2957,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 24f456927ea4b9c489f3922cd8be2a03, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TilePaintView
-  board: {fileID: 0}
-  enemyPath: {fileID: 359805065}
+  registry: {fileID: 0}
   game: {fileID: 314587628}
   painter: {fileID: 314587627}
   showEnemyTiles: 1
@@ -3456,12 +3455,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SpawnerManager
   spawners:
-  - {fileID: 0}
+  - {fileID: 1302664066}
   - {fileID: 738137860}
   startUnlocked: 01000000
-  moduleLogics:
-  - {fileID: 0}
-  - {fileID: 471137748}
+  moduleLogics: []
   cam: {fileID: 0}
 --- !u!1001 &436401074
 PrefabInstance:
@@ -3872,8 +3869,8 @@ Light:
   m_Enabled: 1
   serializedVersion: 12
   m_Type: 1
-  m_Color: {r: 1, g: 0.95686275, b: 0.8392157, a: 1}
-  m_Intensity: 1
+  m_Color: {r: 0.1, g: 0.1, b: 0.3, a: 1}
+  m_Intensity: 0.05
   m_Range: 10
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
@@ -5605,6 +5602,8 @@ MonoBehaviour:
   game: {fileID: 0}
   meleeButton: {fileID: 0}
   rangeButton: {fileID: 0}
+  dualBladerButton: {fileID: 0}
+  spearManButton: {fileID: 0}
 --- !u!114 &669061600
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -9139,10 +9138,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BuildModePanel
   facilityPanel: {fileID: 1679241262}
   heroPanel: {fileID: 669061597}
-  facilityButton: {fileID: 1341805632}
-  heroButton: {fileID: 263538447}
-  removeButton: {fileID: 1203658020}
   view: {fileID: 314587628}
+  game: {fileID: 0}
 --- !u!114 &1088295969
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -10943,6 +10940,28 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 400000, guid: 9cad59b19b7b8be41805dbf9cc7dbd28, type: 3}
   m_PrefabInstance: {fileID: 1268403171}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &1302664066 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 6322919544372698662, guid: 2a68ec03577869b449ea1d5f1fb2c174, type: 3}
+  m_PrefabInstance: {fileID: 326634229}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b15503c1ee9227547aa76b4511c9db1e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WaveSpawner
+--- !u!114 &1302664068 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 4598056168956898711, guid: 2a68ec03577869b449ea1d5f1fb2c174, type: 3}
+  m_PrefabInstance: {fileID: 326634229}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d30247fc5ff868d4abfa65ca5b1ba91d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ModuleLogic
 --- !u!1001 &1319553572
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -15740,7 +15759,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MapRegistry
   _sceneModules:
-  - {fileID: 0}
+  - {fileID: 1302664068}
   - {fileID: 471137748}
 --- !u!4 &1862994568
 Transform:
@@ -17901,5 +17920,5 @@ SceneRoots:
   - {fileID: 347216668}
   - {fileID: 1601660009}
   - {fileID: 1862994568}
-  - {fileID: 5630212262440125018}
   - {fileID: 326634229}
+  - {fileID: 5630212262440125018}

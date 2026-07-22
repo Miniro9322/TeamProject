@@ -246,7 +246,6 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
                     found.Add(d);
             }
         }
-
         foreach (Tile tile in TileShapeQuery.GetLineTiles(board, originCell, dir, length))
         {
             foreach (GameObject enemy in tile.Enemies)

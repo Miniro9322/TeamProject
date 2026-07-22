@@ -113,7 +113,7 @@ public class Projectile : MonoBehaviour
                 enemy.TakeDamage((int)damage);
                 AttackDamageUtil.ApplyTargetDebuffs(enemy as IUnit, cfg.buffList, cfg.buffManager, cfg.source);
             }
-            SplashHighlighter.Instance?.Flash(transform.position, cfg.areaRange, aoeShape);
+            //SplashHighlighter.Instance?.Flash(transform.position, cfg.areaRange, aoeShape);
         }
         else if (target != null && target.GetComponentInParent<IDamageAble>() is IDamageAble damageable)
         {

@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3e63ecebd4cd6e044a8a127ea3df05bc, type: 3}
-  m_Name: DoubleSwordManAttackData
+  m_Name: DoubleSwordManBerserkAttackData
   m_EditorClassIdentifier: Assembly-CSharp::AttackDataSO
   attackPer: 0.6
   range: 3
@@ -31,5 +31,11 @@ MonoBehaviour:
   - Attack
   projectilePrefab: {fileID: 0}
   clipLength: 0.53333336
-  buffList: []
+  buffList:
+  - statType: 4
+    modifierType: 1
+    value: 0.5
+    duration: 10
+    isTargetToOther: 0
+    maxStacks: 5
   groundZone: {fileID: 0}
