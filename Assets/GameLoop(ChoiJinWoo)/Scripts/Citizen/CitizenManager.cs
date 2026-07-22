@@ -64,14 +64,13 @@ public class CitizenManager : MonoBehaviour
     {
         if (currentCitizen + amount <= maxCitizen)
         {
-            IncreaseCitizen(amount);
             return true;
         }
         else
             return false;
     }
 
-    private void IncreaseCitizen(int amount)
+    public void IncreaseCitizen(int amount)
     {
         currentCitizen += amount;
         canUseCitizen += amount;

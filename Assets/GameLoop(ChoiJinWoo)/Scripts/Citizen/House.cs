@@ -41,6 +41,17 @@ public class House : MonoBehaviour, IPlaceAble
     public event Action OnBreak;
     public event Action OnResur;
 
+    public void OnDestroy()
+    {
+        var refund = new Dictionary<ProductionType, int>();
+        foreach (var kv in Resources)
+        {
+            refund[kv.Key] = -kv.Value;
+        }
+
+        resourcesManager.ProductChanged(refund);
+    }
+
     public void SetBoard(MapBoard board)
     {
         this.board = board;
@@ -61,5 +72,6 @@ public class House : MonoBehaviour, IPlaceAble
     private void Start()
     {
         manager.IncreaseMaxCitizen(maxCitizenAmount);
+        resourcesManager.ProductChanged(Resources);
     }
 }

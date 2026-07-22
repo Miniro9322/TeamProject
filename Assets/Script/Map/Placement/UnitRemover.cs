@@ -51,9 +51,15 @@ public class UnitRemover
     private static void DestroyOrReturnToPool(GameObject unit)
     {
         ProductionFacility facility = unit.GetComponent<ProductionFacility>();
+        var house = unit.GetComponent<House>();
         if (facility != null)
         {
             facility.Release();
+        }
+        else if(house != null)
+        {
+            Debug.Log("집은 재배치만 가능합니다.");
+            return;
         }
         else
         {

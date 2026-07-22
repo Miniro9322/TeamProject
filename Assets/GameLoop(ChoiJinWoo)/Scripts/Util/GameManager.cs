@@ -1,4 +1,5 @@
 using System;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 using VContainer;
 
@@ -22,7 +23,7 @@ public class GameManager : MonoBehaviour
     private IState result;
     private IState gameover;
 
-    private bool canBuild = false;
+    private bool canBuild = true;
     private FacilityManager facilityManager;
     private UiManager uiManager;
     private SpawnerManager waveSpawner;

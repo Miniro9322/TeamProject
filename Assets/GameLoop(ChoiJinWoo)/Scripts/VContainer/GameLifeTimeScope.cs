@@ -39,6 +39,7 @@ public class GameLifeTimeScope : LifetimeScope
         builder.RegisterComponentInHierarchy<TopBar>();
         builder.RegisterComponentInHierarchy<DayNightButton>();
         builder.RegisterComponentInHierarchy<MapGame>();
+        builder.RegisterComponentInHierarchy<AddCitizen>();
         builder.RegisterComponentInHierarchy<SpawnerManager>().AsSelf();
         builder.RegisterBuildCallback(resolver =>
         {
