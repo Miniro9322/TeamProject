@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 
+// 영웅 "생성" 전용 패널. 여기선 배치하지 않고 로스터에 엔트리만 추가한다(배치는 HeroRosterPanel이 담당).
 public class HeroSetPanel : MonoBehaviour
 {
     [SerializeField] private MapView view;
@@ -12,21 +13,22 @@ public class HeroSetPanel : MonoBehaviour
 
     private void OnEnable()
     {
-        game.Placer.citizenManager.CitizenChanged += ButtonUpdate;
-        if(view != null)
-        {
-            ButtonUpdate();
-        }
+        game.CitizenManager.CitizenChanged += ButtonUpdate;
+        ButtonUpdate();
     }
 
     private void OnDisable()
     {
-        game.Placer.citizenManager.CitizenChanged -= ButtonUpdate;
+        game.CitizenManager.CitizenChanged -= ButtonUpdate;
     }
 
-    public void OnBuild(string label)
+    public void OnCreate(string label)
     {
-        view.SetUnit(label);
+        if (!view.CheckCanBuild(label)) return;
+
+        Placeable slot = view.GetSlot(label);
+        game.CitizenManager.UseCitizen(slot.prefab.GetComponent<Hero>().CitizenAmount);
+        game.HeroRoster.Add(slot);
     }
 
     private void ButtonUpdate()
@@ -35,8 +37,5 @@ public class HeroSetPanel : MonoBehaviour
         rangeButton.interactable = view.CheckCanBuild("Ranged");
         dualBladerButton.interactable = view.CheckCanBuild("DualBlader");
         spearManButton.interactable = view.CheckCanBuild("SpearMan");
-
-        if (view.IsPlacing && !view.CheckCanBuild(view.PlacingLabel))
-            view.ClearMode();   
     }
 }

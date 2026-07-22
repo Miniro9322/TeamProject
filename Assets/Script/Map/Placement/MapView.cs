@@ -57,6 +57,8 @@ public class MapView : MonoBehaviour
 
     public void SetUnit(int index) { palette.SelectSlot(index); }
     public void SetUnit(string label) { palette.SelectSlot(label); }
+    public Placeable GetSlot(string label) { return palette.GetSlot(label); }
+    public void SetHero(HeroRosterEntry entry) { palette.SelectRuntimeSlot(entry); }
     public void SetReplace()
     {
         palette.SelectReplace();
