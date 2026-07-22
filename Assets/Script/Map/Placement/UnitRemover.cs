@@ -7,11 +7,13 @@ public class UnitRemover
 {
     private readonly List<MapBoard> _boards;
     private readonly UnitList _unitList;
+    private readonly HeroRoster _heroRoster;
 
-    public UnitRemover(List<MapBoard> boards, UnitList unitList)
+    public UnitRemover(List<MapBoard> boards, UnitList unitList, HeroRoster heroRoster)
     {
         _boards = boards;
         _unitList = unitList;
+        _heroRoster = heroRoster;
     }
 
     // 한 칸의 유닛을 치운다. 치운 유닛을 돌려준다(빈 칸이면 null).
@@ -47,8 +49,8 @@ public class UnitRemover
         _unitList.Clear();
     }
 
-    // 생산건물이면 풀에 반납, 아니면 파괴.
-    private static void DestroyOrReturnToPool(GameObject unit)
+    // 생산건물이면 풀에 반납, 집이면 제거 거부, 영웅(로스터 출신)이면 로스터로 되돌리고 파괴.
+    private void DestroyOrReturnToPool(GameObject unit)
     {
         ProductionFacility facility = unit.GetComponent<ProductionFacility>();
         var house = unit.GetComponent<House>();
@@ -63,6 +65,12 @@ public class UnitRemover
         }
         else
         {
+            HeroRosterLink link = unit.GetComponent<HeroRosterLink>();
+            if (link != null && link.Entry != null)
+            {
+                link.Entry.MarkAvailable();
+                _heroRoster.NotifyStateChanged();
+            }
             Object.Destroy(unit);
         }
     }

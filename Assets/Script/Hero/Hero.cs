@@ -69,15 +69,13 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
     //테스트용 코드
     private GameManager gameManager;
     protected BuffManager buffManager;
-    private CitizenManager citizenManager;
     [SerializeField] private int citizenAmount = 2;
     public int CitizenAmount => citizenAmount;
     [Inject]
-    private void Construct(GameManager gameManager, BuffManager buffManager, CitizenManager citizenManager)
+    private void Construct(GameManager gameManager, BuffManager buffManager)
     {
         this.gameManager = gameManager;
         this.buffManager = buffManager;
-        this.citizenManager = citizenManager;
     }
 
     public void Die()
@@ -116,9 +114,6 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
         sc.AddStat(StatType.AS, statData.attackSpeed);
         currentHp = sc[StatType.HP];
         OnResur += StartAuras;
-        //테스트용 코드
-        citizenManager.UseCitizen(citizenAmount);
-        //끝
     }
 
     protected virtual void Start()

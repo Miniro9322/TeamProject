@@ -34,10 +34,11 @@ public class MapAssemble : MonoBehaviour
         PlaceAction action = new PlaceAction();
         action.palette = palette;
         action.placer = mapGame.Placer;
-        action.remover = new UnitRemover(boards, mapGame.Units);
+        action.remover = new UnitRemover(boards, mapGame.Units, mapGame.HeroRoster);
         action.replace = replace;
         action.buildingUi = buildingUi;
         action.view = view;
+        action.heroRoster = mapGame.HeroRoster;
         action.placeYOffset = placeYOffset;
 
         command.pointerPick = pointerPick;
