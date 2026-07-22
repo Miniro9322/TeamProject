@@ -80,9 +80,6 @@ public class SpawnerManager : MonoBehaviour
             return;                                            // 맞는 지역 하나 찾으면 끝
         }
     }
-    // GameManager를 지연 해석해 DayCount만 읽는다.
-    // 직접 Construct(GameManager)로 받으면 GameManager↔SpawnerManager 순환이라 컨테이너 빌드가 깨진다.
-    // IObjectResolver는 "나중에 꺼낼 수단"이라 그래프상 사이클로 안 잡히고, GameManager를 수정할 필요도 없다.
     private IObjectResolver _resolver;
     [Inject] public void Construct(IObjectResolver resolver) => _resolver = resolver;
     private GameManager _gameManager;

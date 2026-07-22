@@ -12,6 +12,8 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit
     [SerializeField] protected List<SkillDataSO> skills = new();
     [Tooltip("은신(Cloaking) 공용 설정. IsCloaking일 때만 사용 — 걸을 땐 은신 재질, 저지 시 원래 재질.")]
     [SerializeField] private CloakSettingsSO cloakSettings;
+    [Tooltip("기본 공격 애니 클립의 원래 길이(초). 공속이 빨라져 공격 간격(1/AS)이 이 값보다 짧아지면 애니를 그만큼 배속한다. 0이면 배속하지 않음.")]
+    [SerializeField] private float attackClipLength = 0f;
 
     private float[] skillTimers;
     private bool[] skillRunning;
@@ -43,6 +45,7 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit
     private EnemyMovement _move; // 경로 추종 이동 — Awake에서 생성, 아래 API는 여기로 위임
     private PoolManager _pool;
     private GameManager gameManager;
+    public GameManager GameManager => gameManager;
     private bool firstEnable =false;
     [Inject] 
     public void Construct(PoolManager pool,WaveSpawner waveSpawner,GameManager gameManager)
@@ -457,9 +460,16 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit
         if(!Board.IsBlocked(gameObject)&&Type==EnemyType.Melee)return;
 
         transform.LookAt(target.transform);
-        _attacking = true; 
-        _move.Pause();     
-        if (animator != null) animator.SetTrigger("Attack");
+        _attacking = true;
+        _move.Pause();
+        if (animator != null)
+        {
+            // 공속이 빨라져 공격 간격(1/AS)이 클립 길이보다 짧아지면 그 비율로 애니를 압축(배속).
+            // 간격이 더 길 땐 1배속 유지 — 억지로 늘려 슬로우모션처럼 보이는 걸 방지.
+            float interval = AttackSpeed > 0f ? 1f / AttackSpeed : 1f;
+            animator.speed = (attackClipLength > interval && interval > 0f) ? attackClipLength / interval : 1f;
+            animator.SetTrigger("Attack");
+        }
         AttackWatchdog(skillCts.Token).Forget(); // 애니 끝나면 상태 복구(이벤트 누락 대비 타임아웃 포함)
     }
 
@@ -496,6 +506,7 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit
         catch (OperationCanceledException) { }
         finally
         {
+            if (animator != null) animator.speed = 1f; // 공격 배속 원복(전역 speed이므로 이동/사망 애니에 안 새게)
             _attacking = false; // 공격 모션 끝 → 스킬/다음 공격 허용
             _move.Resume();
         }
@@ -523,6 +534,7 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit
     public virtual void Die()
     {
         if (IsDead) return;
+        animator.speed = 1f;
         IsDead = true;
         _move.Stop();
         if (Board != null) Board.RemoveEnemy(gameObject);

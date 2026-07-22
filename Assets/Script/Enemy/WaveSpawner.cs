@@ -106,8 +106,6 @@ public class WaveSpawner : MonoBehaviour
         }
     }
 
-    // 분열 등으로 런타임에 추가로 생긴 적을 카운트에 반영(스폰 시점에 호출).
-    // 이렇게 미리 더해두면, 그 분열체가 죽을 때 EnemyDieEvent 감소와 상쇄되어 전멸 시 정확히 0이 된다.
     public void AddSpawnCount(int n) => Enemycount += n;
 
     public void OnClickStage(int region,int currentstage)

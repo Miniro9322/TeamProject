@@ -76,6 +76,7 @@ public static class SkillTableImporter
             {
                 case "DamageZone" : return typeof(DamageZoneSO);
                 case "Explosived" : return typeof(ExplosiveSkillSO);
+                case "RushAttack" : return typeof(RushAttackSkillSO);
             }
         } 
         if (category == "Utility")
@@ -107,6 +108,13 @@ public static class SkillTableImporter
             case AttackSkillDataSO attack:
                 attack.damage = d.Damage ?? 0f;
                 attack.tickInterval = d.TickInterval ?? 0f;
+                switch (attack)
+                {
+                    case RushAttackSkillSO rushAttack :
+                        rushAttack.value = Mathf.RoundToInt(d.Value ?? 0f);
+                        rushAttack.valueScale = Mathf.RoundToInt(d.ValueScale ?? 0f);
+                        break;
+                }
                 break;
 
             case DashSkillDataSO dash:
