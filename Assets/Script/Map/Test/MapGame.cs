@@ -11,6 +11,7 @@ public class MapGame : MonoBehaviour
     private ResourcesManager resourcesManager;
     private CitizenManager citizenManager;
     private EnviromentManager enviromentManager;
+    private HeroRoster heroRoster;
 
     public UnitList Units { get { return unitList; } }
     public UnitPlacer Placer { get { return unitPlacer; } }
@@ -19,21 +20,22 @@ public class MapGame : MonoBehaviour
     public ResourcesManager ResourcesManager { get { return resourcesManager; } }
     public CitizenManager CitizenManager { get { return citizenManager; } }
     public EnviromentManager EnviromentManager { get { return enviromentManager; } }
+    public HeroRoster HeroRoster { get { return heroRoster; } }
 
 
     [Inject]
-    private void Construct(IObjectResolver resolver, ResourcesManager resourcesManager, BuildingPool buildingPool, UiManager uiManager, GameManager gameManager, CitizenManager citizenManager, EnviromentManager enviromentManager)
+    private void Construct(IObjectResolver resolver, ResourcesManager resourcesManager, BuildingPool buildingPool, UiManager uiManager, GameManager gameManager, CitizenManager citizenManager, EnviromentManager enviromentManager, HeroRoster heroRoster)
     {
         this.uiManager = uiManager;
         this.gameManager = gameManager;
         this.resourcesManager = resourcesManager;
         this.citizenManager = citizenManager;
         this.enviromentManager = enviromentManager;
+        this.heroRoster = heroRoster;
         unitPlacer = new UnitPlacer();
         unitPlacer.unitList = unitList;
         unitPlacer.resolver = resolver;
         unitPlacer.resourcesManager = resourcesManager;
-        unitPlacer.citizenManager = citizenManager;
         unitPlacer.pool = buildingPool;
     }
 }
