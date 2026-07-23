@@ -6,6 +6,7 @@ using Cysharp.Threading.Tasks;
 [CreateAssetMenu(menuName = "Data/Skill/DashSkill")]
 public class DashSkillDataSO : UtilitySkillDataSO
 {
+    public GameObject dashEffect;
     public float distance = 20f;   // 경로를 따라 앞으로 이동할 거리(월드). 칸 단위로 쓰려면 board.CellSize를 곱해 넘길 것.
     public override async UniTask Execute(EnemyBase owner, CancellationToken token)
     {
@@ -29,6 +30,9 @@ public class DashSkillDataSO : UtilitySkillDataSO
 
         owner.MovementSuspended = true; // 대시 동안 일반 경로 이동이 위치를 덮어쓰지 않게 정지
         float prevSpeed = owner.animator != null ? owner.animator.speed : 1f; // 대시 후 원래 속도로 복원(슬로우/헤이스트 등 보존)
+        // 대시 이펙트: owner에 붙여 대시 내내 따라오게. 위치·회전은 스폰 시점 owner 기준(로컬 변수 — SO 필드에 담으면 여러 적이 공유돼 오염됨).
+        Vector3 fxPos = owner.transform.position; // 앞쪽에 두려면 + owner.transform.forward * offset
+        GameObject go = PoolManager.Instance.Spawn(dashEffect, fxPos, owner.transform.rotation, owner.transform);
         try
         {
             if (owner.animator != null) owner.animator.speed = 4f;
@@ -55,7 +59,7 @@ public class DashSkillDataSO : UtilitySkillDataSO
                 owner.Board.MoveEnemy(owner.gameObject, cur); // 칸 보고(여기서 저지 상태가 갱신됨)
                 await UniTask.Yield(token); // 파괴/비활성 시 취소돼 파괴된 오브젝트 접근 방지
             }
-
+            
             if (owner != null && !owner.IsDead)
             {
                 if (!blocked)
@@ -76,6 +80,7 @@ public class DashSkillDataSO : UtilitySkillDataSO
                 owner.MovementSuspended = false;
                 if (owner.animator != null) owner.animator.speed = prevSpeed;
             }
+            PoolManager.Instance.Despawn(go,0.3f);
         }
     }
 }

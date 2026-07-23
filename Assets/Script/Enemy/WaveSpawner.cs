@@ -17,6 +17,8 @@ public class WaveSpawner : MonoBehaviour
     public int Region => region;
     public int Enemycount;
     public TMP_Text text;
+    [Tooltip("보스 라운드에서 일반 몹은 즉시, 보스는 이 시간(초) 뒤에 등장.")]
+    [SerializeField] private float bossSpawnDelay = 10f;
     private WaveTable waveTable;
     public IReadOnlyList<Vector3> waypoints; // 스폰→본진 경로. 맵당 1회 계산해 모든 적이 공유.
 
@@ -62,7 +64,7 @@ public class WaveSpawner : MonoBehaviour
     public void SpawnWave(int region,int currentStage, IEnumerable<int> reinforcementSources = null)
     {
         Enemycount =0;
-        int lookupId = GetStageLookupId(currentStage); // 10일차 초과는 1001~1005 라운드로 순환 조회
+        int lookupId = GetStageLookupId(currentStage);
         foreach(var wave in waveTable.GetWave(region,lookupId))
         {
             int count = GetScaleCount(wave.Count, currentStage); // 라운드가 돌수록 마릿수 스케일업
@@ -76,16 +78,24 @@ public class WaveSpawner : MonoBehaviour
                 if (src == region) continue; // 자기 자신 제외
                 foreach (var wave in waveTable.GetWave(src, ReinforceId))
                 {
-                    int count = GetScaleCount(wave.Count, currentStage);
-                    SpawnWaveRout(wave, count).Forget();
-                    Enemycount += count;
+                    SpawnWaveRout(wave, wave.Count).Forget();
+                    Enemycount += wave.Count;
                 }
+            }
+        }
+        
+        if (region == 1 && currentStage > 10 && currentStage % 10 == 0)
+        {
+            foreach (var w in waveTable.GetWave(1, 10))
+            {
+                SpawnWaveRout(w, w.Count, bossSpawnDelay).Forget();
+                Enemycount += w.Count;
             }
         }
         Debug.Log($"{region}지역 총마릿수 : {Enemycount}");
     }
 
-    private async UniTask SpawnWaveRout(WaveTable.Data wave, int count)
+    private async UniTask SpawnWaveRout(WaveTable.Data wave, int count, float startDelay = 0f)
     {
         var prefab = waveTable.GetMonsterPrefab(wave);
         if (prefab == null)
@@ -93,6 +103,8 @@ public class WaveSpawner : MonoBehaviour
             Debug.LogWarning($"WaveSpawner: 프리팹 로드 실패 '{wave.Prefab}' (ID {wave.ID})");
             return;
         }
+        // 시작 지연(보스 지연 등) → 그 위에 웨이브별 SpawnTime을 더한다.
+        if (startDelay > 0f) await UniTask.Delay(TimeSpan.FromSeconds(startDelay));
         if (wave.SpawnTime > 0f) await UniTask.Delay(TimeSpan.FromSeconds(wave.SpawnTime));
 
         for (int i = 0; i < count; i++)
@@ -142,6 +154,13 @@ public class WaveSpawner : MonoBehaviour
                     int count = GetScaleCount(w.Count, currentstage);
                     text.text += $"{DataTableManager.StringTable.Get(w.MonsterName)} {count}마리 (증원)\n";
                 }
+            }
+        }
+        if(currentstage>10&&currentstage%10==0&&region==1)
+        {
+            foreach(var w in waveTable.GetWave(1,10))
+            {
+                text.text +=$"(보스){DataTableManager.StringTable.Get(w.MonsterName)} {w.Count}마리";
             }
         }
     }
