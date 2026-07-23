@@ -42,8 +42,8 @@ public class RequestSupportUi : MonoBehaviour
     {
         if (supportList != null && supportList.Count > 0)
         {
-            firstChoice = supportList[Random.Range(0, supportList.Count)];
-            secondChoice = supportList[Random.Range(0, supportList.Count)];
+            firstChoice = supportList[UnityEngine.Random.Range(0, supportList.Count)];
+            secondChoice = supportList[UnityEngine.Random.Range(0, supportList.Count)];
         }
 
         expand.ShowChoices(BUTTONCOUNT);
