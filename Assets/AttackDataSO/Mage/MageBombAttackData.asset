@@ -10,18 +10,18 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3e63ecebd4cd6e044a8a127ea3df05bc, type: 3}
-  m_Name: DoubleSwordManAttackData
+  m_Name: MageBombAttackData
   m_EditorClassIdentifier: Assembly-CSharp::AttackDataSO
-  attackPer: 0.6
-  range: 3
+  attackPer: 1
+  range: 5
   rangeShape: 0
-  attackType: 0
+  attackType: 1
   targetMode: 0
   attackCount: 1
   targetCount: 1
   shotInterval: 0.1
-  areaShape: 0
-  areaRange: 1
+  areaShape: 1
+  areaRange: 0
   lineLength: 2
   chainRange: 2
   chainCount: 3
@@ -29,7 +29,7 @@ MonoBehaviour:
   selectMode: 0
   animTriggers:
   - Attack
-  projectilePrefab: {fileID: 0}
+  projectilePrefab: {fileID: 6807546537330266764, guid: 5c945ca2d40906c4fba022d3696c31d9, type: 3}
   clipLength: 0.53333336
   buffList: []
   groundZone: {fileID: 0}

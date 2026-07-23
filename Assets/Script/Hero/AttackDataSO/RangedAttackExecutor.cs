@@ -13,13 +13,21 @@ public class RangedAttackExecutor : IAttackExecutor
         float interval = ctx.sc[StatType.AS] > 0f ? 1f / ctx.sc[StatType.AS] : 1f; // AS = 초당 공격 횟수
         float scale = AttackAnimSpeedUtil.ComputeScale(data, interval);
         AttackAnimSpeedUtil.SetSpeed(ctx.anim, scale);
-        AttackAnimSpeedUtil.SetSpeed(ctx.bowAnim, scale);
-        AttackAnimSpeedUtil.SetSpeed(ctx.arrowAnim, scale);
-
+        if (ctx.bowAnim != null && ctx.arrowAnim != null)
+        {
+            AttackAnimSpeedUtil.SetSpeed(ctx.bowAnim, scale);
+            AttackAnimSpeedUtil.SetSpeed(ctx.arrowAnim, scale);
+        }
+        
         string trigger = PickTrigger(data);
         ctx.anim.SetTrigger(trigger);
-        ctx.bowAnim.SetTrigger("Attack");
-        ctx.arrowAnim.SetTrigger("Attack");
+
+        if (ctx.bowAnim != null && ctx.arrowAnim != null)
+        {
+            ctx.bowAnim.SetTrigger("Attack");
+            ctx.arrowAnim.SetTrigger("Attack");
+        }
+        
 
         IObjectPool<Projectile> pool = ctx.getProjectilePool(data.projectilePrefab);
         int damage = (int)(ctx.sc[StatType.ATK] * data.attackPer);
@@ -46,8 +54,11 @@ public class RangedAttackExecutor : IAttackExecutor
         finally
         {
             AttackAnimSpeedUtil.SetSpeed(ctx.anim, 1f);
-            AttackAnimSpeedUtil.SetSpeed(ctx.bowAnim, 1f);
-            AttackAnimSpeedUtil.SetSpeed(ctx.arrowAnim, 1f);
+            if (ctx.bowAnim != null && ctx.arrowAnim != null)
+            {
+                AttackAnimSpeedUtil.SetSpeed(ctx.bowAnim, 1f);
+                AttackAnimSpeedUtil.SetSpeed(ctx.arrowAnim, 1f);
+            }
         }
     }
 
@@ -56,7 +67,7 @@ public class RangedAttackExecutor : IAttackExecutor
         List<Transform> targets;
         if (data.targetMode == TargetMode.DifferentEnemies)
         {
-            List<Transform> enemies = ctx.getEnemyTargetsInRange(ctx.self.position, data.range, data.rangeShape);
+            List<Transform> enemies = ctx.getTargetableEnemyTargetsInRange(ctx.self.position, data.range, data.rangeShape);
             targets = AttackTargetSelector.SelectTargets(enemies, data.attackCount, data.targetCount);
         }
         else
@@ -105,6 +116,7 @@ public class RangedAttackExecutor : IAttackExecutor
             chainFalloff = data.chainFalloff,
             getEnemiesInRange = ctx.getEnemiesInRange,
             getEnemyObjectsInRange = ctx.getEnemyObjectsInRange,
+            getTargetableEnemyObjectsInRange = ctx.getTargetableEnemyObjectsInRange,
             buffList = data.buffList,
             buffManager = ctx.buffManager,
             source = data,

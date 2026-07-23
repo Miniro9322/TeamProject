@@ -2,18 +2,13 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Pool;
 
-public class Archer : Hero
+public class Mage : Hero
 {
-    [SerializeField] private Animator bowAnim;
-    [SerializeField] private Animator arrowAnim;
-    public Animator BowAnim => bowAnim;
-    public Animator ArrowAnim => arrowAnim;
-
     [SerializeField] private Transform muzzle;
     public Transform Muzzle => muzzle;
 
     private readonly Dictionary<Projectile, IObjectPool<Projectile>> projectilePools = new();
-    
+
     private IObjectPool<Projectile> GetProjectilePool(Projectile prefab)
     {
         if (!projectilePools.TryGetValue(prefab, out var pool))
@@ -35,14 +30,12 @@ public class Archer : Hero
     {
         base.Awake();
 
-        attackState = new ArcherAttackState(this, stateMachine);
+        attackState = new MageAttackState(this, stateMachine);
         context = new AttackContext
         {
             self = transform,
             target = null,
             anim = Anim,
-            bowAnim = BowAnim,
-            arrowAnim = ArrowAnim,
             animEvents = AnimEvents,
             muzzle = muzzle,
             getProjectilePool = GetProjectilePool,
