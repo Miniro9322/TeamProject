@@ -2139,7 +2139,6 @@ MonoBehaviour:
   command: {fileID: 314587631}
   view: {fileID: 314587628}
   palette: {fileID: 314587629}
-  expand: {fileID: 0}
   dragPixels: 8
   placeYOffset: 0
 --- !u!1 &322741156
@@ -2564,7 +2563,6 @@ MonoBehaviour:
   region: 1
   Enemycount: 13
   text: {fileID: 0}
-  bossSpawnDelay: 10
 --- !u!4 &422220353
 Transform:
   m_ObjectHideFlags: 0
@@ -4742,51 +4740,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 908549673}
   m_CullTransparentMesh: 1
---- !u!1 &937669906
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 937669908}
-  - component: {fileID: 937669907}
-  m_Layer: 0
-  m_Name: ExpandEvent
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &937669907
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 937669906}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6f27542415416684998643bb5d9726ad, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ExpandEvent
-  registry: {fileID: 1862994567}
---- !u!4 &937669908
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 937669906}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.93146, y: 292.01944, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &953361632
 GameObject:
   m_ObjectHideFlags: 0
@@ -10117,4 +10070,3 @@ SceneRoots:
   - {fileID: 1862994568}
   - {fileID: 5630212262440125018}
   - {fileID: 1403437580}
-  - {fileID: 937669908}
