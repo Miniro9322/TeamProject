@@ -32,7 +32,7 @@ public class HeroAttackState : HeroState
 
     public override void Update()
     {
-        if (hero.Context.target == null)
+        if (hero.Context.target == null && !IsBusy)
         {
             stateMachine.ChangeState(hero.IdleState);
             return;

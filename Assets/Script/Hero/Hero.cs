@@ -118,12 +118,9 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
 
     protected virtual void Start()
     {
-        origin = board.WorldToCell(transform.position);
-        if (board.TryGetCell(origin, out Tile current))
-            currentTile = current;
-        currentTile.SetOccupant(this.gameObject, occupantKind);
+        SetCurrentTile();
         //테스트용 코드
-        if(gameManager != null)
+        if (gameManager != null)
         {
             gameManager.ChangeToDay += Resurrection;
         }
@@ -172,15 +169,27 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
 
     private void AcquireTargetFromTiles()
     {
+        GameObject nearest = null;
+        float nearestSqrDist = float.MaxValue;
+
         foreach (Tile tile in TileShapeQuery.GetTiles(board, origin, range, rangeShape))
         {
             foreach (GameObject enemy in tile.Enemies)
             {
                 if (!IsTargetable(enemy)) continue;
-                target = enemy;
-                context.target = target.transform;
-                return;
+                float sqrDist = (enemy.transform.position - transform.position).sqrMagnitude;
+                if (sqrDist < nearestSqrDist)
+                {
+                    nearestSqrDist = sqrDist;
+                    nearest = enemy;
+                }
             }
+        }
+
+        if (nearest != null)
+        {
+            target = nearest;
+            context.target = nearest.transform;
         }
     }
 
@@ -330,10 +339,16 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
         OnResur?.Invoke();
     }
 
-    public async UniTask ResurrectionAfter10s()
-    {
-        await UniTask.Delay(TimeSpan.FromSeconds(10));
-        Resurrection();
-    }
+    //public async UniTask ResurrectionAfter10s()
+    //{
+    //    await UniTask.Delay(TimeSpan.FromSeconds(10));
+    //    Resurrection();
+    //}
 
+    public void SetCurrentTile()
+    {
+        origin = board.WorldToCell(transform.position);
+        if (board.TryGetCell(origin, out Tile current))
+            currentTile = current;
+    }
 }
