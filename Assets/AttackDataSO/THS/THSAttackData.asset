@@ -10,26 +10,29 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3e63ecebd4cd6e044a8a127ea3df05bc, type: 3}
-  m_Name: DoubleSwordManAttackData
+  m_Name: THSAttackData
   m_EditorClassIdentifier: Assembly-CSharp::AttackDataSO
-  attackPer: 0.6
-  range: 3
+  attackPer: 1
+  range: 2
   rangeShape: 0
-  attackType: 0
+  attackType: 1
   targetMode: 0
   attackCount: 1
   targetCount: 1
   shotInterval: 0.1
   areaShape: 0
-  areaRange: 1
+  areaRange: 2
   lineLength: 2
   chainRange: 2
   chainCount: 3
   chainFalloff: 0.8
   selectMode: 0
   animTriggers:
-  - Attack
+  - Attack1
+  - Attack2
+  - Attack3
+  - Attack4
   projectilePrefab: {fileID: 0}
-  clipLength: 0.53333336
+  clipLength: 0.5333334
   buffList: []
   groundZone: {fileID: 0}

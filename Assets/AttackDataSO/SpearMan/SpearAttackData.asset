@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3e63ecebd4cd6e044a8a127ea3df05bc, type: 3}
   m_Name: SpearAttackData
   m_EditorClassIdentifier: Assembly-CSharp::AttackDataSO
-  attackPer: 2
+  attackPer: 1
   range: 1
   rangeShape: 2
   attackType: 1
@@ -22,7 +22,7 @@ MonoBehaviour:
   shotInterval: 0.1
   areaShape: 2
   areaRange: 1
-  lineLength: 3
+  lineLength: 2
   chainRange: 2
   chainCount: 3
   chainFalloff: 0.8
@@ -31,3 +31,5 @@ MonoBehaviour:
   - Attack
   projectilePrefab: {fileID: 0}
   clipLength: 0.6666667
+  buffList: []
+  groundZone: {fileID: 0}
