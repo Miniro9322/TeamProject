@@ -123,10 +123,9 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit
             animator.Rebind();
             animator.Update(0f);
         }
-        
+        EnemyRegistry.Register(this);
         _move.Resume();
         _cloak.Reset();
-        EnemyRegistry.Register(this);
         skillCts = new CancellationTokenSource();
         _move.ArrivedAtCore += HandleArrivedAtCore;
         RunSkillLoop(skillCts.Token).Forget();
@@ -151,7 +150,7 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit
     }
 
     // 재생 특성 회복량(초당 최대체력 비율). 매 프레임 deltaTime만큼 나눠 채워 부드럽게 차오른다.
-    private const float RegenPerSecond = 0.01f; // 초당 1%
+    private const float RegenPerSecond = 0.005f; // 초당 1%
     // 은신 렌더링은 EnemyCloak가 전담. 은신 몹이면 Awake에서 Setup, 매 프레임 Tick으로 굴린다.
     private readonly EnemyCloak _cloak = new();
 
@@ -428,7 +427,8 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit
         if (IsDead || Board == null || skillCts == null) return;
         GameObject target = FindAttackTarget();
         if (target == null) return; // 사거리에 대상 없으면 멈추지도, 공격하지도 않음
-        if(!Board.IsBlocked(gameObject)&&Type==EnemyType.Melee)return;
+        if (IsUnJudged) return;                                              // 저지 불가 = 막는 칸을 통과만, 스쳐 지나가며 때리지 않음
+        if (Type == EnemyType.Melee && !Board.IsBlocked(gameObject)) return; // 근접은 실제로 저지당했을 때만 공격
 
         transform.LookAt(target.transform);
         _attacking = true;

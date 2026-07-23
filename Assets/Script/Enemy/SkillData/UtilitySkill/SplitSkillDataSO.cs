@@ -1,7 +1,7 @@
 using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
-using Unity.VisualScripting;
+using Unity.Mathematics;
 using UnityEngine;
 
 // 분열 스킬 — 유닛이 죽을 때(TriggerOnDeath) 자신과 같은 적을 value마리 스폰한다.
@@ -11,7 +11,7 @@ public class SplitSkillDataSO : UtilitySkillDataSO
     [Range(0f, 1f)]
     [Tooltip("분열체가 가질 체력 비율(최대 체력 대비). 0.5 = 50%.")]
     public float hpPercent = 0.5f;
-
+    public GameObject splitEffect;
     [Tooltip("분열 최대 세대. 1이면 원본만 분열하고 분열체는 다시 분열하지 않음(무한 방지).")]
     public int maxGeneration = 1;
     public string stateName = "Spawn";
@@ -26,7 +26,11 @@ public class SplitSkillDataSO : UtilitySkillDataSO
         int count = Mathf.Max(1, Mathf.RoundToInt(value)); // value = 분열 수
         int nextGen = owner.SplitGeneration + 1;
         float childHp = owner.MaxHp * hpPercent;
-
+        if(splitEffect!=null)
+        {
+            GameObject go = PoolManager.Instance.Spawn(splitEffect,owner.transform.position,Quaternion.identity);
+            PoolManager.Instance.Despawn(go,1f);
+        }
         // 분열체를 소유 레인 카운트에 미리 더한다(각자 죽을 때 EnemyDieEvent 감소와 상쇄 → 전멸 시 정확히 0).
         owner.Owner?.AddSpawnCount(count);
 
