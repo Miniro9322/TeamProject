@@ -16,8 +16,8 @@ public class RequestSupportUi : MonoBehaviour
     [SerializeField] private TextMeshProUGUI firstLabel;
     [SerializeField] private TextMeshProUGUI secondLabel;
 
-// 선택지는 버튼 수만큼만 올린다.
-    private const int ButtonCount = 2;
+    // 선택지는 버튼 수만큼.
+    private const int BUTTONCOUNT = 2;
 
     private ExpandEvent expand;
 
@@ -35,9 +35,9 @@ public class RequestSupportUi : MonoBehaviour
             secondChoice = supportList[Random.Range(0, supportList.Count)];
         }
 
-        expand.ShowChoices(ButtonCount);
+        expand.ShowChoices(BUTTONCOUNT);
 
-    // 열 지역이 없으면 곧장 닫는다. 안 그러면 UiManager의 WaitUntil이 안 풀린다.
+ 
         if (expand.Choices.Count == 0)
         {
             gameObject.SetActive(false);
