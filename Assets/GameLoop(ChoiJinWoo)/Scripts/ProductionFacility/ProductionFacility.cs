@@ -152,4 +152,6 @@ public class ProductionFacility : MonoBehaviour, IDamageAble, IPlaceAble
     {
         this.board = board;
     }
+
+
 }

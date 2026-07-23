@@ -784,7 +784,7 @@ GameObject:
   - component: {fileID: 8897732166653026195}
   - component: {fileID: 8780429471832135256}
   m_Layer: 5
-  m_Name: Panel
+  m_Name: SupportRequestPanel
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -862,7 +862,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 62e18700f4d592d46ad75d7a54f87acb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RequestSupportUi
-  supportList: []
+  supportList:
+  - {fileID: 11400000, guid: b8f8c618f38418043a992417ea4c2c5f, type: 2}
+  - {fileID: 11400000, guid: 285cae1bbff09de43a3cf2b354a260f7, type: 2}
 --- !u!1 &3255249184159123882
 GameObject:
   m_ObjectHideFlags: 0
