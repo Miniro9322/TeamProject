@@ -61,7 +61,6 @@ public class MapAssemble : MonoBehaviour
         // 미배선이면 확장만 꺼지고 나머지 조립은 그대로 돈다.
         if (expand != null)
         {
-            mapGame.Rule.ExpandMap += expand.ShowChoices;
             mapGame.Rule.ChangeToNight += expand.CancelChoices;
         }
     }
@@ -71,7 +70,6 @@ public class MapAssemble : MonoBehaviour
         mapGame.Rule.ChangeToNight -= view.ClearMode;
         if (expand != null)
         {
-            mapGame.Rule.ExpandMap -= expand.ShowChoices;
             mapGame.Rule.ChangeToNight -= expand.CancelChoices;
         }
     }
