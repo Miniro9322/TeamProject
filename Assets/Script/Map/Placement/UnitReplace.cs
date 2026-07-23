@@ -61,6 +61,14 @@ public class UnitReplace
         tile.Board.TryPlace(tile.Coord, _heldUnit, _heldKind, yOffset, out _);
         RegisterCover(tile);
         message = $"{tile.Coord} 이동";
+        //
+        Hero hero = _heldUnit.GetComponent<Hero>();
+        if (hero != null)
+        {
+            hero.SetBoard(tile.Board);
+            hero.SetCurrentTile();
+        }
+        //
         ClearHeld();
         return true;
     }

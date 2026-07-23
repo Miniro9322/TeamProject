@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3e63ecebd4cd6e044a8a127ea3df05bc, type: 3}
   m_Name: ArcherPierceAttackData
   m_EditorClassIdentifier: Assembly-CSharp::AttackDataSO
-  attackPer: 1
+  attackPer: 3
   range: 10
   rangeShape: 2
   attackType: 1
@@ -22,12 +22,14 @@ MonoBehaviour:
   shotInterval: 0.1
   areaShape: 2
   areaRange: 1
-  lineLength: 100
+  lineLength: 8
   chainRange: 2
   chainCount: 3
   chainFalloff: 0.8
   selectMode: 0
   animTriggers:
   - Attack
-  projectilePrefab: {fileID: 607833191716554269, guid: 9a655c0bc584fd949b6d31f3804c9433, type: 3}
+  projectilePrefab: {fileID: 607833191716554269, guid: 096e519a71d84cd492def126191b3ea9, type: 3}
   clipLength: 0.6666667
+  buffList: []
+  groundZone: {fileID: 0}
