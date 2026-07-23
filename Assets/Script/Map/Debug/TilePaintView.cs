@@ -95,7 +95,7 @@ public class TilePaintView : MonoBehaviour
             int range = game.UnitRange(tile.OccupantObject);
             if (range >= 0)
             {
-                PaintRange(tile, range);
+                //PaintRange(tile, range);
             }
         }
     }
@@ -105,7 +105,7 @@ public class TilePaintView : MonoBehaviour
         OccupantKind kind = game.PlacingKind;
         if (kind == OccupantKind.MeleeHero || kind == OccupantKind.RangedHero)
         {
-            PaintRange(tile, game.PlacingRange);
+            //PaintRange(tile, game.PlacingRange);
         }
 
         // 호버된 타일이 속한 모듈 보드 기준으로 판정한다(어느 모듈이든 프리뷰가 맞게 뜬다).

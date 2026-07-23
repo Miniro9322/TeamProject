@@ -8,6 +8,7 @@ public class Placeable
 {
     public string label = "유닛";
     public GameObject prefab;
+    public Sprite icon;
     public OccupantKind kind = OccupantKind.MeleeHero;
     [Min(0)] public int attackRange;
 }
