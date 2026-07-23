@@ -76,13 +76,10 @@ public class SpawnerManager : MonoBehaviour
             Tile tile = spawner.Board.CellFromRay(ray);
             if (tile == null || !tile.isEnemySpawn) continue; // 이 지역 보드의 소환지점 타일이 아니면 skip
             if(!IsUnlocked(kv.Key))continue;
-            spawner.OnClickStage(kv.Key, CurrentDay);          // 그 지역의 현재 날짜 웨이브 정보 표시
+            spawner.OnClickStage(kv.Key, CurrentDay, UnlockedRegions()); // 그 지역의 현재 날짜 웨이브 + 증원 정보 표시
             return;                                            // 맞는 지역 하나 찾으면 끝
         }
     }
-    // GameManager를 지연 해석해 DayCount만 읽는다.
-    // 직접 Construct(GameManager)로 받으면 GameManager↔SpawnerManager 순환이라 컨테이너 빌드가 깨진다.
-    // IObjectResolver는 "나중에 꺼낼 수단"이라 그래프상 사이클로 안 잡히고, GameManager를 수정할 필요도 없다.
     private IObjectResolver _resolver;
     [Inject] public void Construct(IObjectResolver resolver) => _resolver = resolver;
     private GameManager _gameManager;
@@ -123,14 +120,20 @@ public class SpawnerManager : MonoBehaviour
     public bool IsUnlocked(int region)
         => IsUnlockregion.TryGetValue(region, out bool v) && v; //해금 확인용
 
+    // 현재 해금된 지역 번호 목록. 증원 소스로 각 스포너에 넘긴다(스포너가 자기 지역은 알아서 제외).
+    private List<int> UnlockedRegions()
+    {
+        var list = new List<int>();
+        foreach (var kv in _byRegion)
+            if (IsUnlocked(kv.Key)) list.Add(kv.Key);
+        return list;
+    }
+
     public void SpawnWave(int round) //해당라운드 전체소환
     {
-        foreach (var kv in _byRegion)
-        {
-            if (!IsUnlocked(kv.Key)) continue;
-
-            kv.Value.SpawnWave(kv.Key,round);
-        }
+        var unlocked = UnlockedRegions();
+        foreach (int region in unlocked)
+            _byRegion[region].SpawnWave(region, round, unlocked);
     }
 
 

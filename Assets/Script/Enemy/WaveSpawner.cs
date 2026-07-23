@@ -49,25 +49,43 @@ public class WaveSpawner : MonoBehaviour
     public void SpawnWave(int currentStage)
     {
         Enemycount =0;
-        foreach(var wave in waveTable.GetWave(1,currentStage))
+        int lookupId = GetStageLookupId(currentStage); // 10일차 초과는 1001~1005 라운드로 순환 조회
+        foreach(var wave in waveTable.GetWave(1,lookupId))
         {
-            SpawnWaveRout(wave).Forget();
-            Enemycount += wave.Count;
+            int count = GetScaleCount(wave.Count, currentStage); // 라운드가 돌수록 마릿수 스케일업
+            SpawnWaveRout(wave, count).Forget();
+            Enemycount += count;
         }
         Debug.Log($"{region}지역 : {Enemycount}");
     }
-    public void SpawnWave(int region,int currentStage)
+    // reinforcementSources: 해금된 "다른" 지역 번호들. 그 지역이 export하는 증원 몹(9001 대역)을 이 지역 웨이브에 추가로 얹는다.
+    public void SpawnWave(int region,int currentStage, IEnumerable<int> reinforcementSources = null)
     {
         Enemycount =0;
-        foreach(var wave in waveTable.GetWave(region,currentStage))
+        int lookupId = GetStageLookupId(currentStage); // 10일차 초과는 1001~1005 라운드로 순환 조회
+        foreach(var wave in waveTable.GetWave(region,lookupId))
         {
-            SpawnWaveRout(wave).Forget();
-            Enemycount += wave.Count;
+            int count = GetScaleCount(wave.Count, currentStage); // 라운드가 돌수록 마릿수 스케일업
+            SpawnWaveRout(wave, count).Forget();
+            Enemycount += count;
+        }
+        if (reinforcementSources != null)
+        {
+            foreach (int src in reinforcementSources)
+            {
+                if (src == region) continue; // 자기 자신 제외
+                foreach (var wave in waveTable.GetWave(src, ReinforceId))
+                {
+                    int count = GetScaleCount(wave.Count, currentStage);
+                    SpawnWaveRout(wave, count).Forget();
+                    Enemycount += count;
+                }
+            }
         }
         Debug.Log($"{region}지역 총마릿수 : {Enemycount}");
     }
 
-    private async UniTask SpawnWaveRout(WaveTable.Data wave)
+    private async UniTask SpawnWaveRout(WaveTable.Data wave, int count)
     {
         var prefab = waveTable.GetMonsterPrefab(wave);
         if (prefab == null)
@@ -77,9 +95,9 @@ public class WaveSpawner : MonoBehaviour
         }
         if (wave.SpawnTime > 0f) await UniTask.Delay(TimeSpan.FromSeconds(wave.SpawnTime));
 
-        for (int i = 0; i < wave.Count; i++)
+        for (int i = 0; i < count; i++)
         {
-            
+
             var go = (_pool ??= PoolManager.Instance).Spawn(prefab, Vector3.zero, Quaternion.identity);
             if (go.TryGetComponent(out EnemyBase enemy))
             {
@@ -87,7 +105,7 @@ public class WaveSpawner : MonoBehaviour
                 enemy.EnterMap(board, waypoints);
             }
 
-            if (i < wave.Count - 1 && wave.Delay > 0f)
+            if (i < count - 1 && wave.Delay > 0f)
             await UniTask.Delay(TimeSpan.FromSeconds(wave.Delay));
         }
     }
@@ -102,17 +120,29 @@ public class WaveSpawner : MonoBehaviour
         }
     }
 
-    // 분열 등으로 런타임에 추가로 생긴 적을 카운트에 반영(스폰 시점에 호출).
-    // 이렇게 미리 더해두면, 그 분열체가 죽을 때 EnemyDieEvent 감소와 상쇄되어 전멸 시 정확히 0이 된다.
     public void AddSpawnCount(int n) => Enemycount += n;
 
-    public void OnClickStage(int region,int currentstage)
+    public void OnClickStage(int region,int currentstage, IEnumerable<int> reinforcementSources = null)
     {
         if (waveTable == null || text == null) return; // Start 전 클릭/텍스트 미할당 방어
         text.text = $"{region}지역 {currentstage}일차\n";
-        foreach(var w in waveTable.GetWave(region,currentstage))
+        int lookupId = GetStageLookupId(currentstage);
+        foreach(var w in waveTable.GetWave(region,lookupId))
         {
-            text.text += $"{DataTableManager.StringTable.Get(w.MonsterName)} {w.Count}마리 \n";
+            int count = GetScaleCount(w.Count, currentstage);
+            text.text += $"{DataTableManager.StringTable.Get(w.MonsterName)} {count}마리 \n";
+        }
+        if (reinforcementSources != null)
+        {
+            foreach (int src in reinforcementSources)
+            {
+                if (src == region) continue;
+                foreach (var w in waveTable.GetWave(src, ReinforceId))
+                {
+                    int count = GetScaleCount(w.Count, currentstage);
+                    text.text += $"{DataTableManager.StringTable.Get(w.MonsterName)} {count}마리 (증원)\n";
+                }
+            }
         }
     }
 
@@ -126,4 +156,8 @@ public class WaveSpawner : MonoBehaviour
     {
         return stage > 10 ? ((stage-6)%5)+1001 : stage;
     }
+
+    // 지역 해금 시 다른 해금 지역에 흘려보내는 "증원 몹" 전용 ID 대역.
+    // 일반 라운드(1~10, 1001~1005)와 겹치지 않으므로 정상 웨이브로는 절대 스폰되지 않는다.
+    public const int ReinforceId = 9001;
 }
