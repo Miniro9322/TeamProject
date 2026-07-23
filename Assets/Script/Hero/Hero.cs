@@ -118,12 +118,9 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
 
     protected virtual void Start()
     {
-        origin = board.WorldToCell(transform.position);
-        if (board.TryGetCell(origin, out Tile current))
-            currentTile = current;
-        currentTile.SetOccupant(this.gameObject, occupantKind);
+        SetCurrentTile();
         //테스트용 코드
-        if(gameManager != null)
+        if (gameManager != null)
         {
             gameManager.ChangeToDay += Resurrection;
         }
@@ -172,18 +169,35 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
 
     private void AcquireTargetFromTiles()
     {
+        GameObject nearest = null;
+        float nearestSqrDist = float.MaxValue;
+
         foreach (Tile tile in TileShapeQuery.GetTiles(board, origin, range, rangeShape))
         {
             foreach (GameObject enemy in tile.Enemies)
             {
-                if (enemy == null) continue;
-                var eb = enemy.GetComponent<EnemyBase>();
-                if (eb == null || (eb.Attribute & unattackableTarget) != 0) continue;
-                target = enemy;
-                context.target = target.transform;
-                return;
+                if (!IsTargetable(enemy)) continue;
+                float sqrDist = (enemy.transform.position - transform.position).sqrMagnitude;
+                if (sqrDist < nearestSqrDist)
+                {
+                    nearestSqrDist = sqrDist;
+                    nearest = enemy;
+                }
             }
         }
+
+        if (nearest != null)
+        {
+            target = nearest;
+            context.target = nearest.transform;
+        }
+    }
+
+    private bool IsTargetable(GameObject enemy)
+    {
+        if (enemy == null) return false;
+        var eb = enemy.GetComponent<EnemyBase>();
+        return eb != null && (eb.Attribute & unattackableTarget) == 0;
     }
 
     public List<IDamageAble> GetEnemiesInRange(Vector3 originWorld, int range, RangeShape shape = RangeShape.Diamond)
@@ -224,6 +238,42 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
         return found;
     }
 
+    // 아래 3개는 GetEnemiesInRange/GetEnemyTransformsInRange/GetEnemyObjectsInRange와 동일하되,
+    // unattackableTarget 필터를 적용한다. 체인/다수 공격처럼 "특정 적을 타겟으로 선정"하는 로직에서 써서
+    // 공격 불가 대상(예: 원거리 전용 대상인 Fly, 저지 전엔 못 때리는 Cloaking)이 뽑히지 않게 한다.
+    // 범위(AOE) 스플래시는 의도적으로 이 필터를 타지 않는 기존 메서드를 그대로 쓴다.
+    public List<IDamageAble> GetTargetableEnemiesInRange(Vector3 originWorld, int range, RangeShape shape = RangeShape.Diamond)
+    {
+        var found = new HashSet<IDamageAble>();
+        foreach (GameObject enemy in GetTargetableEnemyObjectsInRange(originWorld, range, shape))
+        {
+            if (enemy.GetComponentInParent<IDamageAble>() is IDamageAble damageable)
+                found.Add(damageable);
+        }
+
+        return new List<IDamageAble>(found);
+    }
+
+    public List<Transform> GetTargetableEnemyTransformsInRange(Vector3 originWorld, int range, RangeShape shape = RangeShape.Diamond)
+    {
+        var found = new HashSet<Transform>();
+        foreach (GameObject enemy in GetTargetableEnemyObjectsInRange(originWorld, range, shape))
+            found.Add(enemy.transform);
+
+        return new List<Transform>(found);
+    }
+
+    public List<GameObject> GetTargetableEnemyObjectsInRange(Vector3 originWorld, int range, RangeShape shape = RangeShape.Diamond)
+    {
+        var found = new List<GameObject>();
+        foreach (GameObject enemy in GetEnemyObjectsInRange(originWorld, range, shape))
+        {
+            if (IsTargetable(enemy)) found.Add(enemy);
+        }
+
+        return found;
+    }
+
     // originWorld에서 towardWorld 방향으로 4방향 스냅한 직선을 length칸 조회해 적을 모은다.
     public List<IDamageAble> GetEnemiesInLine(Vector3 originWorld, Vector3 towardWorld, int length)
     {
@@ -241,7 +291,6 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
                     found.Add(d);
             }
         }
-
         foreach (Tile tile in TileShapeQuery.GetLineTiles(board, originCell, dir, length))
         {
             foreach (GameObject enemy in tile.Enemies)
@@ -290,10 +339,16 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
         OnResur?.Invoke();
     }
 
-    public async UniTask ResurrectionAfter10s()
-    {
-        await UniTask.Delay(TimeSpan.FromSeconds(10));
-        Resurrection();
-    }
+    //public async UniTask ResurrectionAfter10s()
+    //{
+    //    await UniTask.Delay(TimeSpan.FromSeconds(10));
+    //    Resurrection();
+    //}
 
+    public void SetCurrentTile()
+    {
+        origin = board.WorldToCell(transform.position);
+        if (board.TryGetCell(origin, out Tile current))
+            currentTile = current;
+    }
 }

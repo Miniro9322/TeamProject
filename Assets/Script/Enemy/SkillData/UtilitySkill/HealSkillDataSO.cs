@@ -13,7 +13,9 @@ public class HealSkillDataSO : UtilitySkillDataSO
     // Cooldown 을 틱 간격으로 사용한다(예: 0.5초). EnemyBase 스킬 루프가 쿨다운마다 호출 = 매 틱 1회 힐.
     public override async UniTask Execute(EnemyBase owner, CancellationToken token)
     {
-        TickRateInterval(owner,token).Forget();
+        // fire-and-forget: 힐 장판은 Execute보다 오래 산다. 스킬 루프가 넘겨준 token은 이 Execute 스코프에서
+        // 만료(dispose)되므로, 유닛 수명 토큰(LifetimeToken)으로 돌려야 디스폰/사망 시 정상 취소된다.
+        TickRateInterval(owner, owner.LifetimeToken).Forget();
         await UniTask.CompletedTask;
     }
     private async UniTask TickRateInterval(EnemyBase owner,CancellationToken token)

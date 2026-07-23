@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
@@ -7,10 +8,12 @@ using VContainer;
 public class RequestSupportUi : MonoBehaviour
 {
     [SerializeField] private List<SupportRegion> supportList;
+    private List<SupportRegion> supportListCopy = new();
     private SupportRegion firstChoice;
     private SupportRegion secondChoice;
 
-   
+    public event Action<byte> OnUnlock;
+
     [SerializeField] private Button firstButton;
     [SerializeField] private Button secondButton;
     [SerializeField] private TextMeshProUGUI firstLabel;
@@ -25,6 +28,14 @@ public class RequestSupportUi : MonoBehaviour
     private void Construct(ExpandEvent expand)
     {
         this.expand = expand;
+    }
+
+    private void Awake()
+    {
+        foreach(var support in supportList)
+        {
+            supportListCopy.Add(support);
+        }
     }
 
     private void OnEnable()
@@ -50,15 +61,21 @@ public class RequestSupportUi : MonoBehaviour
 
     public void FirstButton()
     {
+        Debug.Log((byte)firstChoice.UnlockHero);
+        OnUnlock?.Invoke((byte)firstChoice.UnlockHero);
+        supportListCopy.Remove(firstChoice);
         SelectChoice(0);
+        gameObject.SetActive(false);
     }
 
     public void SecondButton()
     {
+        OnUnlock?.Invoke((byte)secondChoice.UnlockHero);
+        supportListCopy.Remove(secondChoice);
         SelectChoice(1);
+        gameObject.SetActive(false);
     }
 
-     
     private void FillButton(Button button, TextMeshProUGUI label, int index)
     {
         bool has = index < expand.Choices.Count;
@@ -68,8 +85,6 @@ public class RequestSupportUi : MonoBehaviour
             label.text = $"지역 {expand.Choices[index].ModuleId}";
         }
     }
-
-   
 
     private void SelectChoice(int index)
     {
