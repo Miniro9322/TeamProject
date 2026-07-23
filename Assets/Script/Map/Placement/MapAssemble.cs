@@ -11,6 +11,7 @@ public class MapAssemble : MonoBehaviour
     [SerializeField] private MapCommand command;
     [SerializeField] private MapView view;
     [SerializeField] private PlacePalette palette;
+    [SerializeField] private ExpandEvent expand;
     [SerializeField] private float dragPixels = 8f;
     [SerializeField] private float placeYOffset = 0f;
 
@@ -55,11 +56,22 @@ public class MapAssemble : MonoBehaviour
         };
 
         mapGame.Rule.ChangeToNight += view.ClearMode;
+
+        // 확장 이벤트: 5일마다 GameManager가 쏘고, 밤이 되면 선택을 무른다.
+        // 미배선이면 확장만 꺼지고 나머지 조립은 그대로 돈다.
+        if (expand != null)
+        {
+            mapGame.Rule.ChangeToNight += expand.CancelChoices;
+        }
     }
 
     private void OnDestroy()
     {
         mapGame.Rule.ChangeToNight -= view.ClearMode;
+        if (expand != null)
+        {
+            mapGame.Rule.ChangeToNight -= expand.CancelChoices;
+        }
     }
 
     // 레지스트리에 등록된 모듈들의 보드 목록. 모듈 루트에 ModuleLogic과 MapBoard가 함께 산다.
