@@ -10,7 +10,7 @@ public class RangeInfo
         _unitList = unitList;
     }
 
-    public int Of(GameObject unit)
+    public int RangeOf(GameObject unit)
     {
         _unitList.TryGetRange(unit, out int range);
         return Mathf.Max(0, range);

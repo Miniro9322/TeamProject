@@ -50,7 +50,7 @@ public class MapView : MonoBehaviour
 
     public int UnitRange(GameObject unit)
     {
-        return rangeInfo.Of(unit);
+        return rangeInfo.RangeOf(unit);
     }
 
     // ---- 모드 전환(PanelLogic 버튼이 부른다) ----

@@ -4,18 +4,31 @@ using UnityEngine;
 // FogView(구멍 데이터)와 분리된 순수 외형 튜닝 컴포넌트. OnValidate로 Play 중 실시간 반영.
 public class FogLook : MonoBehaviour
 {
-    [Header("Fog")]
+    [Header("안개 기본")]
+    [Tooltip("안개의 기본 색입니다. 알파값은 사용하지 않으며 투명도는 Density로 조절합니다.")]
     [SerializeField] private Color fogColor = new Color(0.55f, 0.6f, 0.7f, 1f);
+
+    [Tooltip("안개의 전체 불투명도입니다. 0이면 투명하고 1이면 가장 진합니다.")]
     [SerializeField, Range(0f, 1f)] private float density = 0.9f;
+
+    [Tooltip("안개 내부 구름 명암의 강도입니다. 0이면 단색에 가까워집니다.")]
     [SerializeField, Range(0f, 1f)] private float cloudTint = 0.5f;
 
-    [Header("Edge")]
+    [Header("안개 경계")]
+    [Tooltip("열린 구역과 안개 사이 경계의 부드러운 폭입니다. 높을수록 경계가 넓고 흐릿해집니다.")]
     [SerializeField, Range(0f, 10f)] private float edgeSoft = 2f;
+
+    [Tooltip("경계가 울퉁불퉁하게 흔들리는 거리입니다. 0이면 직선에 가까워집니다.")]
     [SerializeField, Range(0f, 20f)] private float edgeRough = 6f;
+
+    [Tooltip("경계 굴곡의 촘촘함입니다. 높을수록 작고 촘촘한 굴곡이 생깁니다.")]
     [SerializeField, Range(0.005f, 0.5f)] private float edgeScale = 0.06f;
 
-    [Header("Cloud")]
+    [Header("구름 무늬")]
+    [Tooltip("구름 무늬의 촘촘함입니다. 높을수록 구름 무늬가 작아집니다.")]
     [SerializeField, Range(0.01f, 1f)] private float cloudScale = 0.15f;
+
+    [Tooltip("안개 무늬가 흐르는 속도입니다. 0이면 정지합니다.")]
     [SerializeField, Range(0f, 5f)] private float windSpeed = 1.5f;
 
     private static readonly int ColorId = Shader.PropertyToID("_FogColor");
