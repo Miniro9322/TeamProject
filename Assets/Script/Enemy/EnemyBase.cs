@@ -105,7 +105,7 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit
         LoadStats();
         animator = GetComponent<Animator>();
         _move = new EnemyMovement(gameObject, animator, arriveSqr);
-        SetupCloak();
+        if (IsCloaking) _cloak.Setup(gameObject, cloakSettings); // Attribute 결정(LoadStats) 뒤에 호출
     }
 
     protected virtual void OnEnable()
@@ -125,7 +125,7 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit
         }
         
         _move.Resume();
-        ResetCloak();
+        _cloak.Reset();
         EnemyRegistry.Register(this);
         skillCts = new CancellationTokenSource();
         _move.ArrivedAtCore += HandleArrivedAtCore;
@@ -135,7 +135,7 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit
     }
     protected virtual void OnDisable()
     {
-        ResetCloak();
+        _cloak.Reset();
         _move.Pause();
         _move.LeaveBoard(); // 어떤 경로로 사라지든 현재 칸에서 빠진다
         _move.ArrivedAtCore -= HandleArrivedAtCore;
@@ -152,24 +152,14 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit
 
     // 재생 특성 회복량(초당 최대체력 비율). 매 프레임 deltaTime만큼 나눠 채워 부드럽게 차오른다.
     private const float RegenPerSecond = 0.01f; // 초당 1%
-    // ── 은신(Cloaking) 렌더링 ────────────────────────────────
-    // 재질 교체 없이, 은신 셰이더의 _CloakAmount를 0~1로 보간해 [본체 ↔ 흐릿]을 "점점" 전환한다.
-    private static readonly int CloakAmountId = Shader.PropertyToID("_CloakAmount");
-    private static readonly int BaseMapId = Shader.PropertyToID("_BaseMap");
-    private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
-    private static readonly int LegacyColorId = Shader.PropertyToID("_Color");
-    private Renderer[] _cloakRenderers;
-    private MaterialPropertyBlock _cloakMpb;
-    private Material[][] _originalMats;   // 렌더러별 원래 재질 — 드러날 때(amount=0) 이걸로 복귀(원본 조명/색 그대로)
-    private Material[][] _cloakMats;      // 렌더러별 은신 재질 — 은신/전환 중에만 사용
-    private bool _cloakApplied;           // 현재 은신 재질이 올라가 있는지
-    private float _cloakAmount;          // 0=또렷 ~ 1=은신. 매 프레임 목표값으로 보간.
+    // 은신 렌더링은 EnemyCloak가 전담. 은신 몹이면 Awake에서 Setup, 매 프레임 Tick으로 굴린다.
+    private readonly EnemyCloak _cloak = new();
 
     protected virtual void Update()
     {
         _move.Tick(!IsDead && !IsStunned, MoveSpeed); // active=사망/스턴 아님 → 스턴 중엔 이동 정지(Idle)
         UpdateExposedAttribute();       // 저지 상태에 따라 Hero가 보는 Attribute를 갱신
-        CloakTick();
+        _cloak.Tick(CloakClear);
         StunTick();                     // 스턴 만료를 감지해 Animator bool을 끈다
     }
 
@@ -221,7 +211,7 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit
 
     // Hero가 읽는 공개 Attribute 갱신.
     // 은신 유닛이 저지당하는 동안엔 Cloaking 비트를 빼서 Hero의 unattackable 필터를 통과(=공격 가능)시킨다.
-    // 저지가 풀리면 다시 원본으로 돌아가 공격 불가. 연출(CloakTick)과 동일한 IsBlocked 조건이라 "보이는 것=때릴 수 있는 것"이 항상 일치.
+    // 저지가 풀리면 다시 원본으로 돌아가 공격 불가. 연출(EnemyCloak)과 동일한 IsBlocked 조건이라 "보이는 것=때릴 수 있는 것"이 항상 일치.
     private void UpdateExposedAttribute()
     {
         EnemyAttribute exposed = Dataattribute;
@@ -230,92 +220,8 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit
         Attribute = exposed;
     }
 
-    // 걸을 때(저지 안 됨) → 은신(1)로 페이드, 저지/사망 시 → 또렷(0)로 페이드.
-    private void CloakTick()
-    {
-        if (!IsCloaking || _cloakRenderers == null) return;
-
-        bool clear = IsDead || (Board != null && Board.IsBlocked(gameObject)); // 저지/사망이면 또렷
-        float target = clear ? 0f : 1f;
-        float next = Mathf.MoveTowards(_cloakAmount, target, cloakSettings.fadeSpeed * Time.deltaTime);
-        if (next == _cloakAmount) return;
-        _cloakAmount = next;
-
-        bool needCloak = _cloakAmount > 0.0001f;
-        ApplyCloakMaterial(needCloak);          // amount>0 → 은신 재질 / amount==0 → 원래 재질(원본 그대로)
-        if (needCloak) SetCloakAmount(_cloakAmount);
-    }
-
-    // 은신 재질 ↔ 원래 재질 전환. 원래 재질을 영구히 덮지 않고, 필요할 때만 갈아끼운다.
-    private void ApplyCloakMaterial(bool on)
-    {
-        if (on == _cloakApplied) return;
-        for (int i = 0; i < _cloakRenderers.Length; i++)
-            _cloakRenderers[i].sharedMaterials = on ? _cloakMats[i] : _originalMats[i];
-        _cloakApplied = on;
-    }
-
-    // 모든 렌더러의 _CloakAmount를 MPB로 갱신(재질 인스턴스 생성 없이 개체별로).
-    private void SetCloakAmount(float amount)
-    {
-        for (int i = 0; i < _cloakRenderers.Length; i++)
-        {
-            _cloakRenderers[i].GetPropertyBlock(_cloakMpb);
-            _cloakMpb.SetFloat(CloakAmountId, amount);
-            _cloakRenderers[i].SetPropertyBlock(_cloakMpb);
-        }
-    }
-
-    // 은신 몬스터일 때만: 렌더러를 은신 재질로 두고, 본체 텍스처를 MPB로 주입(재질 하나 공유 가능).
-    // Awake에서 LoadStats 뒤에 호출(Attribute 결정된 뒤).
-    private const string CloakSettingsPath = "Skills/CloakSettings"; // Resources/CloakSettings.asset
-    private void SetupCloak()
-    {
-        if (!IsCloaking) return;
-        if (cloakSettings == null) cloakSettings = Resources.Load<CloakSettingsSO>(CloakSettingsPath);
-        if (cloakSettings == null || cloakSettings.cloakMaterial == null) return;
-
-        _cloakRenderers = GetComponentsInChildren<Renderer>(true);
-        _cloakMpb = new MaterialPropertyBlock();
-        _originalMats = new Material[_cloakRenderers.Length][];
-        _cloakMats = new Material[_cloakRenderers.Length][];
-        for (int i = 0; i < _cloakRenderers.Length; i++)
-        {
-            Renderer r = _cloakRenderers[i];
-            Material src = r.sharedMaterial;                            // 원래 재질(안 덮어씀, 드러날 때 복귀용)
-            Texture baseTex = src != null ? src.mainTexture : null;     // 본체 텍스처(없으면 흰색 폴백)
-            Color baseColor = GetBaseColor(src);                        // 본체 색(_BaseColor/_Color)
-
-            Material[] orig = r.sharedMaterials;
-            _originalMats[i] = orig;                                    // 원래 재질 배열 보관
-            Material[] cloak = new Material[orig.Length];
-            for (int j = 0; j < cloak.Length; j++) cloak[j] = cloakSettings.cloakMaterial;
-            _cloakMats[i] = cloak;
-
-            // 은신 재질이 올라갔을 때 원래 텍스처·색을 재현하도록 MPB에 미리 넣어둠(전환 중 본체가 섞여 보임).
-            r.GetPropertyBlock(_cloakMpb);
-            if (baseTex != null) _cloakMpb.SetTexture(BaseMapId, baseTex);
-            _cloakMpb.SetColor(BaseColorId, baseColor);
-            _cloakMpb.SetFloat(CloakAmountId, 0f);
-            r.SetPropertyBlock(_cloakMpb);
-        }
-        _cloakApplied = false; // 시작은 원래 재질 그대로(또렷)
-    }
-
-    // 원래 재질의 본체 색을 최대한 정확히 뽑아온다(_BaseColor 우선, 없으면 _Color, 둘 다 없으면 흰색).
-    private static Color GetBaseColor(Material src)
-    {
-        if (src == null) return Color.white;
-        if (src.HasProperty(BaseColorId)) return src.GetColor(BaseColorId);
-        if (src.HasProperty(LegacyColorId)) return src.GetColor(LegacyColorId);
-        return Color.white;
-    }
-
-    private void ResetCloak()
-    {
-        _cloakAmount = 0f;
-        if (_cloakRenderers != null) ApplyCloakMaterial(false);
-    }
+    // 저지/사망이면 또렷, 아니면 은신으로 페이드. 실제 렌더링은 EnemyCloak가 처리.
+    private bool CloakClear => IsDead || (Board != null && Board.IsBlocked(gameObject));
 
 
 
