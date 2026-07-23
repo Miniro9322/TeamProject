@@ -18,7 +18,9 @@ public class DayState : IState
         Debug.Log($"{gameManager.DayCount}일차");
         facilityManager.SumProduct();
         if (gameManager.DayCount % 5 == 0)
+        {
             gameManager.ChangeRequest(true);
+        }
     }
 
     public void Exit()
