@@ -13,6 +13,7 @@ public struct ProjectileAoEConfig
     public float chainFalloff;
     public System.Func<Vector3, int, RangeShape, List<IDamageAble>> getEnemiesInRange;
     public System.Func<Vector3, int, RangeShape, List<GameObject>> getEnemyObjectsInRange;
+    public System.Func<Vector3, int, RangeShape, List<GameObject>> getTargetableEnemyObjectsInRange;
     public List<BuffEffect> buffList;
     public BuffManager buffManager;
     public object source; // 보통 발사한 AttackDataSO 인스턴스
@@ -102,7 +103,7 @@ public class Projectile : MonoBehaviour
 
         if (cfg.attackType == AttackType.Area && cfg.areaShape == AreaShape.Chain)
         {
-            List<GameObject> hits = ChainResolver.Resolve(target.gameObject, damage, cfg.chainRange, cfg.chainCount, cfg.chainFalloff, cfg.getEnemyObjectsInRange);
+            List<GameObject> hits = ChainResolver.Resolve(target.gameObject, damage, cfg.chainRange, cfg.chainCount, cfg.chainFalloff, cfg.getTargetableEnemyObjectsInRange);
             foreach (GameObject go in hits)
                 AttackDamageUtil.ApplyTargetDebuffs(go.GetComponentInParent<IUnit>(), cfg.buffList, cfg.buffManager, cfg.source);
         }
