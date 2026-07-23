@@ -55,10 +55,6 @@ public class BuildModePanel : MonoBehaviour
         {
             heroPanel.SetActive(false);
         }
-        if (rosterPanel.activeSelf)
-        {
-            rosterPanel.SetActive(false);
-        }
         gameObject.SetActive(false);
     }
 
@@ -71,8 +67,6 @@ public class BuildModePanel : MonoBehaviour
     {
         if (heroPanel.activeSelf == true)
             heroPanel.SetActive(false);
-        if (rosterPanel.activeSelf == true)
-            rosterPanel.SetActive(false);
         facilityPanel.SetActive(true);
     }
 
@@ -80,18 +74,15 @@ public class BuildModePanel : MonoBehaviour
     {
         if (facilityPanel.activeSelf == true)
             facilityPanel.SetActive(false);
-        if (rosterPanel.activeSelf == true)
-            rosterPanel.SetActive(false);
         heroPanel.SetActive(true);
     }
 
     public void OnRosterButton()
     {
-        if (facilityPanel.activeSelf == true)
-            facilityPanel.SetActive(false);
-        if (heroPanel.activeSelf == true)
-            heroPanel.SetActive(false);
-        rosterPanel.SetActive(true);
+        if(rosterPanel.activeSelf == true)
+            rosterPanel.SetActive(false);
+        else
+            rosterPanel.SetActive(true);
     }
 
     public void OnRemoveButton()
@@ -100,8 +91,6 @@ public class BuildModePanel : MonoBehaviour
             facilityPanel.SetActive(false);
         if (heroPanel.activeSelf == true)
             heroPanel.SetActive(false);
-        if (rosterPanel.activeSelf == true)
-            rosterPanel.SetActive(false);
         view.SetRemove();
     }
 
@@ -111,8 +100,6 @@ public class BuildModePanel : MonoBehaviour
             facilityPanel.SetActive(false);
         if (heroPanel.activeSelf == true)
             heroPanel.SetActive(false);
-        if (rosterPanel.activeSelf == true)
-            rosterPanel.SetActive(false);
         view.SetReplace();
     }
 
@@ -122,8 +109,6 @@ public class BuildModePanel : MonoBehaviour
             facilityPanel.SetActive(false);
         if (heroPanel.activeSelf == true)
             heroPanel.SetActive(false);
-        if (rosterPanel.activeSelf == true)
-            rosterPanel.SetActive(false);
         view.ClearMode();
     }
 }

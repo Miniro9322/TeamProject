@@ -1,41 +1,64 @@
 using UnityEngine;
-using UnityEngine.UI;
 
-// 영웅 "생성" 전용 패널. 여기선 배치하지 않고 로스터에 엔트리만 추가한다(배치는 HeroRosterPanel이 담당).
+// 영웅 "생성" 전용 패널. 버튼을 수동으로 늘리지 않고, PlacePalette에 등록된 영웅 슬롯 수만큼 자동으로 만든다.
 public class HeroSetPanel : MonoBehaviour
 {
     [SerializeField] private MapView view;
     [SerializeField] private MapGame game;
-    [SerializeField] private Button meleeButton;
-    [SerializeField] private Button rangeButton;
-    [SerializeField] private Button dualBladerButton;
-    [SerializeField] private Button spearManButton;
+    [SerializeField] private HeroCreateIcon iconPrefab;
+    [SerializeField] private Transform container;
 
     private void OnEnable()
     {
-        game.CitizenManager.CitizenChanged += ButtonUpdate;
-        ButtonUpdate();
+        game.CitizenManager.CitizenChanged += Refresh;
+        Refresh();
     }
 
     private void OnDisable()
     {
-        game.CitizenManager.CitizenChanged -= ButtonUpdate;
+        game.CitizenManager.CitizenChanged -= Refresh;
     }
 
-    public void OnCreate(string label)
+    public void OnCreate(Placeable slot)
     {
-        if (!view.CheckCanBuild(label)) return;
+        if (!view.CheckCanBuild(slot.label)) return;
 
-        Placeable slot = view.GetSlot(label);
         game.CitizenManager.UseCitizen(slot.prefab.GetComponent<Hero>().CitizenAmount);
-        game.HeroRoster.Add(slot);
+        HeroRosterEntry entry = game.HeroRoster.Add(slot);
+        view.SetHero(entry);   // 생성과 동시에 배치 모드로 진입(타일 클릭하면 바로 배치)
     }
 
-    private void ButtonUpdate()
+    private void Refresh()
     {
-        meleeButton.interactable = view.CheckCanBuild("melee");
-        rangeButton.interactable = view.CheckCanBuild("Ranged");
-        dualBladerButton.interactable = view.CheckCanBuild("DualBlader");
-        spearManButton.interactable = view.CheckCanBuild("SpearMan");
+        foreach (Transform child in container)
+        {
+            Destroy(child.gameObject);
+        }
+
+        byte unlocked = game.Rule.UnlockHero;
+
+        foreach (Placeable slot in view.Items)
+        {
+            if (slot.kind != OccupantKind.MeleeHero && slot.kind != OccupantKind.RangedHero) continue;
+
+            HeroType type = TypeOf(slot.label);
+            if (((byte)type & unlocked) != (byte)type) continue;
+
+            HeroCreateIcon icon = Instantiate(iconPrefab, container);
+            icon.Set(slot, view.CheckCanBuild(slot.label), OnCreate, slot.label);
+        }
+    }
+
+    // 해금 체크는 기존 방식(라벨 → HeroType) 그대로 유지.
+    private static HeroType TypeOf(string label)
+    {
+        switch (label)
+        {
+            case "SwordMan": return HeroType.SwordMan;
+            case "Archer": return HeroType.Archer;
+            case "DualSwordMan": return HeroType.DualSwordMan;
+            case "SpearMan": return HeroType.SpearMan;
+            default: return 0;
+        }
     }
 }

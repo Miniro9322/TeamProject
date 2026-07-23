@@ -335,7 +335,7 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit
         if (gm == null)
             Debug.LogWarning($"[{name}] GameManager를 찾을 수 없음 — HpDamage 스킵.", this);
         else
-            gm.HpDamage();
+            gm.HpDamage(Class);
         if (Board != null) Board.RemoveEnemy(gameObject);
     }
     private async UniTask RunSkillLoop(CancellationToken token)
