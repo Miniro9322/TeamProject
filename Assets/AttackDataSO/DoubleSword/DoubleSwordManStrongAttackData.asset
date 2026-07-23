@@ -12,15 +12,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3e63ecebd4cd6e044a8a127ea3df05bc, type: 3}
   m_Name: DoubleSwordManStrongAttackData
   m_EditorClassIdentifier: Assembly-CSharp::AttackDataSO
-  attackPer: 0.6
+  attackPer: 1.1
   range: 3
-  rangeShape: 0
-  attackType: 0
+  rangeShape: 1
+  attackType: 1
   targetMode: 0
   attackCount: 1
   targetCount: 1
   shotInterval: 0.1
-  areaShape: 0
+  areaShape: 1
   areaRange: 1
   lineLength: 2
   chainRange: 2
@@ -28,7 +28,7 @@ MonoBehaviour:
   chainFalloff: 0.8
   selectMode: 0
   animTriggers:
-  - Attack
+  - StrongAttack
   projectilePrefab: {fileID: 0}
   clipLength: 0.53333336
   buffList: []
