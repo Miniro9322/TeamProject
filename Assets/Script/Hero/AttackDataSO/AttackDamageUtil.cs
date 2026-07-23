@@ -6,12 +6,13 @@ using UnityEngine;
 
 public static class AttackDamageUtil
 {
+    //public static int count = 0;
     public static async UniTask ApplyInstantDamage(AttackDataSO data, AttackContext ctx, CancellationToken ct)
     {
         float baseDamage = ctx.sc[StatType.ATK] * data.attackPer;
-
+        
         ApplySelfBuffs(ctx.selfUnit, data.buffList, ctx.buffManager, data); // 공격 1회당 1회, 맞은 대상 수와 무관하게 적용(스택형 자기 버프용)
-
+        //Debug.Log($"Damage: {++count}");
         // Line/Chain은 targetMode와 무관하게 자체 타겟팅 모델로 처리한다.
         if (data.attackType == AttackType.Area && data.areaShape == AreaShape.Line)
         {
@@ -26,7 +27,7 @@ public static class AttackDamageUtil
         if (data.attackType == AttackType.Area && data.areaShape == AreaShape.Chain)
         {
             List<GameObject> hits = ChainResolver.Resolve(ctx.target.gameObject, baseDamage, data.chainRange, data.chainCount,
-                data.chainFalloff, ctx.getEnemyObjectsInRange);
+                data.chainFalloff, ctx.getTargetableEnemyObjectsInRange);
             foreach (GameObject go in hits)
                 ApplyTargetDebuffs(go.GetComponentInParent<IUnit>(), data.buffList, ctx.buffManager, data);
             return;
@@ -44,7 +45,7 @@ public static class AttackDamageUtil
 
         if (data.attackType == AttackType.Single && data.targetMode == TargetMode.DifferentEnemies)
         {
-            List<IDamageAble> enemies = ctx.getEnemiesInRange(ctx.self.position, data.range, data.rangeShape);
+            List<IDamageAble> enemies = ctx.getTargetableEnemiesInRange(ctx.self.position, data.range, data.rangeShape);
             List<IDamageAble> targets = AttackTargetSelector.SelectTargets(enemies, data.attackCount, data.targetCount);
             await FireEach(targets, t =>
             {
@@ -65,7 +66,7 @@ public static class AttackDamageUtil
                     e.TakeDamage((int)baseDamage);
                     ApplyTargetDebuffs(e as IUnit, data.buffList, ctx.buffManager, data);
                 }
-                SplashHighlighter.Instance?.Flash(ctx.self.position, data.areaRange, aoeShape);
+                //SplashHighlighter.Instance?.Flash(ctx.self.position, data.areaRange, aoeShape);
                 if (i < data.attackCount - 1)
                     await UniTask.Delay(TimeSpan.FromSeconds(data.shotInterval), cancellationToken: ct);
             }
@@ -73,7 +74,7 @@ public static class AttackDamageUtil
         }
 
         // Area + DifferentEnemies: 서로 다른 적 최대 targetCount명, 각각을 중심으로 AOE 캐스트.
-        List<GameObject> enemyObjects = ctx.getEnemyObjectsInRange(ctx.self.position, data.range, data.rangeShape);
+        List<GameObject> enemyObjects = ctx.getTargetableEnemyObjectsInRange(ctx.self.position, data.range, data.rangeShape);
         List<GameObject> centers = AttackTargetSelector.SelectTargets(enemyObjects, data.attackCount, data.targetCount);
         await FireEach(centers, go =>
         {

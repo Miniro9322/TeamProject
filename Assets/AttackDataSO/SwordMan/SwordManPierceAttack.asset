@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3e63ecebd4cd6e044a8a127ea3df05bc, type: 3}
   m_Name: SwordManPierceAttack
   m_EditorClassIdentifier: Assembly-CSharp::AttackDataSO
-  attackPer: 10
+  attackPer: 1
   range: 1
   rangeShape: 2
   attackType: 1
@@ -22,7 +22,7 @@ MonoBehaviour:
   shotInterval: 0.1
   areaShape: 2
   areaRange: 1
-  lineLength: 10
+  lineLength: 2
   chainRange: 2
   chainCount: 3
   chainFalloff: 0.8
@@ -31,3 +31,11 @@ MonoBehaviour:
   - Attack3
   projectilePrefab: {fileID: 0}
   clipLength: 0.5333333
+  buffList:
+  - statType: 5
+    modifierType: 1
+    value: -0.5
+    duration: 10
+    isTargetToOther: 1
+    maxStacks: 1
+  groundZone: {fileID: 0}

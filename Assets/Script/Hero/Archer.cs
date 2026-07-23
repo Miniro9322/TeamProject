@@ -49,6 +49,9 @@ public class Archer : Hero
             getEnemiesInRange = GetEnemiesInRange,
             getEnemyTargetsInRange = GetEnemyTransformsInRange,
             getEnemyObjectsInRange = GetEnemyObjectsInRange,
+            getTargetableEnemiesInRange = GetTargetableEnemiesInRange,
+            getTargetableEnemyObjectsInRange = GetTargetableEnemyObjectsInRange,
+            getTargetableEnemyTargetsInRange = GetTargetableEnemyTransformsInRange,
             getEnemiesInLine = GetEnemiesInLine,
             getCardinalDirection = GetCardinalDirection,
             getLineEndPoint = GetLineEndPoint,
@@ -57,6 +60,5 @@ public class Archer : Hero
             selfUnit = this
         };
         occupantKind = OccupantKind.RangedHero;
-        range = 10;
     }
 }

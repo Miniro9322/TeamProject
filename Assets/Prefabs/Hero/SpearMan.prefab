@@ -3652,7 +3652,7 @@ Animator:
   m_Controller: {fileID: 9100000, guid: 0a9754ba3a8fddc4daba00270b664591, type: 2}
   m_CullingMode: 1
   m_UpdateMode: 0
-  m_ApplyRootMotion: 1
+  m_ApplyRootMotion: 0
   m_LinearVelocityBlending: 0
   m_StabilizeFeet: 0
   m_AnimatePhysics: 0
@@ -16428,10 +16428,13 @@ MonoBehaviour:
   procs: []
   anim: {fileID: 6989708048733833427}
   animEvents: {fileID: 8003858886257523969}
-  statData: {fileID: 11400000, guid: 7b41ee83b1ea5574f8002684d4e2c81f, type: 2}
+  statData: {fileID: 11400000, guid: 74789d1d0a2a31548b3a0d6b17291d33, type: 2}
   board: {fileID: 0}
   range: 2
   rangeShape: 2
+  auraZones: []
+  unattackableTarget: 3
+  citizenAmount: 2
 --- !u!1 &6371844147298520082
 GameObject:
   m_ObjectHideFlags: 0

@@ -3282,13 +3282,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SwordMan
   basePattern:
-  - {fileID: 11400000, guid: d952c1fa35318b94889bc4ca99db5070, type: 2}
-  selectors: []
+  - {fileID: 11400000, guid: 8efa5dcaabb0bf1429315aba67fb67d0, type: 2}
+  selectors:
+  - {fileID: 11400000, guid: ff4a238cf2f9e144789879eaf416ec8e, type: 2}
   procs: []
   anim: {fileID: 4961962971643976453}
   animEvents: {fileID: 6012942502851000738}
-  statData: {fileID: 11400000, guid: 7b41ee83b1ea5574f8002684d4e2c81f, type: 2}
+  statData: {fileID: 11400000, guid: cbb9cead14128214eaa4791ce343711f, type: 2}
   board: {fileID: 0}
+  range: 1
+  rangeShape: 0
+  auraZones: []
+  unattackableTarget: 3
+  citizenAmount: 2
 --- !u!1 &1184476059935144041
 GameObject:
   m_ObjectHideFlags: 0
@@ -11450,7 +11456,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 5861033080365881230}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 4.9842806}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 6.165948}
 --- !u!1 &4205414084869060269
 GameObject:
   m_ObjectHideFlags: 0
@@ -11919,7 +11925,7 @@ Transform:
   m_Children:
   - {fileID: 6489843779452914595}
   m_Father: {fileID: 7514504213353668901}
-  m_LocalEulerAnglesHint: {x: -1.2900064, y: 9.058508, z: 8.063698}
+  m_LocalEulerAnglesHint: {x: 0.3477208, y: -2.100319, z: 9.396213}
 --- !u!1 &4431023281485205479
 GameObject:
   m_ObjectHideFlags: 0
@@ -13017,7 +13023,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 5715185744115867640}
-  m_LocalEulerAnglesHint: {x: -23.12564, y: 178.20505, z: -161.86414}
+  m_LocalEulerAnglesHint: {x: 2.3538957, y: -167.43787, z: 169.15111}
 --- !u!1 &4881613666032509970
 GameObject:
   m_ObjectHideFlags: 0
@@ -14670,7 +14676,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 15146552204580912}
-  m_LocalEulerAnglesHint: {x: -34.98698, y: -2.9028869, z: 42.495018}
+  m_LocalEulerAnglesHint: {x: -2.196497, y: 11.78245, z: 7.612262}
 --- !u!1 &5791028504188713101
 GameObject:
   m_ObjectHideFlags: 0
@@ -16289,7 +16295,7 @@ Animator:
   m_Controller: {fileID: 9100000, guid: 871a321070ba90e4f8669b88640316ac, type: 2}
   m_CullingMode: 1
   m_UpdateMode: 0
-  m_ApplyRootMotion: 1
+  m_ApplyRootMotion: 0
   m_LinearVelocityBlending: 0
   m_StabilizeFeet: 0
   m_AnimatePhysics: 0
@@ -20432,7 +20438,7 @@ Transform:
   m_Children:
   - {fileID: 5861033080365881230}
   m_Father: {fileID: 1866315973657434902}
-  m_LocalEulerAnglesHint: {x: 5.830332, y: -169.29556, z: -28.252913}
+  m_LocalEulerAnglesHint: {x: -1.0761577, y: 177.37321, z: -22.263031}
 --- !u!1 &8023717396319928770
 GameObject:
   m_ObjectHideFlags: 0

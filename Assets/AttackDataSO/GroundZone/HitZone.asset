@@ -17,4 +17,8 @@ MonoBehaviour:
   tickInterval: 0.2
   damagePer: 0.05
   duration: 2
-  debuffs: []
+  debuffs:
+  - statType: 5
+    modifierType: 1
+    value: -0.5
+    maxStacks: 1
