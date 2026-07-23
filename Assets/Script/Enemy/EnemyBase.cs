@@ -18,6 +18,10 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit
     private float[] skillTimers;
     private bool[] skillRunning;
     private CancellationTokenSource skillCts;
+    private CancellationTokenSource[] skillCtsPer; // 스킬별 취소 토큰(skillCts에 연결) — 스턴 시 액티브 스킬만 개별 취소
+    // 유닛 생존 동안 유효한 취소 토큰(OnDisable에서 취소). Heal처럼 Execute보다 오래 사는
+    // fire-and-forget 효과는 per-skill 토큰(Execute 종료 시 dispose됨)이 아니라 이걸 써야 디스폰 시 정상 취소된다.
+    public CancellationToken LifetimeToken => skillCts != null ? skillCts.Token : CancellationToken.None;
     [field: SerializeField] public float Hp { get; protected set; }   // 인스펙터 표시용(런타임 값 확인). 값은 ApplyData/재생/피격이 갱신.
     // 아래 스탯들은 StatContainer(sc)에서 파생 — 값/버프는 sc가 단일 소스. ApplyData가 sc를 채운 뒤부터 유효.
     public float MaxHp => sc[StatType.HP];
@@ -89,6 +93,12 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit
     private bool _berserkOn;        // 이번 생존 동안 이미 발동했는지(중복 누적 방지)
     private Vector3 _baseScale;     // 원래 스케일 — 풀 재사용 시 여기로 복구(분열체가 줄여놓은 걸 리셋)
     public bool IsShielded => Time.time < _shieldExpiry;
+
+    private float _stunExpiry;      // Time.time 기준 스턴 만료 시각 — 코루틴 없이 지연 만료(풀링 안전, Shield와 동일 패턴)
+    private bool _stunAnimActive;   // Animator에 보고한 마지막 스턴 상태 — 바뀐 프레임에만 SetBool("Stun") 호출
+    private bool _hasStunParam;     // 애니메이터에 Bool "Stun" 파라미터가 있는지(1회 검사 후 캐시)
+    private bool _stunParamChecked;
+    public bool IsStunned => Time.time < _stunExpiry; // 스턴 중엔 이동/공격/스킬 시전이 모두 멈춘다
     protected virtual void Awake()
     {
         _baseScale = transform.localScale; // 프리팹 원래 스케일 스냅샷(분열 축소 후 복구 기준)
@@ -102,7 +112,9 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit
     {
         LoadStats();
         _attacking = false;
-        _shieldExpiry = 0f; 
+        _shieldExpiry = 0f;
+        _stunExpiry = 0f;               // 풀 재사용 시 이전 스턴 잔여 제거
+        _stunAnimActive = false;        // animator.Rebind()로 bool도 초기화되므로 상태만 맞춰둔다
         _berserkOn = false;             
         SplitGeneration = 0;           
         transform.localScale = _baseScale; 
@@ -155,9 +167,56 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit
 
     protected virtual void Update()
     {
-        _move.Tick(!IsDead, MoveSpeed); // active=사망 아님 → 원본 게이트(!IsDie)와 동일
+        _move.Tick(!IsDead && !IsStunned, MoveSpeed); // active=사망/스턴 아님 → 스턴 중엔 이동 정지(Idle)
         UpdateExposedAttribute();       // 저지 상태에 따라 Hero가 보는 Attribute를 갱신
         CloakTick();
+        StunTick();                     // 스턴 만료를 감지해 Animator bool을 끈다
+    }
+
+    // 외부(영웅 등)에서 이 적을 duration초간 스턴. 이동/공격/스킬 시전이 모두 멈춘다.
+    // 이미 걸린 스턴보다 긴 스턴이 들어오면 만료 시각을 갱신(중첩 시 최댓값). 애니 bool은 StunTick이 켠다.
+    public void Stun(float duration)
+    {
+        if (IsDead || duration <= 0f) return;
+        bool wasStunned = IsStunned;
+        float expiry = Time.time + duration;
+        if (expiry > _stunExpiry) _stunExpiry = expiry;
+        if (!wasStunned) InterruptActiveSkills(); // 스턴 시작(상승 엣지)에만 끊기 — 재스턴 시 중복 취소 방지
+    }
+
+    // 스턴 시작 시 호출 — 애니를 재생하는 액티브 스킬(BlocksBasicAttack=true)만 즉시 취소한다.
+    // 배경 오라(BlocksBasicAttack=false, 지속형)는 끊지 않고 계속 유지.
+    private void InterruptActiveSkills()
+    {
+        if (skillCtsPer == null) return;
+        for (int i = 0; i < skillCtsPer.Length; i++)
+            if (skillRunning[i] && skills[i] != null && skills[i].BlocksBasicAttack)
+                skillCtsPer[i]?.Cancel();
+    }
+
+    // 스턴 상태를 Animator에 반영 — 바뀐 프레임에만 처리(만료 시 자동 해제도 여기서).
+    // Stun bool 파라미터가 있으면 그걸로(Stun 스테이트가 연출 담당), 없으면 애니를 얼려서 "굳음"으로 대체.
+    private void StunTick()
+    {
+        bool stunned = IsStunned;
+        if (_stunAnimActive == stunned) return;
+        _stunAnimActive = stunned;
+        if (animator == null) return;
+
+        if (HasStunParam())
+            animator.SetBool("Stun", stunned);   // Stun 스테이트가 연출을 담당(권장)
+        else
+            animator.speed = stunned ? 0f : 1f;  // fallback: 파라미터 없으면 현재 프레임에서 얼림 → 풀리면 원복
+    }
+
+    // 애니메이터에 Bool "Stun" 파라미터가 있는지 1회 검사 후 캐시(파라미터 목록은 런타임에 안 바뀜).
+    private bool HasStunParam()
+    {
+        if (_stunParamChecked) return _hasStunParam;
+        _stunParamChecked = true;
+        foreach (var p in animator.parameters)
+            if (p.type == AnimatorControllerParameterType.Bool && p.name == "Stun") { _hasStunParam = true; break; }
+        return _hasStunParam;
     }
 
     // Hero가 읽는 공개 Attribute 갱신.
@@ -284,6 +343,7 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit
         if (skills == null || skills.Count == 0) return;
         skillTimers = new float[skills.Count];
         skillRunning = new bool[skills.Count];
+        skillCtsPer = new CancellationTokenSource[skills.Count];
 
         while (!IsDead)
         {
@@ -292,7 +352,7 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit
                 if (skills[i] == null || skillRunning[i] || skills[i].TriggerOnDeath) continue; // 온데스 스킬은 Die()에서만 발동
                 skillTimers[i] += Time.deltaTime;
                 // 공격 모션 중이면 시전 보류(타이머는 계속 쌓여서 공격 끝나면 바로 발동).
-                if (skillTimers[i] >= skills[i].cooldown && !_attacking)
+                if (skillTimers[i] >= skills[i].cooldown && !_attacking && !IsStunned)
                 {
                     RunSkill(i, token).Forget();
                 }
@@ -305,12 +365,17 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit
     private async UniTask RunSkill(int index, CancellationToken token)
     {
         skillRunning[index] = true;
-        try { await skills[index].Execute(this, token); }
-        catch (System.OperationCanceledException) { /* 비활성/파괴로 취소 — 정상 */ }
-        finally 
+        // 스킬별 CTS(상위 token에 연결) — 스턴 시 이 스킬만 개별 취소할 수 있게(지속형 오라는 건드리지 않음).
+        var cts = CancellationTokenSource.CreateLinkedTokenSource(token);
+        skillCtsPer[index] = cts;
+        try { await skills[index].Execute(this, cts.Token); }
+        catch (System.OperationCanceledException) { /* 비활성/파괴/스턴으로 취소 — 정상 */ }
+        finally
         {
-            skillRunning[index] = false; 
+            skillRunning[index] = false;
             skillTimers[index] = 0f;
+            skillCtsPer[index] = null;
+            cts.Dispose();
         }
     }
 
@@ -322,7 +387,7 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit
             float interval = AttackSpeed > 0f ? 1f / AttackSpeed : 1f; //attackspped = 초당 공격횟수
             // 공격 모션/스킬 시전 중엔 딜레이를 세지 않는다 — 공격이 끝난 뒤부터 interval을 새로 채워
             // 매 공격 사이에 온전한 간격을 보장(안 그러면 모션 중 타이머가 넘쳐 애니 끝나자마자 연사됨).
-            if (!_attacking && !AnySkillRunning())
+            if (!_attacking && !AnySkillRunning() && !IsStunned)
             {
                 attackTimer += Time.deltaTime;
                 if (attackTimer >= interval)
@@ -556,7 +621,7 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit
             if (animator != null) animator.SetTrigger("Die");
             await WaitForDeathAnim("Die", 5f, token);
         }
-        catch (OperationCanceledException) { return; } // 풀 반환/파괴로 취소 — 디스폰 재호출 금지
+        catch (OperationCanceledException) { return; }
         Despawn();
     }
     private async UniTask WaitForDeathAnim(string stateName, float timeout, CancellationToken token)

@@ -16,6 +16,9 @@ public class RushAttackSkillSO : AttackSkillDataSO
     public int valueScale; // 5라운드마다 때리는 횟수 증가
     [Tooltip("연타 횟수가 늘수록 애니 재생속도를 올린다. 기준 횟수(value) 대비 비율에 이 값을 곱해 배속. 1이면 비례(2배 횟수→2배속), 0이면 배속 없음.")]
     public float animSpeedScale = 1f;
+    public GameObject onSkillEffectPrefab;
+    public GameObject onAttackEffectPrefab;
+
     [Tooltip("애니 배속 상한(너무 빨라지는 것 방지).")]
     public float maxAnimSpeed = 8f;
     private float hitDelay = 0.1f;
@@ -41,9 +44,11 @@ public class RushAttackSkillSO : AttackSkillDataSO
         try
         {
             owner.animator.SetTrigger("Skill");
+            GameObject go = PoolManager.Instance.Spawn(onSkillEffectPrefab,owner.transform.position,Quaternion.identity);
             await WaitForAnimationEnd(owner,"Skill",animTimeout,token); // 상태 이름과 정확히 일치해야 함(대소문자 구분)
-            // owner.animator.speed = animSpeed; // WaitForAnimationEnd가 info.length/speed로 대기하므로 스윙도 그만큼 짧아짐
-            owner.animator.speed = 5f;
+            PoolManager.Instance.Despawn(go);
+            // owner.animator.speed = animSpeed; // WaitForAnimationEnd가 info.length/speed로 대기sdadqqdqddsdfsfdsaafdsadsfasdfdsf하므로 스윙도 그만큼 짧아짐
+            owner.animator.speed = 6f;
             for (int i = 0; i < attackCount; i++)
             {
                 // 스윙 직전 확인 — 적 사망 or 대상(영웅) 사망 시 연타 중단.
