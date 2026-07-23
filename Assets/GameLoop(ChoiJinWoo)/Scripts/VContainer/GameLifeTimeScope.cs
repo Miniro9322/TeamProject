@@ -15,6 +15,15 @@ public class GameLifeTimeScope : LifetimeScope
 
     protected override void Configure(IContainerBuilder builder)
     {
+
+        builder.RegisterComponentInHierarchy<ExpandEvent>().AsSelf();
+
+        builder.RegisterBuildCallback(resolver =>
+        {
+            var ui = resolver.Resolve<UiManager>();
+            resolver.InjectGameObject(ui.gameObject);
+        });
+        
         builder.RegisterComponentInNewPrefab(resourcesManagerPrefab, Lifetime.Singleton).AsSelf();
         builder.RegisterComponentInNewPrefab(citizenManagerPrefab, Lifetime.Singleton).AsSelf();
         builder.RegisterComponentInNewPrefab(UiManagerPrefab, Lifetime.Singleton).AsSelf();
