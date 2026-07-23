@@ -40,12 +40,18 @@ public class GameManager : MonoBehaviour
     public event Action ChangeToNight;
     public event Action ExpandMap;
 
+    private byte unlockedHero = (byte)HeroType.SwordMan | (byte)HeroType.Archer;
+    public byte UnlockHero => unlockedHero;
+    private byte UnlockedEnemy = 0b000111;
+
     [Inject]
     private void Construct(FacilityManager facilityManager, UiManager uiManager, SpawnerManager waveSpawner)
     {
         this.facilityManager = facilityManager;
         this.uiManager = uiManager;
         this.waveSpawner = waveSpawner;
+        uiManager.UnlockedEnemy = UnlockedEnemy;
+        uiManager.UnlockedHero = unlockedHero;
     }
 
     private void Start()
@@ -56,11 +62,13 @@ public class GameManager : MonoBehaviour
         gameover = new GameOverState(this);
         waveSpawner.AllRegionsClear += OnResult;
         fsm.ChangeState(day);
+        uiManager.UnlockChanged += UpdateUnlock;
     }
 
     private void OnDestroy()
     {
         waveSpawner.AllRegionsClear -= OnResult;
+        uiManager.UnlockChanged -= UpdateUnlock;
     }
 
     public void OnNight()
@@ -110,14 +118,31 @@ public class GameManager : MonoBehaviour
         canSpawnEnemy = value;
     }
 
-    public void HpDamage()
+    public void HpDamage(EnemyClass enemyclass)
     {
-        hp--;
+        switch (enemyclass)
+        {
+            case EnemyClass.Normal:
+                hp--;
+                break;
+            case EnemyClass.Elite:
+                hp -= 2;
+                break;
+            case EnemyClass.Boss:
+                hp = 0;
+                break;
+        }
         Debug.Log($"현재 체력: {hp}");
         if(hp <= 0)
         {
             hp = 0;
             fsm.ChangeState(gameover);
         }
+    }
+
+    public void UpdateUnlock()
+    {
+        unlockedHero = uiManager.UnlockedHero;
+        UnlockedEnemy = uiManager.UnlockedEnemy;
     }
 }

@@ -14,8 +14,12 @@ public class ProductionValue : ScriptableObject
     [SerializeField] private int defaultMaxWorker;
     [Header("생산 건물 건설에 필요한 자원 종류")]
     [SerializeField] private List<ProductionType> constructProduct;
-    [Header("생산 건물 건설에 필요한 자원량(자원 종류 순서에 맞게 설정해주세요)")]
+    [Header("생산 건물 건설에 필요한 초기 자원량(자원 종류 순서에 맞게 설정해주세요)")]
     [SerializeField] private List<int> constructAmount;
+    [Header("생산 건물 업그레이드에 필요한 자원 종류")]
+    [SerializeField] private List<ProductionType> upgradeCostProduct;
+    [Header("생산 건물 업그레이드에 필요한 초기 자원량(자원 종류 순서에 맞게 설정해주세요)")]
+    [SerializeField] private List<int> upgradeCostAmount;
 
 
     public ProductionType Type => type;
@@ -38,6 +42,29 @@ public class ProductionValue : ScriptableObject
                 for (int i = 0; i < constructProduct.Count; i++)
                 {
                     temp[constructProduct[i]] = -constructAmount[i];
+                }
+
+                return temp;
+            }
+        }
+    }
+
+    public Dictionary<ProductionType, int> UpgradeCost
+    {
+        get
+        {
+            if (upgradeCostProduct.Count != upgradeCostAmount.Count)
+            {
+                Debug.LogError("생산 건물에 필요한 자원과 자원량이 매칭되지 않습니다. 다시 설정해주세요");
+                return null;
+            }
+            else
+            {
+                Dictionary<ProductionType, int> temp = new();
+
+                for (int i = 0; i < upgradeCostProduct.Count; i++)
+                {
+                    temp[upgradeCostProduct[i]] = -upgradeCostAmount[i];
                 }
 
                 return temp;

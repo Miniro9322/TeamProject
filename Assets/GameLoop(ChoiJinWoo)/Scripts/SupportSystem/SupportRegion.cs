@@ -4,9 +4,13 @@ using UnityEngine;
 public class SupportRegion : ScriptableObject
 {
     [Header("해금되는 병종")]
-    [SerializeField] private Hero unlockHero;
+    [SerializeField] private HeroType unlockHero;
     [Header("해금되는 자원")]
     [SerializeField] private ProductionType unlockResource;
     [Header("해금되는 적 종류")]
-    [SerializeField] private EnemyBase unlockEnemy;
+    [SerializeField] private EnemyTypeList unlockEnemy;
+
+    public HeroType UnlockHero => unlockHero;
+    public ProductionType UnlockResource => unlockResource;
+    public EnemyTypeList UnlockEnemy => unlockEnemy;
 }

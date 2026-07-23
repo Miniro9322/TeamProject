@@ -15,7 +15,6 @@ public class FacilityManager
     {
         this.resourcesManager = resourcesManager;
         this.objectPool = objectPool;
-
     }
 
     public void AddFacility(ProductionFacility facility)

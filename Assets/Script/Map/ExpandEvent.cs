@@ -15,7 +15,7 @@ public class ExpandEvent : MonoBehaviour
 
      
     // 선택지로 올라간 지역을 UI가 읽고, 버튼 클릭 시 선택한다.
-    public void ShowChoices(int count)
+    public void ShowChoices(int count) // 선택지로 올라간 지역을 UI가 읽고, 버튼 클릭 시 선택한다.
     {
         CollectLocked(count);
     }
@@ -23,7 +23,7 @@ public class ExpandEvent : MonoBehaviour
     // 선택지 중 하나를 골랐을 때 처리.
     //실제 호출부 메서드. expand.ShowChoices()로 선택지 뽑고, 
     // UI에서 버튼 클릭 시 호출.
-    public void SelectModule(ModuleLogic module)
+    public void SelectModule(ModuleLogic module) // 선택지 중 하나를 골랐을 때 처리. (UI에서 버튼 클릭 시 호출)
     {
         // 선택지에 없는 지역은 무시한다(이벤트 밖에서 임의로 열리는 걸 막는다).
         if (!_choices.Contains(module))
@@ -32,7 +32,7 @@ public class ExpandEvent : MonoBehaviour
         }
 
         _choices.Clear();
-        module.Unlock();
+        module.Unlock(); //모듈 상태를 Preparing으로 전환. (UI에서만 호출)
     }
 
     // 지역 번호로 고르는 통로.  
