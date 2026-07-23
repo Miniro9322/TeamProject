@@ -84,6 +84,7 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
         anim.SetBool(HeroAnimHash.idle, false);
         stateMachine.ChangeState(deathState);
         OnBreak?.Invoke();
+        
         // ResurrectionAfter10s().Forget();
     }
     public void TakeDamage(int damage)
