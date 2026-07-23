@@ -2044,12 +2044,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlacePalette
   _slots:
-  - label: melee
+  - label: SwordMan
     prefab: {fileID: 5228687494590014126, guid: c30b2462f1d175a40be298650efb1f87, type: 3}
     icon: {fileID: 0}
     kind: 1
     attackRange: 1
-  - label: Ranged
+  - label: Archer
     prefab: {fileID: 9004755700449656008, guid: ca79c758b242b1f43b792e4c008ee16f, type: 3}
     icon: {fileID: 0}
     kind: 2
@@ -2084,7 +2084,7 @@ MonoBehaviour:
     icon: {fileID: 0}
     kind: 3
     attackRange: 0
-  - label: DualBlader
+  - label: DualSwordMan
     prefab: {fileID: 1125355577782864148, guid: fc90ec49c4098fc4e8de8d2bbfb448ec, type: 3}
     icon: {fileID: 0}
     kind: 1

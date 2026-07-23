@@ -54,9 +54,9 @@ public class HeroSetPanel : MonoBehaviour
     {
         switch (label)
         {
-            case "melee": return HeroType.SwordMan;
-            case "Ranged": return HeroType.Archer;
-            case "DualBlader": return HeroType.DualSwordMan;
+            case "SwordMan": return HeroType.SwordMan;
+            case "Archer": return HeroType.Archer;
+            case "DualSwordMan": return HeroType.DualSwordMan;
             case "SpearMan": return HeroType.SpearMan;
             default: return 0;
         }

@@ -118,9 +118,20 @@ public class GameManager : MonoBehaviour
         canSpawnEnemy = value;
     }
 
-    public void HpDamage()
+    public void HpDamage(EnemyClass enemyclass)
     {
-        hp--;
+        switch (enemyclass)
+        {
+            case EnemyClass.Normal:
+                hp--;
+                break;
+            case EnemyClass.Elite:
+                hp -= 2;
+                break;
+            case EnemyClass.Boss:
+                hp = 0;
+                break;
+        }
         Debug.Log($"현재 체력: {hp}");
         if(hp <= 0)
         {
