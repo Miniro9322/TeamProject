@@ -37,7 +37,8 @@ public class ResultState : IState
         if (manager.RequestSupport)
         {
             await uiManager.OpenRequestSupportUi();
-            manager.ExpandMapForce();
+            MapRegistry.Instance?.UnlockNextModule();
+            //manager.ExpandMapForce();
         }
         //if(카드 드래프트 플래그)
         //{
