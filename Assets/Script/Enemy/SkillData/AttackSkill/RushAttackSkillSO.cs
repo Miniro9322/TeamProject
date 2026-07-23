@@ -18,6 +18,10 @@ public class RushAttackSkillSO : AttackSkillDataSO
     public float animSpeedScale = 1f;
     public GameObject onSkillEffectPrefab;
     public GameObject onAttackEffectPrefab;
+    [Tooltip("타격 이펙트 자동 반환까지의 수명(초). 이펙트 재생 길이에 맞춰 설정.")]
+    public float attackEffectLifetime = 1f;
+    [Tooltip("타격 이펙트 회전 보정(도). 이펙트가 반대로/옆으로 나오면 Y에 180 등으로 맞춘다.")]
+    public Vector3 attackEffectEulerOffset;
 
     [Tooltip("애니 배속 상한(너무 빨라지는 것 방지).")]
     public float maxAnimSpeed = 8f;
@@ -49,6 +53,7 @@ public class RushAttackSkillSO : AttackSkillDataSO
             PoolManager.Instance.Despawn(go);
             // owner.animator.speed = animSpeed; // WaitForAnimationEnd가 info.length/speed로 대기sdadqqdqddsdfsfdsaafdsadsfasdfdsf하므로 스윙도 그만큼 짧아짐
             owner.animator.speed = 6f;
+            var anchors = owner.GetComponent<AttackEffectAnchors>(); // 없으면 owner 위치로 폴백
             for (int i = 0; i < attackCount; i++)
             {
                 // 스윙 직전 확인 — 적 사망 or 대상(영웅) 사망 시 연타 중단.
@@ -58,7 +63,8 @@ public class RushAttackSkillSO : AttackSkillDataSO
                 await UniTask.Delay(TimeSpan.FromSeconds(hitDelay / animSpeed), cancellationToken: token); // 타격 딜레이도 배속에 맞춰 단축
                 await WaitForAnimationEnd(owner, state, animTimeout, token); // 스윙 끝까지 대기 → 트리거 레이스 방지
                 if (target == null || target.IsDead) break; // 스윙 도중 대상이 죽었으면 이 타격은 취소
-                ApplyHit(owner, target); 
+                SpawnAttackEffect(owner, anchors, i); // 이번 스윙 손 위치에 타격 이펙트
+                ApplyHit(owner, target);
             }
         }
         catch (OperationCanceledException)
@@ -74,6 +80,19 @@ public class RushAttackSkillSO : AttackSkillDataSO
             }
         }
 
+    }
+
+    // 이번 스윙 위치에 타격 이펙트. 앵커가 있으면 그 위치/회전, 없으면 owner 위치로 폴백.
+    // 수명(attackEffectLifetime) 뒤 자동으로 풀에 반환된다.
+    private void SpawnAttackEffect(EnemyBase owner, AttackEffectAnchors anchors, int swingIndex)
+    {
+        if (onAttackEffectPrefab == null) return;
+        Transform p = anchors != null ? anchors.Get(swingIndex) : null;
+        Vector3 pos = p != null ? p.position : owner.transform.position;
+        // 위치는 손 앵커, 회전은 owner 정면(LookAt으로 대상을 향함) + 인스펙터 보정.
+        Quaternion rot = owner.transform.rotation * Quaternion.Euler(attackEffectEulerOffset);
+        GameObject fx = PoolManager.Instance.Spawn(onAttackEffectPrefab, pos, rot);
+        if (attackEffectLifetime > 0f) PoolManager.Instance.Despawn(fx, attackEffectLifetime);
     }
 
     // 저지 대상에게 데미지. damage(SO 필드)가 0 이하면 적의 기본 공격력을 사용.

@@ -314,6 +314,7 @@ GameObject:
   - component: {fileID: 7623191339318389335}
   - component: {fileID: 2209175944390671809}
   - component: {fileID: 1478221465270403062}
+  - component: {fileID: 6272213697742206980}
   m_Layer: 0
   m_Name: DeathAttacker
   m_TagString: Untagged
@@ -385,6 +386,21 @@ MonoBehaviour:
   speed: 0
   attack: 0
   def: 0
+--- !u!114 &6272213697742206980
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2801309901739945121}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 33e4df744cbe10b409b19720710487ea, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AttackEffectAnchors
+  points:
+  - {fileID: 3899852393052939580}
+  - {fileID: 5491216512820447786}
 --- !u!1 &3789240009060134650
 GameObject:
   m_ObjectHideFlags: 0
