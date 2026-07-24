@@ -65,7 +65,6 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
     public bool IsDead => isDead;
 
     [SerializeField] private EnemyAttribute unattackableTarget = EnemyAttribute.Fly | EnemyAttribute.Cloaking;
-
     //테스트용 코드
     private GameManager gameManager;
     protected BuffManager buffManager;
