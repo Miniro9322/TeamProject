@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using VContainer;
@@ -37,6 +36,7 @@ public class SpawnerManager : MonoBehaviour
             return instance;
         }
     }
+    private bool changeCheck;
 
     void Awake()
     {
@@ -49,15 +49,25 @@ public class SpawnerManager : MonoBehaviour
             m.OnStateChanged += state =>
                 UnlockRegion(m.ModuleId,m.CurrentState);
         }
+        changeCheck = true;
     }
 
     private void OnDestroy()
     {
         foreach (var s in spawners)
             if (s != null) s.EnemyAllClear -= OnRegionClear;
+        
+        if(_gameManager!=null)
+        {
+            _gameManager.ChangeToDay-=ChangeDay;
+            _gameManager.ChangeToNight-=ChangeNight;
+        }
     }
+
+
     void Update()
     {
+        if(changeCheck)
         InputClick();
     }
     private void InputClick()
@@ -89,6 +99,28 @@ public class SpawnerManager : MonoBehaviour
         {
             if (_gameManager == null && _resolver != null) _gameManager = _resolver.Resolve<GameManager>();
             return _gameManager != null ? _gameManager.DayCount : 0;
+        }
+    }
+    void Start()
+    {
+        if (_gameManager == null && _resolver != null)
+        _gameManager = _resolver.Resolve<GameManager>();
+        if(_gameManager!=null)
+        {
+            _gameManager.ChangeToDay+=ChangeDay;
+            _gameManager.ChangeToNight+=ChangeNight;
+        }
+    }
+    private void ChangeDay()
+    {
+        changeCheck =true;
+    }
+    private void ChangeNight()
+    {
+        changeCheck = false;
+        foreach(var s in spawners)
+        {
+            s.ResetText();
         }
     }
     private void BuildRegistry()
