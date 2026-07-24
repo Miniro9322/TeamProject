@@ -88,10 +88,10 @@ public class RequestSupportUi : MonoBehaviour
 
     private void SelectChoice(int index)
     {
-        if (index < expand.Choices.Count)
-        {
-            expand.SelectModule(expand.Choices[index]);
-        }
+        //if (index < expand.Choices.Count)
+        //{
+        //    expand.SelectModule(expand.Choices[index]);
+        //}
 
         gameObject.SetActive(false);
     }

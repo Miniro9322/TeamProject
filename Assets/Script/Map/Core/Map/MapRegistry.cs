@@ -11,17 +11,32 @@ public class MapRegistry : MonoBehaviour
     // 동번호(int) → 모듈(ModuleLogic)
     private readonly Dictionary<int, ModuleLogic> _ModuleLogicId = new();
 
+    private static MapRegistry instance;
+    public static MapRegistry Instance => instance;
+
     private void Awake()
     {
+        if (instance != null && instance != this)
+        {
+            Debug.LogWarning("MapRegistry 인스턴스가 이미 존재합니다.", this);
+        }
+        else
+        {
+            instance = this;
+        }
+
         foreach (ModuleLogic logic in _sceneModules)
         {
             if (logic != null)
-            {
                 RegisterModuleLogic(logic);
-            }
         }
     }
-     // 등록된 모든 모듈 
+    private void OnDestroy()
+    {
+        if (instance == this)
+            instance = null;
+    }
+    // 등록된 모든 모듈 
     public IReadOnlyDictionary<int, ModuleLogic> AllModules => _ModuleLogicId;
 
     public int ModuleLogicCount => _ModuleLogicId.Count;
@@ -41,5 +56,14 @@ public class MapRegistry : MonoBehaviour
     {
         return _ModuleLogicId.TryGetValue(moduleId, out logic);
     }
- 
+    public bool UnlockNextModule()
+    {
+        foreach (ModuleLogic logic in _sceneModules)
+        {
+            if (logic == null || logic.IsUnlocked) continue;
+            logic.Unlock();
+            return true;
+        }
+        return false;
+    }
 }

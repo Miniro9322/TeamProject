@@ -11,8 +11,6 @@ public class ExpandEvent : MonoBehaviour
 
     // 선택지는 버튼 수만큼만 올린다.
 
-
-
      
     // 선택지로 올라간 지역을 UI가 읽고, 버튼 클릭 시 선택한다.
     public void ShowChoices(int count) // 선택지로 올라간 지역을 UI가 읽고, 버튼 클릭 시 선택한다.
