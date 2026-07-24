@@ -15,6 +15,8 @@ public class MapAssemble : MonoBehaviour
     [SerializeField] private float dragPixels = 8f;
     [SerializeField] private float placeYOffset = 0f;
 
+    private List<PathTrail> pathTrails;
+
     private void Start()
     {
         List<MapBoard> boards = ModuleBoards();
@@ -54,6 +56,13 @@ public class MapAssemble : MonoBehaviour
             { PlaceMode.Place, action.PlaceUnit },
             { PlaceMode.Remove, action.RemoveUnit },
         };
+        pathTrails = ModuleTrails();
+        foreach(PathTrail trail in pathTrails)
+        {
+            mapGame.Rule.ChangeToDay += trail.PlayLoop;
+            mapGame.Rule.ChangeToNight += trail.PlayOnce;
+        }
+        
 
         mapGame.Rule.ChangeToNight += view.ClearMode;
 
@@ -72,6 +81,14 @@ public class MapAssemble : MonoBehaviour
         {
             mapGame.Rule.ChangeToNight -= expand.CancelChoices;
         }
+        if (pathTrails != null)
+        {
+            foreach (PathTrail trail in pathTrails)
+            {
+                mapGame.Rule.ChangeToDay -= trail.PlayLoop;
+                mapGame.Rule.ChangeToNight -= trail.PlayOnce;
+            }
+        }
     }
 
     // 레지스트리에 등록된 모듈들의 보드 목록. 모듈 루트에 ModuleLogic과 MapBoard가 함께 산다.
@@ -83,5 +100,18 @@ public class MapAssemble : MonoBehaviour
             boards.Add(logic.GetComponent<MapBoard>());
         }
         return boards;
+    }
+    private List<PathTrail> ModuleTrails()
+    {
+        List<PathTrail> trails = new();
+        foreach (ModuleLogic logic in registry.AllModules.Values)
+        {
+            PathTrail trail = logic.GetComponent<PathTrail>();
+            if (trail != null) 
+            { 
+                trails.Add(trail); 
+            }
+        }
+        return trails;
     }
 }
