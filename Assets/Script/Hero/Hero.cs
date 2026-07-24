@@ -7,8 +7,8 @@ using VContainer;
 
 public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
 {
-    [SerializeField] private AttackDataSO[] basePattern;
-    public AttackDataSO[] BasePattern => basePattern;
+    [SerializeField] private List<AttackDataSO> basePattern;
+    public List<AttackDataSO> BasePattern => basePattern;
 
     [SerializeField] private List<AttackSelectorSO> selectors = new();
     public List<AttackSelectorSO> Selectors => selectors;
@@ -84,6 +84,7 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
         anim.SetBool(HeroAnimHash.idle, false);
         stateMachine.ChangeState(deathState);
         OnBreak?.Invoke();
+        
         // ResurrectionAfter10s().Forget();
     }
     public void TakeDamage(int damage)
@@ -350,5 +351,12 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
         origin = board.WorldToCell(transform.position);
         if (board.TryGetCell(origin, out Tile current))
             currentTile = current;
+    }
+
+    public void ExchangeAttackDatas(List<AttackDataSO> datas, List<AttackSelectorSO> selectors, List<AttackProcSO> procs)
+    {
+        this.basePattern = datas;
+        this.selectors = selectors;
+        this.procs = procs;
     }
 }

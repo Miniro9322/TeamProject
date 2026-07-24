@@ -22589,15 +22589,16 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Archer
   basePattern:
-  - {fileID: 11400000, guid: a17338591fbe42e4e9e0971a1f166103, type: 2}
-  selectors: []
+  - {fileID: 11400000, guid: ed306a8b3d06d9f43a2708a95d7437cf, type: 2}
+  selectors:
+  - {fileID: 11400000, guid: 0d5377dd40378494688366410dd3e32f, type: 2}
   procs: []
   anim: {fileID: 4378586045599540503}
   animEvents: {fileID: 7722490271011846444}
   statData: {fileID: 11400000, guid: 8d6fa0f0a36921a4eac423cbec1169ad, type: 2}
   board: {fileID: 0}
   range: 5
-  rangeShape: 2
+  rangeShape: 0
   auraZones: []
   unattackableTarget: 1
   citizenAmount: 2
