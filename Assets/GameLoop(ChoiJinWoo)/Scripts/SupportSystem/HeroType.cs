@@ -7,4 +7,6 @@ public enum HeroType
     Archer = 1 << 1,
     SpearMan = 1 << 2,
     DualSwordMan = 1 << 3,
+    Mage = 1 << 4,
+    THS = 1 << 5,
 }

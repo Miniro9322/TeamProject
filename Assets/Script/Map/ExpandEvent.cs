@@ -13,9 +13,9 @@ public class ExpandEvent : MonoBehaviour
 
      
     // 선택지로 올라간 지역을 UI가 읽고, 버튼 클릭 시 선택한다.
-    public void ShowChoices(int count) // 선택지로 올라간 지역을 UI가 읽고, 버튼 클릭 시 선택한다.
+    public void ShowChoices() // 선택지로 올라간 지역을 UI가 읽고, 버튼 클릭 시 선택한다.
     {
-        CollectLocked(count);
+        CollectLocked();
     }
 
     // 선택지 중 하나를 골랐을 때 처리.
@@ -29,8 +29,8 @@ public class ExpandEvent : MonoBehaviour
             return;
         }
 
-        _choices.Clear();
         module.Unlock(); //모듈 상태를 Preparing으로 전환. (UI에서만 호출)
+        _choices.Clear();
     }
 
     // 지역 번호로 고르는 통로.  
@@ -50,7 +50,7 @@ public class ExpandEvent : MonoBehaviour
         _choices.Clear();
     }
 
-    private void CollectLocked(int count)
+    private void CollectLocked()
     {
         _choices.Clear();
         foreach (ModuleLogic module in registry.AllModules.Values)
@@ -61,10 +61,6 @@ public class ExpandEvent : MonoBehaviour
             }
 
             _choices.Add(module);
-            if (_choices.Count >= count)
-            {
-                return;
-            }
         }
     }
   

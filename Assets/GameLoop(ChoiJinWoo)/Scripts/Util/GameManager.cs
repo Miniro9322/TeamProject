@@ -1,6 +1,7 @@
 using System;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using VContainer;
 
 public class GameManager : MonoBehaviour
@@ -43,6 +44,7 @@ public class GameManager : MonoBehaviour
     private byte unlockedHero = (byte)HeroType.SwordMan | (byte)HeroType.Archer;
     public byte UnlockHero => unlockedHero;
     private byte UnlockedEnemy = 0b000111;
+    public bool isGameOver = false;
 
     [Inject]
     private void Construct(FacilityManager facilityManager, UiManager uiManager, SpawnerManager waveSpawner)
@@ -65,6 +67,12 @@ public class GameManager : MonoBehaviour
         uiManager.UnlockChanged += UpdateUnlock;
     }
 
+    private void Update()
+    {
+        if (Keyboard.current.cKey.wasPressedThisFrame)
+            requestSupport = true;
+    }
+
     private void OnDestroy()
     {
         waveSpawner.AllRegionsClear -= OnResult;
@@ -73,18 +81,27 @@ public class GameManager : MonoBehaviour
 
     public void OnNight()
     {
+        if (isGameOver)
+            return;
+
         fsm.ChangeState(night);
         ChangeToNight?.Invoke();
     }
 
     public void OnDay()
     {
+        if (isGameOver)
+            return;
+
         fsm.ChangeState(day);
         ChangeToDay?.Invoke();
     }
 
     public void OnResult()
     {
+        if (isGameOver)
+            return;
+
         fsm.ChangeState(result);
     }
 
@@ -137,6 +154,7 @@ public class GameManager : MonoBehaviour
         {
             hp = 0;
             fsm.ChangeState(gameover);
+            uiManager.OpenGameOverUI();
         }
     }
 
