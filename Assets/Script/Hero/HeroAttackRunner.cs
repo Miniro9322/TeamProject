@@ -6,7 +6,7 @@ public class HeroAttackRunner
 {
     private const int MaxProcDepth = 5;
 
-    private readonly AttackDataSO[] basePattern;
+    private readonly List<AttackDataSO> basePattern;
     private readonly List<AttackSelectorSO> selectors;
     private readonly List<AttackProcSO> procs;
     private readonly IAttackExecutor executor;
@@ -17,7 +17,7 @@ public class HeroAttackRunner
     public bool IsExecuting { get; private set; }
 
     public HeroAttackRunner(
-        AttackDataSO[] basePattern,
+        List<AttackDataSO> basePattern,
         List<AttackSelectorSO> selectors,
         List<AttackProcSO> procs,
         IAttackExecutor executor)
@@ -41,7 +41,7 @@ public class HeroAttackRunner
             var result = sel.Select(HitCount, ctx);
             if (result != null) return result;
         }
-        return basePattern[HitCount % basePattern.Length];
+        return basePattern[HitCount % basePattern.Count];
     }
 
     public async UniTask ExecuteNext(AttackContext ctx, CancellationToken ct)
