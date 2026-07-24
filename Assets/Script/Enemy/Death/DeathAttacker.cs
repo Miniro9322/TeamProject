@@ -14,4 +14,9 @@ public class DeathAttacker : EnemyBase
         attack =Mathf.FloorToInt(Stats[StatType.ATK]);
         def = Mathf.FloorToInt(Stats[StatType.DEF]);
     }
+    public override void EnemySoundAttack()
+    {
+        EnemySoundManager.Play("DeathNormalAttack");
+        EnemySoundManager.Play("DeathNormalAttack2");
+    }
 }

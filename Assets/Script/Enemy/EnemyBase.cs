@@ -266,6 +266,10 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit
         } 
         
     }
+    public virtual void EnemySoundAttack()
+    {
+        
+    }
 
     private async UniTask RunSkill(int index, CancellationToken token)
     {
@@ -451,6 +455,7 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit
         GameObject target = FindAttackTarget(); 
         if (target != null && target.GetComponentInParent<IDamageAble>() is IDamageAble dmg)
         {
+            EnemySoundAttack();
             dmg.TakeDamage(AttackPower);
         }
             

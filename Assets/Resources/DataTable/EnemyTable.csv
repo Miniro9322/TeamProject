@@ -1,8 +1,8 @@
 Name,Attack,AttackSpeed,Range,Defense,Health,MoveSpeed,UpHealthScale,UpDefenseScale,Skills,Type,Class,Attribute
-SpiderNormal,10,1,1,1,100,5,10,1,Spider_Split,Melee,Normal,None
-SpiderToxin,15,1,1,2,80,6,8,1,SpiderToxin_Dash,Melee,Normal,Cloaking
+SpiderNormal,10,1,1,1,100,5,20,1,Spider_Split,Melee,Normal,None
+SpiderToxin,15,1,1,2,80,6,16,1,SpiderToxin_Dash,Melee,Normal,Cloaking
 SpiderKing,30,1,2,5,1000,4,150,2,SpiderKing_Summon,Melee,Elite,Regeneration
-Bat,20,0.7,5,3,100,5,10,1,DamageZoneSkill,Ranged,Normal,Fly
-Scorpion,15,1,1,1,100,5,10,1,Scorpion_Shield,Melee,Normal,Berserk
-Golem,40,0.5,1,5,20,3,1,5,Explosived,Melee,Normal,HitsShield|Unjudged
+Bat,20,0.7,5,3,100,5,8,1,DamageZoneSkill,Ranged,Normal,Fly
+Scorpion,15,1,1,1,100,5,20,1,Scorpion_Shield,Melee,Normal,Berserk
+Golem,40,0.5,1,5,500,3,50,5,Explosived,Melee,Normal,Unjudged
 DeathAttacker,60,1,1,8,4000,3,500,5,Death_RushAttackSkill,Melee,Boss,Regeneration
