@@ -114,21 +114,10 @@ public partial class Tile : MonoBehaviour
 
     //타일에 적 이탈 등록
     public void RemoveEnemy(GameObject enemy) => _enemies.Remove(enemy);
-
-    public void AddRangeCover(GameObject unit)
-    {
-        if (unit != null) _rangeCovers.Add(unit);
-    }
-
-    public void RemoveRangeCover(GameObject unit)
-    {
-        if (unit != null) _rangeCovers.Remove(unit);
-    }
-
-    public void ClearRangeCovers()
-    {
-        _rangeCovers.Clear();
-    }
+    public void AddRangeCover(GameObject unit) => _rangeCovers.Add(unit);
+    public void RemoveRangeCover(GameObject unit) => _rangeCovers.Remove(unit);
+    public void ClearRangeCovers() => _rangeCovers.Clear();
+    
 
     private static int GetCapacity(GameObject go, OccupantKind kind)
     {

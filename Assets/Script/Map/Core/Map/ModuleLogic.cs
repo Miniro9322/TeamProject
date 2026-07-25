@@ -47,5 +47,5 @@ public enum ModuleState
 {
     Locked,     // 데이터만/실루엣. 배치·전투 불가
     Preparing,  // 배치 가능, 적 미등장
-    Battle      // 현재 웨이브 전투 진행
+    //Battle      // 현재 웨이브 전투 진행
 }
