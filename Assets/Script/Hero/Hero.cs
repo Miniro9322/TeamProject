@@ -7,6 +7,35 @@ using VContainer;
 
 public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
 {
+        [Header("유닛 생성 비용")]
+    [SerializeField] private int citizenAmount = 2;
+    [SerializeField] private List<ProductionType> costType;
+    [SerializeField] private List<int> costAmount;
+
+    public Dictionary<ProductionType, int> Cost
+    {
+        get
+        {
+            if (costType.Count != costAmount.Count)
+            {
+                Debug.LogError("생산 건물에 필요한 자원과 자원량이 매칭되지 않습니다. 다시 설정해주세요");
+                return null;
+            }
+            else
+            {
+                Dictionary<ProductionType, int> temp = new();
+
+                for (int i = 0; i < costType.Count; i++)
+                {
+                    temp[costType[i]] = -costAmount[i];
+                }
+
+                return temp;
+            }
+        }
+    }
+
+    [Header("유닛 정보")]
     [SerializeField] private List<AttackDataSO> basePattern;
     public List<AttackDataSO> BasePattern => basePattern;
 
@@ -68,7 +97,6 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
     //테스트용 코드
     private GameManager gameManager;
     protected BuffManager buffManager;
-    [SerializeField] private int citizenAmount = 2;
     public int CitizenAmount => citizenAmount;
     [Inject]
     private void Construct(GameManager gameManager, BuffManager buffManager)

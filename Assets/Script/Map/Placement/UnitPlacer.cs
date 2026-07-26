@@ -21,7 +21,6 @@ public class UnitPlacer
         placedUnit = null;
 
         GameObject unit = Create(slot);      // 배치할 오브젝트 생성
-        Debug.Log(unit == null);
         if (unit == null)
         {
             failReason = "오브젝트 생성 실패";

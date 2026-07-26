@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -8,13 +9,17 @@ using VContainer;
 public class AddCitizen : MonoBehaviour
 {
     private CitizenManager citizenManager;
+    private ResourcesManager resourcesManager;
     [SerializeField] private TMP_InputField amountInput;
+    [SerializeField] private TextMeshProUGUI costText;
+    [SerializeField] private int costAmount;
     private int amount = 0;
 
     [Inject]
-    private void Construct(CitizenManager citizenManager)
+    private void Construct(CitizenManager citizenManager, ResourcesManager resourcesManager)
     {
         this.citizenManager = citizenManager;
+        this.resourcesManager = resourcesManager;
     }
 
     private void Awake()
@@ -25,8 +30,8 @@ public class AddCitizen : MonoBehaviour
     public void OpenPanel()
     {
         gameObject.SetActive(true);
-        amountInput.text = $"{0}";
         amount = 0;
+        UpdatePanel();
     }
 
     private void Update()
@@ -37,16 +42,27 @@ public class AddCitizen : MonoBehaviour
         }
     }
 
+    private void UpdatePanel()
+    {
+        var cost = new Dictionary<ProductionType, int>()
+        {
+            {ProductionType.Food, amount * -costAmount }
+        };
+        amountInput.text = $"{amount}";
+        costText.text = $"ºñ¿ë: {ProductionType.Food} {amount * costAmount}";
+        costText.color = resourcesManager.CheckResources(cost) ? Color.white : Color.red;
+    }
+
     public void ChangeAmount(string amount)
     {
         if (int.TryParse(amount, out this.amount))
         {
             this.amount = Mathf.Clamp(this.amount, 0, citizenManager.MaxCitizen - citizenManager.CurrentCitizen);
-            amountInput.text = $"{this.amount}";
+            UpdatePanel();
         }
         else
         {
-            amountInput.text = $"{this.amount}";
+            UpdatePanel();
         }
     }
 
@@ -54,22 +70,41 @@ public class AddCitizen : MonoBehaviour
     {
         if(amount + citizenManager.CurrentCitizen < citizenManager.MaxCitizen)
             amount++;
-        amountInput.text = $"{this.amount}";
+        UpdatePanel();
     }
 
     public void DecreaseAmount()
     {
         if(amount > 0)
             amount--;
-        amountInput.text = $"{this.amount}";
+        UpdatePanel();
     }
 
+    public void IncreaseTen()
+    {
+        if (amount + citizenManager.CurrentCitizen < citizenManager.MaxCitizen)
+            amount = Mathf.Clamp(amount + 10, 0, citizenManager.MaxCitizen - citizenManager.CurrentCitizen);
+        UpdatePanel();
+    }
+
+    public void DecreaseTen()
+    {
+        if (amount > 0)
+            amount = Mathf.Clamp(amount - 10, 0, citizenManager.MaxCitizen - citizenManager.CurrentCitizen);
+        UpdatePanel();
+    }
 
     public void CreateCitizen()
     {
-        if (citizenManager.CheckCanIncreaseCitizen(amount))
+        var cost = new Dictionary<ProductionType, int>()
         {
-            citizenManager.IncreaseCitizen(amount); 
+            {ProductionType.Food, amount * -costAmount }
+        };
+
+        if (citizenManager.CheckCanIncreaseCitizen(amount) && resourcesManager.CheckResources(cost))
+        {
+            citizenManager.IncreaseCitizen(amount);
+            resourcesManager.ProductChanged(cost);
         }
 
         gameObject.SetActive(false);

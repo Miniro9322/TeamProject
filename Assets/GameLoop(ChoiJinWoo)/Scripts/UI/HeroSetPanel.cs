@@ -11,12 +11,14 @@ public class HeroSetPanel : MonoBehaviour
     private void OnEnable()
     {
         game.CitizenManager.CitizenChanged += Refresh;
+        game.ResourcesManager.ProductUpdate += Refresh;
         Refresh();
     }
 
     private void OnDisable()
     {
         game.CitizenManager.CitizenChanged -= Refresh;
+        game.ResourcesManager.ProductUpdate -= Refresh;
     }
 
     public void OnCreate(Placeable slot)
@@ -24,6 +26,7 @@ public class HeroSetPanel : MonoBehaviour
         if (!view.CheckCanBuild(slot.label)) return;
 
         game.CitizenManager.UseCitizen(slot.prefab.GetComponent<Hero>().CitizenAmount);
+        view.resourcesManager.ProductChanged(slot.prefab.GetComponent<Hero>().Cost);
         HeroRosterEntry entry = game.HeroRoster.Add(slot);
         view.SetHero(entry);   // 생성과 동시에 배치 모드로 진입(타일 클릭하면 바로 배치)
     }
@@ -58,6 +61,8 @@ public class HeroSetPanel : MonoBehaviour
             case "Archer": return HeroType.Archer;
             case "DualSwordMan": return HeroType.DualSwordMan;
             case "SpearMan": return HeroType.SpearMan;
+            case "Mage": return HeroType.Mage;
+            case "THS": return HeroType.THS;
             default: return 0;
         }
     }

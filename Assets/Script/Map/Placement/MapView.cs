@@ -29,7 +29,7 @@ public class MapView : MonoBehaviour
 
     public bool IsHolding { get { return replace.IsHolding; } }
     public bool InputBlocked { get { return input.Blocked; } }
-    public Tile HoverTile { get { return pointerPick.UnderPointer(); } }
+    public Tile HoverTile { get { return pointerPick != null ? pointerPick.UnderPointer() : null; } }
     public bool IsPlacing { get { return palette.Mode == PlaceMode.Place; } }
     public OccupantKind PlacingKind { get { return palette.CurrentSlot().kind; } }
     public string PlacingLabel { get { return palette.CurrentSlot().label; } }
@@ -76,12 +76,12 @@ public class MapView : MonoBehaviour
             case OccupantKind.None:
                 return false;
             case OccupantKind.MeleeHero:
-                if (citizenManager.CheckCanUseCitizen(slot.prefab.GetComponent<Hero>().CitizenAmount))
+                if (citizenManager.CheckCanUseCitizen(slot.prefab.GetComponent<Hero>().CitizenAmount) && resourcesManager.CheckResources(slot.prefab.GetComponent<Hero>().Cost))
                     return true;
                 else
                     return false;
             case OccupantKind.RangedHero:
-                if (citizenManager.CheckCanUseCitizen(slot.prefab.GetComponent<Hero>().CitizenAmount))
+                if (citizenManager.CheckCanUseCitizen(slot.prefab.GetComponent<Hero>().CitizenAmount) && resourcesManager.CheckResources(slot.prefab.GetComponent<Hero>().Cost))
                     return true;
                 else
                     return false;

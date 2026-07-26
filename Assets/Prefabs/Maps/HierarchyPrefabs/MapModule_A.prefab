@@ -571,6 +571,7 @@ GameObject:
   - component: {fileID: 4423032346248122036}
   - component: {fileID: 6322919544372698662}
   - component: {fileID: 8846460860055391114}
+  - component: {fileID: 7909103713585408565}
   m_Layer: 0
   m_Name: MapModule_A
   m_TagString: Untagged
@@ -638,6 +639,7 @@ MonoBehaviour:
   region: 1
   Enemycount: 10
   text: {fileID: 0}
+  bossSpawnDelay: 10
 --- !u!114 &8846460860055391114
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -651,7 +653,24 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyPathView
   board: {fileID: 4423032346248122036}
-  pathVisible: 1
+  pathVisible: 0
+--- !u!114 &7909103713585408565
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5581972147424868009}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 195be9878b0db794c9aaf144e6353d35, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PathTrail
+  trailPrefab: {fileID: 7689584652585815418, guid: f8698a2a5b09bbc4ea4dcf9c230e43e4, type: 3}
+  moveSpeed: 100
+  trailLift: 0.15
+  loopGap: 1.2
+  autoPlay: 1
 --- !u!1 &5625728969312054158
 GameObject:
   m_ObjectHideFlags: 0
@@ -1416,7 +1435,7 @@ MonoBehaviour:
     EnemyLane: 0
     CanMelee: 0
     CanRanged: 0
-    CanBuild: 1
+    CanBuild: 0
     Flags: 8
     Occupant: 0
   isEnemySpawn: 0
@@ -3211,7 +3230,7 @@ MonoBehaviour:
     EnemyLane: 0
     CanMelee: 0
     CanRanged: 0
-    CanBuild: 1
+    CanBuild: 0
     Flags: 8
     Occupant: 0
   isEnemySpawn: 0
@@ -3313,7 +3332,7 @@ MonoBehaviour:
     EnemyLane: 0
     CanMelee: 0
     CanRanged: 0
-    CanBuild: 1
+    CanBuild: 0
     Flags: 8
     Occupant: 0
   isEnemySpawn: 0
@@ -4630,7 +4649,7 @@ MonoBehaviour:
     EnemyLane: 0
     CanMelee: 0
     CanRanged: 0
-    CanBuild: 1
+    CanBuild: 0
     Flags: 8
     Occupant: 0
   isEnemySpawn: 0
@@ -5458,7 +5477,7 @@ MonoBehaviour:
     EnemyLane: 0
     CanMelee: 0
     CanRanged: 0
-    CanBuild: 1
+    CanBuild: 0
     Flags: 8
     Occupant: 0
   isEnemySpawn: 0
@@ -6602,7 +6621,7 @@ MonoBehaviour:
     EnemyLane: 0
     CanMelee: 0
     CanRanged: 0
-    CanBuild: 1
+    CanBuild: 0
     Flags: 8
     Occupant: 0
   isEnemySpawn: 0
@@ -8206,7 +8225,7 @@ MonoBehaviour:
     EnemyLane: 0
     CanMelee: 0
     CanRanged: 0
-    CanBuild: 1
+    CanBuild: 0
     Flags: 8
     Occupant: 0
   isEnemySpawn: 0
@@ -9025,7 +9044,7 @@ MonoBehaviour:
     EnemyLane: 0
     CanMelee: 0
     CanRanged: 0
-    CanBuild: 1
+    CanBuild: 0
     Flags: 8
     Occupant: 0
   isEnemySpawn: 0
@@ -11569,7 +11588,7 @@ MonoBehaviour:
     EnemyLane: 0
     CanMelee: 0
     CanRanged: 0
-    CanBuild: 1
+    CanBuild: 0
     Flags: 8
     Occupant: 0
   isEnemySpawn: 0
@@ -11745,7 +11764,7 @@ MonoBehaviour:
     EnemyLane: 0
     CanMelee: 0
     CanRanged: 0
-    CanBuild: 1
+    CanBuild: 0
     Flags: 8
     Occupant: 0
   isEnemySpawn: 0
@@ -12823,7 +12842,7 @@ MonoBehaviour:
     EnemyLane: 0
     CanMelee: 0
     CanRanged: 0
-    CanBuild: 1
+    CanBuild: 0
     Flags: 8
     Occupant: 0
   isEnemySpawn: 0
@@ -13144,7 +13163,7 @@ MonoBehaviour:
     EnemyLane: 0
     CanMelee: 0
     CanRanged: 0
-    CanBuild: 1
+    CanBuild: 0
     Flags: 8
     Occupant: 0
   isEnemySpawn: 0
@@ -13577,7 +13596,7 @@ MonoBehaviour:
     EnemyLane: 0
     CanMelee: 0
     CanRanged: 0
-    CanBuild: 1
+    CanBuild: 0
     Flags: 8
     Occupant: 0
   isEnemySpawn: 0
@@ -14429,7 +14448,7 @@ MonoBehaviour:
     EnemyLane: 0
     CanMelee: 0
     CanRanged: 0
-    CanBuild: 1
+    CanBuild: 0
     Flags: 8
     Occupant: 0
   isEnemySpawn: 0
@@ -14848,7 +14867,7 @@ MonoBehaviour:
     EnemyLane: 0
     CanMelee: 0
     CanRanged: 0
-    CanBuild: 1
+    CanBuild: 0
     Flags: 8
     Occupant: 0
   isEnemySpawn: 0
@@ -16202,7 +16221,7 @@ MonoBehaviour:
     EnemyLane: 0
     CanMelee: 0
     CanRanged: 0
-    CanBuild: 1
+    CanBuild: 0
     Flags: 8
     Occupant: 0
   isEnemySpawn: 0
@@ -16943,7 +16962,7 @@ MonoBehaviour:
     EnemyLane: 0
     CanMelee: 0
     CanRanged: 0
-    CanBuild: 1
+    CanBuild: 0
     Flags: 8
     Occupant: 0
   isEnemySpawn: 0
@@ -17162,7 +17181,7 @@ MonoBehaviour:
     EnemyLane: 0
     CanMelee: 0
     CanRanged: 0
-    CanBuild: 1
+    CanBuild: 0
     Flags: 8
     Occupant: 0
   isEnemySpawn: 0
@@ -17733,7 +17752,7 @@ MonoBehaviour:
     EnemyLane: 0
     CanMelee: 0
     CanRanged: 0
-    CanBuild: 1
+    CanBuild: 0
     Flags: 8
     Occupant: 0
   isEnemySpawn: 0
@@ -18767,7 +18786,7 @@ MonoBehaviour:
     EnemyLane: 0
     CanMelee: 0
     CanRanged: 0
-    CanBuild: 1
+    CanBuild: 0
     Flags: 8
     Occupant: 0
   isEnemySpawn: 0
@@ -18976,7 +18995,7 @@ MonoBehaviour:
     EnemyLane: 0
     CanMelee: 0
     CanRanged: 0
-    CanBuild: 1
+    CanBuild: 0
     Flags: 8
     Occupant: 0
   isEnemySpawn: 0
@@ -19190,7 +19209,7 @@ MonoBehaviour:
     EnemyLane: 0
     CanMelee: 0
     CanRanged: 0
-    CanBuild: 1
+    CanBuild: 0
     Flags: 8
     Occupant: 0
   isEnemySpawn: 0
@@ -20515,7 +20534,7 @@ MonoBehaviour:
     EnemyLane: 0
     CanMelee: 0
     CanRanged: 0
-    CanBuild: 1
+    CanBuild: 0
     Flags: 8
     Occupant: 0
   isEnemySpawn: 0
@@ -21903,7 +21922,7 @@ MonoBehaviour:
     EnemyLane: 0
     CanMelee: 0
     CanRanged: 0
-    CanBuild: 1
+    CanBuild: 0
     Flags: 8
     Occupant: 0
   isEnemySpawn: 0
@@ -22545,7 +22564,7 @@ MonoBehaviour:
     EnemyLane: 0
     CanMelee: 0
     CanRanged: 0
-    CanBuild: 1
+    CanBuild: 0
     Flags: 8
     Occupant: 0
   isEnemySpawn: 0
@@ -24890,7 +24909,7 @@ MonoBehaviour:
     EnemyLane: 0
     CanMelee: 0
     CanRanged: 0
-    CanBuild: 1
+    CanBuild: 0
     Flags: 8
     Occupant: 0
   isEnemySpawn: 0
@@ -25104,7 +25123,7 @@ MonoBehaviour:
     EnemyLane: 0
     CanMelee: 0
     CanRanged: 0
-    CanBuild: 1
+    CanBuild: 0
     Flags: 8
     Occupant: 0
   isEnemySpawn: 0
@@ -25323,7 +25342,7 @@ MonoBehaviour:
     EnemyLane: 0
     CanMelee: 0
     CanRanged: 0
-    CanBuild: 1
+    CanBuild: 0
     Flags: 8
     Occupant: 0
   isEnemySpawn: 0
@@ -25747,7 +25766,7 @@ MonoBehaviour:
     EnemyLane: 0
     CanMelee: 0
     CanRanged: 0
-    CanBuild: 1
+    CanBuild: 0
     Flags: 8
     Occupant: 0
   isEnemySpawn: 0
@@ -26487,7 +26506,7 @@ MonoBehaviour:
     EnemyLane: 0
     CanMelee: 0
     CanRanged: 0
-    CanBuild: 1
+    CanBuild: 0
     Flags: 8
     Occupant: 0
   isEnemySpawn: 0
@@ -26915,7 +26934,7 @@ MonoBehaviour:
     EnemyLane: 0
     CanMelee: 0
     CanRanged: 0
-    CanBuild: 1
+    CanBuild: 0
     Flags: 8
     Occupant: 0
   isEnemySpawn: 0
@@ -27134,7 +27153,7 @@ MonoBehaviour:
     EnemyLane: 0
     CanMelee: 0
     CanRanged: 0
-    CanBuild: 1
+    CanBuild: 0
     Flags: 8
     Occupant: 0
   isEnemySpawn: 0
@@ -27738,7 +27757,7 @@ MonoBehaviour:
     EnemyLane: 0
     CanMelee: 0
     CanRanged: 0
-    CanBuild: 1
+    CanBuild: 0
     Flags: 8
     Occupant: 0
   isEnemySpawn: 0
@@ -28660,7 +28679,7 @@ MonoBehaviour:
     EnemyLane: 0
     CanMelee: 0
     CanRanged: 0
-    CanBuild: 1
+    CanBuild: 0
     Flags: 8
     Occupant: 0
   isEnemySpawn: 0
@@ -29302,7 +29321,7 @@ MonoBehaviour:
     EnemyLane: 0
     CanMelee: 0
     CanRanged: 0
-    CanBuild: 1
+    CanBuild: 0
     Flags: 8
     Occupant: 0
   isEnemySpawn: 0
@@ -29916,7 +29935,7 @@ MonoBehaviour:
     EnemyLane: 0
     CanMelee: 0
     CanRanged: 0
-    CanBuild: 1
+    CanBuild: 0
     Flags: 8
     Occupant: 0
   isEnemySpawn: 0
