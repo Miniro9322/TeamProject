@@ -29,7 +29,7 @@ public class MapView : MonoBehaviour
 
     public bool IsHolding { get { return replace.IsHolding; } }
     public bool InputBlocked { get { return input.Blocked; } }
-    public Tile HoverTile { get { return pointerPick.UnderPointer(); } }
+    public Tile HoverTile { get { return pointerPick != null ? pointerPick.UnderPointer() : null; } }
     public bool IsPlacing { get { return palette.Mode == PlaceMode.Place; } }
     public OccupantKind PlacingKind { get { return palette.CurrentSlot().kind; } }
     public string PlacingLabel { get { return palette.CurrentSlot().label; } }
