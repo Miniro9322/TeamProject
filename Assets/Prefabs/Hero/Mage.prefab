@@ -14247,6 +14247,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0f482275a1b393744b95b4b49ba1417b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Mage
+  citizenAmount: 2
+  costType: 
+  costAmount: 
   basePattern:
   - {fileID: 11400000, guid: c86fad42437ee1747a4325a8938839fb, type: 2}
   selectors:
@@ -14260,7 +14263,6 @@ MonoBehaviour:
   rangeShape: 0
   auraZones: []
   unattackableTarget: 1
-  citizenAmount: 2
   muzzle: {fileID: 3165585453254409694}
 --- !u!1 &5160900259636390969
 GameObject:

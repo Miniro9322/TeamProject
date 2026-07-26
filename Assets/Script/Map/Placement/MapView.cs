@@ -76,12 +76,12 @@ public class MapView : MonoBehaviour
             case OccupantKind.None:
                 return false;
             case OccupantKind.MeleeHero:
-                if (citizenManager.CheckCanUseCitizen(slot.prefab.GetComponent<Hero>().CitizenAmount))
+                if (citizenManager.CheckCanUseCitizen(slot.prefab.GetComponent<Hero>().CitizenAmount) && resourcesManager.CheckResources(slot.prefab.GetComponent<Hero>().Cost))
                     return true;
                 else
                     return false;
             case OccupantKind.RangedHero:
-                if (citizenManager.CheckCanUseCitizen(slot.prefab.GetComponent<Hero>().CitizenAmount))
+                if (citizenManager.CheckCanUseCitizen(slot.prefab.GetComponent<Hero>().CitizenAmount) && resourcesManager.CheckResources(slot.prefab.GetComponent<Hero>().Cost))
                     return true;
                 else
                     return false;

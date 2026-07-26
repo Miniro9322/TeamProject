@@ -6,7 +6,6 @@ using UnityEngine.UI;
 public class HeroRosterIcon : MonoBehaviour
 {
     [SerializeField] private Image icon;
-    [SerializeField] private Sprite placedIcon;
     [SerializeField] private Button button;
 
     private HeroRosterEntry entry;
@@ -17,7 +16,7 @@ public class HeroRosterIcon : MonoBehaviour
         this.entry = entry;
         this.onClick = onClick;
 
-        icon.sprite = entry.State == HeroRosterState.Placed ? placedIcon : entry.Slot.icon;
+        icon.sprite = entry.State == HeroRosterState.Placed ? entry.Slot.placedIcon : entry.Slot.icon;
 
         button.onClick.RemoveAllListeners();
         button.onClick.AddListener(() => this.onClick?.Invoke(this.entry));

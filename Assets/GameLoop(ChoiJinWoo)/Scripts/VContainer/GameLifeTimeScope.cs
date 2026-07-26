@@ -45,7 +45,6 @@ public class GameLifeTimeScope : LifetimeScope
             });
         }
 
-        //builder.RegisterComponentInHierarchy<ResourceTest>();
         builder.RegisterComponentInHierarchy<TopBar>();
         builder.RegisterComponentInHierarchy<DayNightButton>();
         builder.RegisterComponentInHierarchy<MapGame>();
