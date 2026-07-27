@@ -9,4 +9,5 @@ public enum HeroType
     DualSwordMan = 1 << 3,
     Mage = 1 << 4,
     THS = 1 << 5,
+    Healer = 1 << 6,
 }

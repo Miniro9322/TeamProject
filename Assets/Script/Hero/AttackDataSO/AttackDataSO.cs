@@ -37,7 +37,7 @@ public class AttackDataSO : ScriptableObject
 
     [Header("아군 힐 / 피흡")]
     public float lifestealPercent = 0f; // 0 = 없음. 가한 데미지의 N%만큼 공격자 회복
-    public float allyHealAmount = 0f;                      // 0 = 없음. 적중 시 범위 내 최저 체력 아군 1명 회복
+    public float allyHealAmount = 0f;                      // 0 = 없음. 적중 시 범위 내 최저 체력 아군 1명을 casterATK * allyHealAmount만큼 회복
     public int allyHealRange = 2;
     public RangeShape allyHealRangeShape = RangeShape.Diamond;
 }

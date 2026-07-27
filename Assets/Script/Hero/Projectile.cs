@@ -140,7 +140,7 @@ public class Projectile : MonoBehaviour
     private void ApplyHealOptions(float damageDealt)
     {
         if (cfg.source is AttackDataSO data)
-            AttackDamageUtil.ApplyHealOptions(data, cfg.casterPos, cfg.healSelf, cfg.getAllyObjectsInRange, damageDealt);
+            AttackDamageUtil.ApplyHealOptions(data, cfg.casterPos, cfg.healSelf, cfg.getAllyObjectsInRange, damageDealt, cfg.attackerStats[StatType.ATK]);
     }
 
     private void Return()

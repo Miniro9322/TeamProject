@@ -11,6 +11,7 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
     [SerializeField] private int citizenAmount = 2;
     [SerializeField] private List<ProductionType> costType;
     [SerializeField] private List<int> costAmount;
+    [SerializeField] private int level = 0;
 
     public Dictionary<ProductionType, int> Cost
     {
@@ -204,7 +205,7 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
             AcquireTargetFromTiles();
     }
 
-    private void AcquireTargetFromTiles()
+    protected virtual void AcquireTargetFromTiles()
     {
         GameObject nearest = null;
         float nearestSqrDist = float.MaxValue;
@@ -369,7 +370,7 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
         return originWorld + new Vector3(direction.x, 0, direction.y) * length;
     }
 
-    private void CheckTargetStillInRange()
+    protected virtual void CheckTargetStillInRange()
     {
         foreach (Tile tile in TileShapeQuery.GetTiles(board, origin, range, rangeShape))
         {

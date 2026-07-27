@@ -20,7 +20,7 @@ public static class AttackDamageUtil
             {
                 e.TakeDamage((int)baseDamage);
                 ApplyTargetDebuffs(e as IUnit, data.buffList, ctx.buffManager, data);
-                ApplyHealOptions(data, ctx.self.position, ctx.healSelf, ctx.getAllyObjectsInRange, baseDamage);
+                ApplyHealOptions(data, ctx.self.position, ctx.healSelf, ctx.getAllyObjectsInRange, baseDamage, ctx.sc[StatType.ATK]);
             }
             return;
         }
@@ -32,7 +32,7 @@ public static class AttackDamageUtil
             foreach (GameObject go in hits)
             {
                 ApplyTargetDebuffs(go.GetComponentInParent<IUnit>(), data.buffList, ctx.buffManager, data);
-                ApplyHealOptions(data, ctx.self.position, ctx.healSelf, ctx.getAllyObjectsInRange, baseDamage);
+                ApplyHealOptions(data, ctx.self.position, ctx.healSelf, ctx.getAllyObjectsInRange, baseDamage, ctx.sc[StatType.ATK]);
             }
             return;
         }
@@ -43,7 +43,7 @@ public static class AttackDamageUtil
             {
                 d.TakeDamage((int)baseDamage);
                 ApplyTargetDebuffs(d as IUnit, data.buffList, ctx.buffManager, data);
-                ApplyHealOptions(data, ctx.self.position, ctx.healSelf, ctx.getAllyObjectsInRange, baseDamage);
+                ApplyHealOptions(data, ctx.self.position, ctx.healSelf, ctx.getAllyObjectsInRange, baseDamage, ctx.sc[StatType.ATK]);
             }
             return;
         }
@@ -56,7 +56,7 @@ public static class AttackDamageUtil
             {
                 t.TakeDamage((int)baseDamage);
                 ApplyTargetDebuffs(t as IUnit, data.buffList, ctx.buffManager, data);
-                ApplyHealOptions(data, ctx.self.position, ctx.healSelf, ctx.getAllyObjectsInRange, baseDamage);
+                ApplyHealOptions(data, ctx.self.position, ctx.healSelf, ctx.getAllyObjectsInRange, baseDamage, ctx.sc[StatType.ATK]);
             }, data.shotInterval, ct);
             return;
         }
@@ -71,7 +71,7 @@ public static class AttackDamageUtil
                 {
                     e.TakeDamage((int)baseDamage);
                     ApplyTargetDebuffs(e as IUnit, data.buffList, ctx.buffManager, data);
-                    ApplyHealOptions(data, ctx.self.position, ctx.healSelf, ctx.getAllyObjectsInRange, baseDamage);
+                    ApplyHealOptions(data, ctx.self.position, ctx.healSelf, ctx.getAllyObjectsInRange, baseDamage, ctx.sc[StatType.ATK]);
                 }
                 //SplashHighlighter.Instance?.Flash(ctx.self.position, data.areaRange, aoeShape);
                 if (i < data.attackCount - 1)
@@ -89,10 +89,33 @@ public static class AttackDamageUtil
             {
                 e.TakeDamage((int)baseDamage);
                 ApplyTargetDebuffs(e as IUnit, data.buffList, ctx.buffManager, data);
-                ApplyHealOptions(data, ctx.self.position, ctx.healSelf, ctx.getAllyObjectsInRange, baseDamage);
+                ApplyHealOptions(data, ctx.self.position, ctx.healSelf, ctx.getAllyObjectsInRange, baseDamage, ctx.sc[StatType.ATK]);
             }
             //SplashHighlighter.Instance?.Flash(go.transform.position, data.areaRange, aoeShape);
         }, data.shotInterval, ct);
+    }
+
+    // 기본 공격 자체가 아군을 힐하는 영웅(Healer) 전용 — TakeDamage 대신 Heal을 적용한다.
+    // Single: Healer.AcquireTargetFromTiles가 미리 골라둔 ctx.target을 그대로 힐(재조회하지 않음).
+    // Area: 자기 중심 범위 내 아군 전원을 1회 힐(attackCount 반복 캐스트는 지원하지 않음).
+    public static UniTask ApplyInstantHeal(AttackDataSO data, AttackContext ctx, CancellationToken ct)
+    {
+        float healAmount = ctx.sc[StatType.ATK] * data.attackPer; // 데미지와 동일한 컨벤션 재사용(전용 힐량 스탯 없음)
+        ApplySelfBuffs(ctx.selfUnit, data.buffList, ctx.buffManager, data);
+
+        if (data.attackType == AttackType.Single)
+        {
+            if (ctx.target != null && ctx.target.GetComponent<Hero>() is Hero singleAlly)
+                singleAlly.Heal(healAmount);
+            return UniTask.CompletedTask;
+        }
+
+        RangeShape aoeShape = data.areaShape == AreaShape.Square ? RangeShape.Square : RangeShape.Diamond;
+        foreach (GameObject go in ctx.getAllyObjectsInRange(ctx.self.position, data.areaRange, aoeShape))
+            if (go.GetComponent<Hero>() is Hero areaAlly)
+                areaAlly.Heal(healAmount);
+
+        return UniTask.CompletedTask;
     }
 
     // 공격 1회 적중당 호출: 피흡(공격자 자가 회복)과 아군 힐(범위 내 최저 체력 아군 1명 회복) 옵션 적용.
@@ -100,7 +123,8 @@ public static class AttackDamageUtil
     public static void ApplyHealOptions(AttackDataSO data, Vector3 selfPos,
         Action<float> healSelf,
         Func<Vector3, int, RangeShape, List<GameObject>> getAllyObjectsInRange,
-        float damageDealt)
+        float damageDealt,
+        float casterAtk)
     {
         if (data.lifestealPercent > 0f && damageDealt > 0f)
             healSelf?.Invoke(damageDealt * data.lifestealPercent);
@@ -108,18 +132,24 @@ public static class AttackDamageUtil
         if (data.allyHealAmount > 0f && getAllyObjectsInRange != null)
         {
             Hero target = FindLowestHpAlly(getAllyObjectsInRange(selfPos, data.allyHealRange, data.allyHealRangeShape));
-            target?.Heal(data.allyHealAmount);
+            target?.Heal(casterAtk * data.allyHealAmount);
         }
     }
 
-    // 후보 중 IDamageAble.Hp가 가장 낮은 대상을 찾는다. GroundZoneRunner의 힐 장판 틱에서도 재사용.
+    // 다친(풀피가 아닌) 후보 중 Hp가 가장 낮은 대상을 찾는다. 없으면 null.
+    // 풀피 아군을 애초에 후보에서 제외해야 한다 — 최대 체력이 서로 다른 영웅들이 섞이면
+    // "풀피지만 최대 체력 자체가 작은 영웅"이 "다쳤지만 최대 체력이 큰 영웅"보다 절대 Hp가
+    // 낮게 나와 잘못 선택되는 문제가 있었다(힐러가 실제로 다친 아군을 두고도 타겟을 못 잡던 원인).
+    // GroundZoneRunner의 힐 장판 틱에서도 재사용.
     public static Hero FindLowestHpAlly(List<GameObject> candidates)
     {
         Hero lowest = null;
         float lowestHp = float.MaxValue;
         foreach (GameObject go in candidates)
         {
-            if (go.GetComponentInParent<Hero>() is Hero d && d.Hp < lowestHp)
+            if (go.GetComponentInParent<Hero>() is Hero d
+                && d.Hp < d.SC[StatType.HP]
+                && d.Hp < lowestHp)
             {
                 lowestHp = d.Hp;
                 lowest = d;

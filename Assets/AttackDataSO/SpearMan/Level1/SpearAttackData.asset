@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3e63ecebd4cd6e044a8a127ea3df05bc, type: 3}
+  m_Name: SpearAttackData
+  m_EditorClassIdentifier: Assembly-CSharp::AttackDataSO
+  attackPer: 1
+  range: 1
+  rangeShape: 2
+  attackType: 1
+  targetMode: 0
+  attackCount: 1
+  targetCount: 1
+  shotInterval: 0.1
+  areaShape: 2
+  areaRange: 1
+  lineLength: 2
+  chainRange: 2
+  chainCount: 3
+  chainFalloff: 0.8
+  selectMode: 0
+  animTriggers:
+  - Attack
+  projectilePrefab: {fileID: 0}
+  clipLength: 0.6666667
+  buffList: []
+  groundZone: {fileID: 0}
+  lifestealPercent: 0
+  allyHealAmount: 0
+  allyHealRange: 2
+  allyHealRangeShape: 0

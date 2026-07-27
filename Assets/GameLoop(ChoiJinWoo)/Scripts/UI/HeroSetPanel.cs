@@ -63,6 +63,7 @@ public class HeroSetPanel : MonoBehaviour
             case "SpearMan": return HeroType.SpearMan;
             case "Mage": return HeroType.Mage;
             case "THS": return HeroType.THS;
+            case "Healer": return HeroType.Healer;
             default: return 0;
         }
     }

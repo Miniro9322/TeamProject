@@ -41,7 +41,7 @@ public class GameManager : MonoBehaviour
     public event Action ChangeToNight;
     public event Action ExpandMap;
 
-    private byte unlockedHero = (byte)HeroType.SwordMan | (byte)HeroType.Archer;
+    private byte unlockedHero = (byte)HeroType.SpearMan | (byte)HeroType.Archer | (byte)HeroType.Healer;
     public byte UnlockHero => unlockedHero;
     private byte UnlockedEnemy = 0b000111;
     public bool isGameOver = false;

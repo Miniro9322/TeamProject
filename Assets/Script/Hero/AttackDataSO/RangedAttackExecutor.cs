@@ -98,7 +98,7 @@ public class RangedAttackExecutor : IAttackExecutor
             {
                 e.TakeDamage(damage);
                 AttackDamageUtil.ApplyTargetDebuffs(e as IUnit, data.buffList, ctx.buffManager, data);
-                AttackDamageUtil.ApplyHealOptions(data, ctx.self.position, ctx.healSelf, ctx.getAllyObjectsInRange, damage);
+                AttackDamageUtil.ApplyHealOptions(data, ctx.self.position, ctx.healSelf, ctx.getAllyObjectsInRange, damage, ctx.sc[StatType.ATK]);
             }
             AttackDamageUtil.SpawnGroundZone(data.groundZone, target.position,
                 ctx.getEnemyObjectsInRange, ctx.getAllyObjectsInRange, ctx.sc, ctx.buffManager, CancellationToken.None);
