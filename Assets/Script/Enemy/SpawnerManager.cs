@@ -23,7 +23,8 @@ public class SpawnerManager : MonoBehaviour
     public ModuleLogic[] moduleLogics;
     public GameObject spawnPoint;
     private float yOffset = 1f;
-    public Dictionary<int,GameObject> spawnPoints = new();
+    // 지역번호 → 그 지역에 이번 라운드 활성화된 포탈들(레인마다 1개).
+    public Dictionary<int,List<GameObject>> spawnPoints = new();
 
     [Tooltip("구역 클릭 시 포탈 옆에 뜨는 월드 스페이스 텍스트 프리팹(TMP_Text 포함).")]
     public GameObject infoTextPrefab;
@@ -144,22 +145,37 @@ public class SpawnerManager : MonoBehaviour
     }
 
     // 한 지역에만 포탈 표시. 확장(해금) 시에도 이 함수로 즉시 생성한다.
+    // 이번 라운드에 켤 레인을 랜덤으로 뽑아, 활성 레인 시작점마다 포탈을 하나씩 세운다.
     private void ShowPortal(int region)
     {
         if (spawnPoint == null) return;
-        if (spawnPoints.TryGetValue(region, out var existing) && existing != null) return; // 이미 존재
+        if (spawnPoints.TryGetValue(region, out var existing) && existing != null && existing.Count > 0) return; // 이미 존재
 
         if (!_byRegion.TryGetValue(region, out var spawner) || spawner == null || spawner.Board == null) return;
-        var w = spawner.Board.GetWaypoints(yOffset);
-        if (w == null || w.Count == 0) return;
-        spawnPoints[region] = PoolManager.Instance.Spawn(spawnPoint, w[0], Quaternion.identity);
+
+        spawner.RollActivePortals();           // 이번 라운드 활성 레인 추첨(밤 스폰과 같은 집합 공유)
+        var paths = spawner.ActivePaths;
+        if (paths == null || paths.Count == 0) return;
+
+        var portals = new List<GameObject>(paths.Count);
+        Vector3 lift = Vector3.up * yOffset;
+        foreach (var path in paths)
+        {
+            if (path == null || path.Count == 0) continue;
+            portals.Add(PoolManager.Instance.Spawn(spawnPoint, path[0] + lift, Quaternion.identity));
+        }
+        spawnPoints[region] = portals;
     }
 
     private void HideAllPortals()
     {
         if (spawnPoint == null) return;
         foreach (var kv in spawnPoints)
-            if (kv.Value != null) PoolManager.Instance.Despawn(kv.Value);
+        {
+            if (kv.Value == null) continue;
+            foreach (var portal in kv.Value)
+                if (portal != null) PoolManager.Instance.Despawn(portal);
+        }
         spawnPoints.Clear();
     }
 
@@ -168,10 +184,10 @@ public class SpawnerManager : MonoBehaviour
     private void ShowStageInfo(int region)
     {
         if (infoTextPrefab == null) return;
-        if (!spawnPoints.TryGetValue(region, out var portal) || portal == null) return; // 포탈 없으면 표시 안 함
+        if (!spawnPoints.TryGetValue(region, out var portals) || portals == null || portals.Count == 0 || portals[0] == null) return; // 포탈 없으면 표시 안 함
         if (!_byRegion.TryGetValue(region, out var spawner) || spawner == null) return;
 
-        Vector3 pos = portal.transform.position + infoTextOffset;
+        Vector3 pos = portals[0].transform.position + infoTextOffset; // 정보 텍스트는 첫 포탈 옆에
         if (!_infoTexts.TryGetValue(region, out var go) || go == null)
         {
             go = PoolManager.Instance.Spawn(infoTextPrefab, pos, Quaternion.identity);
