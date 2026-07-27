@@ -36,7 +36,7 @@ public class AddCitizen : MonoBehaviour
 
     private void Update()
     {
-        if (Keyboard.current.escapeKey.wasPressedThisFrame)
+        if (Keyboard.current.escapeKey.wasPressedThisFrame || Mouse.current.rightButton.wasPressedThisFrame)
         {
             gameObject.SetActive(false);
         }

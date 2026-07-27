@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Resources;
 using UnityEngine;
@@ -31,6 +32,8 @@ public class MapView : MonoBehaviour
     public bool InputBlocked { get { return input.Blocked; } }
     public Tile HoverTile { get { return pointerPick != null ? pointerPick.UnderPointer() : null; } }
     public bool IsPlacing { get { return palette.Mode == PlaceMode.Place; } }
+    public bool IsReplacing { get { return palette.Mode == PlaceMode.Replace; } }
+    public bool IsOff { get { return palette.Mode == PlaceMode.Off; } }
     public OccupantKind PlacingKind { get { return palette.CurrentSlot().kind; } }
     public string PlacingLabel { get { return palette.CurrentSlot().label; } }
     public int PlacingRange { get { return palette.PreviewRange(); } }
@@ -38,6 +41,8 @@ public class MapView : MonoBehaviour
     public Tile Selected { get { return tileSelect.Selected; } }
     public string Mode { get { return palette.Mode.ToString(); } }
     public IReadOnlyList<Placeable> Items { get { return palette.Slots; } }
+
+    public event Action OnOffMode;
 
     public int UnitIndex
     {
@@ -64,7 +69,7 @@ public class MapView : MonoBehaviour
         palette.SelectReplace();
     }
     public void SetRemove() { palette.SelectRemove(); }
-    public void ClearMode() { palette.ClearMode(); }
+    public void ClearMode() { palette.ClearMode(); OnOffMode?.Invoke(); }
     public void SetBlock(bool value) { input.SetBlock(value); }
 
     public bool CheckCanBuild(string label)
@@ -76,15 +81,12 @@ public class MapView : MonoBehaviour
             case OccupantKind.None:
                 return false;
             case OccupantKind.MeleeHero:
-                if (citizenManager.CheckCanUseCitizen(slot.prefab.GetComponent<Hero>().CitizenAmount) && resourcesManager.CheckResources(slot.prefab.GetComponent<Hero>().Cost))
-                    return true;
-                else
-                    return false;
             case OccupantKind.RangedHero:
-                if (citizenManager.CheckCanUseCitizen(slot.prefab.GetComponent<Hero>().CitizenAmount) && resourcesManager.CheckResources(slot.prefab.GetComponent<Hero>().Cost))
-                    return true;
-                else
-                    return false;
+                {
+                    Hero hero = slot.prefab.GetComponent<Hero>();
+                    var cost = hero.Cost;
+                    return citizenManager.CheckCanUseCitizen(hero.CitizenAmount) && cost != null && resourcesManager.CheckResources(cost);
+                }
             case OccupantKind.Building:
                 if (resourcesManager.CheckResources(slot.prefab.GetComponent<House>().Resources))
                     return true;

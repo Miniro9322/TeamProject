@@ -33,7 +33,7 @@ public class BuildModePanel : MonoBehaviour
     {
         if (!Keyboard.current.escapeKey.wasPressedThisFrame) return;
 
-        if (view.IsPlacing)
+        if (!view.IsOff)
         {
             view.ClearMode();
         }
@@ -96,10 +96,6 @@ public class BuildModePanel : MonoBehaviour
 
     public void OnReplaceButton()
     {
-        if (facilityPanel.activeSelf == true)
-            facilityPanel.SetActive(false);
-        if (heroPanel.activeSelf == true)
-            heroPanel.SetActive(false);
         view.SetReplace();
     }
 
