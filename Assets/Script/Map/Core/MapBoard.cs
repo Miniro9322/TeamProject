@@ -12,6 +12,7 @@ public class MapBoard : MonoBehaviour
 
     [SerializeField] private Grid _grid; // 좌표계의 단일 소스. 셀 크기·원점·Swizzle을 모두 쥔다.
     private Bounds _worldBounds;
+    private ModuleLogic _module; // 소속 모듈. Awake에서 한 번만 잡는다(매 호출 GetComponent 금지).
 
     private readonly TileIndexer _indexer = new(); // 좌표(Col/Row) → 1차원 인덱스. _cells와 같은 Tile을 가리키는 배열.
      
@@ -36,7 +37,24 @@ public class MapBoard : MonoBehaviour
     /// <summary>적이 타일에서 벗어났을 때(칸 이탈·despawn). 인자는 이탈당한 타일.</summary>
     public event Action<Tile> EnemyExited;
 
-    private void Awake() => Build();
+    /// <summary>
+    /// 이 보드의 모듈이 열려 있는가. 모듈이 아예 없는 보드(테스트용)만 열린 것으로 본다.
+    /// 비활성 오브젝트는 Awake가 안 돌아 _module이 비어 있으므로 여기서 한 번 더 잡는다.
+    /// </summary>
+    public bool IsUnlocked
+    {
+        get
+        {
+            if (_module == null) { _module = GetComponent<ModuleLogic>(); }
+            return _module == null || _module.IsUnlocked;
+        }
+    }
+
+    private void Awake()
+    {
+        _module = GetComponent<ModuleLogic>();
+        Build();
+    }
 
     [ContextMenu("Build")]
     public void Build()
@@ -294,7 +312,7 @@ public class MapBoard : MonoBehaviour
 
     public bool CanPlace(Vector2Int coord, OccupantKind kind, out string reason)
     {
-        ModuleLogic module = GetComponent<ModuleLogic>();
+        ModuleLogic module = _module;
         if (module != null && !module.IsPreparing)
         {
             if (module.CurrentState == ModuleState.Locked)
