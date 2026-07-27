@@ -8,10 +8,11 @@ using UnityEngine;
 public class FogController : MonoBehaviour
 {
     [SerializeField] private MapRegistry registry;
-    [SerializeField] private float openDuration = 1.2f;
+    [SerializeField] private float openDuration = 4f;   // 안개가 완전히 걷히는 시간(초)
 
-    [Header("Reveal")]
-    [SerializeField, Range(0f, 8f)] private float revealCells = 0f;   // 모듈 외곽 밖으로 더 보일 칸 수
+    [Header("Edge")]
+    [Tooltip("잠긴 모듈 외곽 밖으로 안개를 더 밀어낼 칸 수. 경계 노이즈가 외곽 타일을 깎아먹는 걸 막는다.")]
+    [SerializeField, Range(0f, 8f)] private float edgeCells = 1.5f;
 
     private const int MaxAreas = 8;
 
@@ -188,7 +189,7 @@ public class FogController : MonoBehaviour
         {
             return;
         }
-        Shader.SetGlobalFloat(MarginId, revealCells * _cellSize);
+        Shader.SetGlobalFloat(MarginId, edgeCells * _cellSize);
     }
 
     private void ApplyOpenState()
