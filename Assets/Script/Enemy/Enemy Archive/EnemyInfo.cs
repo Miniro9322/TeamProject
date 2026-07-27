@@ -1,41 +1,145 @@
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
+// 도감 상세 패널.
+//  - page 0    : 적 이름 + 적 설명 (스킬 텍스트는 비움)
+//  - page 1..N : 적 설명은 비우고, 스킬 이름/설명 텍스트에 각 스킬을 표시
+// 왼쪽/오른쪽 화살표로 페이지를 이동한다(순환 없음):
+//  - 첫 페이지(0)면 왼쪽 화살표 숨김, 마지막 페이지면 오른쪽 화살표 숨김, 가운데면 둘 다 표시.
 public class EnemyInfo : MonoBehaviour
 {
-    public TMP_Text e_NameText;
-    public TMP_Text e_DescText;
-    public TMP_Text e_SkillNameText;
-    public TMP_Text e_SkillDescText;
+    public Image e_Image;              // 적 이미지 (임시 — 아래 로드 코드는 주석 처리)
+    public TMP_Text e_NameText;        // 적 이름 (스킬 페이지에서도 유지)
+    public TMP_Text e_DescText;        // 적 설명 (스킬 페이지에선 비움)
+    public TMP_Text e_SkillNameText;   // 스킬 이름 (적 페이지에선 비움)
+    public TMP_Text e_SkillDescText;   // 스킬 설명 (적 페이지에선 비움)
+    public Button leftArrowButton;     // 이전 페이지 (◀)
+    public Button rightArrowButton;    // 다음 페이지 (▶)
+
+    private string enemyName;
+    private string enemyDesc;
+    private readonly List<string> skillNames = new();
+    private readonly List<string> skillDescs = new();
+    private int page;   // 0 = 적, 1..N = 스킬(page-1)
+    private Image origin;
+    private int LastPage => skillDescs.Count;   // 페이지 인덱스 최대값 (0 + 스킬 수)
+
+    void Awake()
+    {
+        if (leftArrowButton != null)
+        {
+            leftArrowButton.onClick.RemoveAllListeners();
+            leftArrowButton.onClick.AddListener(PrevPage);
+        }
+        if (rightArrowButton != null)
+        {
+            rightArrowButton.onClick.RemoveAllListeners();
+            rightArrowButton.onClick.AddListener(NextPage);
+        }
+        origin = e_Image;
+        Clear();
+    }
+
+    // 처음엔 비워둔 상태로 시작
+    public void Clear()
+    {
+        enemyName = string.Empty;
+        enemyDesc = string.Empty;
+        skillNames.Clear();
+        skillDescs.Clear();
+        page = 0;
+        SetText(e_NameText, string.Empty);
+        SetText(e_DescText, string.Empty);
+        SetText(e_SkillNameText, string.Empty);
+        SetText(e_SkillDescText, string.Empty);
+        if (e_Image != null) e_Image.enabled = false;
+        SetActive(leftArrowButton, false);
+        SetActive(rightArrowButton, false);
+    }
+
     public void Info(EnemyTable.Data data)
     {
-        if (data == null) return;
+        if (data == null) { Clear(); return; }
         var st = DataTableManager.StringTable;
-        e_NameText.text = st.Get(data.Name);
-        e_DescText.text = st.Get(data.Desc);
 
-        if (string.IsNullOrEmpty(data.Skills) ||
-            data.Skills.Equals("None", System.StringComparison.OrdinalIgnoreCase))
+        enemyName = st.Get(data.Name);
+        enemyDesc = st.Get(data.Desc);
+
+        skillNames.Clear();
+        skillDescs.Clear();
+        if (!string.IsNullOrEmpty(data.Skills) &&
+            !data.Skills.Equals("None", System.StringComparison.OrdinalIgnoreCase))
         {
-            e_SkillNameText.text = string.Empty;
-            e_SkillDescText.text = string.Empty;
-            return;
+            var skillTable = DataTableManager.SkillTable;
+            foreach (var raw in data.Skills.Split(';'))
+            {
+                var id = raw.Trim();
+                if (string.IsNullOrEmpty(id)) continue;
+                var skill = skillTable.Get(id);
+                if (skill == null) continue;
+                skillNames.Add(st.Get(skill.NameKey));
+                skillDescs.Add(st.Get(skill.Desc));
+            }
         }
 
-        var skillTable = DataTableManager.SkillTable;
-        var names = new List<string>();
-        var descs = new List<string>();
-        foreach (var raw in data.Skills.Split(';'))
+        // 적 이미지 (임시 — 실제 로드는 Resources/Image 폴더 준비 후 주석 해제)
+        if (e_Image != null)
         {
-            var id = raw.Trim();
-            if (string.IsNullOrEmpty(id)) continue;
-            var skill = skillTable.Get(id);
-            if (skill == null) continue;
-            names.Add(st.Get(skill.NameKey));
-            descs.Add(st.Get(skill.Desc));
+            // e_Image.sprite = Resources.Load<Sprite>($"Image/{data.Name}");
+            // e_Image.enabled = e_Image.sprite != null;
+            e_Image.enabled = origin != null;
         }
-        e_SkillNameText.text = string.Join("\n", names);
-        e_SkillDescText.text = string.Join("\n", descs);
+
+        page = 0;
+        Show();
+    }
+
+    private void NextPage()
+    {
+        if (page >= LastPage) return;
+        page++;
+        Show();
+    }
+
+    private void PrevPage()
+    {
+        if (page <= 0) return;
+        page--;
+        Show();
+    }
+
+    private void Show()
+    {
+        SetText(e_NameText, enemyName);   // 적 이름은 항상 유지
+
+        if (page == 0)
+        {
+            SetText(e_DescText, enemyDesc);
+            SetText(e_SkillNameText, string.Empty);
+            SetText(e_SkillDescText, string.Empty);
+        }
+        else
+        {
+            int i = page - 1;
+            SetText(e_DescText, string.Empty);          // 기존(적) 설명 비움
+            SetText(e_SkillNameText, skillNames[i]);
+            SetText(e_SkillDescText, skillDescs[i]);
+        }
+
+        // 왼쪽: 뒤로 갈 페이지 있을 때 / 오른쪽: 넘길 페이지 있을 때
+        SetActive(leftArrowButton, page > 0);
+        SetActive(rightArrowButton, page < LastPage);
+    }
+
+    private static void SetText(TMP_Text t, string value)
+    {
+        if (t != null) t.text = value;
+    }
+
+    private static void SetActive(Button b, bool on)
+    {
+        if (b != null) b.gameObject.SetActive(on);
     }
 }
