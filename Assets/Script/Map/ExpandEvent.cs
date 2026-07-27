@@ -1,14 +1,20 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class ExpandEvent : MonoBehaviour
 {
     [SerializeField] private MapRegistry registry;
+    [SerializeField] private FogController fogController;
+    [SerializeField] private CameraRig cameraRig;
     // 지금 올라간 선택지들. 선택하거나 밤이 되면 비워진다.
     private readonly List<ModuleLogic> _choices = new();
     // 선택지로 올라간 지역을 읽기 전용으로 제공. UI가 켜질 때 읽는다.
     public IReadOnlyList<ModuleLogic> Choices => _choices;
 
+    [SerializeField] private List<Transform> regionPoint;
+
+    private int expandCount = 0;
     // 선택지는 버튼 수만큼만 올린다.
 
      
@@ -30,6 +36,15 @@ public class ExpandEvent : MonoBehaviour
         }
 
         module.Unlock(); //모듈 상태를 Preparing으로 전환. (UI에서만 호출)
+        module.gameObject.transform.position = regionPoint[expandCount].position;
+
+        // 이동한 위치를 반영: 보드부터 다시 지어야 WorldBounds가 새 위치를 가리킨다(Fog는 실시간이라 안 해도 되지만, 카메라 제한은 캐시라 필요).
+        MapBoard board = module.GetComponent<MapBoard>();
+        if (board != null) board.Build();
+
+        fogController.RefreshArea(module); // 이동한 위치로 안개 영역 재계산
+        if (cameraRig != null) cameraRig.RebuildLimit(); // 이동한 위치로 카메라 팬 제한 재계산
+        expandCount++;
         _choices.Clear();
     }
 
@@ -62,6 +77,24 @@ public class ExpandEvent : MonoBehaviour
 
             _choices.Add(module);
         }
+    }
+
+    public bool GetModuleId(int id, out int moduleId)
+    {
+        if (!registry.TryGetModuleLogic(id, out ModuleLogic module))
+        {
+            moduleId = -1;
+            return false;
+        }
+
+        if (!Choices.Contains(module))
+        {
+            moduleId = module.ModuleId;
+            return false;
+        }
+
+        moduleId = module.ModuleId;
+        return true;
     }
   
 }

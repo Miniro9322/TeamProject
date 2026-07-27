@@ -31,6 +31,7 @@ public class MapView : MonoBehaviour
     public bool InputBlocked { get { return input.Blocked; } }
     public Tile HoverTile { get { return pointerPick != null ? pointerPick.UnderPointer() : null; } }
     public bool IsPlacing { get { return palette.Mode == PlaceMode.Place; } }
+    public bool IsReplacing { get { return palette.Mode == PlaceMode.Replace; } }
     public OccupantKind PlacingKind { get { return palette.CurrentSlot().kind; } }
     public string PlacingLabel { get { return palette.CurrentSlot().label; } }
     public int PlacingRange { get { return palette.PreviewRange(); } }

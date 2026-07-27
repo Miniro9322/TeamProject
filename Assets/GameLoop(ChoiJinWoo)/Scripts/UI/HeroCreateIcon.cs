@@ -18,4 +18,9 @@ public class HeroCreateIcon : MonoBehaviour
         button.onClick.AddListener(() => onClick?.Invoke(slot));
         text.text = label;
     }
+
+    public void SetInteractable(bool interactable)
+    {
+        button.interactable = interactable;
+    }
 }

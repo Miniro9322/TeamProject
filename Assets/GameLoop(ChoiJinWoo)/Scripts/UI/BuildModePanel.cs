@@ -96,10 +96,6 @@ public class BuildModePanel : MonoBehaviour
 
     public void OnReplaceButton()
     {
-        if (facilityPanel.activeSelf == true)
-            facilityPanel.SetActive(false);
-        if (heroPanel.activeSelf == true)
-            heroPanel.SetActive(false);
         view.SetReplace();
     }
 

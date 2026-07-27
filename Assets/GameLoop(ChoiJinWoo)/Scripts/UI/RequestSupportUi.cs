@@ -43,37 +43,43 @@ public class RequestSupportUi : MonoBehaviour
     {
         expand.ShowChoices();
 
-        if (supportListCopy != null && supportListCopy.Count >= 2)
+        List<SupportRegion> eligible = supportListCopy.FindAll(s => expand.GetModuleId(s.ModuleID, out _));
+
+        if (eligible.Count >= 2)
         {
-            firstChoice = supportListCopy[UnityEngine.Random.Range(0, supportListCopy.Count)];
+            int firstIndex = UnityEngine.Random.Range(0, eligible.Count);
+            firstChoice = eligible[firstIndex];
             firstChoiceText.text = $"영웅 해금 : {firstChoice.UnlockHero}";
-            while (true)
+
+            int secondIndex;
+            do
             {
-                secondChoice = supportListCopy[UnityEngine.Random.Range(0, supportListCopy.Count)];
-                if (firstChoice != secondChoice) break;
-            }
+                secondIndex = UnityEngine.Random.Range(0, eligible.Count);
+            } while (secondIndex == firstIndex);
+            secondChoice = eligible[secondIndex];
             secondChoiceText.text = $"영웅 해금 : {secondChoice.UnlockHero}";
         }
-        else if(supportListCopy.Count != 0)
+        else if (eligible.Count == 1)
         {
-            firstChoice = supportListCopy[0];
-            secondChoicePanel.SetActive(false); 
+            firstChoice = eligible[0];
+            firstChoiceText.text = $"영웅 해금 : {firstChoice.UnlockHero}";
+            secondChoicePanel.SetActive(false);
         }
- 
+
         if (expand.Choices.Count == 0)
         {
             gameObject.SetActive(false);
             return;
         }
 
-        FillButton(firstButton, firstLabel, supportListCopy.IndexOf(firstChoice));
-        FillButton(secondButton, secondLabel, supportListCopy.IndexOf(secondChoice));
+        FillButton(firstButton, firstLabel, firstChoice.ModuleID);
+        FillButton(secondButton, secondLabel, secondChoice.ModuleID);
     }
 
     public void FirstButton()
     {
         OnUnlock?.Invoke((byte)firstChoice.UnlockHero);
-        SelectChoice(supportListCopy.IndexOf(firstChoice));
+        SelectChoice(firstChoice.ModuleID);
         supportListCopy.Remove(firstChoice);
         gameObject.SetActive(false);
     }
@@ -81,29 +87,27 @@ public class RequestSupportUi : MonoBehaviour
     public void SecondButton()
     {
         OnUnlock?.Invoke((byte)secondChoice.UnlockHero);
-        SelectChoice(supportListCopy.IndexOf(secondChoice));
+        SelectChoice(secondChoice.ModuleID);
         supportListCopy.Remove(secondChoice);
         gameObject.SetActive(false);
     }
 
     private void FillButton(Button button, TextMeshProUGUI label, int index)
     {
-        Debug.Log($"버튼 인덱스 : {index}");
-        bool has = index < expand.Choices.Count;
+        var has = expand.GetModuleId(index, out int id);
         button.gameObject.SetActive(has);
         if (has)
         {
-            label.text = $"지역 {expand.Choices[index].ModuleId}";
+            label.text = $"지역 {id}";
         }
     }
 
     private void SelectChoice(int index)
     {
-        Debug.Log($"인덱스 : {index}");
-        if (index < expand.Choices.Count)
+
+        if (expand.GetModuleId(index, out _))
         {
-            Debug.Log($"지역 {expand.Choices[index].ModuleId} 확장");
-            expand.SelectModule(expand.Choices[index]);
+            expand.SelectById(index);
         }
 
         gameObject.SetActive(false);

@@ -208,7 +208,7 @@ public class CameraRig : MonoBehaviour
         return new Vector2(local.x / (dz * tanH), local.y / (dz * tanV));
     }
 
-    private void RebuildLimit()
+    public void RebuildLimit()
     {
         _limit.Build(registry);
         ApplyNow();
