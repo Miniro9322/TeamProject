@@ -624,7 +624,7 @@ Canvas:
   m_AdditionalShaderChannelsFlag: 25
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
-  m_SortingOrder: 1
+  m_SortingOrder: 2
   m_TargetDisplay: 0
 --- !u!114 &9011281510874008505
 MonoBehaviour:
@@ -662,6 +662,9 @@ MonoBehaviour:
   e_SkillDescText: {fileID: 4469018794138132668}
   leftArrowButton: {fileID: 7569994988733376093}
   rightArrowButton: {fileID: 1312220785099208523}
+  lockedName: ???
+  lockedMessage: ???
+  lockedEnemyText: {fileID: 0}
 --- !u!114 &845107795027264194
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1238,7 +1241,7 @@ MonoBehaviour:
   m_Content: {fileID: 8395774155935240724}
   m_Horizontal: 1
   m_Vertical: 1
-  m_MovementType: 0
+  m_MovementType: 2
   m_Elasticity: 0.1
   m_Inertia: 1
   m_DecelerationRate: 0.135

@@ -11,7 +11,7 @@ public static class EnemyArchiveData
 
     public static event Action<string> OnUnlocked;
 
-    private const string PrefsKey = "EnemyArchive.Unlocked";
+    private const string PrefsKey = "EnemyArchive.Unlocked_Test1";
     private const char Separator = ';';
 
     static EnemyArchiveData() => Load();
@@ -21,6 +21,7 @@ public static class EnemyArchiveData
         if (string.IsNullOrEmpty(enemyKey)) return;
         if (!unlocked.Add(enemyKey)) return;   // 이미 있으면 false → 조기 반환
 
+        Debug.Log($"[도감] 새 적 해금: {enemyKey} (총 {unlocked.Count}종)");
         Save();
         OnUnlocked?.Invoke(enemyKey);
     }

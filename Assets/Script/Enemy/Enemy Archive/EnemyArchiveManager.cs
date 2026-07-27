@@ -9,7 +9,6 @@ public class EnemyArchiveManager : MonoBehaviour
     public GameObject archive;
     public GameObject guardPanal;
     public Button hidePanal;
-    public Button enemyInfoButton;
     public Button infoOpenButton;
     public Button infoCloseButton;
     private CancellationTokenSource cts;
@@ -82,8 +81,8 @@ public class EnemyArchiveManager : MonoBehaviour
     private async UniTask CloseArchiveCor(CancellationToken token)
     {
         guardPanal.SetActive(true);
-        hidePanal.gameObject.SetActive(false);   // 닫는 중엔 뒤 판넬 클릭 막기
-        float t = 1f - Progress01(archive.transform.localScale); // 현재 스케일에서 이어서 닫기
+        hidePanal.gameObject.SetActive(false);
+        float t = 1f - Progress01(archive.transform.localScale); 
         float speed = 5f;
         while(t<1f)
         {

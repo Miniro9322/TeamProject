@@ -10,21 +10,25 @@ using UnityEngine.UI;
 //  - 첫 페이지(0)면 왼쪽 화살표 숨김, 마지막 페이지면 오른쪽 화살표 숨김, 가운데면 둘 다 표시.
 public class EnemyInfo : MonoBehaviour
 {
-    public Image e_Image;              // 적 이미지 (임시 — 아래 로드 코드는 주석 처리)
-    public TMP_Text e_NameText;        // 적 이름 (스킬 페이지에서도 유지)
-    public TMP_Text e_DescText;        // 적 설명 (스킬 페이지에선 비움)
-    public TMP_Text e_SkillNameText;   // 스킬 이름 (적 페이지에선 비움)
-    public TMP_Text e_SkillDescText;   // 스킬 설명 (적 페이지에선 비움)
-    public Button leftArrowButton;     // 이전 페이지 (◀)
-    public Button rightArrowButton;    // 다음 페이지 (▶)
+    public Image e_Image;
+    public TMP_Text e_NameText;     
+    public TMP_Text e_DescText;      
+    public TMP_Text e_SkillNameText; 
+    public TMP_Text e_SkillDescText;   
+    public Button leftArrowButton;     
+    public Button rightArrowButton;    
+
+    [Header("미해금(아직 못 만난 적) 표시")]
+    public string lockedName = "???";
+    [TextArea] public string lockedMessage = "???";
+    public GameObject lockedEnemyText;
 
     private string enemyName;
     private string enemyDesc;
     private readonly List<string> skillNames = new();
     private readonly List<string> skillDescs = new();
-    private int page;   // 0 = 적, 1..N = 스킬(page-1)
-    private Image origin;
-    private int LastPage => skillDescs.Count;   // 페이지 인덱스 최대값 (0 + 스킬 수)
+    private int page;
+    private int LastPage => skillDescs.Count;
 
     void Awake()
     {
@@ -38,7 +42,10 @@ public class EnemyInfo : MonoBehaviour
             rightArrowButton.onClick.RemoveAllListeners();
             rightArrowButton.onClick.AddListener(NextPage);
         }
-        origin = e_Image;
+        Clear();
+    }
+    void OnDisable()
+    {
         Clear();
     }
 
@@ -62,6 +69,9 @@ public class EnemyInfo : MonoBehaviour
     public void Info(EnemyTable.Data data)
     {
         if (data == null) { Clear(); return; }
+
+        if (!EnemyArchiveData.IsUnlocked(data.Name)) { ShowLocked(); return; }
+
         var st = DataTableManager.StringTable;
 
         enemyName = st.Get(data.Name);
@@ -84,16 +94,30 @@ public class EnemyInfo : MonoBehaviour
             }
         }
 
-        // 적 이미지 (임시 — 실제 로드는 Resources/Image 폴더 준비 후 주석 해제)
         if (e_Image != null)
         {
-            // e_Image.sprite = Resources.Load<Sprite>($"Image/{data.Name}");
-            // e_Image.enabled = e_Image.sprite != null;
-            e_Image.enabled = origin != null;
+            e_Image.sprite = Resources.Load<Sprite>($"EnemyIcons/{data.Name}");
+            e_Image.enabled = e_Image.sprite != null;
         }
 
         page = 0;
         Show();
+    }
+
+    private void ShowLocked()
+    {
+        page = 0;
+        skillNames.Clear();
+        skillDescs.Clear();
+        GameObject go = PoolManager.Instance.Spawn(lockedEnemyText,transform.position,Quaternion.identity,gameObject.transform);
+        PoolManager.Instance.Despawn(go,1f);
+        SetText(e_NameText, lockedName);
+        SetText(e_DescText, lockedMessage);
+        SetText(e_SkillNameText, string.Empty);
+        SetText(e_SkillDescText, string.Empty);
+        if (e_Image != null) e_Image.enabled = false;
+        SetActive(leftArrowButton, false);
+        SetActive(rightArrowButton, false);
     }
 
     private void NextPage()

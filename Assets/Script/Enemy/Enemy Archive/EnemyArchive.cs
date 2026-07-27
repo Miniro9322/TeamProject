@@ -35,8 +35,7 @@ public class EnemyArchive : MonoBehaviour
             Button btn = Instantiate(enemyButtonPrefab, content);
             btn.name = $"EnemyBtn_{data.Name}";
 
-            // TODO: 버튼 이미지 연결 (Resources/Image/{data.Name})
-            // var icon = btn.GetComponentInChildren<Image>();
+            // var icon = btn.GetComponentInChildren<Image>(); // 아직 이미지없음
             // if (icon != null) icon.sprite = Resources.Load<Sprite>($"Image/{data.Name}");
 
             // 클릭 시 상세정보 출력
