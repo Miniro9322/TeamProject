@@ -9,6 +9,7 @@ public class HeroSetPanel : MonoBehaviour
     [SerializeField] private MapGame game;
     [SerializeField] private HeroCreateIcon iconPrefab;
     [SerializeField] private Transform container;
+    [SerializeField] private GameObject HeroInfoPanel;
 
     private readonly Dictionary<Placeable, HeroCreateIcon> icons = new();
     private bool wasBlocked;
