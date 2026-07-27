@@ -5,6 +5,8 @@ using UnityEngine.UI;
 
 public class GameSpeedUI : MonoBehaviour
 {
+    private float beforeTimeSpeed = 1f;
+
     private void Update()
     {
         if (Keyboard.current.tabKey.wasPressedThisFrame)
@@ -31,11 +33,12 @@ public class GameSpeedUI : MonoBehaviour
         {
             if(Time.timeScale > 0f)
             {
+                beforeTimeSpeed = Time.timeScale;
                 OnZeroSpeed();
             }
             else
             {
-                OnNormalSpeed();
+                Time.timeScale = beforeTimeSpeed;
             }
         }
     }
