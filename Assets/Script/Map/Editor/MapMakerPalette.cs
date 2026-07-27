@@ -36,6 +36,12 @@ public static class MapMakerPalette
     public static readonly Color PathEdge = new(0.000f, 0.000f, 0.000f, 0.55f);
     public static readonly Color Problem = new(0.910f, 0.259f, 0.369f);
 
+    /// <summary>프리팹과 다른(씬 오버라이드) 칸 표식 — 청록. 문제(빨강)·스폰(금)과 겹치지 않게 골랐다.</summary>
+    public static readonly Color Override = new(0.216f, 0.804f, 0.831f);
+
+    /// <summary>배치 허용이 켜졌지만 효과 없는(무효 조합) 칸 표식 — 주황.</summary>
+    public static readonly Color Inert = new(0.960f, 0.510f, 0.129f);
+
     /// <summary>지형별 바탕색.</summary>
     public static Color Terrain(TerrainType terrain)
     {

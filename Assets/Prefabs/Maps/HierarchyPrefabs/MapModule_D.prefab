@@ -51733,6 +51733,7 @@ GameObject:
   - component: {fileID: -3547879118163182433}
   - component: {fileID: 7423437774529506930}
   - component: {fileID: 9147489715866583117}
+  - component: {fileID: 6290409441832568780}
   m_Layer: 0
   m_Name: MapModule_D
   m_TagString: Untagged
@@ -51813,7 +51814,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 31478ffa6d3e4dd4a8b4e366106fa1a8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyPathView
-  board: {fileID: 8719301790896272070}
+  routeMap: {fileID: 0}
   pathVisible: 0
 --- !u!114 &9147489715866583117
 MonoBehaviour:
@@ -51832,6 +51833,19 @@ MonoBehaviour:
   trailLift: 0.15
   loopGap: 1.2
   autoPlay: 1
+--- !u!114 &6290409441832568780
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8328397223932432046}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 777a87d1cf3831041932262d28cf86c9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyLanes
+  board: {fileID: 8719301790896272070}
 --- !u!1 &8350355178387166652
 GameObject:
   m_ObjectHideFlags: 0
