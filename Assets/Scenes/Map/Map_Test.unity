@@ -5347,6 +5347,30 @@ PrefabInstance:
       propertyPath: text
       value: 
       objectReference: {fileID: 1957376806}
+    - target: {fileID: 2086674069866403823, guid: b4c9ebb8dbbdd3749bbb2104d50b5b61, type: 3}
+      propertyPath: State.Flags
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 2086674069866403823, guid: b4c9ebb8dbbdd3749bbb2104d50b5b61, type: 3}
+      propertyPath: State.CanMelee
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3204311503108825084, guid: b4c9ebb8dbbdd3749bbb2104d50b5b61, type: 3}
+      propertyPath: State.Flags
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 3204311503108825084, guid: b4c9ebb8dbbdd3749bbb2104d50b5b61, type: 3}
+      propertyPath: State.CanRanged
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4016029111526422794, guid: b4c9ebb8dbbdd3749bbb2104d50b5b61, type: 3}
+      propertyPath: State.Flags
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 4016029111526422794, guid: b4c9ebb8dbbdd3749bbb2104d50b5b61, type: 3}
+      propertyPath: State.CanMelee
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 4730586149953611958, guid: b4c9ebb8dbbdd3749bbb2104d50b5b61, type: 3}
       propertyPath: m_LocalPosition.x
       value: 50
@@ -5385,6 +5409,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4730586149953611958, guid: b4c9ebb8dbbdd3749bbb2104d50b5b61, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5143891710704223962, guid: b4c9ebb8dbbdd3749bbb2104d50b5b61, type: 3}
+      propertyPath: State.CanMelee
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8328397223932432046, guid: b4c9ebb8dbbdd3749bbb2104d50b5b61, type: 3}
@@ -5509,6 +5537,18 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 1526712142145222858, guid: 2a68ec03577869b449ea1d5f1fb2c174, type: 3}
+      propertyPath: State.Terrain
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 1526712142145222858, guid: 2a68ec03577869b449ea1d5f1fb2c174, type: 3}
+      propertyPath: State.CanRanged
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1820093984918914886, guid: 2a68ec03577869b449ea1d5f1fb2c174, type: 3}
+      propertyPath: State.CanBuild
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 5581972147424868009, guid: 2a68ec03577869b449ea1d5f1fb2c174, type: 3}
       propertyPath: m_Name
       value: MapModule_A
@@ -5517,6 +5557,26 @@ PrefabInstance:
       propertyPath: text
       value: 
       objectReference: {fileID: 1848118212}
+    - target: {fileID: 6335198215032827913, guid: 2a68ec03577869b449ea1d5f1fb2c174, type: 3}
+      propertyPath: State.Terrain
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 6335198215032827913, guid: 2a68ec03577869b449ea1d5f1fb2c174, type: 3}
+      propertyPath: State.CanMelee
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6335198215032827913, guid: 2a68ec03577869b449ea1d5f1fb2c174, type: 3}
+      propertyPath: State.CanRanged
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6436497244555327920, guid: 2a68ec03577869b449ea1d5f1fb2c174, type: 3}
+      propertyPath: State.CanBuild
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7369071877551309820, guid: 2a68ec03577869b449ea1d5f1fb2c174, type: 3}
+      propertyPath: State.CanRanged
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 8751462804981830479, guid: 2a68ec03577869b449ea1d5f1fb2c174, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
