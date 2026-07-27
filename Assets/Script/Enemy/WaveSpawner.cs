@@ -112,6 +112,28 @@ public class WaveSpawner : MonoBehaviour
         return _activePaths.Count;
     }
 
+    // 코어에서 가장 먼(=경로가 가장 긴) 스폰 레인 하나만 고정 활성화한다. 보스 라운드의 "끝 구석" 포탈용.
+    // 경로는 스폰→코어 순서라 Count가 클수록 코어에서 멀다. 동률이면 앞선 레인(좌표순 정렬) → 결정적.
+    public int ActivateCornerPortal()
+    {
+        EnsurePaths();
+        _activePaths.Clear();
+
+        IReadOnlyList<Vector3> corner = null;
+        int best = -1;
+        if (_allPaths != null)
+            for (int i = 0; i < _allPaths.Count; i++)
+            {
+                var p = _allPaths[i];
+                if (p == null || p.Count == 0) continue;
+                if (p.Count > best) { best = p.Count; corner = p; }
+            }
+
+        if (corner == null) corner = waypoints;                 // 레인 정보 없으면 단일 경로 폴백
+        if (corner != null && corner.Count > 0) _activePaths.Add(corner);
+        return _activePaths.Count;
+    }
+
     // 활성 포탈 중 하나를 랜덤으로 골라 그 경로를 준다. 활성 집합이 비면 단일 경로 폴백.
     private IReadOnlyList<Vector3> NextSpawnPath()
     {

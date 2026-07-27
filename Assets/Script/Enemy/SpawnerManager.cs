@@ -152,8 +152,13 @@ public class SpawnerManager : MonoBehaviour
         if (spawnPoints.TryGetValue(region, out var existing) && existing != null && existing.Count > 0) return; // 이미 존재
 
         if (!_byRegion.TryGetValue(region, out var spawner) || spawner == null || spawner.Board == null) return;
-
-        spawner.RollActivePortals();           // 이번 라운드 활성 레인 추첨(밤 스폰과 같은 집합 공유)
+        
+        // 보스 라운드(10의 배수 일차)엔 1지역만 코어에서 가장 먼 "끝 구석" 포탈 1개로 고정.
+        // 그 외엔 포탈 테이블 Count만큼 랜덤 활성화(밤 스폰과 같은 집합 공유).
+        if (region == 1 && CurrentDay > 0 && CurrentDay % 10 == 0)
+            spawner.ActivateCornerPortal();
+        else
+            spawner.RollActivePortals(PortalCount(region));
         var paths = spawner.ActivePaths;
         if (paths == null || paths.Count == 0) return;
 
@@ -165,6 +170,16 @@ public class SpawnerManager : MonoBehaviour
             portals.Add(PoolManager.Instance.Spawn(spawnPoint, path[0] + lift, Quaternion.identity));
         }
         spawnPoints[region] = portals;
+    }
+
+    // 포탈 테이블(Region,Id,Count)에서 이번 지역·라운드에 열 포탈 수를 읽는다.
+    // Id는 WaveTable과 같은 라운드 체계(10일차 초과는 1001~1005 순환). 행이 없으면 1개.
+    private int PortalCount(int region)
+    {
+        PortalTable table = DataTableManager.Get<PortalTable>(DataTableIds.Portal);
+        if (table == null) return 1;
+        int id = WaveSpawner.GetStageLookupId(CurrentDay);
+        return table.GetCount(region, id, 1);
     }
 
     private void HideAllPortals()
