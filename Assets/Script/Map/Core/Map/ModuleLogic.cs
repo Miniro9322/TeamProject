@@ -21,11 +21,6 @@ public class ModuleLogic : MonoBehaviour
 
     public event Action<ModuleState> OnStateChanged;
 
-    private void Awake()
-    {
-        gameObject.SetActive(IsUnlocked);
-    }
-
     public void SetModuleId(int ModuleId)
     {
         moduleId = ModuleId;
@@ -43,7 +38,6 @@ public class ModuleLogic : MonoBehaviour
     {
         if (IsUnlocked) return;
 
-        gameObject.SetActive(true);
         SetState(ModuleState.Preparing);
     }
  
