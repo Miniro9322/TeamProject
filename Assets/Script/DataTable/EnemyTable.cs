@@ -19,6 +19,7 @@ public class EnemyTable : DataTable
         public string Type {get ; set ;}     // 공격 타입 (Melee, Ranged)
         public string Class {get ; set ;}     // 등급 (Normal, Elite, Boss)
         public string Attribute {get ; set ;} // 적 속성
+        public string Desc {get ; set ;}
     }
     
     private readonly Dictionary<string, Data> table = new();
