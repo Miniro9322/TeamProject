@@ -14,7 +14,7 @@ public class PhaseController : MonoBehaviour
     // 밤: 열린 모듈 전부 전투 상태로.
     public void EnterNight()
     {
-        SetAll(ModuleState.Battle);
+        //SetAll(ModuleState.Battle);
     }
 
     // Locked는 건드리지 않고, IsUnlocked인 모듈만 전환한다.
