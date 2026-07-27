@@ -14,11 +14,14 @@ public struct ProjectileAoEConfig
     public System.Func<Vector3, int, RangeShape, List<IDamageAble>> getEnemiesInRange;
     public System.Func<Vector3, int, RangeShape, List<GameObject>> getEnemyObjectsInRange;
     public System.Func<Vector3, int, RangeShape, List<GameObject>> getTargetableEnemyObjectsInRange;
+    public System.Func<Vector3, int, RangeShape, List<GameObject>> getAllyObjectsInRange;
+    public System.Action<float> healSelf;
     public List<BuffEffect> buffList;
     public BuffManager buffManager;
     public object source; // 보통 발사한 AttackDataSO 인스턴스
     public GroundZoneDataSO groundZone;
     public StatContainer attackerStats;
+    public Vector3 casterPos; // 피흡/아군 힐 대상 조회 중심 — 착탄 지점(transform.position)이 아니라 발사자 기준이어야 한다.
 }
 
 public class Projectile : MonoBehaviour
@@ -105,7 +108,10 @@ public class Projectile : MonoBehaviour
         {
             List<GameObject> hits = ChainResolver.Resolve(target.gameObject, damage, cfg.chainRange, cfg.chainCount, cfg.chainFalloff, cfg.getTargetableEnemyObjectsInRange);
             foreach (GameObject go in hits)
+            {
                 AttackDamageUtil.ApplyTargetDebuffs(go.GetComponentInParent<IUnit>(), cfg.buffList, cfg.buffManager, cfg.source);
+                ApplyHealOptions(damage);
+            }
         }
         else if (cfg.attackType == AttackType.Area)
         {
@@ -113,6 +119,7 @@ public class Projectile : MonoBehaviour
             {
                 enemy.TakeDamage((int)damage);
                 AttackDamageUtil.ApplyTargetDebuffs(enemy as IUnit, cfg.buffList, cfg.buffManager, cfg.source);
+                ApplyHealOptions(damage);
             }
             //SplashHighlighter.Instance?.Flash(transform.position, cfg.areaRange, aoeShape);
         }
@@ -120,12 +127,20 @@ public class Projectile : MonoBehaviour
         {
             damageable.TakeDamage((int)damage);
             AttackDamageUtil.ApplyTargetDebuffs(target.GetComponentInParent<IUnit>(), cfg.buffList, cfg.buffManager, cfg.source);
+            ApplyHealOptions(damage);
         }
 
         AttackDamageUtil.SpawnGroundZone(cfg.groundZone, transform.position,
-            cfg.getEnemyObjectsInRange, cfg.attackerStats, cfg.buffManager, CancellationToken.None);
+            cfg.getEnemyObjectsInRange, cfg.getAllyObjectsInRange, cfg.attackerStats, cfg.buffManager, CancellationToken.None);
 
         Return();
+    }
+
+    // cfg.source는 발사한 AttackDataSO 인스턴스 — 그걸로 피흡/아군 힐 옵션을 조회해 적용한다.
+    private void ApplyHealOptions(float damageDealt)
+    {
+        if (cfg.source is AttackDataSO data)
+            AttackDamageUtil.ApplyHealOptions(data, cfg.casterPos, cfg.healSelf, cfg.getAllyObjectsInRange, damageDealt);
     }
 
     private void Return()

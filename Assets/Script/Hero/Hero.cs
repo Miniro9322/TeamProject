@@ -7,7 +7,7 @@ using VContainer;
 
 public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
 {
-        [Header("유닛 생성 비용")]
+    [Header("유닛 생성 비용")]
     [SerializeField] private int citizenAmount = 2;
     [SerializeField] private List<ProductionType> costType;
     [SerializeField] private List<int> costAmount;
@@ -123,6 +123,15 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
         if (currentHp <= 0)
             Die();
     }
+
+    public void Heal(float amount)
+    {
+        if (isDead || amount <= 0f)
+            return;
+        Debug.Log($"before : {currentHp}");
+        currentHp = Mathf.Min(currentHp + amount, sc[StatType.HP]);
+        Debug.Log($"after : {currentHp}");
+    }
     protected OccupantKind occupantKind;
 
     public event Action OnBreak;
@@ -182,7 +191,7 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
             if (zone == null) continue;
             // AttackDamageUtil.SpawnGroundZone은 항상 keepAlive=true를 넘겨 임시 장판용이므로,
             // 사망 시 멈춰야 하는 오라는 GroundZoneRunner.Run을 직접 호출해 !IsDead를 넘긴다.
-            GroundZoneRunner.Run(transform.position, zone, GetEnemyObjectsInRange, sc, buffManager,
+            GroundZoneRunner.Run(transform.position, zone, GetEnemyObjectsInRange, GetAllyObjectsInRange, sc, buffManager,
                 () => !IsDead, _auraCts.Token).Forget();
         }
     }
@@ -261,6 +270,25 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
                 if (enemy == null) continue;
                 found.Add(enemy);
             }
+        }
+
+        return found;
+    }
+
+    // GetEnemyObjectsInRange와 동일한 범위 조회지만, 적이 아니라 아군(영웅)을 찾는다.
+    // 영웅은 EnemyRegistry 같은 전역 리스트가 없고 이미 타일당 1개 점유자(OccupantObject) 모델을
+    // 쓰고 있으므로, 그 점유자를 훑는 방식으로 조회한다(힐/피흡/힐 장판에서 아군 조회용).
+    public List<GameObject> GetAllyObjectsInRange(Vector3 originWorld, int range, RangeShape shape = RangeShape.Diamond)
+    {
+        var found = new List<GameObject>();
+        Vector2Int originCell = board.WorldToCell(originWorld);
+
+        foreach (Tile tile in TileShapeQuery.GetTiles(board, originCell, range, shape))
+        {
+            GameObject occupant = tile.OccupantObject;
+            if (occupant == null) continue;
+            if (occupant.GetComponent<Hero>() is Hero ally && !ally.IsDead)
+                found.Add(occupant);
         }
 
         return found;
