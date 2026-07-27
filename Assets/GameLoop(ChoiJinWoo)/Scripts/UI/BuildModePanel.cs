@@ -33,7 +33,7 @@ public class BuildModePanel : MonoBehaviour
     {
         if (!Keyboard.current.escapeKey.wasPressedThisFrame) return;
 
-        if (view.IsPlacing)
+        if (!view.IsOff)
         {
             view.ClearMode();
         }

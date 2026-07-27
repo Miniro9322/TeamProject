@@ -25,6 +25,7 @@ public class PointerPick
         float bestSqr = float.MaxValue;
         foreach (MapBoard board in _boards)
         {
+            if (board == null || !board.gameObject.activeInHierarchy) continue; // 비활성(잠금 등) 모듈은 후보에서 제외
             Tile tile = board.CellFromRay(ray);
             if (tile == null) continue; // 이 보드는 레이가 안 맞음 — 다음 모듈
 
@@ -46,6 +47,7 @@ public class PointerPick
         float bestDist = float.MaxValue;
         foreach (MapBoard board in _boards)
         {
+            if (board == null || !board.gameObject.activeInHierarchy) continue; // 비활성(잠금 등) 모듈은 후보에서 제외
             Tile tile = board.NearestCellFromRay(ray);
             if (tile == null) continue;
 

@@ -25,7 +25,7 @@ public class CameraRig : MonoBehaviour
     public float maxDistance = 120f;
     [SerializeField] private MapRegistry registry; // 시야 경계의 소스(해금 모듈 union). FogController와 동일 주입
     [Tooltip("가로 이동 한계: 맵 좌우 끝이 화면에서 닿는 위치(1=화면 끝, 낮출수록 밖이 더 보임).")]
-    [SerializeField, Range(0.6f, 1f)] private float fillH = 1f;
+    [SerializeField, Range(0.2f, 1f)] private float fillH = 1f;
     [Tooltip("세로 이동 한계: 위/아래로 얼마나 더 갈 수 있는지(낮출수록 위·아래로 더 이동=여백↑). 맵이 3D라 위쪽 타일 윗면 여유가 필요하면 낮춘다.")]
     [SerializeField, Range(0.4f, 1f)] private float fillV = 0.8f;
 

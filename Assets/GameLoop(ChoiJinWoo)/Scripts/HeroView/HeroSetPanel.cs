@@ -13,10 +13,10 @@ public class HeroSetPanel : MonoBehaviour
     private readonly Dictionary<Placeable, HeroCreateIcon> icons = new();
     private bool wasBlocked;
 
-    // 배치/재배치 모드 진입·종료를 알리는 이벤트가 없어서 BuildModePanel의 Esc 감지처럼 매 프레임 폴링한다.
+    //모드 전환을 알리는 이벤트가 없어서 BuildModePanel의 Esc 감지처럼 매 프레임 폴링한다.
     private void Update()
     {
-        bool isBlocked = view.IsPlacing || view.IsReplacing;
+        bool isBlocked = !view.IsOff;
         if (isBlocked == wasBlocked) return;
         wasBlocked = isBlocked;
         RefreshInteractable();
@@ -27,6 +27,7 @@ public class HeroSetPanel : MonoBehaviour
         game.CitizenManager.CitizenChanged += RefreshInteractable;
         game.ResourcesManager.ProductUpdate += RefreshInteractable;
         game.Ui.UnlockChanged += AddNewlyUnlockedIcons;
+        view.OnOffMode += RefreshInteractable;
         AddNewlyUnlockedIcons();
     }
 
@@ -35,12 +36,7 @@ public class HeroSetPanel : MonoBehaviour
         game.CitizenManager.CitizenChanged -= RefreshInteractable;
         game.ResourcesManager.ProductUpdate -= RefreshInteractable;
         game.Ui.UnlockChanged -= AddNewlyUnlockedIcons;
-
-        foreach (Transform child in container)
-        {
-            Destroy(child.gameObject);
-        }
-        icons.Clear();
+        view.OnOffMode -= RefreshInteractable;
     }
 
     public void OnCreate(Placeable slot)
@@ -68,19 +64,19 @@ public class HeroSetPanel : MonoBehaviour
             if (((byte)type & unlocked) != (byte)type) continue;
 
             HeroCreateIcon icon = Instantiate(iconPrefab, container);
-            icon.Set(slot, !(view.IsPlacing || view.IsReplacing) && view.CheckCanBuild(slot.label), OnCreate, slot.label);
+            icon.Set(slot, view.IsOff && view.CheckCanBuild(slot.label), OnCreate, slot.label);
             icons[slot] = icon;
         }
     }
 
-    // 자원/시민 변화, 배치·재배치 모드 진입/종료 시 여기로 온다 — 아이콘을 새로 만들지 않고 interactable만 갱신한다.
-    // 배치·재배치 중에는 무조건 비활성화(자원/시민 여유가 있어도 또 생성 못 하게).
+    // 자원/시민 변화, 모드 진입/종료 시 여기로 온다 — 아이콘을 새로 만들지 않고 interactable만 갱신한다.
+    // Off 모드가 아니면(배치·재배치·제거 등) 무조건 비활성화(자원/시민 여유가 있어도 또 생성 못 하게).
     private void RefreshInteractable()
     {
-        bool blocked = view.IsPlacing || view.IsReplacing;
+        bool off = view.IsOff;
         foreach (var kv in icons)
         {
-            kv.Value.SetInteractable(!blocked && view.CheckCanBuild(kv.Key.label));
+            kv.Value.SetInteractable(off && view.CheckCanBuild(kv.Key.label));
         }
     }
 
