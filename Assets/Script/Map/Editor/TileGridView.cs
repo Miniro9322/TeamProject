@@ -55,8 +55,12 @@ public class TileGridView
         return Pad + Rows * cellPixels + 6;
     }
 
-    /// <summary>격자와 경로를 그린다. path는 스폰→본진 순서로 정렬돼 있어야 한다.</summary>
-    public void Draw(Rect area, int cellPixels, List<Tile> path, Vector2Int hover)
+    /// <summary>
+    /// 격자와 경로를 그린다. 각 경로는 스폰→본진 순서로 정렬돼 있어야 한다.
+    /// overrides에 든 칸은 청록 구석 표식(프리팹과 다름), showInert면 무효 조합 칸에 주황 구석 표식.
+    /// </summary>
+    public void Draw(Rect area, int cellPixels, IReadOnlyList<LaneData> lanes, Vector2Int hover,
+        HashSet<Vector2Int> overrides, bool showInert)
     {
         for (int row = 0; row < Rows; row++)
         {
@@ -69,13 +73,35 @@ public class TileGridView
                     continue; // 타일이 아예 없는 칸은 그리지 않는다(Empty로 칠한 벽과 구분된다)
                 }
 
-                DrawCell(CellRect(area, cellPixels, col, row), tile, cellPixels);
+                Rect rect = CellRect(area, cellPixels, col, row);
+                DrawCell(rect, tile, cellPixels);
+
+                // 붓과 무관한 상시 표식이라 DrawCell(붓에 따라 죽는 층) 위에 얹는다.
+                if (overrides != null && overrides.Contains(coord))
+                {
+                    DrawCorner(rect, cellPixels, MapMakerPalette.Override, true);
+                }
+
+                if (showInert && TileFlagQuery.IsInert(tile))
+                {
+                    DrawCorner(rect, cellPixels, MapMakerPalette.Inert, false);
+                }
             }
         }
 
-        DrawPath(area, cellPixels, path);
+        DrawLanes(area, cellPixels, lanes);
         DrawHover(area, cellPixels, hover);
         DrawAxisLabels(area, cellPixels);
+    }
+
+    // 오버라이드/무효 구석 표식. top이면 오른쪽 위, 아니면 오른쪽 아래에 작은 사각형을 둔다 —
+    // 지형색·배치 점(아래 가운데)·경로선과 겹치지 않는 구석이라 층이 늘어도 서로 안 가린다.
+    private static void DrawCorner(Rect rect, int cellPixels, Color color, bool top)
+    {
+        float size = Mathf.Max(3f, cellPixels * 0.28f);
+        float x = rect.xMax - size;
+        float y = top ? rect.y : rect.yMax - size;
+        EditorGUI.DrawRect(new Rect(x, y, size, size), color);
     }
 
     /// <summary>마우스 위치가 가리키는 칸. 격자 밖이면 (-1,-1).</summary>
@@ -186,13 +212,24 @@ public class TileGridView
     /// "길이 어디로 나는가"와 "이 칸이 무엇인가"를 동시에 볼 수 없다.
     /// 4방향 경로라 모든 구간이 가로 또는 세로다 — 사각형 두 장으로 검은 테두리와 흰 선을 만든다.
     /// </summary>
-    private void DrawPath(Rect area, int cellPixels, List<Tile> path)
+    private void DrawLanes(Rect area, int cellPixels, IReadOnlyList<LaneData> lanes)
     {
-        if (path == null)
+        for (int i = 0; i < lanes.Count; i++)
         {
-            return;
+            LaneData lane = lanes[i];
+            if (lane.IsValid)
+            {
+                DrawPath(area, cellPixels, lane.Tiles);
+            }
+            else
+            {
+                DrawFailed(area, cellPixels, lane.Start);
+            }
         }
+    }
 
+    private void DrawPath(Rect area, int cellPixels, IReadOnlyList<Tile> path)
+    {
         for (int i = 0; i + 1 < path.Count; i++)
         {
             Vector2 from = CellCenter(area, cellPixels, path[i].Coord);
@@ -206,6 +243,18 @@ public class TileGridView
             EditorGUI.DrawRect(new Rect(x - 2.5f, y - 2.5f, width + 5f, height + 5f), MapMakerPalette.PathEdge);
             EditorGUI.DrawRect(new Rect(x - 1f, y - 1f, width + 2f, height + 2f), MapMakerPalette.Path);
         }
+    }
+
+    private void DrawFailed(Rect area, int cellPixels, Tile spawn)
+    {
+        if (spawn == null)
+        {
+            return;
+        }
+
+        Rect rect = CellRect(area, cellPixels, spawn.Coord.x, spawn.Coord.y);
+        Rect inner = Inset(rect, 3f);
+        DrawBorder(inner, MapMakerPalette.Problem, 2f);
     }
 
     private void DrawHover(Rect area, int cellPixels, Vector2Int hover)

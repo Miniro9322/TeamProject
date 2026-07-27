@@ -160,21 +160,29 @@ void FogFinal_float(
     float2 edgeUv = (world.xz + wind * 0.4) * _EdgeScale;
     float edgeNoise = FogNoise(edgeUv);
 
-    // 4) 공개 마스크 (1=안개, 0=구멍). FogView가 _FogAreas/_FogOpens를 채운다.
+    // 4) 잠금 마스크 (1=안개, 0=맨눈). 기본은 안개 없음 — 잠긴 모듈 발자국 안에서만 낀다.
+    //    판정이 XZ 좌표라 타일 높이와 무관하다: 외곽 벽의 측면도 같이 덮인다.
+    //    경계는 노이즈로 크게 허문다 — 안개는 격자를 모른다. 발자국 사각형을 따라 각지면 안 된다.
     float soft = max(_EdgeSoft, 1e-3);
-    float mask = 1.0;
+    float mask = 0.0;
+    float opened = 0.0;
     int count = _FogCount;
     [unroll]
     for (int i = 0; i < 8; i++)
     {
         if (i >= count) { break; }
-        float dist = BoxDist(world.xz, _FogAreas[i]) - _EdgeMargin + (edgeNoise - 0.5) * _EdgeRough;
-        float hole = smoothstep(-soft, soft, dist);
-        hole = lerp(1.0, hole, saturate(_FogOpens[i]));
-        mask = min(mask, hole);
-    }
+        float raw = BoxDist(world.xz, _FogAreas[i]);
+        float dist = raw - _EdgeMargin + (edgeNoise - 0.5) * _EdgeRough;
+        float inside = 1.0 - smoothstep(-soft, soft, dist);
+        float open = saturate(_FogOpens[i]);
 
-    // 5) 출력 — 화면 전체 안개(배경 void 포함), 개방 모듈만 뚫림.
+        mask = max(mask, inside * (1.0 - open));   // 개방될수록 걷힌다
+        // 열린 모듈의 발자국 안(노이즈 없는 원래 사각형)은 이웃 안개가 넘어오지 못하게 지킨다.
+        opened = max(opened, open * (1.0 - smoothstep(-soft, soft, raw)));
+    }
+    mask *= 1.0 - opened;
+
+    // 5) 출력 — 잠긴 모듈 자리에서만 불투명. 하늘은 어떤 박스에도 안 들어가 mask=0.
     Color = _FogColor.rgb * (1.0 - _CloudTint + _CloudTint * cloud);
     Alpha = mask * _FogDensity;
 }
