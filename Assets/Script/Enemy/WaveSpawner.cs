@@ -24,9 +24,11 @@ public class WaveSpawner : MonoBehaviour
 
     // 스코프에 등록되면 주입됨. 아니면 Spawn 시 Instance로 폴백.
     private PoolManager _pool;
-    [Inject] public void Construct(PoolManager pool)
+    private SpawnerManager spawnerManager;
+    [Inject] public void Construct(PoolManager pool,SpawnerManager spawnerManager)
     {
         _pool = pool;
+        this.spawnerManager = spawnerManager;
     }
     
     public event Action EnemyAllClear;
@@ -46,7 +48,13 @@ public class WaveSpawner : MonoBehaviour
             waypoints = board.GetWaypoints(0f); 
             EnemyGridService.mapBoard = board;
         }
-       
+       ResetText();
+    }
+    public void ResetText()
+    {
+        if(text == null || string.IsNullOrEmpty(text.text))return;
+        
+        text.text = string.Empty;
     }
     public void SpawnWave(int currentStage)
     {

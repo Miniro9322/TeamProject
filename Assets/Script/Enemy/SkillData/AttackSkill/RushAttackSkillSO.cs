@@ -32,7 +32,7 @@ public class RushAttackSkillSO : AttackSkillDataSO
     public override async UniTask Execute(EnemyBase owner, CancellationToken token)
     {
         if (owner == null || owner.IsDead || owner.animator == null) return;
-        int attackCount = value + (valueScale*(owner.GameManager.DayCount/5));
+        int attackCount = value + (valueScale*(owner.GameManager.DayCount/10));
         Hero target = FindBlockingHero(owner);
         if (target == null || target.IsDead) return;
 
@@ -48,6 +48,7 @@ public class RushAttackSkillSO : AttackSkillDataSO
         try
         {
             owner.animator.SetTrigger("Skill");
+            EnemySoundManager.Play("RushReady");
             GameObject go = PoolManager.Instance.Spawn(onSkillEffectPrefab,owner.transform.position,Quaternion.identity);
             await WaitForAnimationEnd(owner,"Skill",animTimeout,token); // 상태 이름과 정확히 일치해야 함(대소문자 구분)
             PoolManager.Instance.Despawn(go);
@@ -100,6 +101,8 @@ public class RushAttackSkillSO : AttackSkillDataSO
     {
         if (target == null || target.IsDead) return;
         int dmg = damage > 0f ? Mathf.RoundToInt(damage) : owner.AttackPower;
+        EnemySoundManager.Play("RushAttack");
+        EnemySoundManager.Play("RushAttackHit");
         target.TakeDamage(dmg);
     }
 
@@ -133,7 +136,6 @@ public class RushAttackSkillSO : AttackSkillDataSO
             await UniTask.Yield(token);
         }
         if (owner == null) return;
-
         var info = anim.GetCurrentAnimatorStateInfo(layer);
         float wait = info.length / Mathf.Max(0.01f, anim.speed);
         await UniTask.Delay(TimeSpan.FromSeconds(wait), cancellationToken: token);

@@ -14,4 +14,9 @@ public class SpiderNormal : EnemyBase
         attack = AttackPower;
         def = Defense; //테스트용
     }
+    public override void EnemySoundAttack()
+    {
+        base.EnemySoundAttack();
+        EnemySoundManager.Play("SpiderAttack");
+    }
 }
