@@ -54,4 +54,18 @@ public static class TileFlagQuery
             default: return false;
         }
     }
+
+    /// <summary>
+    /// 배치 허용이 하나라도 켜졌지만 지금 지형에선 아무 효과가 없는 칸인가(무효 조합).
+    /// 예: 지상 칸의 CanRanged. 잘못이 아니라 나중을 위한 대비일 수 있어 막지 않고 표시만 한다.
+    /// </summary>
+    public static bool IsInert(Tile tile)
+    {
+        return Inert(tile, MapBrush.Melee) || Inert(tile, MapBrush.Ranged) || Inert(tile, MapBrush.Build);
+    }
+
+    private static bool Inert(Tile tile, MapBrush brush)
+    {
+        return IsOn(tile, brush) && !TakesEffect(tile.Terrain, brush);
+    }
 }

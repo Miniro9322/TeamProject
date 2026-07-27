@@ -28667,13 +28667,15 @@ GameObject:
   - component: {fileID: 8719301790896272070}
   - component: {fileID: -3547879118163182433}
   - component: {fileID: 7423437774529506930}
+  - component: {fileID: 2242342951500690271}
+  - component: {fileID: 4727924617082367750}
   m_Layer: 0
   m_Name: MapModule_E
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &4730586149953611958
 Transform:
   m_ObjectHideFlags: 0
@@ -28734,6 +28736,7 @@ MonoBehaviour:
   region: 5
   Enemycount: 12
   text: {fileID: 0}
+  bossSpawnDelay: 10
 --- !u!114 &7423437774529506930
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -28746,8 +28749,38 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 31478ffa6d3e4dd4a8b4e366106fa1a8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyPathView
-  board: {fileID: 8719301790896272070}
+  routeMap: {fileID: 0}
   pathVisible: 1
+--- !u!114 &2242342951500690271
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8328397223932432046}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 777a87d1cf3831041932262d28cf86c9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyLanes
+  board: {fileID: 8719301790896272070}
+--- !u!114 &4727924617082367750
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8328397223932432046}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 195be9878b0db794c9aaf144e6353d35, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PathTrail
+  trailPrefab: {fileID: 0}
+  moveSpeed: 8
+  trailLift: 0.15
+  loopGap: 1.2
+  autoPlay: 1
 --- !u!1 &8373023713555947889
 GameObject:
   m_ObjectHideFlags: 0

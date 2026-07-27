@@ -287,14 +287,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FogLook
   showInEditor: 1
-  fogColor: {r: 0.55, g: 0.6, b: 0.7, a: 1}
+  fogColor: {r: 0.41718584, g: 0.51652, b: 0.7075472, a: 1}
   density: 1
-  cloudTint: 0.5
+  cloudTint: 0
   edgeSoft: 2
-  edgeRough: 6
-  edgeScale: 0.06
-  cloudScale: 0.15
-  windSpeed: 1.5
+  edgeRough: 0
+  edgeScale: 0.15
+  cloudScale: 0.78
+  windSpeed: 2.28
 --- !u!114 &85518182
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -308,8 +308,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FogController
   registry: {fileID: 1862994567}
-  openDuration: 1.2
-  revealCells: 0
+  openDuration: 4
+  edgeCells: 0
 --- !u!4 &85518183
 Transform:
   m_ObjectHideFlags: 0
@@ -1157,66 +1157,79 @@ MonoBehaviour:
   - label: melee
     prefab: {fileID: 5228687494590014126, guid: c30b2462f1d175a40be298650efb1f87, type: 3}
     icon: {fileID: 0}
+    placedIcon: {fileID: 0}
     kind: 1
     attackRange: 1
   - label: boxbuilding
     prefab: {fileID: 2836901075419073204, guid: 88748e8576a48a54da60fc7012a7ab0d, type: 3}
     icon: {fileID: 0}
+    placedIcon: {fileID: 0}
     kind: 3
     attackRange: 0
   - label: Ranged
     prefab: {fileID: 9004755700449656008, guid: ca79c758b242b1f43b792e4c008ee16f, type: 3}
     icon: {fileID: 0}
+    placedIcon: {fileID: 0}
     kind: 2
     attackRange: 3
   - label: Food
     prefab: {fileID: 2836901075419073204, guid: 7aca0e29ff41f3e4eaff836ab1cee678, type: 3}
     icon: {fileID: 0}
+    placedIcon: {fileID: 0}
     kind: 3
     attackRange: 0
   - label: Gold
     prefab: {fileID: 2836901075419073204, guid: c4c845130f3f8fb439197ae189ce7f81, type: 3}
     icon: {fileID: 0}
+    placedIcon: {fileID: 0}
     kind: 4
     attackRange: 0
   - label: Wood
     prefab: {fileID: 2836901075419073204, guid: 88748e8576a48a54da60fc7012a7ab0d, type: 3}
     icon: {fileID: 0}
+    placedIcon: {fileID: 0}
     kind: 4
     attackRange: 0
   - label: Iron
     prefab: {fileID: 2836901075419073204, guid: e0218d434b7cf224990e3db1f167f002, type: 3}
     icon: {fileID: 0}
+    placedIcon: {fileID: 0}
     kind: 4
     attackRange: 0
   - label: Stone
     prefab: {fileID: 2836901075419073204, guid: 31f414d054b70134682c7c7d173ebfd8, type: 3}
     icon: {fileID: 0}
+    placedIcon: {fileID: 0}
     kind: 4
     attackRange: 0
   - label: RedHouse
     prefab: {fileID: 7406577774126851646, guid: ed0867148c0de4a448f7769eec638731, type: 3}
     icon: {fileID: 0}
+    placedIcon: {fileID: 0}
     kind: 4
     attackRange: 0
   - label: GreenHouse
     prefab: {fileID: 7406577774126851646, guid: e09878e548f929640893f8015514bb13, type: 3}
     icon: {fileID: 0}
+    placedIcon: {fileID: 0}
     kind: 4
     attackRange: 0
   - label: BlueHouse
     prefab: {fileID: 7406577774126851646, guid: 7961d12a84711644ca1c8feaea41650e, type: 3}
     icon: {fileID: 0}
+    placedIcon: {fileID: 0}
     kind: 4
     attackRange: 0
   - label: DualBlader
     prefab: {fileID: 1125355577782864148, guid: fc90ec49c4098fc4e8de8d2bbfb448ec, type: 3}
     icon: {fileID: 0}
+    placedIcon: {fileID: 0}
     kind: 1
     attackRange: 1
   - label: SpearMan
     prefab: {fileID: 6360810507945036553, guid: 1c18d546630c46e4a84b6242d3953620, type: 3}
     icon: {fileID: 0}
+    placedIcon: {fileID: 0}
     kind: 1
     attackRange: 2
 --- !u!114 &314587630
@@ -1352,7 +1365,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 31478ffa6d3e4dd4a8b4e366106fa1a8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyPathView
-  board: {fileID: 2512691319082104341}
+  routeMap: {fileID: 0}
   pathVisible: 1
 --- !u!114 &359805066
 MonoBehaviour:
@@ -1412,6 +1425,8 @@ GameObject:
   m_Component:
   - component: {fileID: 422220353}
   - component: {fileID: 422220352}
+  - component: {fileID: 422220355}
+  - component: {fileID: 422220354}
   m_Layer: 0
   m_Name: WaveSpawner
   m_TagString: Untagged
@@ -1451,6 +1466,32 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &422220354
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 422220351}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 777a87d1cf3831041932262d28cf86c9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyLanes
+  board: {fileID: 422220355}
+--- !u!114 &422220355
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 422220351}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fa8d21bfae480b7458ef67d68197fe29, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MapBoard
+  _grid: {fileID: 0}
 --- !u!114 &471137748 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 8634429776923064968, guid: b4c9ebb8dbbdd3749bbb2104d50b5b61, type: 3}
@@ -1925,7 +1966,6 @@ GameObject:
   m_Component:
   - component: {fileID: 714490554}
   - component: {fileID: 714490553}
-  - component: {fileID: 714490552}
   m_Layer: 0
   m_Name: TestUi
   m_TagString: Untagged
@@ -1933,18 +1973,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &714490552
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 714490551}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ffc3a7a397e12df49b431167167a3fd7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::MapPanel
 --- !u!114 &714490553
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2204,6 +2232,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::AddCitizen
   amountInput: {fileID: 0}
+  costText: {fileID: 0}
+  costAmount: 0
 --- !u!4 &928862206
 Transform:
   m_ObjectHideFlags: 0
@@ -2452,28 +2482,6 @@ MonoBehaviour:
   m_ChildScaleWidth: 0
   m_ChildScaleHeight: 0
   m_ReverseArrangement: 0
---- !u!1 &1268995330 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 8328397223932432046, guid: 7440c188721deeb44a252d6e6a8c781e, type: 3}
-  m_PrefabInstance: {fileID: 1688813528}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &1268995336
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1268995330}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 195be9878b0db794c9aaf144e6353d35, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PathTrail
-  trailPrefab: {fileID: 0}
-  moveSpeed: 8
-  trailLift: 0.15
-  loopGap: 1.2
-  autoPlay: 1
 --- !u!1 &1281124914
 GameObject:
   m_ObjectHideFlags: 0
@@ -2642,6 +2650,9 @@ MonoBehaviour:
   - {fileID: 471137748}
   - {fileID: 1042105544}
   - {fileID: 2042105544}
+  spawnPoint: {fileID: 0}
+  infoTextPrefab: {fileID: 0}
+  infoTextOffset: {x: 1.5, y: 1, z: 0}
   cam: {fileID: 124960403}
 --- !u!4 &1403437580
 Transform:
@@ -3374,17 +3385,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: MapModule_E
       objectReference: {fileID: 0}
-    - target: {fileID: 8328397223932432046, guid: 7440c188721deeb44a252d6e6a8c781e, type: 3}
-      propertyPath: m_IsActive
-      value: 0
-      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 8328397223932432046, guid: 7440c188721deeb44a252d6e6a8c781e, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1268995336}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 7440c188721deeb44a252d6e6a8c781e, type: 3}
 --- !u!1 &1792757727
 GameObject:
