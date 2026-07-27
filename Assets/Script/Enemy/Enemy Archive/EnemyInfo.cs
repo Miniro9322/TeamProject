@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -11,10 +12,13 @@ using UnityEngine.UI;
 public class EnemyInfo : MonoBehaviour
 {
     public Image e_Image;
-    public TMP_Text e_NameText;     
-    public TMP_Text e_DescText;      
+    public TMP_Text m_ArchiveText;
+    public TMP_Text e_NameText;
+    public TMP_Text e_TypeText;
+    public TMP_Text e_DescText;     
+    public TMP_Text e_Attribute; 
     public TMP_Text e_SkillNameText; 
-    public TMP_Text e_SkillDescText;   
+    public TMP_Text e_SkillDescText;
     public Button leftArrowButton;     
     public Button rightArrowButton;    
 
@@ -23,8 +27,22 @@ public class EnemyInfo : MonoBehaviour
     [TextArea] public string lockedMessage = "???";
     public GameObject lockedEnemyText;
 
+    [Header("특성 표시")]
+    [Tooltip("특성이 여러 개일 때 구분자 (예: \", \" 또는 \" | \")")]
+    public string attributeSeparator = ", ";
+
+    [Header("특성별 글자색 (TMP Rich Text 필요)")]
+    public Color cloakingColor     = new Color(0.61f, 0.35f, 0.71f); // 은신 - 보라
+    public Color flyColor          = new Color(0.20f, 0.60f, 0.86f); // 공중 - 하늘
+    public Color unJudgedColor     = new Color(0.90f, 0.49f, 0.13f); // 저지 불가 - 주황
+    public Color berserkColor      = new Color(0.91f, 0.30f, 0.24f); // 폭주 - 빨강
+    public Color regenerationColor = new Color(0.18f, 0.80f, 0.44f); // 재생 - 초록
+    public Color hitsShieldColor   = new Color(0.95f, 0.77f, 0.06f); // 타수 보호막 - 노랑
+
     private string enemyName;
     private string enemyDesc;
+    private string enemyType;
+    private string enemyAttribute;
     private readonly List<string> skillNames = new();
     private readonly List<string> skillDescs = new();
     private int page;
@@ -42,6 +60,7 @@ public class EnemyInfo : MonoBehaviour
             rightArrowButton.onClick.RemoveAllListeners();
             rightArrowButton.onClick.AddListener(NextPage);
         }
+        m_ArchiveText.text = $"{DataTableManager.StringTable.Get("Ui_EnemyArchive")}";
         Clear();
     }
     void OnDisable()
@@ -54,11 +73,15 @@ public class EnemyInfo : MonoBehaviour
     {
         enemyName = string.Empty;
         enemyDesc = string.Empty;
+        enemyType = string.Empty;
+        enemyAttribute = string.Empty;
         skillNames.Clear();
         skillDescs.Clear();
         page = 0;
         SetText(e_NameText, string.Empty);
         SetText(e_DescText, string.Empty);
+        SetText(e_TypeText, string.Empty);
+        SetText(e_Attribute, string.Empty);
         SetText(e_SkillNameText, string.Empty);
         SetText(e_SkillDescText, string.Empty);
         if (e_Image != null) e_Image.enabled = false;
@@ -76,7 +99,8 @@ public class EnemyInfo : MonoBehaviour
 
         enemyName = st.Get(data.Name);
         enemyDesc = st.Get(data.Desc);
-
+        enemyType = $"{st.Get("Ui_Type")} : {st.Get(data.Type)}";
+        enemyAttribute = $"{st.Get("Ui_Attribute")} : {LocalizeAttributes(data.Attribute)}";
         skillNames.Clear();
         skillDescs.Clear();
         if (!string.IsNullOrEmpty(data.Skills) &&
@@ -99,11 +123,9 @@ public class EnemyInfo : MonoBehaviour
             e_Image.sprite = Resources.Load<Sprite>($"EnemyIcons/{data.Name}");
             e_Image.enabled = e_Image.sprite != null;
         }
-
         page = 0;
         Show();
     }
-
     private void ShowLocked()
     {
         page = 0;
@@ -113,6 +135,8 @@ public class EnemyInfo : MonoBehaviour
         PoolManager.Instance.Despawn(go,1f);
         SetText(e_NameText, lockedName);
         SetText(e_DescText, lockedMessage);
+        SetText(e_TypeText, string.Empty);
+        SetText(e_Attribute, string.Empty);
         SetText(e_SkillNameText, string.Empty);
         SetText(e_SkillDescText, string.Empty);
         if (e_Image != null) e_Image.enabled = false;
@@ -137,7 +161,8 @@ public class EnemyInfo : MonoBehaviour
     private void Show()
     {
         SetText(e_NameText, enemyName);   // 적 이름은 항상 유지
-
+        SetText(e_TypeText, enemyType);
+        SetText(e_Attribute, enemyAttribute);
         if (page == 0)
         {
             SetText(e_DescText, enemyDesc);
@@ -155,6 +180,53 @@ public class EnemyInfo : MonoBehaviour
         // 왼쪽: 뒤로 갈 페이지 있을 때 / 오른쪽: 넘길 페이지 있을 때
         SetActive(leftArrowButton, page > 0);
         SetActive(rightArrowButton, page < LastPage);
+    }
+
+    // data.Attribute 원본("Fly|Cloaking" 등)을 파싱해 각 특성을 번역·결합. 없으면 "특성 없음"(None).
+    private string LocalizeAttributes(string raw)
+    {
+        var st = DataTableManager.StringTable;
+        EnemyAttribute attr = ParseAttribute(raw);
+
+        var parts = new List<string>();
+        foreach (EnemyAttribute f in Enum.GetValues(typeof(EnemyAttribute)))
+            if (f != EnemyAttribute.None && (attr & f) != 0)
+            {
+                // 색 입히고 <link>로 감싼다 → AttributeTooltip이 hover 감지. link ID = 특성 enum 이름
+                string colored = Wrap(st.Get(f.ToString()), AttrColor(f));
+                parts.Add($"<link=\"{f}\">{colored}</link>");
+            }
+
+        return parts.Count > 0 ? string.Join(attributeSeparator, parts) : st.Get("None");
+    }
+
+    // 특성별 글자색
+    private Color AttrColor(EnemyAttribute f)
+    {
+        switch (f)
+        {
+            case EnemyAttribute.Cloaking:     return cloakingColor;
+            case EnemyAttribute.Fly:          return flyColor;
+            case EnemyAttribute.UnJudged:     return unJudgedColor;
+            case EnemyAttribute.Berserk:      return berserkColor;
+            case EnemyAttribute.Regeneration: return regenerationColor;
+            case EnemyAttribute.HitsShield:   return hitsShieldColor;
+            default:                          return Color.white;
+        }
+    }
+
+    // TMP 리치 텍스트 color 태그로 감싸기
+    private static string Wrap(string text, Color c)
+        => $"<color=#{ColorUtility.ToHtmlStringRGB(c)}>{text}</color>";
+
+    private static EnemyAttribute ParseAttribute(string raw)
+    {
+        if (string.IsNullOrEmpty(raw)) return EnemyAttribute.None;
+        EnemyAttribute result = EnemyAttribute.None;
+        foreach (var token in raw.Split(new[] { '|', ';' }, StringSplitOptions.RemoveEmptyEntries))
+            if (Enum.TryParse(token.Trim(), true, out EnemyAttribute flag))
+                result |= flag;
+        return result;
     }
 
     private static void SetText(TMP_Text t, string value)

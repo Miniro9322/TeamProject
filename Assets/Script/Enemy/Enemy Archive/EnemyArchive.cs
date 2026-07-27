@@ -1,21 +1,32 @@
+using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
 
 // 도감 목록. EnemyTable의 모든 적을 순회하며 버튼 프리팹을 content에 하나씩 생성한다.
+// 각 버튼(EnemyArchiveButton)이 해금 여부·등급 색을 스스로 그린다.
 public class EnemyArchive : MonoBehaviour
 {
-    [Tooltip("적 하나당 생성할 버튼 프리팹")]
-    [SerializeField] private Button enemyButtonPrefab;
+    [Tooltip("적 하나당 생성할 버튼 프리팹 (EnemyArchiveButton 붙은 것)")]
+    [SerializeField] private EnemyArchiveButton enemyButtonPrefab;
     [Tooltip("버튼들이 담길 부모 (Scroll View의 Content 등)")]
     [SerializeField] private Transform content;
     [Tooltip("클릭 시 상세정보를 출력할 패널")]
     [SerializeField] private EnemyInfo infoPanel;
+    [Tooltip("미해금 적 버튼에 표시할 ? 이미지")]
+    public Sprite lockIcon;
 
-    private bool built;   // 최초 1회만 생성 (도감을 여러 번 열어도 중복 생성 방지)
+    private bool built;
+    private readonly Dictionary<string, EnemyArchiveButton> buttons = new();   // enemyKey → 버튼
 
-    void Start()
+    void OnEnable()
     {
         Build();
+        EnemyArchiveData.OnUnlocked += HandleUnlocked;
+        RefreshAll();   // 도감이 닫혀있는 동안 해금된 것도 열 때 반영
+    }
+
+    void OnDisable()
+    {
+        EnemyArchiveData.OnUnlocked -= HandleUnlocked;
     }
 
     private void Build()
@@ -32,15 +43,26 @@ public class EnemyArchive : MonoBehaviour
 
         foreach (var data in enemyTable.GetAll())
         {
-            Button btn = Instantiate(enemyButtonPrefab, content);
+            EnemyArchiveButton btn = Instantiate(enemyButtonPrefab, content);
             btn.name = $"EnemyBtn_{data.Name}";
-
-            // var icon = btn.GetComponentInChildren<Image>(); // 아직 이미지없음
-            // if (icon != null) icon.sprite = Resources.Load<Sprite>($"Image/{data.Name}");
-
-            // 클릭 시 상세정보 출력
-            var captured = data;   // 클로저 캡처 함정 방지용 복사
-            btn.onClick.AddListener(() => { if (infoPanel != null) infoPanel.Info(captured); });
+            btn.Set(data, lockIcon, OnClickEnemy);
+            buttons[data.Name] = btn;
         }
+    }
+
+    private void OnClickEnemy(EnemyTable.Data data)
+    {
+        if (infoPanel != null) infoPanel.Info(data);
+    }
+
+    private void RefreshAll()
+    {
+        foreach (var b in buttons.Values) b.Refresh();
+    }
+
+    // 새로 해금될 때 해당 버튼만 즉시 갱신 (도감이 열려있는 동안 실시간)
+    private void HandleUnlocked(string key)
+    {
+        if (buttons.TryGetValue(key, out var b)) b.Refresh();
     }
 }

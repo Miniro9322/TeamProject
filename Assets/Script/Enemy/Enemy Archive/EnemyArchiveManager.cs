@@ -1,5 +1,6 @@
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
@@ -26,6 +27,7 @@ public class EnemyArchiveManager : MonoBehaviour
         infoOpenButton.onClick.AddListener(OnClickOpenArchive);
         infoCloseButton.onClick.AddListener(OnClickCloseArchive); // 닫기 창구 통일
         hidePanal.onClick.AddListener(OnClickCloseArchive);        // 여기서 한 번만 등록(열 때마다 누적 방지)
+        infoOpenButton.GetComponentInChildren<TMP_Text>().text = DataTableManager.StringTable.Get("Ui_ArchiveButton");
     }
     // 진행 중이던 애니메이션 취소 + 새 토큰 발급
     private void ResetCts()
@@ -70,7 +72,7 @@ public class EnemyArchiveManager : MonoBehaviour
         float speed = 5f;
         while(t<1f)
         {
-            t+=Time.deltaTime*speed;
+            t+=Time.unscaledDeltaTime*speed;
             archive.transform.localScale = Vector3.Lerp(Vector3.zero,Vector3.one,t);
             await UniTask.Yield(token);
         }
@@ -86,7 +88,7 @@ public class EnemyArchiveManager : MonoBehaviour
         float speed = 5f;
         while(t<1f)
         {
-            t+=Time.deltaTime*speed;
+            t+=Time.unscaledDeltaTime*speed;
             archive.transform.localScale = Vector3.Lerp(Vector3.one,Vector3.zero,t);
             await UniTask.Yield(token);
         }
