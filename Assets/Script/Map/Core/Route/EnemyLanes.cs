@@ -55,13 +55,7 @@ public class EnemyLanes : MonoBehaviour
         builder = value;
     }
 
-    /// <summary>
-    /// 적 스폰 시스템에 스폰 지점별 월드 경로를 제공합니다.
-    /// 각 경로는 스폰 지점부터 코어까지의 순서이며 유효한 경로만 반환합니다.
-    /// 상태를 변경하거나 경로를 다시 계산하지 않습니다.
-    /// Start 이후 한 번 호출하고 결과를 캐시해서 사용해야 합니다.
-    /// </summary>
-    /// <param name="yOffset">타일 윗면 기준 높이 보정값입니다. 적 이동은 0f를 사용합니다.</param>
+    
     public IReadOnlyList<IReadOnlyList<Vector3>> GetPaths(float yOffset)
     {
         //외부 호출시 

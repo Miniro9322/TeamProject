@@ -47,6 +47,7 @@ public class CameraInput : MonoBehaviour
         if (moved)
         {
             rig.ClampState();
+            rig.CancelAutoPan(); // 사용자가 조작하면 자동 이동을 놓아준다
         }
         rig.ApplyNow();
     }

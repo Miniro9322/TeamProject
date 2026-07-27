@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 
@@ -29,8 +30,17 @@ public class CameraRig : MonoBehaviour
     [Tooltip("세로 이동 한계: 위/아래로 얼마나 더 갈 수 있는지(낮출수록 위·아래로 더 이동=여백↑). 맵이 3D라 위쪽 타일 윗면 여유가 필요하면 낮춘다.")]
     [SerializeField, Range(0.4f, 1f)] private float fillV = 0.8f;
 
+    [Header("확장 이동")]
+    [Tooltip("새로 열린 지역으로 부드럽게 이동하는 시간(초).")]
+    [SerializeField, Min(0.05f)] private float panTime = 0.4f;
+
     private Camera _cam;
     private readonly CameraLimit _limit = new();
+
+    private readonly HashSet<int> _openedSeen = new(); // 이미 카메라가 다녀온 해금 모듈
+    private bool _autoPanning;
+    private Vector3 _panTarget;
+    private Vector3 _panVel;
 
     private Camera Cam
     {
@@ -51,6 +61,8 @@ public class CameraRig : MonoBehaviour
 
     private void Start()
     {
+        if(registry == null) return;
+        
         // 클램프·구독은 런타임만. 에디터에선 디자이너가 카메라를 자유롭게 잡는다.
         if (!Application.isPlaying)
         {
@@ -58,6 +70,7 @@ public class CameraRig : MonoBehaviour
         }
         RebuildLimit();
         BindModules();
+        MarkOpened(); // 시작 시 이미 열린 모듈은 이동 대상에서 제외
     }
 
     private void OnDestroy()
@@ -67,6 +80,29 @@ public class CameraRig : MonoBehaviour
             return;
         }
         UnbindModules();
+    }
+
+    // 새로 열린 지역으로의 부드러운 이동만 여기서 처리한다. 사용자 입력은 CameraInput이 담당.
+    private void Update()
+    {
+        if (!Application.isPlaying || !_autoPanning)
+        {
+            return;
+        }
+        Vector3 before = focus;
+        focus = Vector3.SmoothDamp(focus, _panTarget, ref _panVel, panTime);
+        ApplyNow(); // 이동 중에도 클램프 유지
+        if ((focus - before).sqrMagnitude < 1e-4f) // 더 못 가면(도착 또는 클램프 한계) 종료
+        {
+            _autoPanning = false;
+            _panVel = Vector3.zero;
+        }
+    }
+
+    // 사용자가 팬/회전/줌을 하면 자동 이동을 즉시 놓아준다(CameraInput이 호출).
+    public void CancelAutoPan()
+    {
+        _autoPanning = false;
     }
 
     private void OnValidate()
@@ -90,14 +126,10 @@ public class CameraRig : MonoBehaviour
         distance = Mathf.Clamp(distance, minDistance, maxDistance);
     }
 
-    // 화면에 실제로 쓰는 값. 필드는 그대로 두고 여기서만 한계를 건다.
-    // 한계값이 뒤집혀 있어도 Mathf.Clamp가 조용히 min을 뱉지 않도록 max를 먼저 정렬한다.
+     
     private float ViewPitch => Mathf.Clamp(pitch, minPitch, Mathf.Max(maxPitch, minPitch));
     private float ViewDistance => Mathf.Clamp(distance, minDistance, Mathf.Max(maxDistance, minDistance));
 
-    // 이동(팬) 한계만 건다. 줌은 건드리지 않는다.
-    // 맵 밖 빈 공간이 화면에 크게 들어오려 할 때만 focus를 되민다. 맵이 화면을 덮는 동안엔 자유 이동.
-    // 판정은 맵 3D 박스 8코너(타일 높이 포함)를 뷰포트에 투영해서 하므로 가장자리 윗면이 안 잘린다.
     private void ApplyLimit()
     {
         if (!_limit.Ready)
@@ -217,10 +249,6 @@ public class CameraRig : MonoBehaviour
     // 모듈 해금 시 경계를 다시 잡아, 새로 열린 영역까지 팬이 닿게 한다.
     private void BindModules()
     {
-        if (registry == null)
-        {
-            return;
-        }
         foreach (ModuleLogic module in registry.AllModules.Values)
         {
             if (module != null)
@@ -232,10 +260,6 @@ public class CameraRig : MonoBehaviour
 
     private void UnbindModules()
     {
-        if (registry == null)
-        {
-            return;
-        }
         foreach (ModuleLogic module in registry.AllModules.Values)
         {
             if (module != null)
@@ -247,7 +271,50 @@ public class CameraRig : MonoBehaviour
 
     private void OnModuleState(ModuleState state)
     {
-        RebuildLimit();
+        RebuildLimit();                 // 경계 먼저 확장(새 모듈 포함)
+        ModuleLogic opened = NewlyOpened();
+        if (opened != null)
+        {
+            StartPan(opened);           // 새로 열린 지역으로 부드럽게 이동
+        }
+    }
+
+    private void MarkOpened() // 시작 시 이미 열린 모듈은 이동 대상에서 제외
+    {
+        foreach (ModuleLogic module in registry.AllModules.Values)
+        {
+            if (module.IsUnlocked)
+            {
+                _openedSeen.Add(module.ModuleId);
+            }
+        }
+    }
+
+    // 아직 안 다녀온 '새로 해금된' 모듈 하나. 없으면 null(낮/밤 전이는 여기서 걸러진다).
+    private ModuleLogic NewlyOpened()
+    {
+        foreach (ModuleLogic module in registry.AllModules.Values)
+        {
+            if (!module.IsUnlocked)
+            {
+                continue;
+            }
+            if (_openedSeen.Add(module.ModuleId)) // 처음 보는 해금이면 true
+            {
+                return module;
+            }
+        }
+        return null;
+    }
+
+    // focus의 목표를 해당 모듈 중앙으로 잡는다. 실제 이동은 Update가 부드럽게 처리.
+    private void StartPan(ModuleLogic module)
+    {
+        MapBoard board = module.GetComponent<MapBoard>();
+        Vector3 c = board.WorldBounds.center;
+        _panTarget = new Vector3(c.x, focus.y, c.z);
+        _panVel = Vector3.zero;
+        _autoPanning = true;
     }
 
     private void ApplyLens()
