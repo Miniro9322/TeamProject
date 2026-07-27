@@ -124,6 +124,7 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit
             animator.Update(0f);
         }
         EnemyRegistry.Register(this);
+        EnemyArchiveData.Unlock(enemyKey);   // 등장 = 도감 해금 (멱등 — 재등장해도 최초 1회만 저장)
         _move.Resume();
         _cloak.Reset();
         skillCts = new CancellationTokenSource();

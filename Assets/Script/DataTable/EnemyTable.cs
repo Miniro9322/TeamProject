@@ -49,4 +49,7 @@ public class EnemyTable : DataTable
         return table[key];
     }
 
+    // 도감 등 전체 순회용. 로드된 모든 적 데이터를 반환한다.
+    public IEnumerable<Data> GetAll() => table.Values;
+
 }
