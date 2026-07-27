@@ -22588,6 +22588,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 56167c7aa72d6c94999f63ae622c6a05, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Archer
+  citizenAmount: 2
+  costType: 
+  costAmount: 
   basePattern:
   - {fileID: 11400000, guid: ed306a8b3d06d9f43a2708a95d7437cf, type: 2}
   selectors:
@@ -22601,7 +22604,6 @@ MonoBehaviour:
   rangeShape: 0
   auraZones: []
   unattackableTarget: 1
-  citizenAmount: 2
   bowAnim: {fileID: 5443066929859240409}
   arrowAnim: {fileID: 8610688408873876571}
   muzzle: {fileID: 1517930423594004449}

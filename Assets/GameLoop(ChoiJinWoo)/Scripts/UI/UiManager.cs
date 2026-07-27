@@ -1,14 +1,17 @@
 using System;
 using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
 using VContainer;
 
 public class UiManager : MonoBehaviour
 {
     [SerializeField] private BuildingPanel buildingUi;
     [SerializeField] private RequestSupportUi requestSupportUi;
+    [SerializeField] private GameObject GamaOverUi;
     public bool BuildingUiOpen => buildingUi.gameObject.activeSelf;
     public byte UnlockedHero;
     public byte UnlockedEnemy;
@@ -19,6 +22,7 @@ public class UiManager : MonoBehaviour
     {
         buildingUi.gameObject.SetActive(false);
         requestSupportUi.gameObject.SetActive(false);
+        GamaOverUi.SetActive(false);
         requestSupportUi.OnUnlock += UpdateUnlock;
     }
 
@@ -47,14 +51,32 @@ public class UiManager : MonoBehaviour
     public async UniTask OpenRequestSupportUi()
     {
         requestSupportUi.gameObject.SetActive(true);
-        Debug.Log(requestSupportUi.gameObject.activeSelf);
         await UniTask.WaitUntil(() => requestSupportUi.gameObject.activeSelf == false);
     }
 
     private void UpdateUnlock(byte unlock)
     {
         UnlockedHero |= unlock;
-        Debug.Log(UnlockedHero);
         UnlockChanged?.Invoke();
+    }
+
+    public void OpenGameOverUI()
+    {
+        GamaOverUi.SetActive(true);
+    }
+
+    public void OnTitle()
+    {
+        SceneManager.LoadScene("TempTitle");
+        Time.timeScale = 1f;
+    }
+
+    public void OnQuit()
+    {
+#if UNITY_EDITOR
+        EditorApplication.isPlaying = false;
+#endif
+
+        Application.Quit();
     }
 }

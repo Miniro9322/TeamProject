@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: FogPass
   m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Runtime::UnityEngine.Rendering.Universal.FullScreenPassRendererFeature
   m_Active: 1
-  injectionPoint: 450
+  injectionPoint: 500
   fetchColorBuffer: 1
   requirements: 5
   passMaterial: {fileID: 2100000, guid: 42a78bda1affe7648b38120ce3a08ab6, type: 2}
@@ -93,7 +93,7 @@ MonoBehaviour:
     AOMethod: 0
     Downsample: 0
     AfterOpaque: 0
-    Source: 1
+    Source: 0
     NormalSamples: 1
     Intensity: 0.4
     DirectLightingStrength: 0.25

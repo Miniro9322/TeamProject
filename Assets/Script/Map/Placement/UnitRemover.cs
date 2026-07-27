@@ -28,6 +28,8 @@ public class UnitRemover
     {
         GameObject unit = tile.Board.RemoveUnit(tile.Coord);   // 그 타일이 속한 모듈 보드에서 뗀다
 
+        if(unit == null) return null;
+
         _unitList.Remove(unit);
         DestroyOrReturnToPool(unit);
         return unit;

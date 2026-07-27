@@ -34638,6 +34638,7 @@ GameObject:
   - component: {fileID: 8719301790896272070}
   - component: {fileID: -3547879118163182433}
   - component: {fileID: 7423437774529506930}
+  - component: {fileID: 270820853538002849}
   m_Layer: 0
   m_Name: MapModule_B
   m_TagString: Untagged
@@ -34705,6 +34706,7 @@ MonoBehaviour:
   region: 2
   Enemycount: 12
   text: {fileID: 0}
+  bossSpawnDelay: 10
 --- !u!114 &7423437774529506930
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -34718,7 +34720,24 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyPathView
   board: {fileID: 8719301790896272070}
-  pathVisible: 1
+  pathVisible: 0
+--- !u!114 &270820853538002849
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8328397223932432046}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 195be9878b0db794c9aaf144e6353d35, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PathTrail
+  trailPrefab: {fileID: 7689584652585815418, guid: f8698a2a5b09bbc4ea4dcf9c230e43e4, type: 3}
+  moveSpeed: 100
+  trailLift: 0.15
+  loopGap: 1.2
+  autoPlay: 1
 --- !u!1 &8332353258866227001
 GameObject:
   m_ObjectHideFlags: 0
