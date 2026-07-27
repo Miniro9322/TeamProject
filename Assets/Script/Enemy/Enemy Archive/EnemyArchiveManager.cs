@@ -47,8 +47,7 @@ public class EnemyArchiveManager : MonoBehaviour
     }
     private void OnEscInput()
     {
-        if (cam == null) cam = Camera.main;          // 인스펙터 미할당 시 메인 카메라로 폴백
-        if (cam == null || Keyboard.current == null) return;
+        if (Keyboard.current == null) return;
         if(Time.timeScale==0)return;
         if (Keyboard.current.escapeKey.wasPressedThisFrame&&isOpenCheck)
             OnClickCloseArchive();   // 동일 닫기 창구 재사용
