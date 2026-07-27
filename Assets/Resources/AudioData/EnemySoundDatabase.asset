@@ -1,0 +1,57 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f26c50497b19c534a83490372cb6a0f2, type: 3}
+  m_Name: EnemySoundDatabase
+  m_EditorClassIdentifier: Assembly-CSharp::EnemySoundDataBase
+  entries:
+  - key: RushAttack
+    clip: {fileID: 8300000, guid: ec2cf6869352f4e80a32598bac708074, type: 3}
+    volume: 0.49
+    type: 0
+    loop: 0
+    soundTime: 0
+  - key: RushReady
+    clip: {fileID: 8300000, guid: 9504b4aa9cf004143bc43d4c315fd51e, type: 3}
+    volume: 1
+    type: 0
+    loop: 0
+    soundTime: 0
+  - key: RushAttackHit
+    clip: {fileID: 8300000, guid: 8297900351eb24ac6908e03c22952b72, type: 3}
+    volume: 0.49
+    type: 0
+    loop: 0
+    soundTime: 0
+  - key: DeathNormalAttack
+    clip: {fileID: 8300000, guid: 8297900351eb24ac6908e03c22952b72, type: 3}
+    volume: 0.49
+    type: 0
+    loop: 0
+    soundTime: 0
+  - key: DeathNormalAttack2
+    clip: {fileID: 8300000, guid: 9e0cd798c3ecc437dbc1fa1a6dc6a84e, type: 3}
+    volume: 0.49
+    type: 0
+    loop: 0
+    soundTime: 0
+  - key: DashSkill
+    clip: {fileID: 8300000, guid: d2840f01c63214bc8987328545ac1079, type: 3}
+    volume: 0.49
+    type: 0
+    loop: 0
+    soundTime: 0
+  - key: SpiderAttack
+    clip: {fileID: 8300000, guid: e90c9029397f7403f923a3a38e8f3be6, type: 3}
+    volume: 0.49
+    type: 0
+    loop: 0
+    soundTime: 0

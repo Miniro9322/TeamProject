@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using Unity.VisualScripting;
+using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using VContainer;
@@ -21,6 +21,16 @@ public class SpawnerManager : MonoBehaviour
     // 지역번호 → 해금 여부
     public Dictionary<int, bool> IsUnlockregion = new();
     public ModuleLogic[] moduleLogics;
+    public GameObject spawnPoint;
+    private float yOffset = 1f;
+    public Dictionary<int,GameObject> spawnPoints = new();
+
+    [Tooltip("구역 클릭 시 포탈 옆에 뜨는 월드 스페이스 텍스트 프리팹(TMP_Text 포함).")]
+    public GameObject infoTextPrefab;
+    [Tooltip("포탈 기준 텍스트 오프셋(월드 좌표).")]
+    public Vector3 infoTextOffset = new Vector3(1.5f, 1f, 0f);
+    // 지역번호 → 클릭 시 띄운 정보 텍스트 인스턴스
+    private readonly Dictionary<int,GameObject> _infoTexts = new();
     // 해금된 모든 지역의 적이 전멸했을 때 1회 발생.
     public Camera cam;
     public event Action AllRegionsClear;
@@ -37,6 +47,7 @@ public class SpawnerManager : MonoBehaviour
             return instance;
         }
     }
+    private bool changeCheck;
 
     void Awake()
     {
@@ -49,15 +60,25 @@ public class SpawnerManager : MonoBehaviour
             m.OnStateChanged += state =>
                 UnlockRegion(m.ModuleId,m.CurrentState);
         }
+        changeCheck = true;
     }
 
     private void OnDestroy()
     {
         foreach (var s in spawners)
             if (s != null) s.EnemyAllClear -= OnRegionClear;
+        
+        if(_gameManager!=null)
+        {
+            _gameManager.ChangeToDay-=ChangeDay;
+            _gameManager.ChangeToNight-=ChangeNight;
+        }
     }
+
+
     void Update()
     {
+        if(changeCheck)
         InputClick();
     }
     private void InputClick()
@@ -76,7 +97,7 @@ public class SpawnerManager : MonoBehaviour
             Tile tile = spawner.Board.CellFromRay(ray);
             if (tile == null || !tile.isEnemySpawn) continue; // 이 지역 보드의 소환지점 타일이 아니면 skip
             if(!IsUnlocked(kv.Key))continue;
-            spawner.OnClickStage(kv.Key, CurrentDay, UnlockedRegions()); // 그 지역의 현재 날짜 웨이브 + 증원 정보 표시
+            ShowStageInfo(kv.Key); // 포탈 옆에 정보 텍스트 띄우고 그 지역의 웨이브 정보 채우기
             return;                                            // 맞는 지역 하나 찾으면 끝
         }
     }
@@ -90,6 +111,90 @@ public class SpawnerManager : MonoBehaviour
             if (_gameManager == null && _resolver != null) _gameManager = _resolver.Resolve<GameManager>();
             return _gameManager != null ? _gameManager.DayCount : 0;
         }
+    }
+    void Start()
+    {
+        if (_gameManager == null && _resolver != null)
+        _gameManager = _resolver.Resolve<GameManager>();
+        if(_gameManager!=null)
+        {
+            _gameManager.ChangeToDay+=ChangeDay;
+            _gameManager.ChangeToNight+=ChangeNight;
+        }
+        ShowAllPortals();
+    }
+    private void ChangeDay()
+    {
+        changeCheck =true;
+        HideAllPortals();
+        ShowAllPortals();
+    }
+    private void ChangeNight()
+    {
+        changeCheck = false;
+        HideStageInfos(); // 밤엔 정보 텍스트 제거
+    }
+
+    // 해금된 모든 지역에 포탈 표시(낮). 이미 떠 있으면 중복 생성하지 않는다.
+    private void ShowAllPortals()
+    {
+        if (spawnPoint == null) return;
+        foreach (var kv in _byRegion)
+            if (IsUnlocked(kv.Key)) ShowPortal(kv.Key);
+    }
+
+    // 한 지역에만 포탈 표시. 확장(해금) 시에도 이 함수로 즉시 생성한다.
+    private void ShowPortal(int region)
+    {
+        if (spawnPoint == null) return;
+        if (spawnPoints.TryGetValue(region, out var existing) && existing != null) return; // 이미 존재
+
+        if (!_byRegion.TryGetValue(region, out var spawner) || spawner == null || spawner.Board == null) return;
+        var w = spawner.Board.GetWaypoints(yOffset);
+        if (w == null || w.Count == 0) return;
+        spawnPoints[region] = PoolManager.Instance.Spawn(spawnPoint, w[0], Quaternion.identity);
+    }
+
+    private void HideAllPortals()
+    {
+        if (spawnPoint == null) return;
+        foreach (var kv in spawnPoints)
+            if (kv.Value != null) PoolManager.Instance.Despawn(kv.Value);
+        spawnPoints.Clear();
+    }
+
+    // 구역 클릭 시: 포탈 위치에 정보 텍스트 프리팹을 띄우고, 그 TMP에 웨이브 정보를 채운다.
+    // 월드 오브젝트라 화면을 이동해도 포탈 옆에 그대로 유지된다.
+    private void ShowStageInfo(int region)
+    {
+        if (infoTextPrefab == null) return;
+        if (!spawnPoints.TryGetValue(region, out var portal) || portal == null) return; // 포탈 없으면 표시 안 함
+        if (!_byRegion.TryGetValue(region, out var spawner) || spawner == null) return;
+
+        Vector3 pos = portal.transform.position + infoTextOffset;
+        if (!_infoTexts.TryGetValue(region, out var go) || go == null)
+        {
+            go = PoolManager.Instance.Spawn(infoTextPrefab, pos, Quaternion.identity);
+            _infoTexts[region] = go;
+        }
+        else
+        {
+            go.transform.position = pos;
+        }
+
+        spawner.text = go.GetComponentInChildren<TMP_Text>(true);
+        spawner.OnClickStage(region, CurrentDay, UnlockedRegions()); // 텍스트에 웨이브/증원/보스 정보 기록
+    }
+
+    private void HideStageInfos()
+    {
+        foreach (var kv in _infoTexts)
+        {
+            if (kv.Value != null) PoolManager.Instance.Despawn(kv.Value);
+            if (_byRegion.TryGetValue(kv.Key, out var spawner) && spawner != null)
+                spawner.text = null; // 반납된 풀 오브젝트를 계속 참조하지 않도록 해제
+        }
+        _infoTexts.Clear();
     }
     private void BuildRegistry()
     {
@@ -112,9 +217,14 @@ public class SpawnerManager : MonoBehaviour
     public void UnlockRegion(int region,ModuleState state)
     {
         if(state!=ModuleState.Locked)
-        IsUnlockregion[region] = true; //해금 할때 씀
+        {
+            IsUnlockregion[region] = true; //해금 할때 씀
+            if (changeCheck) ShowPortal(region); // 낮에 확장하면 확장된 곳에 즉시 포탈 생성
+        }
         else
-        IsUnlockregion[region] = false;
+        {
+            IsUnlockregion[region] = false;
+        }
     }
 
     public bool IsUnlocked(int region)
