@@ -107,6 +107,19 @@ public class FogController : MonoBehaviour
         return new Vector4(centerX, centerZ, extentX, extentZ);
     }
 
+    // 모듈이 이동된 뒤(해금 시 재배치 등) 캐시된 안개 영역을 그 모듈의 현재 위치로 다시 재고 반영한다.
+    public void RefreshArea(ModuleLogic module)
+    {
+        int index = _modules.IndexOf(module);
+        if (index < 0) return;
+
+        MapBoard board = module.GetComponent<MapBoard>();
+        if (board == null) return;
+
+        _areas[index] = MeasureCellArea(board);
+        ApplyAreas();
+    }
+
     private void RevealUnlocked()
     {
         for (int i = 0; i < _count; i++)
