@@ -1,59 +1,59 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-// 적 경로를 트레일로 긋는다: 낮이면 반복, 밤이면 1회. 지나간 자리는 TrailRenderer가 자동으로 지운다.
- 
 [DisallowMultipleComponent]
 public class PathTrail : MonoBehaviour
 {
-    private MapBoard board;
+    private class TrailRun
+    {
+        public readonly List<Vector3> Points = new();
+        public TrailRenderer Trail;
+        public Transform Runner;
+        public bool Playing;
+        public int Point;
+        public float Gap;
+    }
+
+    [SerializeField] private TrailRenderer trailPrefab;
+    [SerializeField] private float moveSpeed = 8f;
+    [SerializeField] private float trailLift = 0.15f;
+    [SerializeField] private float loopGap = 1.2f;
+    [SerializeField] private bool autoPlay = true;
+
+    private readonly List<TrailRun> runs = new();
+    private EnemyLanes enemyLanes;
     private ModuleLogic module;
-    [SerializeField] private TrailRenderer trailPrefab;   // 모듈마다 자기 밑에 런타임 생성
-    private TrailRenderer trail;                          // 생성된 인스턴스
-
-    [SerializeField] private float moveSpeed = 8f;    // runner 이동 속도(월드 단위/초).
-    [SerializeField] private float trailLift = 0.15f; // 타일 윗면에서 트레일을 띄우는 높이.
-    [SerializeField] private float loopGap = 1.2f;    // 낮 반복 시 한 바퀴 사이 텀(초). 트레일 수명보다 크게 잡아 꼬리가 다 사라진 뒤 다시 긋는다.
-    [SerializeField] private bool autoPlay = true;    // 모듈이 열릴 때 스스로 낮 재생을 시작할지.
-
-    private readonly List<Vector3> _points = new();
-    private Transform _runner;
-    private bool _playing;
-    private bool _looping;
-    private int _pointIndex;
-    private float _gapLeft;
+    private bool looping;
 
     private void Awake()
     {
-         
-        board = GetComponent<MapBoard>();
-        module = GetComponent<ModuleLogic>();
+        Prepare();
+    }
 
-        if (trailPrefab != null)
+    private void OnEnable()
+    {
+        Prepare();
+
+        if (module != null)
         {
-            trail = Instantiate(trailPrefab, transform);   // 공유 아님 — 모듈 전용 러너
-            trail.transform.localScale = Vector3.one;
-            _runner = trail.transform;
-            trail.emitting = false;
-            trail.Clear();
+            module.OnStateChanged += HandleState;
+        }
+
+        if (enemyLanes != null)
+        {
+            enemyLanes.Changed += HandleLanes;
         }
     }
 
     private void Start()
     {
-        if (autoPlay && module != null && module.IsPreparing)
+        if (!CanAutoPlay())
         {
-            LoadPoints();
-            PlayLoop();
+            return;
         }
-    }
 
-    private void OnEnable()
-    {
-        if (module != null)
-        {
-            module.OnStateChanged += HandleState;
-        }
+        LoadPoints();
+        PlayLoop();
     }
 
     private void OnDisable()
@@ -62,143 +62,260 @@ public class PathTrail : MonoBehaviour
         {
             module.OnStateChanged -= HandleState;
         }
+
+        if (enemyLanes != null)
+        {
+            enemyLanes.Changed -= HandleLanes;
+        }
     }
 
-    // 경로점을 보드에서 1회 읽어 캐시한다(스폰→관문 순서, 끝점 포함). 경로가 없으면 비운다.
     public void LoadPoints()
     {
-        _points.Clear();
-        if (board != null)
+        StopTrail();
+        ClearRuns();
+        Prepare();
+
+        if (!CanLoad())
         {
-            _points.AddRange(board.GetWaypoints(trailLift));
+            return;
+        }
+
+        for (int i = 0; i < enemyLanes.Lanes.Count; i++)
+        {
+            AddRun(enemyLanes.Lanes[i]);
         }
     }
 
-    // 반복해서 긋는다.
     public void PlayLoop()
     {
-        if(module != null && !module.IsPreparing)
+        if (module != null && !module.IsPreparing)
         {
             return;
         }
-        _looping = true;
-        BeginRun();
+
+        looping = true;
+        BeginRuns();
     }
 
-    //한 번만 긋는다.
     public void PlayOnce()
     {
-        if(module != null && !module.IsUnlocked)
+        if (module != null && !module.IsUnlocked)
         {
             return;
         }
-        _looping = false;
-        BeginRun();
+
+        looping = false;
+        BeginRuns();
     }
 
     public void StopTrail()
     {
-        _playing = false;
-        _gapLeft = 0f;
-        if (trail != null)
+        for (int i = 0; i < runs.Count; i++)
         {
-            trail.emitting = false;
-            trail.Clear();
+            StopRun(runs[i]);
         }
-    }
-
-    // 모듈이 열리면  낮 재생을 시작한다. 
-    private void HandleState(ModuleState state)
-    {
-        if (!autoPlay)
-        {
-            return;
-        }
-        if (state == ModuleState.Preparing)
-        {
-            LoadPoints();
-            PlayLoop();
-        }
-    }
-
-    private void BeginRun()
-    {
-        if (_points.Count < 2)
-        {
-            LoadPoints();
-        }
-        if (_points.Count < 2 || _runner == null)
-        {
-            _playing = false; // 경로가 없으면 재생 상태로 남기지 않는다(다음 프레임 FollowPath가 빈 리스트를 읽지 않게)
-            return;
-        }
-
-        _runner.position = _points[0];
-        trail.Clear();                  
-        trail.emitting = true;
-        _pointIndex = 0;
-        _gapLeft = 0f;
-        _playing = true;
     }
 
     private void Update()
     {
-        if (!_playing)
+        for (int i = 0; i < runs.Count; i++)
         {
-            return;
+            TickRun(runs[i]);
         }
-        if (_gapLeft > 0f)
-        {
-            WaitGap();
-            return;
-        }
-        FollowPath();
     }
 
-    // 다음 경로점까지 runner를 이동. 마지막 점에 닿으면 한 바퀴를 끝낸다.
-    private void FollowPath()
+    private void Prepare()
     {
-        // 경로가 도중에 바뀌거나 비어 인덱스가 벗어나면 이번 주행을 안전하게 끝낸다.
-        if (_pointIndex + 1 >= _points.Count)
+        if (enemyLanes == null)
         {
-            EndRun();
+            enemyLanes = GetComponent<EnemyLanes>();
+        }
+
+        if (module == null)
+        {
+            module = GetComponent<ModuleLogic>();
+        }
+    }
+
+    private bool CanAutoPlay()
+    {
+        return autoPlay && module != null && module.IsPreparing;
+    }
+
+    private bool CanLoad()
+    {
+        return enemyLanes != null && trailPrefab != null;
+    }
+
+    private void AddRun(LaneData lane)
+    {
+        if (!lane.IsValid || lane.Tiles.Count < 2)
+        {
             return;
         }
 
-        Vector3 target = _points[_pointIndex + 1];  // 다음 경로점
-        Vector3 stepped = Vector3.MoveTowards(_runner.position, target, moveSpeed * Time.deltaTime);
-        _runner.position = stepped;        // 이번 프레임 만큼 전진
+        TrailRenderer trail = Instantiate(trailPrefab, transform);
+        trail.transform.localScale = Vector3.one;
+        trail.emitting = false;
+        trail.Clear();
 
-        if (stepped == target)
+        var run = new TrailRun();
+        run.Trail = trail;
+        run.Runner = trail.transform;
+        run.Points.AddRange(lane.GetPoints(trailLift));
+        runs.Add(run);
+    }
+
+    private void ClearRuns()
+    {
+        for (int i = 0; i < runs.Count; i++)
         {
-            _pointIndex++;
-            if (_pointIndex >= _points.Count - 1) // 마지막 점까지 다 갔다면
+            TrailRun run = runs[i];
+            if (run.Trail != null)
             {
-                EndRun();
+                Destroy(run.Trail.gameObject);
             }
         }
+
+        runs.Clear();
     }
 
-    // 꼬리가 자연히 사라지게 둔다. 낮이면 텀 뒤 다시 시작.
-    private void EndRun()
+    private void BeginRuns()
     {
-        trail.emitting = false;
-        if (_looping)
+        if (runs.Count == 0)
         {
-            _gapLeft = loopGap;
+            LoadPoints();
         }
-        else
+
+        for (int i = 0; i < runs.Count; i++)
         {
-            _playing = false;
+            BeginRun(runs[i]);
         }
     }
-    //현재 트레일이 끝나고 다음 반복까지 남은 시간. 낮이면 loopGap, 밤이면 0.
-    private void WaitGap()
+
+    private static void BeginRun(TrailRun run)
     {
-        _gapLeft -= Time.deltaTime;
-        if (_gapLeft <= 0f)
+        if (run.Points.Count < 2 || run.Runner == null)
         {
-            BeginRun();
+            run.Playing = false;
+            return;
+        }
+
+        run.Runner.position = run.Points[0];
+        run.Trail.Clear();
+        run.Trail.emitting = true;
+        run.Point = 0;
+        run.Gap = 0f;
+        run.Playing = true;
+    }
+
+    private void TickRun(TrailRun run)
+    {
+        if (!run.Playing)
+        {
+            return;
+        }
+
+        if (run.Gap > 0f)
+        {
+            WaitRun(run);
+            return;
+        }
+
+        FollowRun(run);
+    }
+
+    private void FollowRun(TrailRun run)
+    {
+        if (run.Point + 1 >= run.Points.Count)
+        {
+            EndRun(run);
+            return;
+        }
+
+        Vector3 target = run.Points[run.Point + 1];
+        Vector3 next = Vector3.MoveTowards(
+            run.Runner.position,
+            target,
+            moveSpeed * Time.deltaTime);
+
+        run.Runner.position = next;
+
+        if (next != target)
+        {
+            return;
+        }
+
+        run.Point++;
+        if (run.Point >= run.Points.Count - 1)
+        {
+            EndRun(run);
+        }
+    }
+
+    private void EndRun(TrailRun run)
+    {
+        run.Trail.emitting = false;
+
+        if (looping)
+        {
+            run.Gap = loopGap;
+            return;
+        }
+
+        run.Playing = false;
+    }
+
+    private void WaitRun(TrailRun run)
+    {
+        run.Gap -= Time.deltaTime;
+        if (run.Gap <= 0f)
+        {
+            BeginRun(run);
+        }
+    }
+
+    private static void StopRun(TrailRun run)
+    {
+        run.Playing = false;
+        run.Gap = 0f;
+
+        if (run.Trail == null)
+        {
+            return;
+        }
+
+        run.Trail.emitting = false;
+        run.Trail.Clear();
+    }
+
+    private void HandleState(ModuleState state)
+    {
+        if (!autoPlay || state != ModuleState.Preparing)
+        {
+            return;
+        }
+
+        LoadPoints();
+        PlayLoop();
+    }
+
+    private void HandleLanes()
+    {
+        bool wasPlaying = false;
+        for (int i = 0; i < runs.Count; i++)
+        {
+            if (runs[i].Playing)
+            {
+                wasPlaying = true;
+                break;
+            }
+        }
+
+        LoadPoints();
+        if (wasPlaying)
+        {
+            BeginRuns();
         }
     }
 }

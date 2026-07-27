@@ -62,7 +62,10 @@ public static class TileAuthorRule
     }
 
     /// <summary>이 모듈에서 지금 잡히는 문제들. 없으면 빈 목록.</summary>
-    public static List<string> FindProblems(Dictionary<Vector2Int, Tile> cells, List<Tile> path, int tileCount)
+    public static List<string> FindProblems(
+        Dictionary<Vector2Int, Tile> cells,
+        IReadOnlyList<LaneData> lanes,
+        int tileCount)
     {
         var problems = new List<string>();
 
@@ -72,8 +75,8 @@ public static class TileAuthorRule
                 "Tools/Map/Bake Tile Positions (Active Scene)를 먼저 실행하세요.");
         }
 
-        int spawnCount = TilePathQuery.CollectSpawns(cells).Count;
-        int coreCount = TilePathQuery.CollectCores(cells).Count;
+        int spawnCount = LaneQuery.CollectSpawns(cells).Count;
+        int coreCount = LaneQuery.CollectCores(cells).Count;
 
         if (spawnCount == 0)
         {
@@ -85,13 +88,30 @@ public static class TileAuthorRule
             problems.Add("본진(Core)이 없습니다 — Core 붓으로 도착 칸을 찍으세요.");
         }
 
-        if (spawnCount > 0 && coreCount > 0 && path == null)
+        if (spawnCount > 0 && coreCount > 0)
         {
-            problems.Add("스폰에서 본진까지 가는 길이 없습니다 — High나 Empty가 통로를 완전히 막았습니다.");
+            AddLaneProblems(lanes, problems);
         }
 
         AddDeadCells(cells, problems);
         return problems;
+    }
+
+    private static void AddLaneProblems(
+        IReadOnlyList<LaneData> lanes,
+        List<string> problems)
+    {
+        for (int i = 0; i < lanes.Count; i++)
+        {
+            LaneData lane = lanes[i];
+            if (lane.IsValid)
+            {
+                continue;
+            }
+
+            problems.Add($"스폰 {lane.Start.Coord}에서 본진까지 가는 길이 없습니다 — " +
+                "High나 Empty가 통로를 완전히 막았습니다.");
+        }
     }
 
     // 배치 플래그가 비어 못 쓰는 칸을 지형별로 세어 알린다. 인스펙터로는 눈에 안 띄는 실수다.

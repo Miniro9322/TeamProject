@@ -31,6 +31,7 @@ public class MapMakerWindow : EditorWindow
     private MapBrush _brush = MapBrush.None;
     private int _cellPixels = 20;
     private bool _showProblems = true;
+    private bool _showInert;
     private int _strokeGroup;
     private Vector2Int _hover = new(-1, -1);
     private string _targetSeen = string.Empty;
@@ -121,7 +122,14 @@ public class MapMakerWindow : EditorWindow
         }
 
         var view = new TileGridView(cells, _brush);
-        List<Tile> path = TilePathQuery.FindPath(cells);
+        List<LaneData> lanes = LaneQuery.BuildLanes(cells);
+
+        // 씬 오버라이드는 씬 모드에서만 뜻이 있다 — 프리팹 스테이지는 비교할 프리팹이 없다.
+        HashSet<Vector2Int> overrides = null;
+        if (!ModuleScan.IsPrefabStage())
+        {
+            overrides = TileOverride.Collect(cells);
+        }
 
         // 좁아지면 판을 하나씩 격자 아래로 내린다 — 격자는 마지막까지 자르지 않는다.
         float gridWidth = view.PixelWidth(_cellPixels);
@@ -135,7 +143,7 @@ public class MapMakerWindow : EditorWindow
                 DrawTerrainPanel(cells);
             }
 
-            DrawGridArea(view, cells, path);
+            DrawGridArea(view, cells, lanes, overrides);
 
             if (roomForBoth)
             {
@@ -156,9 +164,11 @@ public class MapMakerWindow : EditorWindow
             }
         }
 
-        List<string> problems = TileAuthorRule.FindProblems(cells, path, tiles.Count);
+        List<string> problems = TileAuthorRule.FindProblems(cells, lanes, tiles.Count);
 
-        DrawStatusBar(cells, view, path, problems.Count);
+        int overrideCount = overrides?.Count ?? 0;
+        DrawStatusBar(cells, view, lanes, problems.Count, overrideCount);
+        DrawMarkerLegend(overrideCount);
         DrawBrushNote();
 
         if (_showProblems)
@@ -198,6 +208,10 @@ public class MapMakerWindow : EditorWindow
 
             _showProblems = GUILayout.Toggle(
                 _showProblems, "검사", EditorStyles.toolbarButton, GUILayout.Width(40));
+
+            // 붓과 무관하게 무효 조합 칸(지상의 CanRanged 등)을 격자에 상시 표시한다.
+            _showInert = GUILayout.Toggle(
+                _showInert, "무효", EditorStyles.toolbarButton, GUILayout.Width(40));
         }
     }
 
@@ -324,7 +338,9 @@ public class MapMakerWindow : EditorWindow
 
     // ---- 가운데: 격자 ----
 
-    private void DrawGridArea(TileGridView view, Dictionary<Vector2Int, Tile> cells, List<Tile> path)
+    private void DrawGridArea(TileGridView view, Dictionary<Vector2Int, Tile> cells,
+        IReadOnlyList<LaneData> lanes,
+        HashSet<Vector2Int> overrides)
     {
         using (new EditorGUILayout.VerticalScope())
         {
@@ -333,7 +349,7 @@ public class MapMakerWindow : EditorWindow
             Rect area = GUILayoutUtility.GetRect(view.PixelWidth(_cellPixels), view.PixelHeight(_cellPixels));
             HandleHover(area, view);
             HandleStroke(area, view, cells);
-            view.Draw(area, _cellPixels, path, _hover);
+            view.Draw(area, _cellPixels, lanes, _hover, overrides, _showInert);
 
             EditorGUILayout.EndScrollView();
         }
@@ -341,8 +357,11 @@ public class MapMakerWindow : EditorWindow
 
     // ---- 아래: 지금 가리키는 칸 ----
 
-    private void DrawStatusBar(Dictionary<Vector2Int, Tile> cells, TileGridView view, List<Tile> path,
-        int problemCount)
+    private void DrawStatusBar(
+        Dictionary<Vector2Int, Tile> cells,
+        TileGridView view,
+        IReadOnlyList<LaneData> lanes,
+        int problemCount, int overrideCount)
     {
         string reading = "칸 위에 마우스를 올리면 그 칸의 상태가 여기 나옵니다";
         bool hovering = cells.TryGetValue(_hover, out Tile tile);
@@ -351,10 +370,13 @@ public class MapMakerWindow : EditorWindow
             reading = TileCellReadout.Describe(tile);
         }
 
-        string pathText = "없음";
-        if (path != null)
+        string pathText = LaneText(lanes);
+
+        // 오버라이드는 씬 모드에서만 센다 — 있으면 프리팹과 다른 칸이 몇인지 늘 띄운다(6-3식 사고 조기 발견).
+        string overrideText = string.Empty;
+        if (overrideCount > 0)
         {
-            pathText = path.Count + "칸";
+            overrideText = $" · 오버라이드 {overrideCount}칸";
         }
 
         using (new EditorGUILayout.HorizontalScope(EditorStyles.helpBox))
@@ -362,9 +384,65 @@ public class MapMakerWindow : EditorWindow
             GUILayout.Label(reading, EditorStyles.miniLabel);
             GUILayout.FlexibleSpace();
             GUILayout.Label(
-                $"{view.Cols}×{view.Rows} · 칸 {cells.Count} · 경로 {pathText} · 문제 {problemCount}",
+                $"{view.Cols}×{view.Rows} · 칸 {cells.Count} · 경로 {pathText} · 문제 {problemCount}{overrideText}",
                 EditorStyles.miniLabel);
         }
+    }
+
+    private static string LaneText(IReadOnlyList<LaneData> lanes)
+    {
+        int valid = 0;
+        int tiles = 0;
+
+        for (int i = 0; i < lanes.Count; i++)
+        {
+            if (!lanes[i].IsValid)
+            {
+                continue;
+            }
+
+            valid++;
+            tiles += lanes[i].Tiles.Count;
+        }
+
+        if (lanes.Count == 0)
+        {
+            return "없음";
+        }
+
+        return $"{valid}/{lanes.Count}개 · 총 {tiles}칸";
+    }
+
+    // 격자에 켜져 있는 상시 표식의 뜻을 한 줄로 알린다. 표식이 없으면 자리를 차지하지 않는다.
+    private void DrawMarkerLegend(int overrideCount)
+    {
+        bool showOverride = overrideCount > 0;
+        if (!showOverride && !_showInert)
+        {
+            return;
+        }
+
+        using (new EditorGUILayout.HorizontalScope())
+        {
+            if (showOverride)
+            {
+                LegendChip(MapMakerPalette.Override, "프리팹과 다름");
+            }
+
+            if (_showInert)
+            {
+                LegendChip(MapMakerPalette.Inert, "무효 조합");
+            }
+
+            GUILayout.FlexibleSpace();
+        }
+    }
+
+    private void LegendChip(Color color, string label)
+    {
+        Rect chip = GUILayoutUtility.GetRect(11f, 13f, GUILayout.Width(11));
+        EditorGUI.DrawRect(new Rect(chip.x, chip.y + 2f, 9f, 9f), color);
+        GUILayout.Label(label, EditorStyles.miniLabel);
     }
 
     // 겉보기와 뜻이 다른 붓 둘. 고른 동안만 띄운다.
