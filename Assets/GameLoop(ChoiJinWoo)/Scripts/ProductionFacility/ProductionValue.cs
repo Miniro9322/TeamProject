@@ -6,6 +6,10 @@ public class ProductionValue : ScriptableObject
 {
     [Header("생산하는 자원 종류")]
     [SerializeField] private ProductionType type;
+    [Header("건물 이름")]
+    [SerializeField] private string facilityName;
+    [Header("건물 설명")]
+    [SerializeField] private string facilityInfo;
     [Header("초기 자원 생산량")]
     [SerializeField] private int defaultAmount;
     [Header("생산 건물 초기 내구도")]
@@ -26,6 +30,8 @@ public class ProductionValue : ScriptableObject
     public int DefaultAmount => defaultAmount;
     public int DefaultHp => defaulthp;
     public int DefaultMaxWorker => defaultMaxWorker;
+    public string FacilityName => facilityName;
+    public string FacilityInfo => facilityInfo;
     public Dictionary<ProductionType, int> ConstructProduct
     { 
         get

@@ -38,9 +38,9 @@ public class PlaceAction
                 entry.MarkPlaced(placedUnit);
                 placedUnit.AddComponent<HeroRosterLink>().Entry = entry;
                 heroRoster.NotifyStateChanged();
-                palette.ClearMode();   // 개체 하나뿐이니 배치 즉시 Place 모드 종료(연속 배치 방지)
             }
             view.Select(tile);
+            palette.ClearMode();   // 개체 하나뿐이니 배치 즉시 Place 모드 종료(연속 배치 방지)
         }
         else
         {

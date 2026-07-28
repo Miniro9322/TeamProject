@@ -1,12 +1,17 @@
+using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
 
-// 입력만 담당한다. CameraRig의 궤도 값을 직접 고치고 반영은 Rig에 맡긴다.
-// 감도 값을 전부 여기서 소유하므로, 조작 방식을 바꿔도 Rig는 건드리지 않는다.
+// 마우스·키보드로 카메라를 조작한다.
+// Alt+우드래그 = 회전, 우드래그·WASD = 평면 이동, QE = 높이, 휠 = 줌.
 public class CameraInput : MonoBehaviour
 {
-    [SerializeField] private CameraRig rig;
+    private CameraRig rig;   // 같은 오브젝트에 붙는 고정 관계라 Awake에서 잡는다(배선 불필요)
+
+    // 사용자가 카메라를 건드린 프레임에 알린다. 자동 이동(ExpandFocus)이 이걸 듣고 손을 뗀다.
+    // 이벤트라서 여기서는 듣는 쪽을 모른다 — ExpandFocus를 떼어내도 이 파일은 그대로다.
+    public event Action UserMoved; // 사용자가 카메라를 건드린 프레임에 알린다. 자동 이동(ExpandFocus)이 이걸 듣고 손을 뗀다.
 
     [Header("Sensitivity")]
     [Tooltip("마우스 델타 1픽셀당 회전 각(도).")]
@@ -16,7 +21,7 @@ public class CameraInput : MonoBehaviour
     public float dragSpeed = 1.5f;
     public float keySpeed = 20f;
 
-    private void Reset()
+    private void Awake()
     {
         rig = GetComponent<CameraRig>();
     }
@@ -33,11 +38,6 @@ public class CameraInput : MonoBehaviour
 
     private void Update()
     {
-        if (rig == null)
-        {
-            return;
-        }
-
         bool moved = Rotate();
         moved |= Pan();
         moved |= Zoom();
@@ -47,7 +47,7 @@ public class CameraInput : MonoBehaviour
         if (moved)
         {
             rig.ClampState();
-            rig.CancelAutoPan(); // 사용자가 조작하면 자동 이동을 놓아준다
+            UserMoved?.Invoke();   // 사용자가 조작하면 자동 이동을 놓아준다
         }
         rig.ApplyNow();
     }

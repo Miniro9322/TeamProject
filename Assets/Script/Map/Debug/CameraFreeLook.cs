@@ -1,14 +1,15 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-// [임시 · 삭제 예정] 카메라 플라이(자유시점) + 홈 복귀.
-// 메인(CameraRig/CameraInput)을 건드리지 않는다. 자유시점 동안엔 CameraInput을 잠깐 끄고
-// 이 스크립트가 트랜스폼을 직접 몰아 focus 클램프까지 우회한다(비행). 나가면 rig 값을 역산해 제약 모드로 복귀.
-// 필요 없어지면 이 파일과 카메라의 이 컴포넌트만 지우면 끝(Core에 진입점 없음).
+// 개발용 자유 카메라. 맵을 아무 각도에서나 둘러보기 위한 도구다.
+// F = 비행 모드 토글(마우스 = 시선, WASD = 이동, QE = 높이, 휠 = 속도), Home = 원래 시점으로 복귀.
+// 비행 중엔 평소 조작과 이동 범위 제한을 잠시 끈다. 게임 플레이에는 쓰이지 않는다.
 public class CameraFreeLook : MonoBehaviour
 {
     [SerializeField] private CameraRig rig;
-    [SerializeField] private CameraInput input; // 비어 있으면 Start에서 rig의 것을 잡는다
+
+    private CameraInput input;   // 셋 다 같은 카메라 오브젝트에 붙는 고정 관계라 Start에서 잡는다
+    private ExpandFocus expand;
 
     [Header("Keys")]
     [SerializeField] private Key freeLookKey = Key.F;
@@ -49,24 +50,14 @@ public class CameraFreeLook : MonoBehaviour
 
     private void Start()
     {
-        if (rig == null)
-        {
-            return;
-        }
-        if (input == null)
-        {
-            input = rig.GetComponent<CameraInput>();
-        }
+        input = rig.GetComponent<CameraInput>();
+        expand = rig.GetComponent<ExpandFocus>();
         cam = rig.GetComponent<Camera>();
         SaveHome();
     }
 
     private void Update()
     {
-        if (rig == null)
-        {
-            return;
-        }
         ReadKeys();
         if (freeLook)
         {
@@ -130,11 +121,8 @@ public class CameraFreeLook : MonoBehaviour
     {
         freeLook = true;
         returning = false;
-        if (input != null)
-        {
-            input.enabled = false;
-        }
-        rig.CancelAutoPan();
+        input.enabled = false;
+        expand.CancelPan();
         flyYaw = rig.yaw;
         flyPitch = rig.pitch;
         flyPos = rig.transform.position;
@@ -151,10 +139,7 @@ public class CameraFreeLook : MonoBehaviour
     {
         freeLook = false;
         ShowCursor();
-        if (input != null)
-        {
-            input.enabled = true;
-        }
+        input.enabled = true;
         SyncRig();
         RestoreLimit();
         rig.pitch = Mathf.Clamp(rig.pitch, basePitch.x, basePitch.y);
@@ -164,7 +149,7 @@ public class CameraFreeLook : MonoBehaviour
     // 비행 한 프레임: 마우스로 시선, WASD/QE로 이동, 스크롤로 속도. 트랜스폼을 직접 세팅(클램프 우회).
     private void FlyStep()
     {
-        rig.CancelAutoPan(); // 비행 중 확장 자동팬 억제
+        expand.CancelPan(); // 비행 중 확장 자동팬 억제
         Look();
         Move();
         rig.transform.SetPositionAndRotation(flyPos, Quaternion.Euler(flyPitch, flyYaw, 0f));
@@ -218,15 +203,12 @@ public class CameraFreeLook : MonoBehaviour
         {
             freeLook = false;
             ShowCursor();
-            if (input != null)
-            {
-                input.enabled = true;
-            }
+            input.enabled = true;
             SyncRig();
             rig.minPitch = freePitch.x; // 넓은 pitch에서 부드럽게 내려오도록 복귀 끝까지 유지
             rig.maxPitch = freePitch.y;
         }
-        rig.CancelAutoPan();
+        expand.CancelPan();
         focusVel = Vector3.zero;
         yawVel = 0f;
         pitchVel = 0f;
