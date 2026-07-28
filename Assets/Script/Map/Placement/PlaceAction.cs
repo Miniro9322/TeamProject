@@ -24,7 +24,11 @@ public class PlaceAction
         if (!palette.TryCurrentSlot(out Placeable slot)) return;   // 슬롯 없으면 중단(검사 게이트)
         HeroRosterEntry entry = palette.CurrentRuntimeEntry;       // 배치 전에 미리 캡처(성공 후 모드가 바뀔 수 있음)
         if (entry != null && entry.State == HeroRosterState.Placed) return; // 이미 배치된 엔트리(개체 하나뿐) 중복 배치 방지
-        if (!tile.Board.CanPlace(tile.Coord, slot.kind, out _)) return; // 배치 불가면 중단(클릭된 타일이 속한 모듈 보드 기준)
+        if (!tile.Board.CanPlace(tile.Coord, slot.kind, out string blockReason))
+        {
+            view.SetStatus($"{tile.Coord} {blockReason}");
+            return;
+        }
         if (!buildingUi.CanBuild()) { Debug.Log("밤에는 배치할 수 없습니다."); return; } // 테스트용
 
         if (placer.TryPlace(tile, slot, placeYOffset, out GameObject placedUnit, out string reason))

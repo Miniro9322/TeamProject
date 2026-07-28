@@ -66,7 +66,6 @@ public class WaveSpawner : MonoBehaviour
             SpawnWaveRout(wave, count).Forget();
             Enemycount += count;
         }
-        Debug.Log($"{region}지역 : {Enemycount}");
     }
     // reinforcementSources: 해금된 "다른" 지역 번호들. 그 지역이 export하는 증원 몹(9001 대역)을 이 지역 웨이브에 추가로 얹는다.
     public void SpawnWave(int region,int currentStage, IEnumerable<int> reinforcementSources = null)
@@ -100,7 +99,6 @@ public class WaveSpawner : MonoBehaviour
                 Enemycount += w.Count;
             }
         }
-        Debug.Log($"{region}지역 총마릿수 : {Enemycount}");
     }
 
     private async UniTask SpawnWaveRout(WaveTable.Data wave, int count, float startDelay = 0f)
@@ -132,7 +130,6 @@ public class WaveSpawner : MonoBehaviour
     public void EnemyDieEvent()
     {
         Enemycount--;
-        Debug.Log($"{region}지역남은 마릿수 : {Enemycount}");
         if(Enemycount<=0)
         {
             EnemyAllClear?.Invoke();

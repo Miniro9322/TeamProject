@@ -7,13 +7,19 @@ Ui_Exit,나가기,Exit,終了
 Ui_Close,닫기,Close,閉じる
 Ui_Pause,일시 정지,Pause,一時停止
 Ui_Start,게임 시작,Game Start,ゲーム開始
+Ui_EnemyArchive,적 도감,Enemy Archive,Enemy Archive
+Ui_ArchiveButton,도감,Archive,Archive
+Ui_Type,타입,Type,Type
+Ui_Attribute,속성,Attribute,Attribute
+Melee,근접,Melee,Melee
+Ranged,원거리,Ranged,Ranged
 LanguageKr,한국어,Korea,韓国語
 LanguageEn,영어,English,英語
 LanguageJp,일본어,Japan,日本語
 SpiderNormal,거미,Spider,蜘蛛
 SpiderNormal_Desc,펠루시아 대륙의 가장 흔하게 보이는 거미이다,ㅇㅇㅇ,ㅇㅇㅇㅇ
 SpiderToxin,독거미,Toxic Spider,毒蜘蛛
-SpiderToxin_Desc,펠루시아 대륙에는 강력한 독을가진 거미가 있다.\n하지만 그 모습을 볼 수가 없다 한다. 어째서 일까?,ㅇㅇㅇㅇ,ㅇㅇㅇㅇㅇ
+SpiderToxin_Desc,펠루시아 대륙에는 강력한 독을가진 거미가 있다.\n하지만 그 모습을 보기 힘들다.,ㅇㅇㅇㅇ,ㅇㅇㅇㅇㅇ
 SpiderKing,여왕 거미,Queen Spider,女王蜘蛛
 SpiderKing_Desc,거미들의 어머니 대륙에 침입한 인간들로 인해 분노하여 직접 나선다.,ㅇㅇㅇㅇ,ㅇㅇㅇㅇㅇㅇㅇ
 Scorpion,전갈,Scorpion,전갈(일본어)
@@ -21,18 +27,36 @@ Bat,박쥐,Bat,박쥐(일본어)
 Golem,골렘,Golem,골렘(일본어)
 DeathAttacker,죽음의 분쇄자,어쩌고저쩌고,ㅇㅇㅇㅇ
 Skill_SpiderBite,물기,Bite,噛みつき
+Skill_SpiderSplitSkill,분열,Split,분열
 Skill_SpiderToxin_Dash,독거미 대시,Toxic Spider Dash,毒蜘蛛ダッシュ
 Skill_SpiderKing_Summon,여왕 거미 소환,Queen Spider Summon,女王蜘蛛召喚
 Skill_Heal,치유,Heal,回復
 Skill_Scorpion_Shield,보호막,Shield,보호막(일본어 아마도)
+Skill_DeathRushAttack,수라,ㅇ,ㅇ
 Desc_SpiderBite,적을 물어 피해를 준다,Bites the enemy to deal damage,敵を噛んでダメージを与える
+Desc_SpiderSplitSKill,거미가 사망시 분열을 한다.,ㅇ,ㅇㅇ
 Desc_SpiderToxin_Dash,독거미가 일정거리 빠르게 이동을 한다,The toxic spider dashes a set distance quickly,毒蜘蛛が一定距離を素早く移動する
 Desc_SpiderKing_Summon,여왕 거미가 거미를 소환한다,The Spider Queen summons spiders,女王蜘蛛が蜘蛛を召喚する
 Desc_Heal,일정 범위 내 아군을 지속 회복시킨다,Continuously heals allies within range,範囲内の味方を継続的に回復する
 Desc_Scorpion_Shield,범위내에 적유닛 데미지 감소,어쩌구저쩌구,ㅇㅇㅇㅇㅇㅇㅇㅇ
+Desc_DeathRushAttack,죽음의 분쇄자가 강력한 의지를 담아 연속으로 공격을 한다.,ㅇㅇㅇ,ㅇㅇㅇ
 Stat_Attack,공격력,Attack,攻撃力
 Stat_AttackSpeed,공격속도,AttackSpeed,攻撃速度
 Stat_Health,체력,Health,体力
 Stat_MoveSpeed,이동속도,MoveSpeed,移動速度
 Stat_Defense,방어력,Defense,防御力
 Stat_Range,사거리,Range,射程
+LockEnemyText,아직 해금되지 않은 적 입니다.,Not UnLock Enemy,음 어쩌고저쩌고
+None,특성 없음,None,特性なし
+Cloaking,은신,Stealth,隠密
+Fly,공중,Flying,飛行
+UnJudged,저지 불가,Unblockable,阻止不可
+Berserk,폭주,Berserk,暴走
+Regeneration,재생,Regeneration,再生
+HitsShield,타수 보호막,Hit Shield,打数バリア
+Cloaking_Desc,외부로부터 외형을 숨겨 공격 대상에서 제외된다. 저지 했을 시에만 공격 할 수 있다.,Can only be hit while blocked,阻止されている時のみ攻撃を受ける
+Fly_Desc,원거리 유닛만 공격할 수 있다. 그리고 지형지물을 무시하고 이동한다,Only ranged units can attack it And Ignores terrain features.,遠距離ユニットのみ攻撃できる
+UnJudged_Desc,저지할 수 없어 막는 유닛을 통과한다,Cannot be blocked and passes through blockers,阻止できずブロックユニットを通り抜ける
+Berserk_Desc,체력 50% 이하일 때 이동속도와 공격력이 증가한다,Gains move speed and attack below 50% HP,HPが50%以下で移動速度と攻撃力が上昇する
+Regeneration_Desc,체력을 계속 회복한다.,Rapidly regenerates HP over time,時間経過でHPが急速に回復する
+HitsShield_Desc,받는 피해가 1로 고정되며 일정 타수만큼만 피해를 받는다,Takes 1 fixed damage per hit for a set number of hits,被ダメージが1に固定され一定の打数だけダメージを受ける

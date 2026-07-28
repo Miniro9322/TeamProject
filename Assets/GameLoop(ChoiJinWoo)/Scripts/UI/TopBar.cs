@@ -24,6 +24,8 @@ public class TopBar : MonoBehaviour
     {
         resourcesManager.ProductUpdate += UpdateResourcesUI;
         citizenManager.CitizenChanged += UpdateCitizenUi;
+        UpdateResourcesUI();
+        UpdateCitizenUi();
     }
 
     private void OnDestroy()
@@ -43,6 +45,6 @@ public class TopBar : MonoBehaviour
 
     private void UpdateCitizenUi()
     {
-        citizenText.text = $"ÃÑ ½Ã¹Î ¼ö: {citizenManager.CurrentCitizen}/ÃÖ´ë ½Ã¹Î ¼ö: {citizenManager.MaxCitizen}\n¹èÄ¡ÇÑ ½Ã¹Î: {citizenManager.UsedCitizen}/¹èÄ¡ °¡´É ½Ã¹Î: {citizenManager.CanUseCitizen}";
+        citizenText.text = $"í˜„ìž¬ ì‹œë¯¼ ìˆ˜: {citizenManager.CurrentCitizen}/ìµœëŒ€ ì‹œë¯¼ ìˆ˜: {citizenManager.MaxCitizen}\në°°ì¹˜ ê°€ëŠ¥ ì‹œë¯¼: {citizenManager.CanUseCitizen}/ë°°ì¹˜í•œ ì‹œë¯¼: {citizenManager.UsedCitizen}";
     }
 }
