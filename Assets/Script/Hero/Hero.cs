@@ -11,7 +11,9 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
     [SerializeField] private int citizenAmount = 2;
     [SerializeField] private List<ProductionType> costType;
     [SerializeField] private List<int> costAmount;
-    [SerializeField] private int level = 0;
+    [SerializeField] private int skillLevel = 0;
+    [SerializeField] private int statLevel = 0;
+    [SerializeField] private List<HeroUpgradeData> upgradeDatas;
 
     public Dictionary<ProductionType, int> Cost
     {
@@ -130,10 +132,9 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
     {
         if (isDead || amount <= 0f)
             return;
-        Debug.Log($"before : {currentHp}");
         currentHp = Mathf.Min(currentHp + amount, sc[StatType.HP]);
-        Debug.Log($"after : {currentHp}");
     }
+
     protected OccupantKind occupantKind;
 
     public event Action OnBreak;
@@ -415,5 +416,24 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
         this.basePattern = datas;
         this.selectors = selectors;
         this.procs = procs;
+    }
+
+    public void SkillUpgrade()
+    {
+        if (skillLevel >= upgradeDatas.Count)
+        {
+            return;
+        }
+        upgradeDatas[skillLevel++].Upgrade(this);
+    }
+    public void StatUpgrade()
+    {
+        statLevel++;
+        Modifier mod = new Modifier(ModifierType.Additive, 0.1f, 0f, StatLayer.Equip, this);
+        sc.AddModifier(StatType.HP, mod);
+        mod = new Modifier(ModifierType.Additive, 0.05f, 0f, StatLayer.Equip, this);
+        sc.AddModifier(StatType.ATK, mod);
+        mod = new Modifier(ModifierType.Flat, 1f, 0f, StatLayer.Equip, this);
+        sc.AddModifier(StatType.DEF, mod);
     }
 }

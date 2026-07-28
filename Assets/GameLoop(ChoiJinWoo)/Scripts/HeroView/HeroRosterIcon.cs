@@ -9,9 +9,9 @@ public class HeroRosterIcon : MonoBehaviour
     [SerializeField] private Button button;
 
     private HeroRosterEntry entry;
-    private Action<HeroRosterEntry> onClick;
+    private Action<HeroRosterEntry, HeroRosterIcon> onClick;
 
-    public void Set(HeroRosterEntry entry, Action<HeroRosterEntry> onClick)
+    public void Set(HeroRosterEntry entry, Action<HeroRosterEntry, HeroRosterIcon> onClick)
     {
         this.entry = entry;
         this.onClick = onClick;
@@ -19,6 +19,6 @@ public class HeroRosterIcon : MonoBehaviour
         icon.sprite = entry.State == HeroRosterState.Placed ? entry.Slot.placedIcon : entry.Slot.icon;
 
         button.onClick.RemoveAllListeners();
-        button.onClick.AddListener(() => this.onClick?.Invoke(this.entry));
+        button.onClick.AddListener(() => this.onClick?.Invoke(this.entry, this));
     }
 }
