@@ -3,6 +3,7 @@ using UnityEngine;
 
 public class LaneBuilder : ILaneBuilder
 {
+    // 모든 스폰을 좌표순으로 정렬하고 스폰마다 독립된 레인을 만듭니다.
     public IReadOnlyList<LaneData> BuildLanes(LaneInput input)
     {
         var lanes = new List<LaneData>();
@@ -19,6 +20,7 @@ public class LaneBuilder : ILaneBuilder
         return lanes;
     }
 
+    // 스폰 하나에서 도달 가능한 코어까지의 최단 레인을 계산합니다.
     private static LaneData BuildLane(LaneInput input, Tile spawn, HashSet<Tile> cores)
     {
         if (cores.Count == 0)
@@ -41,6 +43,7 @@ public class LaneBuilder : ILaneBuilder
         return new LaneData(spawn, goal, path);
     }
 
+    // 현재 타일의 상하좌우에서 이동 가능한 이웃 타일만 반환합니다.
     private static IEnumerable<Tile> GetNeighbors(
         IReadOnlyDictionary<Vector2Int, Tile> cells,
         Tile tile)
@@ -55,6 +58,7 @@ public class LaneBuilder : ILaneBuilder
         }
     }
 
+    // 현재 타일에서 가장 가까운 코어까지의 맨해튼 거리를 구합니다.
     private static int GetDistance(Tile tile, HashSet<Tile> cores)
     {
         int nearest = int.MaxValue;
@@ -71,6 +75,7 @@ public class LaneBuilder : ILaneBuilder
         return nearest;
     }
 
+    // 스폰을 X 좌표 우선, Y 좌표 차순으로 비교합니다.
     private static int CompareSpawn(Tile left, Tile right)
     {
         int column = left.Coord.x.CompareTo(right.Coord.x);

@@ -10,6 +10,7 @@ public class LaneData
     public IReadOnlyList<Tile> Tiles => tiles;
     public bool IsValid => Goal != null && tiles.Count > 0;
 
+    // 스폰과 코어 및 순서가 정해진 경로 타일을 레인 결과로 보관합니다.
     public LaneData(Tile start, Tile goal, IReadOnlyList<Tile> source)
     {
         Start = start;
@@ -22,6 +23,7 @@ public class LaneData
         }
     }
 
+    // 경로 타일을 지정 높이가 적용된 월드 좌표 목록으로 변환합니다.
     public List<Vector3> GetPoints(float yOffset)
     {
         var points = new List<Vector3>(tiles.Count);
