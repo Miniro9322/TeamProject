@@ -8,6 +8,7 @@ public static class DataTableManager
     public static EnemyTable EnemyTable => Get<EnemyTable>(DataTableIds.Enemy);
     public static WaveTable WaveTable => Get<WaveTable>(DataTableIds.Wave);
     public static SkillTable SkillTable => Get<SkillTable>(DataTableIds.Skill);
+    public static PortalTable PortalTable => Get<PortalTable>(DataTableIds.Portal);
     static DataTableManager()
     {
         Init();
@@ -26,6 +27,9 @@ public static class DataTableManager
         var skillTable = new SkillTable();
         skillTable.Load(DataTableIds.Skill);
         tables.Add(DataTableIds.Skill, skillTable);
+        var portalTable = new PortalTable();
+        portalTable.Load(DataTableIds.Portal);
+        tables.Add(DataTableIds.Portal, portalTable);
     }
     public static T Get<T>(string id) where T : DataTable
     {
