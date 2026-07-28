@@ -15,6 +15,8 @@ public class SwordMan : Hero
             getEnemiesInRange = GetEnemiesInRange,
             getEnemyTargetsInRange = GetEnemyTransformsInRange,
             getEnemyObjectsInRange = GetEnemyObjectsInRange,
+            getAllyObjectsInRange = GetAllyObjectsInRange,
+            healSelf = amount => Heal(amount),
             getTargetableEnemiesInRange = GetTargetableEnemiesInRange,
             getTargetableEnemyObjectsInRange = GetTargetableEnemyObjectsInRange,
             getTargetableEnemyTargetsInRange = GetTargetableEnemyTransformsInRange,

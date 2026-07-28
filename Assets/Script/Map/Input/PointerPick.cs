@@ -25,7 +25,7 @@ public class PointerPick
         float bestSqr = float.MaxValue;
         foreach (MapBoard board in _boards)
         {
-            if (!board.IsUnlocked) continue; // 잠긴 모듈은 안 보이니 집히지도 않는다
+            if (board == null || !board.gameObject.activeInHierarchy || !board.IsUnlocked) continue;
 
             Tile tile = board.CellFromRay(ray);
             if (tile == null) continue; // 이 보드는 레이가 안 맞음 — 다음 모듈
@@ -48,8 +48,8 @@ public class PointerPick
         float bestDist = float.MaxValue;
         foreach (MapBoard board in _boards)
         {
-            if (!board.IsUnlocked) continue; // 잠긴 모듈로는 유닛을 끌어다 놓을 수 없다
-
+            if (board == null || !board.gameObject.activeInHierarchy || !board.IsUnlocked) continue;
+            
             Tile tile = board.NearestCellFromRay(ray);
             if (tile == null) continue;
 

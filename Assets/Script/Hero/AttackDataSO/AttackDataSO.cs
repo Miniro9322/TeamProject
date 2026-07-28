@@ -34,6 +34,12 @@ public class AttackDataSO : ScriptableObject
     public float clipLength = 0f;
     public List<BuffEffect> buffList;
     public GroundZoneDataSO groundZone; // null이면 이 공격은 장판을 깔지 않음
+
+    [Header("아군 힐 / 피흡")]
+    public float lifestealPercent = 0f; // 0 = 없음. 가한 데미지의 N%만큼 공격자 회복
+    public float allyHealAmount = 0f;                      // 0 = 없음. 적중 시 범위 내 최저 체력 아군 1명을 casterATK * allyHealAmount만큼 회복
+    public int allyHealRange = 2;
+    public RangeShape allyHealRangeShape = RangeShape.Diamond;
 }
 
 // Single: 대상 하나(또는 targetMode==DifferentEnemies면 서로 다른 적)에게 비범위 피해.
