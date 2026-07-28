@@ -22591,10 +22591,15 @@ MonoBehaviour:
   citizenAmount: 2
   costType: 
   costAmount: 
+  skillLevel: 0
+  statLevel: 0
+  upgradeDatas:
+  - {fileID: 11400000, guid: ba950b713d499c9458a10b1ea69cf9a9, type: 2}
+  - {fileID: 11400000, guid: cc4316d74848d014d8053de37b7be01e, type: 2}
+  - {fileID: 11400000, guid: abc317361cd77324b88c35103d8cfb1f, type: 2}
   basePattern:
   - {fileID: 11400000, guid: ed306a8b3d06d9f43a2708a95d7437cf, type: 2}
-  selectors:
-  - {fileID: 11400000, guid: 0d5377dd40378494688366410dd3e32f, type: 2}
+  selectors: []
   procs: []
   anim: {fileID: 4378586045599540503}
   animEvents: {fileID: 7722490271011846444}
