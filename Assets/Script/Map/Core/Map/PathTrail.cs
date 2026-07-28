@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 [DisallowMultipleComponent]
@@ -9,9 +10,7 @@ public class PathTrail : MonoBehaviour
         public readonly List<Vector3> Points = new();
         public TrailRenderer Trail;
         public Transform Runner;
-        public bool Playing;
-        public int Point;
-        public float Gap;
+        public float Length;
     }
 
     [SerializeField] private TrailRenderer trailPrefab;
@@ -23,49 +22,47 @@ public class PathTrail : MonoBehaviour
     private readonly List<TrailRun> runs = new();
     private WaveSpawner spawner; //활성화된 스폰 지점 참조.
     private ModuleLogic module;
-    private bool looping;
+    private bool isLooping;
+    private bool isPlaying;
+    private bool isWaiting; 
+    private bool isPending; //재생 요청이 큐에 들어가 있는지 여부. 재생 중이면 무시.
+    private float elapsed;
+    private float moveTime;
 
-    // 경로 표시를 위해 필요한 컴포넌트 참조를 준비합니다.
+    // 필요한 컴포넌트 참조를 초기화합니다.
     private void Awake()
     {
-        Prepare();
+        spawner = GetComponent<WaveSpawner>();
+        module = GetComponent<ModuleLogic>();
     }
 
     // 모듈 상태 변경 이벤트를 구독합니다.
     private void OnEnable()
     {
-        Prepare();
         module.OnStateChanged += HandleState;
     }
 
-    // 자동 재생 조건이 맞으면 활성 경로를 반복 재생합니다.
+    // 초기 자동 재생을 요청합니다.
     private void Start()
     {
-        if (!AutoReady())
-        {
-            return;
-        }
+        if (!autoPlay || !module.IsPreparing) return;
 
         PlayLoop();
     }
 
     // 모듈 상태 변경 이벤트 구독을 해제합니다.
     private void OnDisable()
-    { 
-        module.OnStateChanged -= HandleState; 
+    {
+        module.OnStateChanged -= HandleState;
     }
 
-    // 이번 라운드의 활성 경로를 TrailRenderer 실행 목록으로 다시 구성합니다.
+    // 이번 라운드의 활성 경로로 Trail 목록을 구성합니다.
     public void LoadPoints()
     {
         StopTrail();
         ClearRuns();
-        Prepare();
 
-        if (!CanLoad())
-        {
-            return;
-        }
+        if (trailPrefab == null) return;
 
         IReadOnlyList<IReadOnlyList<Vector3>> paths = spawner.ActivePaths;
         for (int i = 0; i < paths.Count; i++)
@@ -74,76 +71,63 @@ public class PathTrail : MonoBehaviour
         }
     }
 
-    // 모든 활성 경로 Trail을 반복 재생합니다.(낮 전용)
-    public void PlayLoop()
+    // 포털 갱신 다음 프레임에 최신 활성 경로를 반복 재생합니다.
+    public async void PlayLoop()
     {
-        if (module != null && !module.IsPreparing)
-        {
-            return;
-        }
+        if (!module.IsPreparing || isPending) return;
+
+        isPending = true;
+        bool canceled = await UniTask.NextFrame(this.GetCancellationTokenOnDestroy()).SuppressCancellationThrow();
+        isPending = false;
+
+        if (canceled || !isActiveAndEnabled || !module.IsPreparing) return;
 
         LoadPoints();
-        looping = true;
+        isLooping = true;
         BeginRuns();
     }
 
-    // 모든 활성 경로 Trail을 한 번만 재생합니다.(밤 전용.)
+    // 해금 상태에서 모든 활성 경로를 한 번 재생합니다.
     public void PlayOnce()
     {
-        if (!module.IsUnlocked)
-        {
-            return;
-        }
+        if (!module.IsUnlocked) return;
 
         LoadPoints();
-        looping = false;
+        isLooping = false;
         BeginRuns();
     }
 
-    // 실행 중인 모든 레인 Trail을 정지하고 지웁니다.
+    // 모든 Trail의 재생과 대기 상태를 정지합니다.
     public void StopTrail()
     {
+        isPlaying = false;
+        isWaiting = false;
+        elapsed = 0f;
+
         for (int i = 0; i < runs.Count; i++)
         {
             StopRun(runs[i]);
         }
     }
 
-    // 각 Trail 실행의 이동 상태를 프레임마다 갱신합니다.
+    // 공통 재생 상태에 따라 이동 또는 대기를 갱신합니다.
     private void Update()
     {
-        for (int i = 0; i < runs.Count; i++)
+        if (!isPlaying) return;
+
+        if (isWaiting)
         {
-            TickRun(runs[i]);
-        }
-    }
-
-    // 같은 GameObject의 WaveSpawner와 ModuleLogic을 가져옵니다.
-    private void Prepare()
-    {
-        spawner = GetComponent<WaveSpawner>(); 
-        module = GetComponent<ModuleLogic>();
-    }
-
-    // 자동 재생 옵션과 모듈 준비 상태를 확인합니다.
-    private bool AutoReady()
-    {
-        return autoPlay && module.IsPreparing;
-    }
-
-    // 활성 경로 제공자와 Trail 프리팹이 준비되었는지 확인합니다.
-    private bool CanLoad()
-    {
-        return trailPrefab != null;
-    }
-
-    // 활성 경로 하나에 대응하는 TrailRenderer와 실행 데이터를 생성합니다.
-    private void AddRun(IReadOnlyList<Vector3> path)
-    {
-        if (path == null || path.Count < 2)
-        {
+            WaitRuns();
             return;
         }
+
+        MoveRuns();
+    }
+
+    // 활성 경로 하나의 Trail과 누적 길이를 생성합니다.
+    private void AddRun(IReadOnlyList<Vector3> path)
+    {
+        if (path == null || path.Count < 2) return;
 
         TrailRenderer trail = Instantiate(trailPrefab, transform);
         trail.transform.localScale = Vector3.one;
@@ -156,12 +140,19 @@ public class PathTrail : MonoBehaviour
         Vector3 lift = Vector3.up * trailLift;
         for (int i = 0; i < path.Count; i++)
         {
-            run.Points.Add(path[i] + lift);
+            Vector3 point = path[i] + lift;
+            if (run.Points.Count > 0)
+            {
+                int last = run.Points.Count - 1;
+                run.Length += Vector3.Distance(run.Points[last], point);
+            }
+
+            run.Points.Add(point);
         }
         runs.Add(run);
     }
 
-    // 생성된 모든 TrailRenderer를 제거하고 실행 목록을 비웁니다.
+    // 생성된 Trail을 제거하고 실행 목록을 비웁니다.
     private void ClearRuns()
     {
         for (int i = 0; i < runs.Count; i++)
@@ -176,124 +167,128 @@ public class PathTrail : MonoBehaviour
         runs.Clear();
     }
 
-    // 실행 목록의 모든 활성 경로 Trail을 시작합니다.
+    // 모든 Trail을 같은 시점에 재생하도록 초기화합니다.
     private void BeginRuns()
     {
+        moveTime = GetMoveTime();
+        if (moveTime <= 0f)
+        {
+            StopTrail();
+            return;
+        }
+
+        elapsed = 0f;
+        isWaiting = false;
+        isPlaying = true;
+
         for (int i = 0; i < runs.Count; i++)
         {
             BeginRun(runs[i]);
         }
     }
 
-    // Trail 하나를 첫 경로 점에서 재생할 수 있도록 초기화합니다.
-    private static void BeginRun(TrailRun run)
+    // Trail 하나를 경로 시작점에서 방출합니다.
+    private void BeginRun(TrailRun run)
     {
-        if (run.Points.Count < 2 || run.Runner == null)
-        {
-            run.Playing = false;
-            return;
-        }
+        if (run.Runner == null) return;
 
         run.Runner.position = run.Points[0];
         run.Trail.Clear();
         run.Trail.emitting = true;
-        run.Point = 0;
-        run.Gap = 0f;
-        run.Playing = true;
     }
 
-    // Trail 하나의 대기 또는 경로 추적 상태를 갱신합니다.
-    private void TickRun(TrailRun run)
+    // 공통 진행률로 모든 Trail의 위치를 갱신합니다.
+    private void MoveRuns()
     {
-        if (!run.Playing)
+        elapsed += Time.deltaTime;
+        float progress = Mathf.Clamp01(elapsed / moveTime);
+
+        for (int i = 0; i < runs.Count; i++)
         {
-            return;
+            MoveRun(runs[i], progress);
         }
 
-        if (run.Gap > 0f)
-        {
-            WaitRun(run);
-            return;
-        }
-
-        FollowRun(run);
+        if (progress < 1f) return;
+        EndRuns();
     }
 
-    // Trail Runner를 현재 경로의 다음 점까지 이동시킵니다.
-    private void FollowRun(TrailRun run)
+    // Trail 하나를 진행률에 해당하는 경로 위치로 이동합니다.
+    private void MoveRun(TrailRun run, float progress)
     {
-        if (run.Point + 1 >= run.Points.Count)
+        if (run.Runner == null) return;
+
+        float distance = run.Length * progress;
+        for (int i = 1; i < run.Points.Count; i++)
         {
-            EndRun(run);
+            Vector3 start = run.Points[i - 1];
+            Vector3 target = run.Points[i];
+            float length = Vector3.Distance(start, target);
+            if (distance > length)
+            {
+                distance -= length;
+                continue;
+            }
+
+            run.Runner.position = Vector3.MoveTowards(start, target, distance);
             return;
         }
 
-        Vector3 target = run.Points[run.Point + 1];
-        Vector3 next = Vector3.MoveTowards(
-            run.Runner.position,
-            target,
-            moveSpeed * Time.deltaTime);
-
-        run.Runner.position = next;
-
-        if (next != target)
-        {
-            return;
-        }
-
-        run.Point++;
-        if (run.Point >= run.Points.Count - 1)
-        {
-            EndRun(run);
-        }
+        run.Runner.position = run.Points[run.Points.Count - 1];
     }
 
-    // Trail 하나의 재생을 끝내고 반복 여부에 따라 대기 상태로 전환합니다.
-    private void EndRun(TrailRun run)
+    // 모든 Trail의 방출을 동시에 끝내고 반복 여부를 처리합니다.
+    private void EndRuns()
     {
-        run.Trail.emitting = false;
-
-        if (looping)
+        for (int i = 0; i < runs.Count; i++)
         {
-            run.Gap = loopGap;
+            runs[i].Trail.emitting = false;
+        }
+
+        if (!isLooping)
+        {
+            isPlaying = false;
             return;
         }
 
-        run.Playing = false;
+        elapsed = 0f;
+        isWaiting = true;
     }
 
-    // 반복 재생 대기 시간을 줄이고 끝나면 Trail을 다시 시작합니다.
-    private void WaitRun(TrailRun run)
+    // 공통 반복 대기 후 모든 Trail을 다시 시작합니다.
+    private void WaitRuns()
     {
-        run.Gap -= Time.deltaTime;
-        if (run.Gap <= 0f)
-        {
-            BeginRun(run);
-        }
+        elapsed += Time.deltaTime;
+        if (elapsed < loopGap) return;
+        BeginRuns();
     }
 
-    // Trail 하나의 실행 상태와 화면 잔상을 초기화합니다.
-    private static void StopRun(TrailRun run)
+    // 가장 긴 경로를 기준으로 공통 이동 시간을 계산합니다.
+    private float GetMoveTime()
     {
-        run.Playing = false;
-        run.Gap = 0f;
+        if (moveSpeed <= 0f) return 0f;
 
-        if (run.Trail == null)
+        float maxLength = 0f;
+        for (int i = 0; i < runs.Count; i++)
         {
-            return;
+            maxLength = Mathf.Max(maxLength, runs[i].Length);
         }
+
+        return maxLength / moveSpeed;
+    }
+
+    // Trail 하나의 방출과 화면 잔상을 초기화합니다.
+    private void StopRun(TrailRun run)
+    {
+        if (run.Trail == null) return;
 
         run.Trail.emitting = false;
         run.Trail.Clear();
     }
 
-    // 모듈이 준비 상태가 되면 현재 활성 경로를 자동 재생합니다.
+    // 모듈이 준비 상태가 되면 자동 반복 재생을 요청합니다.
     private void HandleState(ModuleState state)
     {
-        if (!autoPlay || state != ModuleState.Preparing)
-        {
-            return;
-        }
+        if (!autoPlay || state != ModuleState.Preparing) return;
 
         PlayLoop();
     }
