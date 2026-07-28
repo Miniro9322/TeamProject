@@ -22,11 +22,6 @@ public class AddCitizen : MonoBehaviour
         this.resourcesManager = resourcesManager;
     }
 
-    private void Awake()
-    {
-        gameObject.SetActive(false);
-    }
-
     public void OpenPanel()
     {
         gameObject.SetActive(true);
@@ -49,7 +44,7 @@ public class AddCitizen : MonoBehaviour
             {ProductionType.Food, amount * -costAmount }
         };
         amountInput.text = $"{amount}";
-        costText.text = $"ºñ¿ë: {ProductionType.Food} {amount * costAmount}";
+        costText.text = $"ìì› ì†Œëª¨: {ProductionType.Food} {amount * costAmount}";
         costText.color = resourcesManager.CheckResources(cost) ? Color.white : Color.red;
     }
 

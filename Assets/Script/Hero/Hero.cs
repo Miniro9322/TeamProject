@@ -70,6 +70,7 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
     public GameObject Target => target;
 
     [SerializeField] private StatDataSO statData;
+    public StatDataSO StatData => statData;
 
     [SerializeField] private MapBoard board;
     public MapBoard Board => board;

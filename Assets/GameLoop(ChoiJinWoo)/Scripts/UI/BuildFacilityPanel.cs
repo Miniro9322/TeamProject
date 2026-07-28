@@ -1,3 +1,5 @@
+using System.Text;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -11,11 +13,15 @@ public class BuildFacilityPanel : MonoBehaviour
     [SerializeField] private Button woodFacility;
     [SerializeField] private Button ironFacility;
     [SerializeField] private Button house;
+    [SerializeField] private GameObject facilityInfoPanel;
+    [SerializeField] private Image facilityIcon;
+    [SerializeField] private TextMeshProUGUI facilityInfoText;
+    private string currentLabel;
 
     private void OnEnable()
     {
-        game.Placer.resourcesManager.ProductUpdate += ButtonUpdate; 
-
+        game.Placer.resourcesManager.ProductUpdate += ButtonUpdate;
+        facilityInfoPanel.SetActive(false);
         ButtonUpdate();
     }
 
@@ -24,9 +30,41 @@ public class BuildFacilityPanel : MonoBehaviour
         game.Placer.resourcesManager.ProductUpdate -= ButtonUpdate;
     }
 
-    public void OnBuild(string label)
+    public void OnFacility(string label)
     {
-        view.SetUnit(label);
+        currentLabel = label;
+        var temp = view.GetSlot(label).prefab.GetComponent<ProductionFacility>();
+        if(temp != null)
+        {
+            facilityIcon.sprite = view.GetSlot(label).icon;
+            var sb = new StringBuilder();
+            sb.Append($"{temp.BasicValue.FacilityName}\n{temp.BasicValue.FacilityInfo}\n생산 자원: {temp.ProductionType}\n건설 소모 자원\n");
+            foreach (var item in temp.BasicValue.ConstructProduct)
+            {
+                sb.Append($"{item.Key}: {-item.Value} ");
+            }
+            facilityInfoText.text = sb.ToString().Trim();
+            facilityInfoPanel.SetActive(true);
+        }
+        else
+        {
+            var house = view.GetSlot(label).prefab.GetComponent<House>();
+            facilityIcon.sprite = view.GetSlot(label).icon;
+            var sb = new StringBuilder();
+            sb.Append($"{house.HouseName}\n{house.HouseInfo}\n건설 소모 자원\n");
+            foreach (var item in house.Resources)
+            {
+                sb.Append($"{item.Key}: {-item.Value} ");
+            }
+            facilityInfoText.text = sb.ToString().Trim();
+            facilityInfoPanel.SetActive(true);
+        }
+    }
+
+    public void OnBuild()
+    {
+        view.SetUnit(currentLabel);
+        facilityInfoPanel.SetActive(false);
     }
 
     private void ButtonUpdate()
