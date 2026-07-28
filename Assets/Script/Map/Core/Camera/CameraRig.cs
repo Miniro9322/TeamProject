@@ -39,10 +39,11 @@ public class CameraRig : MonoBehaviour
         ApplyNow();
     }
 
+    // 인스펙터에서 값을 고치면 Play 없이 바로 보여준다. 여기서 값을 되돌리지는 않는다 —
+    // 타이핑 도중의 중간 값(150을 치려고 누른 1)에 반응하면 다른 값까지 덮어써 버린다.
     private void OnValidate()
     {
         cam = GetComponent<Camera>();
-        ClampState();
         ApplyNow();
     }
 
