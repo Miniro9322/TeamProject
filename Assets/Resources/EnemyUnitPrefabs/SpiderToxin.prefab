@@ -375,8 +375,10 @@ MonoBehaviour:
   enemyKey: 
   skills: []
   cloakSettings: {fileID: 0}
+  attackClipLength: 0
+  healthSlider: {fileID: 0}
+  sliderSpeed: 5
   <Hp>k__BackingField: 0
-  <MaxHp>k__BackingField: 0
   IsSpawnInvincible: 0
   animator: {fileID: 2132314309153364529}
   arriveSqr: 0.0004
@@ -384,6 +386,9 @@ MonoBehaviour:
   speed: 0
   attack: 0
   def: 0
+  poisonRatio: 0.3
+  poisonInterval: 0.5
+  poisonDuration: 4
 --- !u!1 &1032565574557172579
 GameObject:
   m_ObjectHideFlags: 0

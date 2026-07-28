@@ -13,7 +13,6 @@ public class EnemyArchiveManager : MonoBehaviour
     public Button infoOpenButton;
     public Button infoCloseButton;
     private CancellationTokenSource cts;
-    private Camera cam;
     private bool isOpenCheck;
 
     void Start()
@@ -27,7 +26,15 @@ public class EnemyArchiveManager : MonoBehaviour
         infoOpenButton.onClick.AddListener(OnClickOpenArchive);
         infoCloseButton.onClick.AddListener(OnClickCloseArchive); // 닫기 창구 통일
         hidePanal.onClick.AddListener(OnClickCloseArchive);        // 여기서 한 번만 등록(열 때마다 누적 방지)
-        infoOpenButton.GetComponentInChildren<TMP_Text>().text = DataTableManager.StringTable.Get("Ui_ArchiveButton");
+        ApplyButtonLabel();
+        // 버튼 라벨을 코드가 채우므로 LocalizeText가 없다 → 언어 전환 이벤트를 직접 받아 갱신한다.
+        LocalizeTextManager.OnLanguageChanged += ApplyButtonLabel;
+    }
+
+    private void ApplyButtonLabel()
+    {
+        var label = infoOpenButton != null ? infoOpenButton.GetComponentInChildren<TMP_Text>(true) : null;
+        if (label != null) label.text = DataTableManager.StringTable.Get("Ui_ArchiveButton");
     }
     // 진행 중이던 애니메이션 취소 + 새 토큰 발급
     private void ResetCts()
@@ -42,6 +49,7 @@ public class EnemyArchiveManager : MonoBehaviour
     }
     void OnDestroy()
     {
+        LocalizeTextManager.OnLanguageChanged -= ApplyButtonLabel; // static 이벤트라 해제 필수(누수 방지)
         cts?.Cancel();
         cts?.Dispose();
         cts = null;
