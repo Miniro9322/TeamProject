@@ -1129,17 +1129,11 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 314587622}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 62738c24cbd9db847bb4b07f28ed8bb9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MapDebug
-  board: {fileID: 2512691319082104341}
-  view: 0
-  showColor: 0
-  showLabel: 0
-  yOffset: 0.08
-  size: 0.85
 --- !u!114 &314587627
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1449,86 +1443,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d31a4a4b08f024940a267ca48451aa82, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlacePanel
---- !u!1 &422220351
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 422220353}
-  - component: {fileID: 422220352}
-  - component: {fileID: 422220355}
-  - component: {fileID: 422220354}
-  m_Layer: 0
-  m_Name: WaveSpawner
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &422220352
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 422220351}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b15503c1ee9227547aa76b4511c9db1e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::WaveSpawner
-  board: {fileID: 2512691319082104341}
-  region: 1
-  Enemycount: 13
-  text: {fileID: 0}
-  bossSpawnDelay: 10
-  enemyLanes: {fileID: 0}
-  minActivePortals: 1
-  maxActivePortals: 3
---- !u!4 &422220353
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 422220351}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -18.65442, y: 0, z: -13.72216}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &422220354
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 422220351}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 777a87d1cf3831041932262d28cf86c9, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::EnemyLanes
-  board: {fileID: 422220355}
---- !u!114 &422220355
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 422220351}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fa8d21bfae480b7458ef67d68197fe29, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::MapBoard
-  _grid: {fileID: 0}
 --- !u!114 &471137748 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 8634429776923064968, guid: b4c9ebb8dbbdd3749bbb2104d50b5b61, type: 3}
@@ -1945,54 +1859,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 665834957}
   m_CullTransparentMesh: 1
---- !u!1 &670345960
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 670345962}
-  - component: {fileID: 670345963}
-  m_Layer: 0
-  m_Name: enemyspawner
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &670345962
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 670345960}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -8.58096, y: 0, z: -26.81446}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &670345963
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 670345960}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f5d78efd37543d843a970a74d48fcc04, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::EnemyUnit
-  speed: 2
-  yOffset: 0.5
-  destroyOnArrive: 1
-  board: {fileID: 0}
 --- !u!1 &714490551
 GameObject:
   m_ObjectHideFlags: 0
@@ -2690,8 +2556,8 @@ MonoBehaviour:
   - {fileID: 471137748}
   - {fileID: 1042105544}
   - {fileID: 2042105544}
-  spawnPoint: {fileID: 0}
-  infoTextPrefab: {fileID: 0}
+  spawnPoint: {fileID: 7456569907757309849, guid: bea80f4b41e53ed419d66ed07388c193, type: 3}
+  infoTextPrefab: {fileID: 7556058626658315482, guid: 4e2497c728adeb14d84e5b1905c18242, type: 3}
   infoTextOffset: {x: 1.5, y: 1, z: 0}
   cam: {fileID: 124960403}
 --- !u!4 &1403437580
@@ -4872,6 +4738,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b15503c1ee9227547aa76b4511c9db1e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WaveSpawner
+--- !u!114 &3174010361864650334 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 3883215913338336503, guid: 2a68ec03577869b449ea1d5f1fb2c174, type: 3}
+  m_PrefabInstance: {fileID: 8079177119373648108}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 777a87d1cf3831041932262d28cf86c9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyLanes
 --- !u!1001 &3511408517977640982
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -5147,68 +5024,16 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 1031492899228982777, guid: 2a68ec03577869b449ea1d5f1fb2c174, type: 3}
-      propertyPath: State.Flags
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 1031492899228982777, guid: 2a68ec03577869b449ea1d5f1fb2c174, type: 3}
-      propertyPath: State.CanBuild
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 1996095281841325024, guid: 2a68ec03577869b449ea1d5f1fb2c174, type: 3}
-      propertyPath: State.Flags
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 1996095281841325024, guid: 2a68ec03577869b449ea1d5f1fb2c174, type: 3}
-      propertyPath: State.CanBuild
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 2180246699197218067, guid: 2a68ec03577869b449ea1d5f1fb2c174, type: 3}
-      propertyPath: State.Flags
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2180246699197218067, guid: 2a68ec03577869b449ea1d5f1fb2c174, type: 3}
-      propertyPath: State.CanBuild
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 4365715927392796592, guid: 2a68ec03577869b449ea1d5f1fb2c174, type: 3}
-      propertyPath: State.Flags
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4365715927392796592, guid: 2a68ec03577869b449ea1d5f1fb2c174, type: 3}
-      propertyPath: State.CanBuild
-      value: 1
-      objectReference: {fileID: 0}
     - target: {fileID: 5581972147424868009, guid: 2a68ec03577869b449ea1d5f1fb2c174, type: 3}
       propertyPath: m_Name
       value: MapModule_A
       objectReference: {fileID: 0}
-    - target: {fileID: 5682608521808216986, guid: 2a68ec03577869b449ea1d5f1fb2c174, type: 3}
-      propertyPath: State.Flags
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5682608521808216986, guid: 2a68ec03577869b449ea1d5f1fb2c174, type: 3}
-      propertyPath: State.CanBuild
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 6152204276450218725, guid: 2a68ec03577869b449ea1d5f1fb2c174, type: 3}
-      propertyPath: m_LocalScale.x
-      value: 2
-      objectReference: {fileID: 0}
-    - target: {fileID: 6152204276450218725, guid: 2a68ec03577869b449ea1d5f1fb2c174, type: 3}
-      propertyPath: m_LocalScale.y
-      value: 2
-      objectReference: {fileID: 0}
-    - target: {fileID: 6152204276450218725, guid: 2a68ec03577869b449ea1d5f1fb2c174, type: 3}
-      propertyPath: m_LocalScale.z
-      value: 2
-      objectReference: {fileID: 0}
-    - target: {fileID: 6321150013910219580, guid: 2a68ec03577869b449ea1d5f1fb2c174, type: 3}
-      propertyPath: State.Flags
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6321150013910219580, guid: 2a68ec03577869b449ea1d5f1fb2c174, type: 3}
-      propertyPath: State.CanBuild
+    - target: {fileID: 6322919544372698662, guid: 2a68ec03577869b449ea1d5f1fb2c174, type: 3}
+      propertyPath: enemyLanes
+      value: 
+      objectReference: {fileID: 3174010361864650334}
+    - target: {fileID: 7909103713585408565, guid: 2a68ec03577869b449ea1d5f1fb2c174, type: 3}
+      propertyPath: autoPlay
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8751462804981830479, guid: 2a68ec03577869b449ea1d5f1fb2c174, type: 3}
@@ -5262,12 +5087,10 @@ SceneRoots:
   m_Roots:
   - {fileID: 124960404}
   - {fileID: 477517789}
-  - {fileID: 670345962}
   - {fileID: 314587625}
   - {fileID: 714490554}
   - {fileID: 1681537971}
   - {fileID: 359805067}
-  - {fileID: 422220353}
   - {fileID: 1832749584}
   - {fileID: 347216668}
   - {fileID: 8079177119373648108}
