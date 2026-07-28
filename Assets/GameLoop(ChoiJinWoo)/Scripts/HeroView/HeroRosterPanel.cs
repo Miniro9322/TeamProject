@@ -50,7 +50,7 @@ public class HeroRosterPanel : MonoBehaviour, IBeginDragHandler, IScrollHandler
                 currentObject = entry.PlacedUnit;
                 heroUpgradePanel.gameObject.SetActive(true);
                 heroUpgradePanel.InitHeroInfo(entry.PlacedUnit.GetComponent<Hero>());
-                heroUpgradePanel.PositionAtIconY((RectTransform)icon.transform);
+                heroUpgradePanel.PositionAtIconY(icon);
             }
         }
         else
