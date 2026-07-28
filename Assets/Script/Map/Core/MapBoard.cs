@@ -310,36 +310,20 @@ public class MapBoard : MonoBehaviour
 
     // ---- 배치 ----
 
-    public bool CanPlace(Vector2Int coord, OccupantKind kind, out string reason)
+    public bool CanPlace(Vector2Int coord, OccupantKind kind)
     {
         ModuleLogic module = _module;
         if (module != null && !module.IsPreparing)
         {
-            if (module.CurrentState == ModuleState.Locked)
-            {
-                reason = "해금되지 않은 모듈";
-            }
-            else
-            {
-                reason = "배치할 수 없는 모듈 상태";
-            }
-            return false;
+            return false;   // 잠겼거나 준비 단계가 아닌 모듈
         }
 
-        if (!_cells.TryGetValue(coord, out Tile tile))
-        {
-            reason = "타일 없음";
-            return false;
-        }
-
-        TilePlacementRule.Result r = TilePlacementRule.CanPlace(tile.State, kind);
-        reason = r.Reason;
-        return r.Allowed;
+        return _cells.TryGetValue(coord, out Tile tile) && TilePlacementRule.CanPlace(tile.State, kind);
     }
 
-    public bool TryPlace(Vector2Int coord, GameObject unit, OccupantKind kind, float yOffset, out string reason)
+    public bool TryPlace(Vector2Int coord, GameObject unit, OccupantKind kind, float yOffset)
     {
-        if (!CanPlace(coord, kind, out reason)) return false;
+        if (!CanPlace(coord, kind)) return false;
 
         Tile tile = _cells[coord];
         if (unit != null)

@@ -109,7 +109,7 @@ public class TilePaintView : MonoBehaviour
         }
 
         // 호버된 타일이 속한 모듈 보드 기준으로 판정한다(어느 모듈이든 프리뷰가 맞게 뜬다).
-        if (tile.Board.CanPlace(tile.Coord, kind, out _))
+        if (tile.Board.CanPlace(tile.Coord, kind))
         {
             Paint(tile, painter.okColor);
         }

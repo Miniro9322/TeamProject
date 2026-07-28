@@ -15,13 +15,13 @@ public class PathTrail : MonoBehaviour
     }
 
     [SerializeField] private TrailRenderer trailPrefab;
-    [SerializeField] private float moveSpeed = 8f;
+    [SerializeField] private float moveSpeed = 8f; //실제 값은 inspector에서 조절한다.
     [SerializeField] private float trailLift = 0.15f;
     [SerializeField] private float loopGap = 1.2f;
     [SerializeField] private bool autoPlay = true;
 
     private readonly List<TrailRun> runs = new();
-    private EnemyLanes enemyLanes;
+    private WaveSpawner spawner; //활성화된 스폰 지점 참조.
     private ModuleLogic module;
     private bool looping;
 
@@ -31,49 +31,31 @@ public class PathTrail : MonoBehaviour
         Prepare();
     }
 
-    // 모듈 상태와 레인 변경 이벤트를 구독합니다.
+    // 모듈 상태 변경 이벤트를 구독합니다.
     private void OnEnable()
     {
         Prepare();
-
-        if (module != null)
-        {
-            module.OnStateChanged += HandleState;
-        }
-
-        if (enemyLanes != null)
-        {
-            enemyLanes.Changed += HandleLanes;
-        }
+        module.OnStateChanged += HandleState;
     }
 
-    // 자동 재생 조건이 맞으면 레인 좌표를 불러와 반복 재생합니다.
+    // 자동 재생 조건이 맞으면 활성 경로를 반복 재생합니다.
     private void Start()
     {
-        if (!CanAutoPlay())
+        if (!AutoReady())
         {
             return;
         }
 
-        LoadPoints();
         PlayLoop();
     }
 
-    // 모듈 상태와 레인 변경 이벤트 구독을 해제합니다.
+    // 모듈 상태 변경 이벤트 구독을 해제합니다.
     private void OnDisable()
-    {
-        if (module != null)
-        {
-            module.OnStateChanged -= HandleState;
-        }
-
-        if (enemyLanes != null)
-        {
-            enemyLanes.Changed -= HandleLanes;
-        }
+    { 
+        module.OnStateChanged -= HandleState; 
     }
 
-    // 현재 유효한 레인을 TrailRenderer 실행 목록으로 다시 구성합니다.
+    // 이번 라운드의 활성 경로를 TrailRenderer 실행 목록으로 다시 구성합니다.
     public void LoadPoints()
     {
         StopTrail();
@@ -85,13 +67,14 @@ public class PathTrail : MonoBehaviour
             return;
         }
 
-        for (int i = 0; i < enemyLanes.Lanes.Count; i++)
+        IReadOnlyList<IReadOnlyList<Vector3>> paths = spawner.ActivePaths;
+        for (int i = 0; i < paths.Count; i++)
         {
-            AddRun(enemyLanes.Lanes[i]);
+            AddRun(paths[i]);
         }
     }
 
-    // 모든 레인 Trail을 반복 재생합니다.
+    // 모든 활성 경로 Trail을 반복 재생합니다.(낮 전용)
     public void PlayLoop()
     {
         if (module != null && !module.IsPreparing)
@@ -99,18 +82,20 @@ public class PathTrail : MonoBehaviour
             return;
         }
 
+        LoadPoints();
         looping = true;
         BeginRuns();
     }
 
-    // 모든 레인 Trail을 한 번만 재생합니다.
+    // 모든 활성 경로 Trail을 한 번만 재생합니다.(밤 전용.)
     public void PlayOnce()
     {
-        if (module != null && !module.IsUnlocked)
+        if (!module.IsUnlocked)
         {
             return;
         }
 
+        LoadPoints();
         looping = false;
         BeginRuns();
     }
@@ -133,36 +118,29 @@ public class PathTrail : MonoBehaviour
         }
     }
 
-    // 같은 GameObject의 EnemyLanes와 ModuleLogic을 가져옵니다.
+    // 같은 GameObject의 WaveSpawner와 ModuleLogic을 가져옵니다.
     private void Prepare()
     {
-        if (enemyLanes == null)
-        {
-            enemyLanes = GetComponent<EnemyLanes>();
-        }
-
-        if (module == null)
-        {
-            module = GetComponent<ModuleLogic>();
-        }
+        spawner = GetComponent<WaveSpawner>(); 
+        module = GetComponent<ModuleLogic>();
     }
 
     // 자동 재생 옵션과 모듈 준비 상태를 확인합니다.
-    private bool CanAutoPlay()
+    private bool AutoReady()
     {
-        return autoPlay && module != null && module.IsPreparing;
+        return autoPlay && module.IsPreparing;
     }
 
-    // 레인과 Trail 프리팹이 준비되어 좌표를 불러올 수 있는지 확인합니다.
+    // 활성 경로 제공자와 Trail 프리팹이 준비되었는지 확인합니다.
     private bool CanLoad()
     {
-        return enemyLanes != null && trailPrefab != null;
+        return trailPrefab != null;
     }
 
-    // 레인 하나에 대응하는 TrailRenderer와 실행 데이터를 생성합니다.
-    private void AddRun(LaneData lane)
+    // 활성 경로 하나에 대응하는 TrailRenderer와 실행 데이터를 생성합니다.
+    private void AddRun(IReadOnlyList<Vector3> path)
     {
-        if (!lane.IsValid || lane.Tiles.Count < 2)
+        if (path == null || path.Count < 2)
         {
             return;
         }
@@ -175,7 +153,11 @@ public class PathTrail : MonoBehaviour
         var run = new TrailRun();
         run.Trail = trail;
         run.Runner = trail.transform;
-        run.Points.AddRange(lane.GetPoints(trailLift));
+        Vector3 lift = Vector3.up * trailLift;
+        for (int i = 0; i < path.Count; i++)
+        {
+            run.Points.Add(path[i] + lift);
+        }
         runs.Add(run);
     }
 
@@ -194,14 +176,9 @@ public class PathTrail : MonoBehaviour
         runs.Clear();
     }
 
-    // 실행 목록을 준비하고 모든 레인 Trail을 시작합니다.
+    // 실행 목록의 모든 활성 경로 Trail을 시작합니다.
     private void BeginRuns()
     {
-        if (runs.Count == 0)
-        {
-            LoadPoints();
-        }
-
         for (int i = 0; i < runs.Count; i++)
         {
             BeginRun(runs[i]);
@@ -310,7 +287,7 @@ public class PathTrail : MonoBehaviour
         run.Trail.Clear();
     }
 
-    // 모듈이 준비 상태가 되면 현재 레인을 불러와 자동 재생합니다.
+    // 모듈이 준비 상태가 되면 현재 활성 경로를 자동 재생합니다.
     private void HandleState(ModuleState state)
     {
         if (!autoPlay || state != ModuleState.Preparing)
@@ -318,27 +295,6 @@ public class PathTrail : MonoBehaviour
             return;
         }
 
-        LoadPoints();
         PlayLoop();
-    }
-
-    // 레인 변경 후 Trail 목록을 다시 만들고 기존 재생 상태를 이어갑니다.
-    private void HandleLanes()
-    {
-        bool wasPlaying = false;
-        for (int i = 0; i < runs.Count; i++)
-        {
-            if (runs[i].Playing)
-            {
-                wasPlaying = true;
-                break;
-            }
-        }
-
-        LoadPoints();
-        if (wasPlaying)
-        {
-            BeginRuns();
-        }
     }
 }

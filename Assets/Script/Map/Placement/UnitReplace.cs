@@ -7,7 +7,7 @@ public class UnitReplace
     private readonly UnitList _unitList;
 
     private GameObject _heldUnit;   // 집어 든 유닛(보드에서 뗀 채 포인터를 따라간다).
-    private Tile _heldFromTile;     // 집은 출발 칸(제자리 판별·정보 표시용).
+    private Tile _heldFromTile;     // 집은 출발 칸(제자리 판별용).
     private OccupantKind _heldKind;
     private int _heldRange;
 
@@ -18,16 +18,6 @@ public class UnitReplace
 
     public bool IsHolding => _heldUnit != null;
     public Tile HeldFromTile => _heldFromTile;
-
-    // 패널 Status에 그대로 표시되는 "집은 유닛 정보" 문자열.
-    public string HeldInfo
-    {
-        get
-        {
-            if (_heldUnit == null) return "";
-            return $"{_heldKind} 이동 중 (출발 {_heldFromTile.Coord}, 사거리 {_heldRange})";
-        }
-    }
 
     // 칸의 유닛을 집어 든다: 보드에서 떼고 프리뷰 상태로 전환. 성공하면 true(빈 칸이면 false).
     public bool PickUp(Tile tile)
@@ -48,19 +38,17 @@ public class UnitReplace
         _heldUnit.transform.position = tile.WorldTop + Vector3.up * yOffset;
     }
 
-    // 집은 유닛을 칸에 내려놓는다. 배치 규칙 통과 시 재배치하고 true, 아니면 사유(message) 반환하고 집은 채 유지.
+    // 집은 유닛을 칸에 내려놓는다. 배치 규칙 통과 시 재배치하고 true, 아니면 집은 채 유지한다.
     // 목표 타일의 보드 기준이라, 다른 모듈에 놓으면 커버도 그 모듈에 등록된다(다른 모듈 공격 금지 요구 충족).
-    public bool TryDrop(Tile tile, float yOffset, out string message)
+    public bool TryDrop(Tile tile, float yOffset)
     {
-        if (!tile.Board.CanPlace(tile.Coord, _heldKind, out string reason))
+        if (!tile.Board.CanPlace(tile.Coord, _heldKind))
         {
-            message = $"{tile.Coord} {reason}";
             return false;
         }
 
-        tile.Board.TryPlace(tile.Coord, _heldUnit, _heldKind, yOffset, out _);
+        tile.Board.TryPlace(tile.Coord, _heldUnit, _heldKind, yOffset);
         RegisterCover(tile);
-        message = $"{tile.Coord} 이동";
         //
         Hero hero = _heldUnit.GetComponent<Hero>();
         if (hero != null)
