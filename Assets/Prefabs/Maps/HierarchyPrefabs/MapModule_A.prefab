@@ -640,6 +640,9 @@ MonoBehaviour:
   Enemycount: 10
   text: {fileID: 0}
   bossSpawnDelay: 10
+  enemyLanes: {fileID: 0}
+  minActivePortals: 1
+  maxActivePortals: 3
 --- !u!114 &8846460860055391114
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -652,7 +655,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 31478ffa6d3e4dd4a8b4e366106fa1a8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyPathView
-  routeMap: {fileID: 3883215913338336503}
+  enemyLanes: {fileID: 3883215913338336503}
   pathVisible: 0
 --- !u!114 &7909103713585408565
 MonoBehaviour:
@@ -8664,8 +8667,8 @@ MonoBehaviour:
     EnemyLane: 0
     CanMelee: 0
     CanRanged: 0
-    CanBuild: 0
-    Flags: 8
+    CanBuild: 1
+    Flags: 0
     Occupant: 0
   isEnemySpawn: 0
   UnitPrefab: {fileID: 0}
@@ -14588,8 +14591,8 @@ MonoBehaviour:
     EnemyLane: 0
     CanMelee: 0
     CanRanged: 0
-    CanBuild: 0
-    Flags: 8
+    CanBuild: 1
+    Flags: 0
     Occupant: 0
   isEnemySpawn: 0
   UnitPrefab: {fileID: 0}
@@ -18365,8 +18368,8 @@ MonoBehaviour:
     EnemyLane: 0
     CanMelee: 0
     CanRanged: 0
-    CanBuild: 0
-    Flags: 8
+    CanBuild: 1
+    Flags: 0
     Occupant: 0
   isEnemySpawn: 0
   UnitPrefab: {fileID: 0}
@@ -18579,8 +18582,8 @@ MonoBehaviour:
     EnemyLane: 0
     CanMelee: 0
     CanRanged: 0
-    CanBuild: 0
-    Flags: 8
+    CanBuild: 1
+    Flags: 0
     Occupant: 0
   isEnemySpawn: 0
   UnitPrefab: {fileID: 0}
@@ -24430,8 +24433,8 @@ MonoBehaviour:
     EnemyLane: 0
     CanMelee: 0
     CanRanged: 0
-    CanBuild: 0
-    Flags: 8
+    CanBuild: 1
+    Flags: 0
     Occupant: 0
   isEnemySpawn: 0
   UnitPrefab: {fileID: 0}
@@ -28078,8 +28081,8 @@ MonoBehaviour:
     EnemyLane: 0
     CanMelee: 0
     CanRanged: 0
-    CanBuild: 0
-    Flags: 8
+    CanBuild: 1
+    Flags: 0
     Occupant: 0
   isEnemySpawn: 0
   UnitPrefab: {fileID: 0}
