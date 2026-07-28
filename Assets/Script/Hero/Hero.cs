@@ -11,6 +11,9 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
     [SerializeField] private int citizenAmount = 2;
     [SerializeField] private List<ProductionType> costType;
     [SerializeField] private List<int> costAmount;
+
+    [SerializeField] private List<ProductionType> statUpgradeCostType;
+    [SerializeField] private List<int> statUpgradeCostAmount;
     [SerializeField] private List<HeroUpgradeData> upgradeDatas;
     private int skillLevel = 0;
     private int statLevel = 0;
@@ -32,6 +35,28 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
                 for (int i = 0; i < costType.Count; i++)
                 {
                     temp[costType[i]] = -costAmount[i];
+                }
+
+                return temp;
+            }
+        }
+    }
+
+    public Dictionary<ProductionType, int> StatUpgradeCost
+    {
+        get
+        {
+            if (statUpgradeCostType.Count != statUpgradeCostAmount.Count)
+            {
+                return null;
+            }
+            else
+            {
+                Dictionary<ProductionType, int> temp = new();
+
+                for (int i = 0; i < statUpgradeCostType.Count; i++)
+                {
+                    temp[statUpgradeCostType[i]] = -(statUpgradeCostAmount[i] + statUpgradeCostAmount[i] * statLevel);
                 }
 
                 return temp;
@@ -436,12 +461,16 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
     }
     public void StatUpgrade()
     {
-        statLevel++;
-        Modifier mod = new Modifier(ModifierType.Additive, 0.1f, 0f, StatLayer.Equip, this);
-        sc.AddModifier(StatType.HP, mod);
-        mod = new Modifier(ModifierType.Additive, 0.05f, 0f, StatLayer.Equip, this);
-        sc.AddModifier(StatType.ATK, mod);
-        mod = new Modifier(ModifierType.Flat, 1f, 0f, StatLayer.Equip, this);
-        sc.AddModifier(StatType.DEF, mod);
+        if (resourcesManager.CheckResources(StatUpgradeCost))
+        {
+            resourcesManager.ProductChanged(StatUpgradeCost);
+            statLevel++;
+            Modifier mod = new Modifier(ModifierType.Additive, 0.1f, 0f, StatLayer.Equip, this);
+            sc.AddModifier(StatType.HP, mod);
+            mod = new Modifier(ModifierType.Additive, 0.05f, 0f, StatLayer.Equip, this);
+            sc.AddModifier(StatType.ATK, mod);
+            mod = new Modifier(ModifierType.Flat, 1f, 0f, StatLayer.Equip, this);
+            sc.AddModifier(StatType.DEF, mod);
+        }
     }
 }
