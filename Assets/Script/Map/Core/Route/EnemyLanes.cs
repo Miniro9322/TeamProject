@@ -17,17 +17,20 @@ public class EnemyLanes : MonoBehaviour
 
     public event Action Changed;
 
+    // 같은 GameObject의 MapBoard를 인스펙터 참조에 자동 할당합니다.
     private void Reset()
     {
         board = GetComponent<MapBoard>();
     }
 
+    // 필수 참조를 준비하고 현재 맵의 모든 적 이동 레인을 계산합니다.
     private void Awake()
     {
         Prepare();
         RefreshLanes();
     }
 
+    // 기존 레인을 비우고 현재 MapBoard 상태를 기준으로 전체 레인을 다시 계산합니다.
     public void RefreshLanes()
     {
         IsReady = false;
@@ -45,6 +48,7 @@ public class EnemyLanes : MonoBehaviour
         ApplyLanes(built);
     }
 
+    // 레인 계산에 사용할 ILaneBuilder 구현체를 교체합니다.
     public void SetBuilder(ILaneBuilder value)
     {
         if (value == null)
@@ -55,7 +59,7 @@ public class EnemyLanes : MonoBehaviour
         builder = value;
     }
 
-    
+    // 유효한 모든 레인을 지정 높이가 적용된 월드 좌표 경로 목록으로 반환합니다.
     public IReadOnlyList<IReadOnlyList<Vector3>> GetPaths(float yOffset)
     {
         //외부 호출시 
@@ -83,6 +87,7 @@ public class EnemyLanes : MonoBehaviour
         return paths;
     }
 
+    // MapBoard 참조와 기본 LaneBuilder가 준비되었는지 확인합니다.
     private void Prepare()
     {
         if (board == null)
@@ -96,11 +101,13 @@ public class EnemyLanes : MonoBehaviour
         }
     }
 
+    // 레인을 계산할 MapBoard와 셀이 준비되었는지 확인합니다.
     private bool CanBuild()
     {
         return board != null && board.CellCount > 0;
     }
 
+    // MapBoard의 셀에서 스폰과 코어를 수집해 LaneInput을 만듭니다.
     private LaneInput CreateInput()
     {
         var spawns = new List<Tile>();
@@ -114,6 +121,7 @@ public class EnemyLanes : MonoBehaviour
         return new LaneInput(board.Cells, spawns, cores);
     }
 
+    // 타일의 역할에 따라 스폰 또는 코어 목록에 추가합니다.
     private static void AddEndpoint(Tile tile, List<Tile> spawns, List<Tile> cores)
     {
         if (tile.IsEnemySpawn)
@@ -127,6 +135,7 @@ public class EnemyLanes : MonoBehaviour
         }
     }
 
+    // 계산된 레인을 내부 목록에 보관하고 준비 완료 이벤트를 알립니다.
     private void ApplyLanes(IReadOnlyList<LaneData> built)
     {
         for (int i = 0; i < built.Count; i++)

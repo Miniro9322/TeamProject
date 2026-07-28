@@ -25,14 +25,14 @@ public static class TileAuthorRule
 
         if (state.Terrain == TerrainType.Ground)
         {
-            bool melee = TilePlacementRule.CanPlace(state, OccupantKind.MeleeHero).Allowed;
-            bool build = TilePlacementRule.CanPlace(state, OccupantKind.Building).Allowed;
+            bool melee = TilePlacementRule.CanPlace(state, OccupantKind.MeleeHero);
+            bool build = TilePlacementRule.CanPlace(state, OccupantKind.Building);
             return !melee && !build;
         }
 
         if (state.Terrain == TerrainType.High)
         {
-            return !TilePlacementRule.CanPlace(state, OccupantKind.RangedHero).Allowed;
+            return !TilePlacementRule.CanPlace(state, OccupantKind.RangedHero);
         }
 
         return false;

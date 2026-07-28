@@ -10,6 +10,10 @@ public class House : MonoBehaviour, IPlaceAble
     [SerializeField] private List<ProductionType> products;
     [Header("건설에 필요한 자원량")]
     [SerializeField] private List<int> amount;
+    [Header("건물 이름")]
+    [SerializeField] private string houseName;
+    [Header("건물 설명")]
+    [SerializeField] private string houseInfo;
     private CitizenManager manager;
     private ResourcesManager resourcesManager;
     private MapBoard board;
@@ -28,7 +32,7 @@ public class House : MonoBehaviour, IPlaceAble
 
                 for (int i = 0; i < products.Count; i++)
                 {
-                    temp[products[i]] = amount[i];
+                    temp[products[i]] = -amount[i];
                 }
 
                 return temp;
@@ -37,6 +41,8 @@ public class House : MonoBehaviour, IPlaceAble
     }
 
     public MapBoard Board => board;
+    public string HouseName => houseName;
+    public string HouseInfo => houseInfo;
 
     public event Action OnBreak;
     public event Action OnResur;

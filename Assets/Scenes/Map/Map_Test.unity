@@ -522,6 +522,7 @@ GameObject:
   - component: {fileID: 124960407}
   - component: {fileID: 124960406}
   - component: {fileID: 124960408}
+  - component: {fileID: 124960409}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -659,7 +660,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8f2d6f72bef598f49b548a8ede56ca7e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CameraInput
-  rig: {fileID: 124960407}
   rotateSensitivity: 0.098
   zoomStep: 0.1
   dragSpeed: 0.5
@@ -686,10 +686,8 @@ MonoBehaviour:
   maxPitch: 150
   minDistance: 5
   maxDistance: 120
-  registry: {fileID: 1862994567}
   fillH: 1
   fillV: 0.8
-  panTime: 0.4
 --- !u!114 &124960408
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -703,7 +701,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CameraFreeLook
   rig: {fileID: 124960407}
-  input: {fileID: 124960406}
   freeLookKey: 20
   resetKey: 68
   lookSens: 0.15
@@ -711,6 +708,20 @@ MonoBehaviour:
   freePitch: {x: -80, y: 89}
   flyFov: 60
   returnTime: 0.4
+--- !u!114 &124960409
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 124960401}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 734f08933c061bb45b2fef6cd3fc7dbf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ExpandFocus
+  registry: {fileID: 1862994567}
+  panTime: 0.4
 --- !u!1 &170979343
 GameObject:
   m_ObjectHideFlags: 0
@@ -1474,6 +1485,9 @@ MonoBehaviour:
   Enemycount: 13
   text: {fileID: 0}
   bossSpawnDelay: 10
+  enemyLanes: {fileID: 0}
+  minActivePortals: 1
+  maxActivePortals: 3
 --- !u!4 &422220353
 Transform:
   m_ObjectHideFlags: 0
@@ -2210,6 +2224,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ExpandEvent
   registry: {fileID: 1862994567}
+  fogController: {fileID: 0}
+  cameraRig: {fileID: 0}
+  regionPoint: []
 --- !u!4 &807758961
 Transform:
   m_ObjectHideFlags: 0

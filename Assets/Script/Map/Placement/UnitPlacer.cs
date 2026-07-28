@@ -15,21 +15,20 @@ public class UnitPlacer
     public BuildingPool pool;
 
     // 슬롯을 칸에 놓는다: 생성→보드 배치→(성공 시)장부·커버 등록.
-    // 성공하면 놓인 오브젝트를 반환(true), 실패하면 만든 오브젝트를 파괴하고 사유를 돌려준다(false).
-    public bool TryPlace(Tile tile, Placeable slot, float yOffset, out GameObject placedUnit, out string failReason)
+    // 성공하면 놓인 오브젝트를 반환(true), 실패하면 만든 오브젝트를 파괴한다(false).
+    public bool TryPlace(Tile tile, Placeable slot, float yOffset, out GameObject placedUnit)
     {
         placedUnit = null;
 
         GameObject unit = Create(slot);      // 배치할 오브젝트 생성
         if (unit == null)
         {
-            failReason = "오브젝트 생성 실패";
             return false;
         }
 
         BindBoard(unit, tile.Board);         // 생성한 오브젝트에 "놓이는 타일의" 모듈 보드 참조 전달
 
-        if (tile.Board.TryPlace(tile.Coord, unit, slot.kind, yOffset, out failReason))
+        if (tile.Board.TryPlace(tile.Coord, unit, slot.kind, yOffset))
         {
             RegisterUnit(unit, tile, slot);   // 성공 → 사거리 장부·커버 등록
             placedUnit = unit;

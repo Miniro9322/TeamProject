@@ -1,5 +1,7 @@
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 // 영웅 "생성" 전용 패널. 버튼을 수동으로 늘리지 않고, PlacePalette에 등록된 영웅 슬롯 수만큼 자동으로 만든다.
 // 아이콘은 패널이 켜질 때 한 번만 만들고, 자원/시민 변화에는 파괴/재생성 없이 interactable만 갱신한다.
@@ -9,6 +11,9 @@ public class HeroSetPanel : MonoBehaviour
     [SerializeField] private MapGame game;
     [SerializeField] private HeroCreateIcon iconPrefab;
     [SerializeField] private Transform container;
+    [SerializeField] private HeroInfoUI HeroInfoPanel;
+    [SerializeField] private Image HeroInfoIcon;
+    [SerializeField] private TextMeshProUGUI heroInfoText;
 
     private readonly Dictionary<Placeable, HeroCreateIcon> icons = new();
     private bool wasBlocked;
@@ -24,11 +29,13 @@ public class HeroSetPanel : MonoBehaviour
 
     private void OnEnable()
     {
+        wasBlocked = view.IsOff;
         game.CitizenManager.CitizenChanged += RefreshInteractable;
         game.ResourcesManager.ProductUpdate += RefreshInteractable;
         game.Ui.UnlockChanged += AddNewlyUnlockedIcons;
         view.OnOffMode += RefreshInteractable;
         AddNewlyUnlockedIcons();
+        HeroInfoPanel.gameObject.SetActive(false);
     }
 
     private void OnDisable()
@@ -39,8 +46,16 @@ public class HeroSetPanel : MonoBehaviour
         view.OnOffMode -= RefreshInteractable;
     }
 
+    public void OnHero(Placeable slot)
+    {
+        HeroInfoPanel.gameObject.SetActive(true);
+        HeroInfoPanel.Set(slot, OnCreate);
+    }
+
     public void OnCreate(Placeable slot)
     {
+        HeroInfoPanel.gameObject.SetActive(false);
+
         if (!view.CheckCanBuild(slot.label)) return;
 
         game.CitizenManager.UseCitizen(slot.prefab.GetComponent<Hero>().CitizenAmount);
@@ -64,7 +79,7 @@ public class HeroSetPanel : MonoBehaviour
             if (((byte)type & unlocked) != (byte)type) continue;
 
             HeroCreateIcon icon = Instantiate(iconPrefab, container);
-            icon.Set(slot, view.IsOff && view.CheckCanBuild(slot.label), OnCreate, slot.label);
+            icon.Set(slot, view.IsOff && view.CheckCanBuild(slot.label), OnHero, slot.label);
             icons[slot] = icon;
         }
     }

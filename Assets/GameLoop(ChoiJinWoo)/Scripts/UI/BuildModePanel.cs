@@ -31,6 +31,14 @@ public class BuildModePanel : MonoBehaviour
 
     private void Update()
     {
+        if (Mouse.current.rightButton.wasPressedThisFrame)
+        {
+            if (!view.IsOff)
+            {
+                view.ClearMode();
+            }
+        }
+
         if (!Keyboard.current.escapeKey.wasPressedThisFrame) return;
 
         if (!view.IsOff)
@@ -101,10 +109,6 @@ public class BuildModePanel : MonoBehaviour
 
     public void OnOffButton()
     {
-        if (facilityPanel.activeSelf == true)
-            facilityPanel.SetActive(false);
-        if (heroPanel.activeSelf == true)
-            heroPanel.SetActive(false);
         view.ClearMode();
     }
 }
