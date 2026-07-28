@@ -32,7 +32,7 @@ public class BuildingPanel : MonoBehaviour
     {
         workerText.text = $"{facility.WorkerAmount}/{facility.MaxWorker}";
         upgradeButton.interactable = facility.CheckCanUpgrade();
-        perProductText.text = $"{facility.ProductAmount * facility.WorkerAmount}/day";
+        perProductText.text = $"{facility.ProductionType} {facility.ProductAmount * facility.WorkerAmount}/day";
         var sb = new StringBuilder();
         foreach(var cost in facility.UpgradeCostCopy)
         {

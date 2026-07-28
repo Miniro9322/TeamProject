@@ -7,7 +7,7 @@ using VContainer;
 
 public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
 {
-        [Header("유닛 생성 비용")]
+    [Header("유닛 생성 비용")]
     [SerializeField] private int citizenAmount = 2;
     [SerializeField] private List<ProductionType> costType;
     [SerializeField] private List<int> costAmount;
@@ -69,6 +69,7 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
     public GameObject Target => target;
 
     [SerializeField] private StatDataSO statData;
+    public StatDataSO StatData => statData;
 
     [SerializeField] private MapBoard board;
     public MapBoard Board => board;
