@@ -2595,7 +2595,6 @@ GameObject:
   m_Component:
   - component: {fileID: 314587625}
   - component: {fileID: 314587623}
-  - component: {fileID: 314587626}
   - component: {fileID: 314587627}
   - component: {fileID: 314587630}
   - component: {fileID: 314587629}
@@ -2636,18 +2635,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &314587626
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 314587622}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 62738c24cbd9db847bb4b07f28ed8bb9, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::MapDebug
 --- !u!114 &314587627
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5771,6 +5758,7 @@ GameObject:
   - component: {fileID: 755029710}
   - component: {fileID: 755029709}
   - component: {fileID: 755029715}
+  - component: {fileID: 755029716}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -5950,6 +5938,26 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ExpandFocus
   registry: {fileID: 1862994567}
   panTime: 0.4
+--- !u!114 &755029716
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 755029708}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 29397bcef9244f34f8da78fcc8f82511, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CameraFreeLook
+  rig: {fileID: 755029710}
+  freeLookKey: 20
+  resetKey: 68
+  lookSens: 0.15
+  moveSpeed: 20
+  freePitch: {x: -85, y: 85}
+  flyFov: 60
+  returnTime: 0.4
 --- !u!1 &756783498
 GameObject:
   m_ObjectHideFlags: 0
