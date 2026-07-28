@@ -4,6 +4,7 @@ using System.Threading;
 using Cysharp.Threading.Tasks;
 
 using UnityEngine;
+using UnityEngine.UI;
 using VContainer;
 
 public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit
@@ -14,7 +15,10 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit
     [SerializeField] private CloakSettingsSO cloakSettings;
     [Tooltip("기본 공격 애니 클립의 원래 길이(초). 공속이 빨라져 공격 간격(1/AS)이 이 값보다 짧아지면 애니를 그만큼 배속한다. 0이면 배속하지 않음.")]
     [SerializeField] private float attackClipLength = 0f;
-
+    [Tooltip("적 머리 위 체력바. 없는 프리팹이면 비워두면 된다(체력바 로직 전체가 no-op).")]
+    public Slider healthSlider;
+    [Tooltip("체력바가 현재 체력을 따라가는 속도. 클수록 빠르게 붙는다.")]
+    private float sliderSpeed = 10f;
     private float[] skillTimers;
     private bool[] skillRunning;
     private CancellationTokenSource skillCts;
@@ -102,6 +106,7 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit
     protected virtual void Awake()
     {
         _baseScale = transform.localScale; // 프리팹 원래 스케일 스냅샷(분열 축소 후 복구 기준)
+        _bar.Setup(healthSlider, sliderSpeed); // LoadStats(→ApplyData)가 바를 채우므로 그보다 먼저
         LoadStats();
         animator = GetComponent<Animator>();
         _move = new EnemyMovement(gameObject, animator, arriveSqr);
@@ -136,6 +141,7 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit
     protected virtual void OnDisable()
     {
         _cloak.Reset();
+        _bar.Reset();
         _move.Pause();
         _move.LeaveBoard(); // 어떤 경로로 사라지든 현재 칸에서 빠진다
         _move.ArrivedAtCore -= HandleArrivedAtCore;
@@ -151,9 +157,11 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit
     }
 
     // 재생 특성 회복량(초당 최대체력 비율). 매 프레임 deltaTime만큼 나눠 채워 부드럽게 차오른다.
-    private const float RegenPerSecond = 0.005f; // 초당 1%
+    private const float RegenPerSecond = 0.005f;
     // 은신 렌더링은 EnemyCloak가 전담. 은신 몹이면 Awake에서 Setup, 매 프레임 Tick으로 굴린다.
     private readonly EnemyCloak _cloak = new();
+    // 머리 위 체력바는 EnemyHealthBar가 전담(빌보드·보간·표시 여부). 프리팹에 Slider가 없으면 통째로 no-op.
+    private readonly EnemyHealthBar _bar = new();
 
     protected virtual void Update()
     {
@@ -161,6 +169,18 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit
         UpdateExposedAttribute();       // 저지 상태에 따라 Hero가 보는 Attribute를 갱신
         _cloak.Tick(CloakClear);
         StunTick();                     // 스턴 만료를 감지해 Animator bool을 끈다
+    }
+
+    // 체력바는 LateUpdate에서 굴린다 — 이동(Update)과 카메라 회전(CameraInput.Update)이 모두 끝난 뒤라야
+    // 빌보드가 한 프레임 밀리지 않는다.
+    protected virtual void LateUpdate()
+    {
+        // 은신이 걸려 있는 동안은 숨긴다. 안 그러면 체력바가 위치를 알려줘 은신 특성이 무력화된다.
+        // Attribute는 UpdateExposedAttribute가 매 프레임 갱신하므로(저지 중이면 Cloaking 비트가 빠짐)
+        // "체력바가 보이는 것 == 영웅이 때릴 수 있는 것"이 항상 일치한다.
+        // 표시 여부(안 맞았으면 숨김 / 죽을 땐 0까지 깎이는 걸 보여줌)는 EnemyHealthBar가 판단한다.
+        bool cloakedNow = (Attribute & EnemyAttribute.Cloaking) != 0;
+        _bar.Tick(Hp, MaxHp, IsDead, cloakedNow);
     }
 
     // 외부(영웅 등)에서 이 적을 duration초간 스턴. 이동/공격/스킬 시전이 모두 멈춘다.
@@ -345,6 +365,7 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit
         }
         Range = data.Range;
         Hp = sc[StatType.HP];
+        _bar.ResetTo(Hp, MaxHp); // 스폰 시 보간 없이 즉시 풀피로(풀 재사용 시 이전 값 잔상 제거)
         IsDead = false;
         //MoveSpeed = data.MoveSpeed;
     }
@@ -471,7 +492,8 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit
         {
             if (tile.OccupantObject == null) continue;
             int d = EnemyTargeting.Distance(origin, tile.Coord);
-            if(tile.OccupantObject.GetComponent<Hero>().IsDead) continue;
+            // if(tile.OccupantObject.GetComponent<Hero>().IsDead) continue;
+            if (tile.OccupantObject.GetComponent<Hero>() is not Hero h || h.IsDead) continue;
             if (d < bestDist) { bestDist = d; target = tile.OccupantObject; }
         }
         return target;

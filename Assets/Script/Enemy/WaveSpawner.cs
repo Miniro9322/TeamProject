@@ -234,12 +234,15 @@ public class WaveSpawner : MonoBehaviour
     public void OnClickStage(int region,int currentstage, IEnumerable<int> reinforcementSources = null)
     {
         if (waveTable == null || text == null) return; // Start 전 클릭/텍스트 미할당 방어
-        text.text = $"{region}지역 {currentstage}일차\n";
+        var st = DataTableManager.StringTable;
+        // 헤더는 문장 통째로 한 키. 언어마다 어순이 달라("1지역 5일차" vs "Region 1 - Day 5")
+        // 단어만 키로 빼면 순서를 못 맞춘다. {0}=지역번호 {1}=일차.
+        text.text = string.Format(st.Get("Ui_StageHeader"), region, currentstage) + "\n";
         int lookupId = GetStageLookupId(currentstage);
         foreach(var w in waveTable.GetWave(region,lookupId))
         {
             int count = GetScaleCount(w.Count, currentstage);
-            text.text += $"{DataTableManager.StringTable.Get(w.MonsterName)} {count}마리 \n";
+            text.text += $"{st.Get(w.MonsterName)} x {count}\n";
         }
         if (reinforcementSources != null)
         {
@@ -249,7 +252,8 @@ public class WaveSpawner : MonoBehaviour
                 foreach (var w in waveTable.GetWave(src, ReinforceId))
                 {
                     int count = GetScaleCount(w.Count, currentstage);
-                    text.text += $"{DataTableManager.StringTable.Get(w.MonsterName)} {count}마리 (증원)\n";
+                    
+                    text.text += $"{st.Get(w.MonsterName)} x {count}({st.Get("Ui_Add")})\n";
                 }
             }
         }
@@ -257,7 +261,7 @@ public class WaveSpawner : MonoBehaviour
         {
             foreach(var w in waveTable.GetWave(1,10))
             {
-                text.text +=$"(보스){DataTableManager.StringTable.Get(w.MonsterName)} {w.Count}마리";
+                text.text +=$"({st.Get("Ui_Boss")}){st.Get(w.MonsterName)} x {w.Count}";
             }
         }
     }

@@ -96,9 +96,13 @@ public class SpawnerManager : MonoBehaviour
             if (spawner == null || spawner.Board == null) continue;
 
             Tile tile = spawner.Board.CellFromRay(ray);
-            if (tile == null || !tile.isEnemySpawn) continue; // 이 지역 보드의 소환지점 타일이 아니면 skip
+            if (tile == null || !tile.isEnemySpawn) 
+            {
+                HideStageInfos();
+                continue;
+            }
             if(!IsUnlocked(kv.Key))continue;
-            ShowStageInfo(kv.Key); // 포탈 옆에 정보 텍스트 띄우고 그 지역의 웨이브 정보 채우기
+            ShowStageInfo(kv.Key, tile); // 클릭한 그 포탈 옆에 정보 텍스트 띄우고 그 지역의 웨이브 정보 채우기
             return;                                            // 맞는 지역 하나 찾으면 끝
         }
     }
@@ -194,15 +198,20 @@ public class SpawnerManager : MonoBehaviour
         spawnPoints.Clear();
     }
 
-    // 구역 클릭 시: 포탈 위치에 정보 텍스트 프리팹을 띄우고, 그 TMP에 웨이브 정보를 채운다.
+    // 구역 클릭 시: 클릭한 그 포탈 옆에 정보 텍스트 프리팹을 띄우고, 그 TMP에 웨이브 정보를 채운다.
     // 월드 오브젝트라 화면을 이동해도 포탈 옆에 그대로 유지된다.
-    private void ShowStageInfo(int region)
+    private void ShowStageInfo(int region, Tile clickedTile)
     {
         if (infoTextPrefab == null) return;
-        if (!spawnPoints.TryGetValue(region, out var portals) || portals == null || portals.Count == 0 || portals[0] == null) return; // 포탈 없으면 표시 안 함
+        if (!spawnPoints.TryGetValue(region, out var portals) || portals == null || portals.Count == 0) return; // 포탈 없으면 표시 안 함
         if (!_byRegion.TryGetValue(region, out var spawner) || spawner == null) return;
 
-        Vector3 pos = portals[0].transform.position + infoTextOffset; // 정보 텍스트는 첫 포탈 옆에
+        // 클릭한 스폰 칸 위에 실제로 서 있는 포탈을 기준점으로 삼는다(포탈은 레인 시작 칸에 세워지므로 좌표가 일치).
+        // 이번 라운드에 안 뽑혀 포탈이 없는 칸이면 적이 나오지 않는 자리 — 정보를 띄우지 않고 떠 있던 것도 치운다.
+        GameObject portal = FindPortalAt(spawner.Board, portals, clickedTile);
+        if (portal == null) { HideStageInfos(); return; }
+
+        Vector3 pos = portal.transform.position + infoTextOffset;
         if (!_infoTexts.TryGetValue(region, out var go) || go == null)
         {
             go = PoolManager.Instance.Spawn(infoTextPrefab, pos, Quaternion.identity);
@@ -215,6 +224,20 @@ public class SpawnerManager : MonoBehaviour
 
         spawner.text = go.GetComponentInChildren<TMP_Text>(true);
         spawner.OnClickStage(region, CurrentDay, UnlockedRegions()); // 텍스트에 웨이브/증원/보스 정보 기록
+    }
+
+    // 클릭한 칸과 같은 격자 좌표에 서 있는 포탈을 찾는다. 없으면 null(그 칸은 이번 라운드에 안 뽑힌 스폰 지점).
+    private static GameObject FindPortalAt(MapBoard board, List<GameObject> portals, Tile clickedTile)
+    {
+        if (board == null || clickedTile == null) return null;
+
+        Vector2Int want = clickedTile.Coord;
+        foreach (GameObject portal in portals)
+        {
+            if (portal == null) continue;
+            if (board.WorldToCell(portal.transform.position) == want) return portal;
+        }
+        return null;
     }
 
     private void HideStageInfos()

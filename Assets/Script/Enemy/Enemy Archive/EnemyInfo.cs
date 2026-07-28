@@ -60,17 +60,51 @@ public class EnemyInfo : MonoBehaviour
             rightArrowButton.onClick.RemoveAllListeners();
             rightArrowButton.onClick.AddListener(NextPage);
         }
-        m_ArchiveText.text = $"{DataTableManager.StringTable.Get("Ui_EnemyArchive")}";
+        ApplyTitle();
         Clear();
     }
+
+    void OnEnable()
+    {
+        // 이 패널의 문구는 코드가 직접 채우므로 LocalizeText가 붙지 않는다.
+        // 언어를 바꿔도 갱신되지 않으니 여기서 직접 이벤트를 구독한다.
+        LocalizeTextManager.OnLanguageChanged += Relocalize;
+    }
+
     void OnDisable()
     {
+        LocalizeTextManager.OnLanguageChanged -= Relocalize;
         Clear();
     }
+
+    private void ApplyTitle()
+    {
+        SetText(m_ArchiveText, DataTableManager.StringTable.Get("Ui_EnemyArchive"));
+    }
+
+    // 언어가 바뀌면 캐시해둔 문자열을 버리고 지금 보고 있던 적으로 다시 만든다.
+    // Info()가 page를 0으로 되돌리므로 보고 있던 페이지는 따로 보존한다.
+    private void Relocalize()
+    {
+        ApplyTitle();
+        if (current == null) return;
+        // 잠금 화면은 lockedName/lockedMessage(인스펙터 문자열)라 StringTable과 무관 — 다시 그릴 것이 없다.
+        // 여기서 Info()를 부르면 ShowLocked()가 다시 돌아 잠금 팝업만 또 뜬다.
+        if (!EnemyArchiveData.IsUnlocked(current.Name)) return;
+
+        int keepPage = page;
+        Info(current);
+        page = Mathf.Clamp(keepPage, 0, LastPage);
+        Show();
+    }
+
+    // 지금 표시 중인 적. 언어 전환 시 이걸로 문자열을 다시 만든다.
+    private EnemyTable.Data current;
 
     // 처음엔 비워둔 상태로 시작
     public void Clear()
     {
+        current = null;
         enemyName = string.Empty;
         enemyDesc = string.Empty;
         enemyType = string.Empty;
@@ -92,6 +126,8 @@ public class EnemyInfo : MonoBehaviour
     public void Info(EnemyTable.Data data)
     {
         if (data == null) { Clear(); return; }
+
+        current = data; // 언어 전환 시 다시 그릴 대상(미해금이어도 기억해둬야 잠금 문구가 갱신된다)
 
         if (!EnemyArchiveData.IsUnlocked(data.Name)) { ShowLocked(); return; }
 
