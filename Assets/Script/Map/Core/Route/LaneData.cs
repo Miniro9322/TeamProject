@@ -15,12 +15,7 @@ public class LaneData
         Start = start;
         Goal = goal;
         tiles = new List<Tile>();
-
-        if (source == null)
-        {
-            return;
-        }
-
+        
         for (int i = 0; i < source.Count; i++)
         {
             tiles.Add(source[i]);

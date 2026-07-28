@@ -32,6 +32,9 @@ public class MapMakerWindow : EditorWindow
     private int _cellPixels = 20;
     private bool _showProblems = true;
     private bool _showInert;
+    private bool _swap;
+    private TilePrefabSet _prefabs;
+    private readonly HashSet<Vector2Int> _swapped = new();
     private int _strokeGroup;
     private Vector2Int _hover = new(-1, -1);
     private string _targetSeen = string.Empty;
@@ -93,6 +96,7 @@ public class MapMakerWindow : EditorWindow
         }
 
         DrawToolbar(target);
+        DrawSwapNotice();
 
         if (_modules.Length == 0)
         {
@@ -212,6 +216,45 @@ public class MapMakerWindow : EditorWindow
             // 붓과 무관하게 무효 조합 칸(지상의 CanRanged 등)을 격자에 상시 표시한다.
             _showInert = GUILayout.Toggle(
                 _showInert, "무효", EditorStyles.toolbarButton, GUILayout.Width(40));
+
+            // 켜면 지형 붓이 State만 바꾸는 대신 그 칸 타일을 지형 프리팹으로 실제 교체한다.
+            _swap = GUILayout.Toggle(
+                _swap, "스왑", EditorStyles.toolbarButton, GUILayout.Width(40));
+        }
+    }
+
+    private void EnsurePrefabSet()
+    {
+        if (_prefabs == null)
+        {
+            _prefabs = TilePrefabSetIO.Load();
+        }
+    }
+
+    // 스왑이 켜졌는데 매핑 에셋(TilePrefabSet)이 없으면 여기서 바로 만들 수 있게 안내한다.
+    private void DrawSwapNotice()
+    {
+        if (!_swap)
+        {
+            return;
+        }
+
+        EnsurePrefabSet();
+        if (_prefabs != null)
+        {
+            return;
+        }
+
+        using (new EditorGUILayout.HorizontalScope(EditorStyles.helpBox))
+        {
+            GUILayout.Label(
+                "스왑하려면 지형→프리팹 매핑(TilePrefabSet)이 필요합니다.", EditorStyles.miniLabel);
+            GUILayout.FlexibleSpace();
+            if (GUILayout.Button("기본 세트 만들기", EditorStyles.miniButton, GUILayout.Width(100)))
+            {
+                _prefabs = TilePrefabSetIO.CreateDefault();
+                Selection.activeObject = _prefabs;
+            }
         }
     }
 
@@ -508,6 +551,7 @@ public class MapMakerWindow : EditorWindow
 
         if (input.type == EventType.MouseDown)
         {
+            _swapped.Clear(); // 새 붓질 — 이번에 교체한 칸 기록을 비운다
             _strokeGroup = TileStamp.BeginStroke();
             StampAt(input.mousePosition, area, view, cells, input.alt);
             input.Use();
@@ -538,9 +582,56 @@ public class MapMakerWindow : EditorWindow
             return; // 격자 밖이거나 타일이 없는 칸 — 1단계에서는 칸을 만들지 않는다
         }
 
+        if (TrySwap(coord, tile, cells))
+        {
+            return;
+        }
+
         TileStamp.Stamp(tile, _brush, !turnOff);
         _hover = coord;
         Repaint(); // 경로가 바로 다시 계산돼 보이도록
+    }
+
+    // 스왑이 켜졌고 이 붓이 프리팹을 가진 지형이면 타일을 갈아끼운다.
+    // 한 붓질에 같은 칸을 두 번 스왑하지 않는다 — 드래그 이벤트마다 교체하면 GameObject가 우수수 생겼다 사라진다.
+    private bool TrySwap(Vector2Int coord, Tile tile, Dictionary<Vector2Int, Tile> cells)
+    {
+        if (!_swap)
+        {
+            return false;
+        }
+
+        EnsurePrefabSet();
+        TerrainType terrain = SwapTerrain(_brush);
+        GameObject prefab = _prefabs != null ? _prefabs.For(terrain) : null;
+        if (prefab == null)
+        {
+            return false; // 스왑 대상 붓이 아니거나 슬롯이 빔 → 데이터 칠로 넘어간다
+        }
+
+        if (!_swapped.Add(coord))
+        {
+            return true; // 이번 붓질에 이미 교체한 칸 — 다시 만들지 않고 삼킨다
+        }
+
+        Tile made = TileSwap.Swap(tile, prefab, terrain);
+        cells[coord] = made; // 붓질 내내 dict를 최신으로 — 뒤 이벤트가 파괴된 타일을 잡지 않도록
+        _hover = coord;
+        Repaint();
+        return true;
+    }
+
+    // 지형 붓 → 지형. 스왑이 다루지 않는 붓(스폰·읽기 등)은 Empty로 떨어져 프리팹이 없다.
+    private static TerrainType SwapTerrain(MapBrush brush)
+    {
+        switch (brush)
+        {
+            case MapBrush.Ground: return TerrainType.Ground;
+            case MapBrush.High: return TerrainType.High;
+            case MapBrush.Core: return TerrainType.Core;
+            case MapBrush.Special: return TerrainType.Special;
+            default: return TerrainType.Empty;
+        }
     }
 
     // ---- 검사 ----

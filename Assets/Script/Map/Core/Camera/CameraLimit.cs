@@ -9,14 +9,11 @@ public sealed class CameraLimit
 
     public bool Ready => _ready;
     public Bounds Area => _area;
+    
 
     public void Build(MapRegistry registry)
     {
         _ready = false;
-        if (registry == null)
-        {
-            return;
-        }
 
         bool hasArea = false;
         Bounds nextArea = default;
@@ -29,19 +26,10 @@ public sealed class CameraLimit
             }
 
             MapBoard board = module.GetComponent<MapBoard>();
-            if (board == null)
-            {
-                continue;
-            }
             if (board.CellCount == 0)
             {
                 board.Build(); // 타이밍상 아직 안 지어졌으면 여기서 지어 경계를 얻는다(FogController와 동일)
             }
-            if (board.CellCount == 0)
-            {
-                continue;
-            }
-
             Bounds boardArea = board.WorldBounds;
             if (!hasArea)
             {
