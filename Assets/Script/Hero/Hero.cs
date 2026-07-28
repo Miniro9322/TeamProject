@@ -11,9 +11,11 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
     [SerializeField] private int citizenAmount = 2;
     [SerializeField] private List<ProductionType> costType;
     [SerializeField] private List<int> costAmount;
-    [SerializeField] private int skillLevel = 0;
-    [SerializeField] private int statLevel = 0;
     [SerializeField] private List<HeroUpgradeData> upgradeDatas;
+    private int skillLevel = 0;
+    private int statLevel = 0;
+    public int SkillLevel => skillLevel;
+    public int StatLevel => statLevel;
 
     public Dictionary<ProductionType, int> Cost
     {
@@ -21,7 +23,6 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
         {
             if (costType.Count != costAmount.Count)
             {
-                Debug.LogError("생산 건물에 필요한 자원과 자원량이 매칭되지 않습니다. 다시 설정해주세요");
                 return null;
             }
             else
@@ -100,13 +101,16 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
     [SerializeField] private EnemyAttribute unattackableTarget = EnemyAttribute.Fly | EnemyAttribute.Cloaking;
     //테스트용 코드
     private GameManager gameManager;
+    private ResourcesManager resourcesManager;
     protected BuffManager buffManager;
+    
     public int CitizenAmount => citizenAmount;
     [Inject]
-    private void Construct(GameManager gameManager, BuffManager buffManager)
+    private void Construct(GameManager gameManager, BuffManager buffManager, ResourcesManager resourcesManager)
     {
         this.gameManager = gameManager;
         this.buffManager = buffManager;
+        this.resourcesManager = resourcesManager;
     }
 
     public void Die()
@@ -424,7 +428,11 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
         {
             return;
         }
-        upgradeDatas[skillLevel++].Upgrade(this);
+        if (resourcesManager.CheckResources(upgradeDatas[skillLevel].Cost))
+        {
+            resourcesManager.ProductChanged(upgradeDatas[skillLevel].Cost);
+            upgradeDatas[skillLevel++].Upgrade(this);
+        }
     }
     public void StatUpgrade()
     {

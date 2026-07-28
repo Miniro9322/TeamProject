@@ -16423,13 +16423,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SwordMan
   citizenAmount: 2
-  costType: 
-  costAmount: 
-  level: 0
+  costType: 00000000020000000300000004000000
+  costAmount: 28000000320000001e0000001e000000
+  upgradeDatas:
+  - {fileID: 11400000, guid: bc4623384d966d84ca091b683859d5d4, type: 2}
+  - {fileID: 11400000, guid: 9cebf5aea4aff87439f890143e9092f2, type: 2}
+  - {fileID: 11400000, guid: 4588248daec49dd4f8266e7775e86b14, type: 2}
   basePattern:
-  - {fileID: 11400000, guid: 20b8101723dbe2b44b67dbf271f0cf6c, type: 2}
-  selectors:
-  - {fileID: 11400000, guid: 7db75bd4f168e78409385fb274d9c17e, type: 2}
+  - {fileID: 11400000, guid: abc60030c1717dd409ed283d879d2529, type: 2}
+  selectors: []
   procs: []
   anim: {fileID: 6989708048733833427}
   animEvents: {fileID: 8003858886257523969}

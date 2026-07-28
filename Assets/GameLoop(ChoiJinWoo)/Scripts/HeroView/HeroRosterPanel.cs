@@ -22,6 +22,7 @@ public class HeroRosterPanel : MonoBehaviour, IBeginDragHandler, IScrollHandler
     private void OnDisable()
     {
         game.HeroRoster.Changed -= Refresh;
+        currentObject = null;
     }
 
     private void Refresh()
