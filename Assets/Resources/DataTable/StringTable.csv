@@ -2,7 +2,10 @@ ID,Kr,En,Jp
 HelloWorld,안녕,Hello,こんにちは
 Ui_MainMenu,메인 메뉴,Main Menu,メインメニュー
 Ui_Setting,설정,Setting,設定
-Ui_MasterVolume,전체 소리,MasterVolume,マスター音量
+Ui_MasterVolume,마스터 볼륨,Master Volume,マスター音量
+Ui_SfxVolume,효과음,Sound Effects,効果音
+Ui_BgmVolume,배경음,Music,BGM
+Ui_SystemVolume,시스템,System,システム
 Ui_Exit,나가기,Exit,終了
 Ui_Close,닫기,Close,閉じる
 Ui_Pause,일시 정지,Pause,一時停止
@@ -28,7 +31,7 @@ SpiderKing_Desc,거미들의 어머니 대륙에 침입한 인간들로 인해 �
 Scorpion,전갈,Scorpion,サソリ
 Scorpion_Desc,평범한 대륙의 전갈과는 다르게 펠루시아 대륙의 생명체들에게는 온화한거 같다.,Unlike the scorpions of ordinary lands it seems gentle toward the creatures of Felucia.,普通の大陸のサソリとは違い、フェルシア大陸の生き物たちには穏やかなようだ。
 Bat,박쥐,Bat,コウモリ
-Bat_Desc,펠루시아 동굴에서 무리지어 사는 박쥐,A bat that lives in swarms deep in the caves of Felucia.,フェルシアの洞窟で群れをなして暮らすコウモリ。
+Bat_Desc,펠루시아 동굴에서 무리지어 사는 박쥐 초음파를 이용해 공격을 한다.,A bat that lives in swarms deep in the caves of Felucia. It attacks using ultrasonic waves.,フェルシアの洞窟で群れをなして暮らすコウモリ。超音波を使って攻撃する。
 Golem,골렘,Golem,ゴーレム
 Golem_Desc,펠루시아를 수호하는 고대병기 대륙을 침입한 인간들을 향해 분노한거 같다.,An ancient weapon that guards Felucia. It seems enraged at the humans who invaded the continent.,フェルシアを守護する古代兵器。大陸に侵入した人間たちに怒っているようだ。
 DeathAttacker,죽음의 분쇄자,Death Crusher,死の粉砕者
@@ -47,10 +50,10 @@ Desc_SpiderSplitSKill,거미가 사망시 분열을 한다.,The spider splits ap
 Desc_SpiderToxin_Dash,독거미가 일정거리 빠르게 이동을 한다,The toxic spider dashes a set distance quickly,毒蜘蛛が一定距離を素早く移動する
 Desc_SpiderKing_Summon,여왕 거미가 거미를 소환한다,The Spider Queen summons spiders,女王蜘蛛が蜘蛛を召喚する
 Desc_Heal,일정 범위 내 아군을 지속 회복시킨다,Continuously heals allies within range,範囲内の味方を継続的に回復する
-Desc_Scorpion_Shield,범위내에 적 유닛 데미지 감소,Reduces damage taken by enemy units within range,範囲内の敵ユニットの被ダメージを減少させる
-Desc_DeathRushAttack,죽음의 분쇄자가 강력한 의지를 담아 연속으로 공격을 한다.,The Death Crusher attacks repeatedly with overwhelming will.,死の粉砕者が強い意志を込めて連続で攻撃する。
-Desc_DamageZoneSkill,박쥐가 주변 영웅에게 일정 주기마다 피해를 입힌다.,The bat deals damage to nearby heroes at regular intervals.,コウモリが周囲の英雄に一定周期でダメージを与える。
-Desc_ExplosivedSkill,사망시 주변 영웅에게 자폭데미지를 입힌다.,Explodes on death and deals damage to nearby heroes.,死亡時に自爆して周囲の英雄にダメージを与える。
+Desc_Scorpion_Shield,펠루시아 의 전갈이 보호막을 둘러 주변 적 들의 받는 피해를 감소 시킨다.,The scorpion of Felucia raises a barrier that reduces damage taken by nearby enemies.,フェルシアのサソリがバリアを張り、周囲の敵が受けるダメージを軽減する。
+Desc_DeathRushAttack,죽음의 분쇄자가 강력한 의지를 담아 영웅을 향하여 연속으로 공격을 한다.,The Death Crusher charges the heroes and strikes repeatedly with overwhelming will.,死の粉砕者が強い意志を込めて英雄に向かって連続で攻撃する。
+Desc_DamageZoneSkill,박쥐가 주변 영웅에게 초음파를 이용해 일정 주기마다 피해를 입힌다.,The bat uses ultrasonic waves to damage nearby heroes at regular intervals.,コウモリが超音波を使って周囲の英雄に一定周期でダメージを与える。
+Desc_ExplosivedSkill,고대 병기 골렘이 사망시 골렘의 핵이 폭발해 주변 영웅에게 자폭데미지를 입힌다.,When the ancient weapon golem dies its core detonates and damages nearby heroes.,古代兵器ゴーレムが死亡すると核が爆発し、周囲の英雄にダメージを与える。
 Stat_Attack,공격력,Attack,攻撃力
 Stat_AttackSpeed,공격속도,AttackSpeed,攻撃速度
 Stat_Health,체력,Health,体力

@@ -9,25 +9,30 @@ public class EnemySoundManager : MonoBehaviour
     [SerializeField] private EnemySoundDataBase db;
     [SerializeField] private AudioSource sfxSource;
     [SerializeField] private AudioSource bgmSource;
-    
+    [SerializeField] private AudioSource systemSource;
+
     [SerializeField] private Slider masterSlider;
     [SerializeField] private Slider bgmSlider;
     [SerializeField] private Slider sfxSlider;
+    [SerializeField] private Slider systemSlider;
 
     [SerializeField] private AudioMixer mixer;
     [SerializeField] private string masterParam = "MasterVolume";
     [SerializeField] private string sfxParam = "SfxVolume";
     [SerializeField] private string bgmParam = "BgmVolume";
+    [SerializeField] private string systemParam = "SystemVolume";
 
 
     [Range(0f, 1f)] public float masterVolume = 1f;
     [Range(0f, 1f)] public float sfxVolume = 1f;
     [Range(0f, 1f)] public float bgmVolume = 1f;
+    [Range(0f, 1f)] public float systemVolume = 1f;
 
 
     private const string PrefMaster = "vol_master";
     private const string PrefSfx = "vol_sfx";
     private const string PrefBgm = "vol_bgm";
+    private const string PrefSystem = "vol_system";
 
     // 같은 키 효과음이 너무 짧은 간격으로 중복 재생되는 것만 막는 스로틀.
     // 상태를 SoundDatabase(SO 에셋)에 저장하면 에디터 세션 간에 값이 남아 소리가 안 나므로,
@@ -46,6 +51,7 @@ public class EnemySoundManager : MonoBehaviour
         masterVolume = PlayerPrefs.GetFloat(PrefMaster, masterVolume);
         sfxVolume = PlayerPrefs.GetFloat(PrefSfx, sfxVolume);
         bgmVolume = PlayerPrefs.GetFloat(PrefBgm, bgmVolume);
+        systemVolume = PlayerPrefs.GetFloat(PrefSystem, systemVolume);
         ApplyMixer();
     }
     void Start()
@@ -53,6 +59,7 @@ public class EnemySoundManager : MonoBehaviour
         if (masterSlider != null) masterSlider.value = masterVolume;
         if (sfxSlider != null)    sfxSlider.value = sfxVolume;
         if (bgmSlider != null)    bgmSlider.value = bgmVolume;
+        if (systemSlider != null) systemSlider.value = systemVolume;
     }
 
     private void ApplyMixer()
@@ -61,12 +68,14 @@ public class EnemySoundManager : MonoBehaviour
         mixer.SetFloat(masterParam, LinearToDb(masterVolume));
         mixer.SetFloat(sfxParam, LinearToDb(sfxVolume));
         mixer.SetFloat(bgmParam, LinearToDb(bgmVolume));
+        mixer.SetFloat(systemParam, LinearToDb(systemVolume));
     }
 
     // 슬라이더 초기값 표시용 (설정창 열 때 호출)
     public float GetMasterVolume() => masterVolume;
     public float GetSfxVolume() => sfxVolume;
     public float GetBgmVolume() => bgmVolume;
+    public float GetSystemVolume() => systemVolume;
 
     // 선형 0~1 → 데시벨 변환 (믹서는 dB로 동작)
     private static float LinearToDb(float v)
@@ -128,11 +137,16 @@ public class EnemySoundManager : MonoBehaviour
         if (mixer != null) mixer.SetFloat(sfxParam, LinearToDb(sfxVolume));
         PlayerPrefs.SetFloat(PrefSfx, sfxVolume);
     }
-
     public void SetBgmVolume(float v)
     {
         bgmVolume = Mathf.Clamp01(v);
         if (mixer != null) mixer.SetFloat(bgmParam, LinearToDb(bgmVolume));
         PlayerPrefs.SetFloat(PrefBgm, bgmVolume);
+    }
+    public void SetSystemVolume(float v)
+    {
+        systemVolume = Mathf.Clamp01(v);
+        if(mixer!=null) mixer.SetFloat(systemParam, LinearToDb(systemVolume));
+        PlayerPrefs.SetFloat(PrefSystem, systemVolume);
     }
 }
