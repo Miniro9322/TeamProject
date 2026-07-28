@@ -17,14 +17,12 @@ public class MapView : MonoBehaviour
     public ResourcesManager resourcesManager;
 
     private readonly TileSelect tileSelect = new();
-    private readonly StatusText statusText = new();
 
     // ---- 상태 기록(PlaceAction이 결과를 알릴 때 부른다) ----
 
     public void Select(Tile tile) { tileSelect.Select(tile); }
     public void ClearSelection() { tileSelect.Clear(); }
     public bool IsSelected(Tile tile) { return tileSelect.IsSelected(tile); }
-    public void SetStatus(string value) { statusText.Set(value); }
 
     // ---- 읽기(PanelLogic·TilePaintView가 본다) ----
 
@@ -37,7 +35,6 @@ public class MapView : MonoBehaviour
     public OccupantKind PlacingKind { get { return palette.CurrentSlot().kind; } }
     public string PlacingLabel { get { return palette.CurrentSlot().label; } }
     public int PlacingRange { get { return palette.PreviewRange(); } }
-    public string Status { get { return statusText.Text; } }
     public Tile Selected { get { return tileSelect.Selected; } }
     public string Mode { get { return palette.Mode.ToString(); } }
     public IReadOnlyList<Placeable> Items { get { return palette.Slots; } }
