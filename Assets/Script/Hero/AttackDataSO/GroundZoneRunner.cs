@@ -12,6 +12,7 @@ public static class GroundZoneRunner
         Vector3 center,
         GroundZoneDataSO data,
         Func<Vector3, int, RangeShape, List<GameObject>> getEnemyObjectsInRange,
+        Func<Vector3, int, RangeShape, List<GameObject>> getAllyObjectsInRange,
         StatContainer attackerStats,
         BuffManager buffManager,
         Func<bool> keepAliveWhilePersistent, // duration<=0(오라)일 때만 참조
@@ -32,7 +33,7 @@ public static class GroundZoneRunner
             if (tickTimer >= data.tickInterval)
             {
                 tickTimer = 0f;
-                Tick(center, data, getEnemyObjectsInRange, attackerStats, buffManager, source);
+                Tick(center, data, getEnemyObjectsInRange, getAllyObjectsInRange, attackerStats, buffManager, source);
             }
             await UniTask.Yield(token);
         }
@@ -40,8 +41,19 @@ public static class GroundZoneRunner
 
     private static void Tick(Vector3 center, GroundZoneDataSO data,
         Func<Vector3, int, RangeShape, List<GameObject>> getEnemyObjectsInRange,
+        Func<Vector3, int, RangeShape, List<GameObject>> getAllyObjectsInRange,
         StatContainer attackerStats, BuffManager buffManager, object source)
     {
+        if (data.mode == GroundZoneMode.Heal)
+        {
+            float heal = attackerStats[StatType.ATK] * data.healPer;
+            if (heal <= 0f || getAllyObjectsInRange == null) return;
+
+            Hero target = AttackDamageUtil.FindLowestHpAlly(getAllyObjectsInRange(center, data.radius, data.shape));
+            target?.Heal(heal);
+            return;
+        }
+
         int dmg = Mathf.RoundToInt(attackerStats[StatType.ATK] * data.damagePer);
         float debuffDuration = data.tickInterval + 0.15f; // 다음 틱까지 갱신 못 받으면(=영역 이탈) 곧 만료 — 이탈 시 디버프 제거를 흉내
 

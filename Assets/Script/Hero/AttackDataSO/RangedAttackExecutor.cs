@@ -98,9 +98,10 @@ public class RangedAttackExecutor : IAttackExecutor
             {
                 e.TakeDamage(damage);
                 AttackDamageUtil.ApplyTargetDebuffs(e as IUnit, data.buffList, ctx.buffManager, data);
+                AttackDamageUtil.ApplyHealOptions(data, ctx.self.position, ctx.healSelf, ctx.getAllyObjectsInRange, damage, ctx.sc[StatType.ATK]);
             }
             AttackDamageUtil.SpawnGroundZone(data.groundZone, target.position,
-                ctx.getEnemyObjectsInRange, ctx.sc, ctx.buffManager, CancellationToken.None);
+                ctx.getEnemyObjectsInRange, ctx.getAllyObjectsInRange, ctx.sc, ctx.buffManager, CancellationToken.None);
             Vector3 endPoint = ctx.getLineEndPoint(ctx.self.position, dir, data.lineLength);
             arrow.LaunchVisualOnly(endPoint, pool);
             return;
@@ -117,6 +118,9 @@ public class RangedAttackExecutor : IAttackExecutor
             getEnemiesInRange = ctx.getEnemiesInRange,
             getEnemyObjectsInRange = ctx.getEnemyObjectsInRange,
             getTargetableEnemyObjectsInRange = ctx.getTargetableEnemyObjectsInRange,
+            getAllyObjectsInRange = ctx.getAllyObjectsInRange,
+            healSelf = ctx.healSelf,
+            casterPos = ctx.self.position,
             buffList = data.buffList,
             buffManager = ctx.buffManager,
             source = data,

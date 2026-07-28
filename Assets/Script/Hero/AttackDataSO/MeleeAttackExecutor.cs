@@ -16,7 +16,7 @@ public class MeleeAttackExecutor : IAttackExecutor
 
         if (data.groundZone != null && ctx.target != null)
             AttackDamageUtil.SpawnGroundZone(data.groundZone, ctx.target.position,
-                ctx.getEnemyObjectsInRange, ctx.sc, ctx.buffManager, ct);
+                ctx.getEnemyObjectsInRange, ctx.getAllyObjectsInRange, ctx.sc, ctx.buffManager, ct);
 
         try
         {

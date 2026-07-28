@@ -17,6 +17,8 @@ public struct AttackContext
     public System.Func<Vector3, int, RangeShape, List<IDamageAble>> getEnemiesInRange;
     public System.Func<Vector3, int, RangeShape, List<Transform>> getEnemyTargetsInRange;
     public System.Func<Vector3, int, RangeShape, List<GameObject>> getEnemyObjectsInRange;
+    public System.Func<Vector3, int, RangeShape, List<GameObject>> getAllyObjectsInRange;
+    public System.Action<float> healSelf;
     public System.Func<Vector3, int, RangeShape, List<IDamageAble>> getTargetableEnemiesInRange;
     public System.Func<Vector3, int, RangeShape, List<GameObject>> getTargetableEnemyObjectsInRange;
     public System.Func<Vector3, int, RangeShape, List<Transform>> getTargetableEnemyTargetsInRange;
