@@ -11,7 +11,7 @@ using UnityEngine;
 /// </summary>
 public static class LaneQuery
 {
-    /// <summary>스폰별 레인 결과. 본진이 없거나 막힌 스폰도 실패 결과로 포함한다.</summary>
+    // 셀에서 스폰과 코어를 수집하고 스폰별 레인 결과를 계산합니다.
     public static List<LaneData> BuildLanes(Dictionary<Vector2Int, Tile> cells)
     {
         List<Tile> spawns = CollectSpawns(cells);
@@ -29,7 +29,7 @@ public static class LaneQuery
         return lanes;
     }
 
-    /// <summary>적 스폰으로 찍힌 타일들(경로 시작점).</summary>
+    // 셀에서 적 스폰으로 지정된 타일만 수집합니다.
     public static List<Tile> CollectSpawns(Dictionary<Vector2Int, Tile> cells)
     {
         var spawns = new List<Tile>();
@@ -44,7 +44,7 @@ public static class LaneQuery
         return spawns;
     }
 
-    /// <summary>본진(Terrain=Core)으로 찍힌 타일들(경로 도착점).</summary>
+    // 셀에서 코어로 지정된 타일만 수집합니다.
     public static List<Tile> CollectCores(Dictionary<Vector2Int, Tile> cells)
     {
         var cores = new List<Tile>();
