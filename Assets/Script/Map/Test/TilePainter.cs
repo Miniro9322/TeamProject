@@ -23,12 +23,12 @@ public class TilePainter : MonoBehaviour
  
     public void SetColor(Vector2Int coord, Color color)
     {
-        if (board != null && board.TryGetCell(coord, out Tile tile)) Paint(tile, color);
+        if (board.TryGetCell(coord, out Tile tile)) Paint(tile, color);
     }
 
     public void ClearColor(Vector2Int coord)
     {
-        if (board != null && board.TryGetCell(coord, out Tile tile)) Restore(tile);
+        if (board.TryGetCell(coord, out Tile tile)) Restore(tile);
     }
 
     // 타일을 직접 받는 경로 — 좌표는 모듈 로컬이라 보드 역조회가 모듈을 특정 못 하므로,
@@ -84,7 +84,6 @@ public class TilePainter : MonoBehaviour
     [ContextMenu("Tint Terrain")]
     public void TintTerrain()
     {
-        if (board == null) return;
         if (board.Cells.Count == 0) board.Build();
 
         foreach (Tile t in board.Cells.Values)
@@ -104,7 +103,6 @@ public class TilePainter : MonoBehaviour
     [ContextMenu("Clear Tint")]
     public void ClearTint()
     {
-        if (board == null) return;
         foreach (Tile t in board.Cells.Values) Restore(t);
     }
 }

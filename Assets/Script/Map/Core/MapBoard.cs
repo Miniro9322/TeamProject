@@ -24,14 +24,8 @@ public class MapBoard : MonoBehaviour
     /// 이 보드의 모듈이 열려 있는가. 모듈이 아예 없는 보드(테스트용)만 열린 것으로 본다.
     /// 비활성 오브젝트는 Awake가 안 돌아 _module이 비어 있으므로 여기서 한 번 더 잡는다.
     /// </summary>
-    public bool IsUnlocked
-    {
-        get
-        {
-            if (_module == null) { _module = GetComponent<ModuleLogic>(); }
-            return _module == null || _module.IsUnlocked;
-        }
-    }
+    public bool IsUnlocked => _module.IsUnlocked;
+ 
 
     private void Awake()
     {
@@ -124,20 +118,16 @@ public class MapBoard : MonoBehaviour
             _spawns, t => t.Terrain == TerrainType.Core, WalkableNeighbors, HeuristicToNearestCore);
         SetLanes(path);
 
-        if (path == null)
-            Debug.LogWarning("[MapBoard] 경로 없음.");
-
         return path;
     }
 
     private void SetLanes(List<Tile> path)
     {
         ClearLanes();
-        if (path == null) return;
-
         foreach (Tile tile in path)
         {
-            if (tile == null || tile.IsEnemySpawn || tile.IsCore) continue;
+            if (tile.IsEnemySpawn) continue; 
+            if (tile.IsCore) continue;
             tile.State.EnemyLane = true;
         }
     }
@@ -173,8 +163,10 @@ public class MapBoard : MonoBehaviour
     {
         var list = new List<Vector3>();
         List<Tile> path = GetPath();
-        if (path != null)
-            foreach (Tile t in path) list.Add(t.WorldTop + Vector3.up * yOffset);
+        foreach (Tile t in path) 
+        {
+            list.Add(t.WorldTop + Vector3.up * yOffset);
+        }
         return list;
     }
 
@@ -241,11 +233,6 @@ public class MapBoard : MonoBehaviour
     public bool CanPlace(Vector2Int coord, OccupantKind kind)
     {
         ModuleLogic module = _module;
-        if (module != null && !module.IsPreparing)
-        {
-            return false;   // 잠겼거나 준비 단계가 아닌 모듈
-        }
-
         return _cells.TryGetValue(coord, out Tile tile) && TilePlacementRule.CanPlace(tile.State, kind);
     }
 
@@ -254,10 +241,7 @@ public class MapBoard : MonoBehaviour
         if (!CanPlace(coord, kind)) return false;
 
         Tile tile = _cells[coord];
-        if (unit != null)
-        {
-            unit.transform.position = tile.WorldTop + Vector3.up * yOffset;
-        }
+        unit.transform.position = tile.WorldTop + Vector3.up * yOffset;
         tile.SetOccupant(unit, kind);
         return true;
     }
@@ -318,8 +302,6 @@ public class MapBoard : MonoBehaviour
 
     public void SetRangeCover(GameObject unit, Vector2Int origin, int range, bool square = false, bool includeCenter = true)
     {
-        if (unit == null) return;
-
         ClearRangeCover(unit);
 
         var covered = new List<Tile>();
@@ -337,7 +319,7 @@ public class MapBoard : MonoBehaviour
 
     private void ClearRangeCover(GameObject unit)
     {
-        if (unit == null || !_rangeCoverByUnit.TryGetValue(unit, out List<Tile> covered)) return;
+        if (!_rangeCoverByUnit.TryGetValue(unit, out List<Tile> covered)) return;
 
         foreach (Tile tile in covered)
             if (tile != null)

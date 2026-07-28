@@ -24,11 +24,6 @@ public class TilePaintView : MonoBehaviour
         foreach (ModuleLogic module in registry.AllModules.Values)
         {
             MapBoard board = module.GetComponent<MapBoard>();
-            if (board == null)
-            {
-                continue;
-            }
-
             PaintPath(module.GetComponent<EnemyPathView>());
             PaintState(board);
         }
