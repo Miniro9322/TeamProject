@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -14,28 +13,12 @@ public class MapBoard : MonoBehaviour
     private Bounds _worldBounds;
     private ModuleLogic _module; // 소속 모듈. Awake에서 한 번만 잡는다(매 호출 GetComponent 금지).
 
-    private readonly TileIndexer _indexer = new(); // 좌표(Col/Row) → 1차원 인덱스. _cells와 같은 Tile을 가리키는 배열.
-     
-
     public IReadOnlyDictionary<Vector2Int, Tile> Cells => _cells;
     public int CellCount => _cells.Count;
-    public IReadOnlyList<Tile> Spawns => _spawns;
-    public IReadOnlyList<Tile> Cores => _cores;
-    public bool HasEndpoints => _spawns.Count > 0 && _cores.Count > 0;
     public Bounds WorldBounds => _worldBounds;
     public float CellSize => _grid.cellSize.x;
-    public int Cols => _indexer.Cols;
-    public int Rows => _indexer.Rows;
 
-    public GameObject UnitPrefab { get; set; }
-
-    public event Action<Tile> Occupied;
-    public event Action<Tile> OnUnitRemoved; 
-
-    /// <summary>적이 어떤 타일에 새로 올라섰을 때(칸 진입). 인자는 진입당한 타일.</summary>
-    public event Action<Tile> EnemyEntered;
-    /// <summary>적이 타일에서 벗어났을 때(칸 이탈·despawn). 인자는 이탈당한 타일.</summary>
-    public event Action<Tile> EnemyExited;
+    private bool HasEndpoints => _spawns.Count > 0 && _cores.Count > 0;
 
     /// <summary>
     /// 이 보드의 모듈이 열려 있는가. 모듈이 아예 없는 보드(테스트용)만 열린 것으로 본다.
@@ -112,10 +95,16 @@ public class MapBoard : MonoBehaviour
             
         }
 
-        // 2) 인덱스 격자: 바운딩 박스(Cols×Rows) 기준 1차원 배열. 좌표는 Grid 원점 기준이라 0 이상이다.
-        _indexer.BuildIndexGrid(_cells.Values);
+        // 2) 격자 크기: 로그 표기용 바운딩 박스. 좌표는 Grid 원점 기준이라 0 이상이다.
+        int cols = 0;
+        int rows = 0;
+        foreach (Tile tile in _cells.Values)
+        {
+            if (tile.State.Col >= cols) { cols = tile.State.Col + 1; }
+            if (tile.State.Row >= rows) { rows = tile.State.Row + 1; }
+        }
 
-        Debug.Log($"[MapBoard] 타일 {_cells.Count}개 ({Cols}×{Rows}, 셀크기 {CellSize:0.###}), 스폰 {_spawns.Count}, 본진 {_cores.Count}", this);
+        Debug.Log($"[MapBoard] 타일 {_cells.Count}개 ({cols}×{rows}, 셀크기 {CellSize:0.###}), 스폰 {_spawns.Count}, 본진 {_cores.Count}", this);
 
         if (!HasEndpoints)
             Debug.LogWarning("[MapBoard] 스폰(isEnemySpawn) 또는 본진(Terrain=Core) 타일을 찾지 못했습니다.", this);
@@ -123,7 +112,7 @@ public class MapBoard : MonoBehaviour
 
     // ---- 경로 ----
 
-    public List<Tile> GetPath()
+    private List<Tile> GetPath()
     {
         if (!HasEndpoints)
         {
@@ -247,99 +236,22 @@ public class MapBoard : MonoBehaviour
         return best;
     }
 
-    public IEnumerable<Tile> GroundCells
-    {
-        get { foreach (Tile t in _cells.Values) if (t.Terrain == TerrainType.Ground) yield return t; }
-    }
-
-
-    // ---- 인덱스 관리 (index = Row * Cols + Col) ----
-    // 좌표 딕셔너리(_cells)와 같은 Tile을 가리키는 1차원 배열. 순회·저장·경로/영토 참조·이웃에 유리.
-
-    
-
-    public bool ValidIndex(int index) => _indexer.IsValidIndex(index);
-    public bool InBounds(int col, int row) => GridCalculator.IsInGrid(new Vector2Int(col, row), Cols, Rows);
-    public bool InBounds(Vector2Int c) => GridCalculator.IsInGrid(c, Cols, Rows);
-
-    /// <summary>(col,row) → 1차원 인덱스.</summary>
-    public int Index(int col, int row) =>  _indexer.ConvertCellToIndex(new Vector2Int(col, row));
-    public int Index(Vector2Int c) => _indexer.ConvertCellToIndex(c);
-
-    /// <summary>인덱스 → (col,row).</summary>
-    public Vector2Int Coord(int index) => _indexer.ConvertIndexToCell(index);
-
-    /// <summary>인덱스로 타일 얻기. 범위 밖·빈칸이면 null.</summary>
-    public Tile ByIndex(int index) => _indexer.GetTileOnIndex(index);
-
-    /// <summary>타일의 인덱스. null이면 -1.</summary>
-    public int IndexOf(Tile tile)
-    {
-        if(tile == null) return -1;
-        return _indexer.ConvertCellToIndex(tile.Coord);
-    }
-
-    /// <summary>
-    /// 상하좌우 4방향 이웃의 인덱스. 격자 밖으로 나가는 방향은 빼고 준다(가장자리 wrap 방지).
-    /// 예) 3×3 격자에서 가운데(0-based 4)의 이웃 = 1,3,5,7.
-    /// </summary>
-    public List<int> NeighborIndices(int index)
-    {
-        var result = new List<int>(4);
-        if (!ValidIndex(index)) return result;
-        Vector2Int c = Coord(index);
-        foreach (Vector2Int d in GridCalculator.Directions)
-        {
-            Vector2Int n = c + d;
-            if (InBounds(n)) result.Add(Index(n)); // 좌표로 경계 검사 → col 끝에서 옆줄로 새지 않음
-        }
-
-        return result;
-    }
-
-    /// <summary>상하좌우 이웃 중 실제 타일이 있는 것만(빈칸 제외).</summary>
-    public List<Tile> Neighbors(int index)
-    {
-        var result = new List<Tile>(4);
-        foreach (int ni in NeighborIndices(index))
-            if (ByIndex(ni) is Tile tile) result.Add(tile);
-        return result;
-    }
-
-    public List<Tile> Neighbors(Tile tile) => Neighbors(IndexOf(tile));
-
     // ---- 배치 ----
 
-    public bool CanPlace(Vector2Int coord, OccupantKind kind, out string reason)
+    public bool CanPlace(Vector2Int coord, OccupantKind kind)
     {
         ModuleLogic module = _module;
         if (module != null && !module.IsPreparing)
         {
-            if (module.CurrentState == ModuleState.Locked)
-            {
-                reason = "해금되지 않은 모듈";
-            }
-            else
-            {
-                reason = "배치할 수 없는 모듈 상태";
-            }
-            return false;
+            return false;   // 잠겼거나 준비 단계가 아닌 모듈
         }
 
-        if (!_cells.TryGetValue(coord, out Tile tile))
-        {
-            reason = "타일 없음";
-            return false;
-        }
-
-        TilePlacementRule.Result r = TilePlacementRule.CanPlace(tile.State, kind);
-        reason = r.Reason;
-        return r.Allowed;
+        return _cells.TryGetValue(coord, out Tile tile) && TilePlacementRule.CanPlace(tile.State, kind);
     }
 
-    public bool TryPlace(Vector2Int coord, GameObject unit, OccupantKind kind, float yOffset, out string reason)
+    public bool TryPlace(Vector2Int coord, GameObject unit, OccupantKind kind, float yOffset)
     {
-        if (!CanPlace(coord, kind, out reason)) return false;
+        if (!CanPlace(coord, kind)) return false;
 
         Tile tile = _cells[coord];
         if (unit != null)
@@ -347,7 +259,6 @@ public class MapBoard : MonoBehaviour
             unit.transform.position = tile.WorldTop + Vector3.up * yOffset;
         }
         tile.SetOccupant(unit, kind);
-        Occupied?.Invoke(tile);
         return true;
     }
 
@@ -356,29 +267,12 @@ public class MapBoard : MonoBehaviour
         if (!_cells.TryGetValue(coord, out Tile tile) || !tile.HasUnit) return null;
         GameObject unit = tile.ClearOccupant();
         ClearRangeCover(unit);
-        OnUnitRemoved?.Invoke(tile);
         return unit;
     }
 
     // ---- 적 격자 점유 (움직이는 적의 현재 칸 추적 — 좌표 기반) ----
     // 적은 타일 점유(OccupantObject)와 별개다: 한 칸에 여러 마리가 드나들 수 있다.
     // 적 이동 컴포넌트가 월드 위치를 알려주면, 칸이 바뀐 경우에만 이전/새 타일을 갱신한다.
-
-    /// <summary>
-    /// [경로 추종 적 권장] 적이 자기 "현재 타일"을 인덱스로 직접 지정한다. 월드 위치 역산 없이
-    /// 격자가 단일 소스 → 부동소수 오차와 무관하게 4→5 전환이 정확하다. index = Row*Cols + Col.
-    /// 범위 밖 인덱스면 칸 없음으로 처리(빠짐).
-    /// </summary>
-    public void SetEnemyCell(GameObject enemy, int index)
-    {
-        if (enemy != null) ApplyEnemyCell(enemy, ByIndex(index));
-    }
-
-    /// <summary>[경로 추종 적 권장] 적의 현재 타일을 직접 지정. null이면 격자 밖으로 처리(빠짐).</summary>
-    public void SetEnemyCell(GameObject enemy, Tile tile)
-    {
-        if (enemy != null) ApplyEnemyCell(enemy, tile);
-    }
 
     /// <summary>[자유 이동 적] 월드 위치를 보고받아 WorldToCell로 현재 칸을 역산해 갱신한다.</summary>
     public void MoveEnemy(GameObject enemy, Vector3 world)
@@ -395,12 +289,11 @@ public class MapBoard : MonoBehaviour
         _enemyCell.TryGetValue(enemy, out Tile prev);
         if (prev == now) return;
 
-        if (prev != null) { prev.RemoveEnemy(enemy); EnemyExited?.Invoke(prev); }
+        if (prev != null) { prev.RemoveEnemy(enemy); }
         if (now != null)
         {
             now.AddEnemy(enemy);
             _enemyCell[enemy] = now;
-            EnemyEntered?.Invoke(now);
         }
         else
         {
@@ -413,11 +306,9 @@ public class MapBoard : MonoBehaviour
     {
         if (enemy == null || !_enemyCell.TryGetValue(enemy, out Tile tile)) return;
         _enemyCell.Remove(enemy);
-        if (tile != null) { tile.RemoveEnemy(enemy); EnemyExited?.Invoke(tile); }
+        if (tile != null) { tile.RemoveEnemy(enemy); }
     }
 
-    /// <summary>해당 칸 위에 지금 있는 적들(읽기 전용). 타일이 없으면 빈 목록.</summary>
-    
     public bool IsBlocked(GameObject enemy)
         => enemy != null && _enemyCell.TryGetValue(enemy, out Tile tile) && tile.IsBlocked(enemy);
 
@@ -444,7 +335,7 @@ public class MapBoard : MonoBehaviour
             _rangeCoverByUnit[unit] = covered;
     }
 
-    public void ClearRangeCover(GameObject unit)
+    private void ClearRangeCover(GameObject unit)
     {
         if (unit == null || !_rangeCoverByUnit.TryGetValue(unit, out List<Tile> covered)) return;
 
@@ -454,9 +345,6 @@ public class MapBoard : MonoBehaviour
 
         _rangeCoverByUnit.Remove(unit);
     }
-
-    public bool IsRangeCovered(Vector2Int coord)
-        => _cells.TryGetValue(coord, out Tile tile) && tile.IsRangeCovered;
 
     // ---- 공간 질의 (상호작용 틀) ----
     // 맵은 "몇 칸 이내에 무엇이 있나"만 계산해 후보를 돌려준다. 타겟 선정·공격·데미지는 담당 몫.
@@ -468,9 +356,6 @@ public class MapBoard : MonoBehaviour
         Vector3Int cell = _grid.WorldToCell(world);
         return new Vector2Int(cell.x, cell.y);
     }
-
-    public static int TileDistance(Vector2Int fromCell, Vector2Int toCell)
-        => GridCalculator.GetDistance(fromCell, toCell);
 
     public List<Tile> GetTiles(Vector2Int origin, int range, bool square = false)
     {
