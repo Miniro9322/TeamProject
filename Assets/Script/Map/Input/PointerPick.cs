@@ -30,7 +30,7 @@ public class PointerPick
         }
 
         // 앵커와 스냅이 같은 광선에서 나와야 한다 — 따로 뽑으면 포인터가 움직인 만큼 어긋난다.
-        return AreaAnchor.Resolve(anchor, ray, size, anchor.Board.CellSize);
+        return AreaAnchor.Resolve(anchor, ray, size);
     }
 
     public Tile UnderPointer()   // 없으면 null

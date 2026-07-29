@@ -25,7 +25,7 @@ public class TilePaintView : MonoBehaviour
         {
             MapBoard board = module.GetComponent<MapBoard>();
             PaintPath(module.GetComponent<EnemyPathView>());
-            PaintState(board);
+            //PaintState(board);
         }
 
         PaintHover();
