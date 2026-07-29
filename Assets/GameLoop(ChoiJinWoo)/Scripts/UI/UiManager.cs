@@ -41,11 +41,19 @@ public class UiManager : MonoBehaviour
             {
                 CloseBuildingUi();
             }
+
+            if (MenuPanel.activeSelf)
+            {
+                MenuPanel.SetActive(false);
+            }
         }
 
         if (keyboard[MenuKey].wasPressedThisFrame)
         {
-            MenuPanel.SetActive(true);
+            if(MenuPanel.activeSelf)
+                MenuPanel.SetActive(false);
+            else
+                MenuPanel.SetActive(true);
         }
     }
 

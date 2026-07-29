@@ -8,14 +8,15 @@ public class FacilityManager
     private List<(ProductionType Type, int Amount)> products = new();
 
     private ResourcesManager resourcesManager;
-    private BuildingPool objectPool;
-
+    private EnviromentManager enviromentManager;
     [Inject]
-    private void Construct(ResourcesManager resourcesManager, BuildingPool objectPool)
+    private void Construct(ResourcesManager resourcesManager, EnviromentManager enviromentManager)
     {
         this.resourcesManager = resourcesManager;
-        this.objectPool = objectPool;
-    }
+        this.enviromentManager = enviromentManager;
+
+        enviromentManager.OnDay += SumProduct;
+    }   
 
     public void AddFacility(ProductionFacility facility)
     {

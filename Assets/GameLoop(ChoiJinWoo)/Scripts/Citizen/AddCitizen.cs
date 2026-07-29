@@ -13,6 +13,7 @@ public class AddCitizen : MonoBehaviour
     [SerializeField] private TextMeshProUGUI costText;
     [SerializeField] private int costAmount;
     [SerializeField] private Key closeKey = Key.Escape;
+    [SerializeField] private RectTransform openButtonRect; // 이 패널을 여닫는 토글 버튼 — 바깥 클릭 판정에서 제외
     private int amount = 0;
     private Keyboard keyboard;
     private Mouse mouse;
@@ -57,8 +58,14 @@ public class AddCitizen : MonoBehaviour
 
         if (Time.frameCount == openedFrame) return; // 패널이 열린 바로 그 프레임의 클릭은 무시
 
-        if (mouse.leftButton.wasPressedThisFrame &&
-            !RectTransformUtility.RectangleContainsScreenPoint(rectTransform, mouse.position.ReadValue(), null))
+        if (!mouse.leftButton.wasPressedThisFrame) return;
+
+        var point = mouse.position.ReadValue();
+        bool insidePanel = RectTransformUtility.RectangleContainsScreenPoint(rectTransform, point, null);
+        bool onOpenButton = openButtonRect != null &&
+            RectTransformUtility.RectangleContainsScreenPoint(openButtonRect, point, null);
+
+        if (!insidePanel && !onOpenButton)
         {
             gameObject.SetActive(false);
         }

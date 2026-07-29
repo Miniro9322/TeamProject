@@ -14,7 +14,6 @@ public class GameManager : MonoBehaviour
     private IState gameover;
 
     private bool canBuild = true;
-    private FacilityManager facilityManager;
     private UiManager uiManager;
     public UiManager UiManager => uiManager;
     private SpawnerManager waveSpawner;
@@ -38,9 +37,8 @@ public class GameManager : MonoBehaviour
     public bool isGameOver = false;
 
     [Inject]
-    private void Construct(FacilityManager facilityManager, UiManager uiManager, SpawnerManager waveSpawner)
+    private void Construct(UiManager uiManager, SpawnerManager waveSpawner)
     {
-        this.facilityManager = facilityManager;
         this.uiManager = uiManager;
         this.waveSpawner = waveSpawner;
         unlockedHero = (byte)initialUnlockedHero;
@@ -50,7 +48,7 @@ public class GameManager : MonoBehaviour
 
     private void Start()
     {
-        day = new DayState(this, facilityManager);
+        day = new DayState(this);
         night = new NightState(this);
         result = new ResultState(this, uiManager);
         gameover = new GameOverState(this);
