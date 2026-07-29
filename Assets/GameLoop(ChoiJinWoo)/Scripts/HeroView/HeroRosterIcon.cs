@@ -1,4 +1,5 @@
 using System;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -7,7 +8,9 @@ public class HeroRosterIcon : MonoBehaviour
 {
     [SerializeField] private Image icon;
     [SerializeField] private Button button;
-
+    [SerializeField] private TextMeshProUGUI statLevelText;
+    [SerializeField] private TextMeshProUGUI skillLevelText;
+    
     private HeroRosterEntry entry;
     private Action<HeroRosterEntry, HeroRosterIcon> onClick;
 
@@ -20,5 +23,11 @@ public class HeroRosterIcon : MonoBehaviour
 
         button.onClick.RemoveAllListeners();
         button.onClick.AddListener(() => this.onClick?.Invoke(this.entry, this));
+    }
+
+    public void UpdateLevel(Hero hero)
+    {
+        statLevelText.text = $"LV.{hero.StatLevel}";
+        skillLevelText.text = $"LV.{hero.SkillLevel}";
     }
 }

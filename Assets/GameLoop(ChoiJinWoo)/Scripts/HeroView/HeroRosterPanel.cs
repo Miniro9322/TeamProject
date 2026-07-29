@@ -22,6 +22,7 @@ public class HeroRosterPanel : MonoBehaviour, IBeginDragHandler, IScrollHandler
     private void OnDisable()
     {
         game.HeroRoster.Changed -= Refresh;
+        currentObject = null;
     }
 
     private void Refresh()
@@ -35,6 +36,9 @@ public class HeroRosterPanel : MonoBehaviour, IBeginDragHandler, IScrollHandler
         {
             HeroRosterIcon icon = Instantiate(iconPrefab, container);
             icon.Set(entry, OnIconClicked);
+            if (entry.PlacedUnit != null)
+                if (entry.PlacedUnit.GetComponent<Hero>() is Hero hero)
+                    icon.UpdateLevel(hero);
         }
     }
 
@@ -49,7 +53,7 @@ public class HeroRosterPanel : MonoBehaviour, IBeginDragHandler, IScrollHandler
                 currentObject = entry.PlacedUnit;
                 heroUpgradePanel.gameObject.SetActive(true);
                 heroUpgradePanel.InitHeroInfo(entry.PlacedUnit.GetComponent<Hero>());
-                heroUpgradePanel.PositionAtIconY((RectTransform)icon.transform);
+                heroUpgradePanel.PositionAtIconY(icon);
             }
         }
         else

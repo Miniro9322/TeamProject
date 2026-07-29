@@ -10,10 +10,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 1577d3082264991468e072b86f5c0235, type: 3}
-  m_Name: DoubleSwordLevel1Upgrade
+  m_Name: HealerLevel2UpgradeData
   m_EditorClassIdentifier: Assembly-CSharp::HeroUpgradeData
   attackDatas:
-  - {fileID: 11400000, guid: 7feffc2da1392e148b31bc4a78d33132, type: 2}
-  selectors:
-  - {fileID: 11400000, guid: 61d85161af49fa346a09c0338565a9af, type: 2}
+  - {fileID: 11400000, guid: d3b7af6fa142d0d41955205316f469ff, type: 2}
+  selectors: []
   procs: []
+  costType: 00000000020000000300000004000000
+  costAmount: 3c0000003c0000003c0000003c000000
