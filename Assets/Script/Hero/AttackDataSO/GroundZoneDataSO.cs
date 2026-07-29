@@ -12,6 +12,8 @@ public class GroundZoneDataSO : ScriptableObject
     public float healPer = 0f;     // mode==Heal: 틱 1회당 힐량 = casterATK * healPer (범위 내 최저 체력 아군 1명)
     public float duration = 3f;    // 0 이하 = 오라 전용(소유자가 죽을 때까지 유지). 공격 트리거형 장판은 반드시 양수로 설정.
     public List<ZoneDebuffEffect> debuffs; // mode==Heal일 때는 미사용
+    public ParticleSystem landEffect;
+    public ParticleSystem hitEffect;
 }
 
 public enum GroundZoneMode { Damage, Heal }
