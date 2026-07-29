@@ -46,11 +46,26 @@ public static class TileActionPreview
 
     /// <summary>클릭하면 무엇이 되는지. turnOff는 Alt를 누르고 있는 상태(끄는 쪽으로 찍기).</summary>
     public static string Describe(Grid module, Vector2Int coord, Tile tile,
-        MapBrush brush, bool swap, TilePrefabSet prefabs, bool turnOff)
+        MapTool tool, MapBrush brush, TilePrefabSet prefabs, bool turnOff)
     {
+        if (tool == MapTool.Select)
+        {
+            return "계층에서 이 타일을 고릅니다 — 데이터는 바뀌지 않습니다";
+        }
+
+        if (tool == MapTool.Pick)
+        {
+            return $"이 칸의 {Word(tile.Terrain)}을(를) 팔레트로 가져옵니다";
+        }
+
+        if (tool == MapTool.Erase)
+        {
+            return EraseWord(module, coord);
+        }
+
         if (brush == MapBrush.None)
         {
-            return "읽기 전용 — 클릭해도 아무것도 바뀌지 않습니다";
+            return "팔레트에서 무엇을 칠할지 먼저 고르세요";
         }
 
         if (brush == MapBrush.Spawn)
@@ -64,16 +79,15 @@ public static class TileActionPreview
         }
 
         TerrainType want = TerrainOf(brush);
-        if (swap)
+        if (tool == MapTool.Swap)
         {
             GameObject prefab = prefabs != null ? prefabs.For(want) : null;
-            if (prefab != null)
+            if (prefab == null)
             {
-                return SwapWord(module, coord, want, prefab);
+                return $"{Word(want)} 슬롯이 비어 교체할 프리팹이 없습니다 ({SlotHint(prefabs)})";
             }
 
-            return $"{Word(tile.Terrain)} → {Word(want)} · 데이터만 " +
-                   $"(스왑 슬롯이 비어 큐브는 그대로 — {SlotHint(prefabs)})";
+            return SwapWord(module, coord, want, prefab);
         }
 
         if (tile.Terrain == want)
@@ -82,6 +96,24 @@ public static class TileActionPreview
         }
 
         return $"{Word(tile.Terrain)} → {Word(want)} · 데이터만 (큐브는 그대로라 겉모습이 어긋납니다)";
+    }
+
+    // 지우기는 제일 위 한 겹만 없앤다. 마지막 겹이면 그 칸에 타일이 아예 없어진다.
+    private static string EraseWord(Grid module, Vector2Int coord)
+    {
+        List<Tile> layers = TileSwap.Stack(module, coord);
+        if (layers.Count == 0)
+        {
+            return "타일이 없는 칸 — 지울 것이 없습니다";
+        }
+
+        Tile top = layers[layers.Count - 1];
+        if (layers.Count == 1)
+        {
+            return $"마지막 {Word(top.State.Terrain)} 한 겹을 지웁니다 — 이 칸에 타일이 없어집니다";
+        }
+
+        return $"{Word(top.State.Terrain)} 한 겹을 걷어냅니다 ({layers.Count}겹 → {layers.Count - 1}겹)";
     }
 
     // 스왑이 실제로 할 일. TileSwap.Apply의 분기와 같은 순서로 판단한다.

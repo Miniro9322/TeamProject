@@ -32,7 +32,7 @@ public class MapMakerWindow : EditorWindow
     private int _cellPixels = 20;
     private bool _showProblems = true;
     private bool _showInert;
-    private bool _swap;
+    private MapTool _tool = MapTool.Select;
     private TilePrefabSet _prefabs;
     private readonly HashSet<Vector2Int> _swapped = new();
     private int _strokeGroup;
@@ -218,9 +218,33 @@ public class MapMakerWindow : EditorWindow
             _showInert = GUILayout.Toggle(
                 _showInert, "무효", EditorStyles.toolbarButton, GUILayout.Width(40));
 
-            // 켜면 지형 붓이 State만 바꾸는 대신 그 칸 타일을 지형 프리팹으로 실제 교체한다.
-            _swap = GUILayout.Toggle(
-                _swap, "스왑", EditorStyles.toolbarButton, GUILayout.Width(40));
+        }
+
+        DrawToolRow();
+    }
+
+    // 도구 줄. 팔레트(무엇을)와 도구(어떻게)를 나눠, 같은 클릭이 상황마다 다른 뜻이 되지 않게 한다.
+    private void DrawToolRow()
+    {
+        using (new EditorGUILayout.HorizontalScope())
+        {
+            ToolButton(MapTool.Select);
+            ToolButton(MapTool.Paint);
+            ToolButton(MapTool.Swap);
+            ToolButton(MapTool.Erase);
+            ToolButton(MapTool.Pick);
+            GUILayout.FlexibleSpace();
+        }
+    }
+
+    private void ToolButton(MapTool tool)
+    {
+        bool pressed = GUILayout.Toggle(
+            _tool == tool, MapToolWord.Name(tool), EditorStyles.miniButton, GUILayout.Width(58));
+
+        if (pressed)
+        {
+            _tool = tool;
         }
     }
 
@@ -239,10 +263,10 @@ public class MapMakerWindow : EditorWindow
         }
     }
 
-    // 스왑이 켜졌는데 매핑 에셋(TilePrefabSet)이 없으면 여기서 바로 만들 수 있게 안내한다.
+    // 교체 도구를 골랐는데 매핑 에셋(TilePrefabSet)이 없으면 여기서 바로 만들 수 있게 안내한다.
     private void DrawSwapNotice()
     {
-        if (!_swap)
+        if (_tool != MapTool.Swap)
         {
             return;
         }
@@ -256,7 +280,7 @@ public class MapMakerWindow : EditorWindow
         using (new EditorGUILayout.HorizontalScope(EditorStyles.helpBox))
         {
             GUILayout.Label(
-                "스왑하려면 지형→프리팹 매핑(TilePrefabSet)이 필요합니다.", EditorStyles.miniLabel);
+                "교체하려면 지형→프리팹 매핑(TilePrefabSet)이 필요합니다.", EditorStyles.miniLabel);
             GUILayout.FlexibleSpace();
             if (GUILayout.Button("기본 세트 만들기", EditorStyles.miniButton, GUILayout.Width(100)))
             {
@@ -423,12 +447,12 @@ public class MapMakerWindow : EditorWindow
         bool turnOff = Event.current.alt;
 
         string action = TileActionPreview.Describe(
-            module, _hover, tile, _brush, _swap, _prefabs, turnOff);
+            module, _hover, tile, _tool, _brush, _prefabs, turnOff);
         string stack = TileActionPreview.DescribeStack(module, _hover);
 
         using (new EditorGUILayout.HorizontalScope(EditorStyles.helpBox))
         {
-            GUILayout.Label(_swap ? "스왑 ▶" : "클릭 ▶", EditorStyles.miniBoldLabel, GUILayout.Width(46));
+            GUILayout.Label($"{MapToolWord.Name(_tool)} ▶", EditorStyles.miniBoldLabel, GUILayout.Width(52));
             GUILayout.Label(action, EditorStyles.miniBoldLabel);
             GUILayout.FlexibleSpace();
             GUILayout.Label($"지금 {stack}", EditorStyles.miniLabel);
@@ -582,9 +606,9 @@ public class MapMakerWindow : EditorWindow
     // 누른 순간 되돌리기 그룹을 열고, 끄는 동안 지나간 칸을 찍고, 뗄 때 한 단계로 접는다.
     private void HandleStroke(Rect area, TileGridView view, Dictionary<Vector2Int, Tile> cells)
     {
-        if (_brush == MapBrush.None)
+        if (MapToolWord.Writes(_tool) && _brush == MapBrush.None && _tool != MapTool.Erase)
         {
-            return; // 읽기 전용 모드 — 입력을 아예 받지 않는다
+            return; // 칠할 것을 안 골랐다 — 지우기는 팔레트가 필요 없어 예외다
         }
 
         Event input = Event.current;
@@ -623,32 +647,83 @@ public class MapMakerWindow : EditorWindow
         bool exists = cells.TryGetValue(coord, out Tile tile);
         if (!exists)
         {
-            return; // 격자 밖이거나 타일이 없는 칸 — 1단계에서는 칸을 만들지 않는다
+            return; // 격자 밖이거나 타일이 없는 칸 — 아직 없는 칸을 새로 만들지는 않는다
         }
 
-        if (TrySwap(coord, cells))
+        _hover = coord;
+
+        switch (_tool)
+        {
+            case MapTool.Select:
+                Selection.activeGameObject = tile.gameObject;
+                EditorGUIUtility.PingObject(tile.gameObject);
+                break;
+
+            case MapTool.Pick:
+                _brush = BrushOf(tile.Terrain);
+                break;
+
+            case MapTool.Erase:
+                Wipe(coord, cells);
+                break;
+
+            case MapTool.Swap:
+                TrySwap(coord, cells);
+                break;
+
+            default:
+                TileStamp.Stamp(tile, _brush, !turnOff);
+                break;
+        }
+
+        Repaint(); // 경로가 바로 다시 계산돼 보이도록
+    }
+
+    // 제일 위 한 겹을 지운다. 한 붓질에 같은 칸을 두 번 지우지 않는다 —
+    // 드래그로 지나가기만 해도 겹이 우수수 사라지면 되돌리기 전엔 알아채기 어렵다.
+    private void Wipe(Vector2Int coord, Dictionary<Vector2Int, Tile> cells)
+    {
+        if (!_swapped.Add(coord))
         {
             return;
         }
 
-        TileStamp.Stamp(tile, _brush, !turnOff);
-        _hover = coord;
-        Repaint(); // 경로가 바로 다시 계산돼 보이도록
-    }
-
-    // 스왑이 켜졌고 이 붓이 프리팹을 가진 지형이면 타일 실물을 갈아끼운다.
-    // 한 붓질에 같은 칸을 두 번 스왑하지 않는다 — 드래그 이벤트마다 교체하면 GameObject가 우수수 생겼다 사라진다.
-    private bool TrySwap(Vector2Int coord, Dictionary<Vector2Int, Tile> cells)
-    {
-        if (!_swap)
+        Tile left = TileSwap.Erase(_modules[_moduleIndex], coord);
+        if (left != null)
         {
-            return false;
+            cells[coord] = left;
+        }
+        else
+        {
+            cells.Remove(coord); // 마지막 겹까지 지웠다 — 그 칸은 이제 타일이 없다
         }
 
+        SceneView.RepaintAll();
+    }
+
+    // 스포이드가 집어 온 지형에 맞는 팔레트.
+    private static MapBrush BrushOf(TerrainType terrain)
+    {
+        switch (terrain)
+        {
+            case TerrainType.High: return MapBrush.High;
+            case TerrainType.Core: return MapBrush.Core;
+            case TerrainType.Special: return MapBrush.Special;
+            case TerrainType.Empty: return MapBrush.Empty;
+            default: return MapBrush.Ground;
+        }
+    }
+
+    // 이 칸의 타일 실물을 팔레트 지형의 프리팹으로 갈아끼운다.
+    // 한 붓질에 같은 칸을 두 번 교체하지 않는다 — 드래그 이벤트마다 갈면 GameObject가 우수수 생겼다 사라진다.
+    private bool TrySwap(Vector2Int coord, Dictionary<Vector2Int, Tile> cells)
+    {
         TerrainType terrain = TileActionPreview.TerrainOf(_brush);
         if (!IsTerrainBrush(_brush))
         {
-            return false; // 스폰·배치 허용 붓은 실물과 무관하다 → 데이터 칠로 넘어간다
+            // 스폰·배치 허용은 같은 큐브 위의 데이터라 바꿀 실물이 없다.
+            Debug.LogWarning("[Map Maker] 교체는 지형 팔레트에만 씁니다 — 스폰·배치 허용은 칠하기로 바꾸세요.");
+            return true;
         }
 
         // 매핑이 아직 없으면 여기서 만든다. 조용히 데이터 칠로 떨어지면

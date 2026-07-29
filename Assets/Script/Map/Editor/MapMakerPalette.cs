@@ -42,6 +42,9 @@ public static class MapMakerPalette
     /// <summary>배치 허용이 켜졌지만 효과 없는(무효 조합) 칸 표식 — 주황.</summary>
     public static readonly Color Inert = new(0.960f, 0.510f, 0.129f);
 
+    /// <summary>칸 글자(P·G·H·B) — 지형색 위에서 읽히도록 거의 흰색으로 둔다.</summary>
+    public static readonly Color Letter = new(0.945f, 0.945f, 0.945f);
+
     /// <summary>지형별 바탕색.</summary>
     public static Color Terrain(TerrainType terrain)
     {
