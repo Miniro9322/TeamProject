@@ -20,9 +20,9 @@ public class HeroInfoUI : MonoBehaviour
         sb.Append($"영웅 이름\n영웅 설명\n공격력: {temp.StatData.attackPower} 방어력: {temp.StatData.defence} 체력: {temp.StatData.maxHp}\n사거리: {temp.Range} 인구 수: {temp.CitizenAmount}\n소모 자원\n");
         foreach(var item in temp.Cost)
         {
-            sb.Append($"{item.Key} : {-item.Value} ");
+            sb.Append($"{item.Type} : {-item.Amount} ");
         }
-        if(temp.Cost.Count == 0)
+        if(temp.Cost.Length == 0)
         {
             sb.Append("소모 자원 없음");
         }

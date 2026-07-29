@@ -9,12 +9,15 @@ public class BuildModePanel : MonoBehaviour
     [SerializeField] private GameObject rosterPanel;
     [SerializeField] private MapView view;
     [SerializeField] private MapGame game;
+    [SerializeField] private Key closeKey = Key.Escape;
+    private Keyboard keyboard;
 
     private void Awake()
     {
         facilityPanel.SetActive(false);
         heroPanel.SetActive(false);
         rosterPanel.SetActive(false);
+        keyboard = Keyboard.current;
     }
 
     private void Start()
@@ -31,15 +34,8 @@ public class BuildModePanel : MonoBehaviour
 
     private void Update()
     {
-        if (Mouse.current.rightButton.wasPressedThisFrame)
-        {
-            if (!view.IsOff)
-            {
-                view.ClearMode();
-            }
-        }
-
-        if (!Keyboard.current.escapeKey.wasPressedThisFrame) return;
+        if (keyboard == null) return;
+        if (!keyboard[closeKey].wasPressedThisFrame) return;
 
         if (!view.IsOff)
         {
@@ -73,21 +69,27 @@ public class BuildModePanel : MonoBehaviour
 
     public void OnFacilityButton()
     {
-        if (heroPanel.activeSelf == true)
+        if (heroPanel.activeSelf)
             heroPanel.SetActive(false);
-        facilityPanel.SetActive(true);
+        if (facilityPanel.activeSelf)
+            facilityPanel.SetActive(false);
+        else
+            facilityPanel.SetActive(true);
     }
 
     public void OnHeroButton()
     {
-        if (facilityPanel.activeSelf == true)
+        if (facilityPanel.activeSelf)
             facilityPanel.SetActive(false);
-        heroPanel.SetActive(true);
+        if (heroPanel.activeSelf)
+            heroPanel.SetActive(false);
+        else
+            heroPanel.SetActive(true);
     }
 
     public void OnRosterButton()
     {
-        if(rosterPanel.activeSelf == true)
+        if(rosterPanel.activeSelf)
             rosterPanel.SetActive(false);
         else
             rosterPanel.SetActive(true);
@@ -95,9 +97,9 @@ public class BuildModePanel : MonoBehaviour
 
     public void OnRemoveButton()
     {
-        if (facilityPanel.activeSelf == true)
+        if (facilityPanel.activeSelf)
             facilityPanel.SetActive(false);
-        if (heroPanel.activeSelf == true)
+        if (heroPanel.activeSelf)
             heroPanel.SetActive(false);
         view.SetRemove();
     }

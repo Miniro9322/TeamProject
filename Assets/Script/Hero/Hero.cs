@@ -9,58 +9,42 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
 {
     [Header("유닛 생성 비용")]
     [SerializeField] private int citizenAmount = 2;
-    [SerializeField] private List<ProductionType> costType;
-    [SerializeField] private List<int> costAmount;
+    [SerializeField] private List<ResourceCost> cost;
 
-    [SerializeField] private List<ProductionType> statUpgradeCostType;
-    [SerializeField] private List<int> statUpgradeCostAmount;
+    [SerializeField] private List<ResourceCost> statUpgradeCost;
     [SerializeField] private List<HeroUpgradeData> upgradeDatas;
     private int skillLevel = 0;
     private int statLevel = 0;
     public int SkillLevel => skillLevel;
     public int StatLevel => statLevel;
 
-    public Dictionary<ProductionType, int> Cost
+    public (ProductionType Type, int Amount)[] Cost
     {
         get
         {
-            if (costType.Count != costAmount.Count)
-            {
-                return null;
-            }
-            else
-            {
-                Dictionary<ProductionType, int> temp = new();
+            var temp = new (ProductionType, int)[cost.Count];
 
-                for (int i = 0; i < costType.Count; i++)
-                {
-                    temp[costType[i]] = -costAmount[i];
-                }
-
-                return temp;
+            for (int i = 0; i < cost.Count; i++)
+            {
+                temp[i] = (cost[i].Type, -cost[i].Amount);
             }
+
+            return temp;
         }
     }
 
-    public Dictionary<ProductionType, int> StatUpgradeCost
+    public (ProductionType Type, int Amount)[] StatUpgradeCost
     {
         get
         {
-            if (statUpgradeCostType.Count != statUpgradeCostAmount.Count)
-            {
-                return null;
-            }
-            else
-            {
-                Dictionary<ProductionType, int> temp = new();
+            var temp = new (ProductionType, int)[statUpgradeCost.Count];
 
-                for (int i = 0; i < statUpgradeCostType.Count; i++)
-                {
-                    temp[statUpgradeCostType[i]] = -(statUpgradeCostAmount[i] + statUpgradeCostAmount[i] * statLevel);
-                }
-
-                return temp;
+            for (int i = 0; i < statUpgradeCost.Count; i++)
+            {
+                temp[i] = (statUpgradeCost[i].Type, -(statUpgradeCost[i].Amount + statUpgradeCost[i].Amount * statLevel));
             }
+
+            return temp;
         }
     }
 

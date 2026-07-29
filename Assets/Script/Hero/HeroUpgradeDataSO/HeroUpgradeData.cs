@@ -8,28 +8,20 @@ public class HeroUpgradeData : ScriptableObject
     public List<AttackSelectorSO> selectors;
     public List<AttackProcSO> procs;
 
-    [SerializeField] private List<ProductionType> costType;
-    [SerializeField] private List<int> costAmount;
+    [SerializeField] private List<ResourceCost> cost;
 
-    public Dictionary<ProductionType, int> Cost
+    public (ProductionType Type, int Amount)[] Cost
     {
         get
         {
-            if (costType.Count != costAmount.Count)
-            {
-                return null;
-            }
-            else
-            {
-                Dictionary<ProductionType, int> temp = new();
+            var temp = new (ProductionType, int)[cost.Count];
 
-                for (int i = 0; i < costType.Count; i++)
-                {
-                    temp[costType[i]] = -costAmount[i];
-                }
-
-                return temp;
+            for (int i = 0; i < cost.Count; i++)
+            {
+                temp[i] = (cost[i].Type, -cost[i].Amount);
             }
+
+            return temp;
         }
     }
 
