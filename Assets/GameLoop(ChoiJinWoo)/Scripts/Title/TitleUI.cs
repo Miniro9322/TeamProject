@@ -12,6 +12,7 @@ public class TitleUI : MonoBehaviour
     {
         ApplyResolution();
         ApplyVolume();
+        settingPanel.SetActive(false);
     }
 
     private void ApplyResolution()
@@ -19,6 +20,10 @@ public class TitleUI : MonoBehaviour
         int width = PlayerPrefs.GetInt("ResWidth", Screen.currentResolution.width);
         int height = PlayerPrefs.GetInt("ResHeight", Screen.currentResolution.height);
         var mode = (FullScreenMode)PlayerPrefs.GetInt("ScreenMode", (int)FullScreenMode.FullScreenWindow);
+
+        if (Screen.width == width && Screen.height == height && Screen.fullScreenMode == mode)
+            return;
+
         Screen.SetResolution(width, height, mode);
     }
 
@@ -28,14 +33,11 @@ public class TitleUI : MonoBehaviour
         mixer.SetFloat("BgmVolume", PlayerPrefs.GetFloat("BgmVolume", 0f));
         mixer.SetFloat("SfxVolume", PlayerPrefs.GetFloat("SfxVolume", 0f));
         mixer.SetFloat("System", PlayerPrefs.GetFloat("System", 0f));
-
-        if(mixer.GetFloat("MasterVolume", out float value))
-            Debug.Log(value);
     }
 
     public void OnStart()
     {
-        SceneManager.LoadScene("Map_Test5");
+        SceneManager.LoadScene("MainScene");
     }
 
     public void OnUpgrade()
