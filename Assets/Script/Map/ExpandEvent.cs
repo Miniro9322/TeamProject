@@ -42,7 +42,7 @@ public class ExpandEvent : MonoBehaviour
         //
         // // 이동한 위치를 반영: 보드부터 다시 지어야 WorldBounds가 새 위치를 가리킨다(Fog는 실시간이라 안 해도 되지만, 카메라 제한은 캐시라 필요).
         // MapBoard board = module.GetComponent<MapBoard>();
-        // if (board != null) board.Build();
+        // board.Build();
         //
         // fogController.RefreshArea(module); // 이동한 위치로 안개 영역 재계산
         // if (cameraRig != null) cameraRig.RebuildLimit(); // 이동한 위치로 카메라 팬 제한 재계산

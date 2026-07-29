@@ -24,11 +24,6 @@ public class TilePaintView : MonoBehaviour
         foreach (ModuleLogic module in registry.AllModules.Values)
         {
             MapBoard board = module.GetComponent<MapBoard>();
-            if (board == null)
-            {
-                continue;
-            }
-
             PaintPath(module.GetComponent<EnemyPathView>());
             PaintState(board);
         }
@@ -80,17 +75,19 @@ public class TilePaintView : MonoBehaviour
             return;
         }
 
+        if (game.IsPlacing)
+        {
+            PaintPlace(game.HoverArea);
+            return;
+        }
+
         Tile tile = game.HoverTile;
         if (tile == null)
         {
             return;
         }
 
-        if (game.IsPlacing)
-        {
-            PaintPlace(tile);
-        }
-        else if (tile.OccupantObject != null)
+        if (tile.OccupantObject != null)
         {
             int range = game.UnitRange(tile.OccupantObject);
             if (range >= 0)
@@ -100,22 +97,25 @@ public class TilePaintView : MonoBehaviour
         }
     }
 
-    private void PaintPlace(Tile tile)
+    private void PaintPlace(PlacementArea area)
     {
-        OccupantKind kind = game.PlacingKind;
-        if (kind == OccupantKind.MeleeHero || kind == OccupantKind.RangedHero)
+        if (area == null)
         {
-            //PaintRange(tile, game.PlacingRange);
+            return;
         }
 
-        // 호버된 타일이 속한 모듈 보드 기준으로 판정한다(어느 모듈이든 프리뷰가 맞게 뜬다).
-        if (tile.Board.CanPlace(tile.Coord, kind))
+        OccupantKind kind = game.PlacingKind;
+
+        // 한 칸이라도 막히면 덮는 칸 전체를 거부색으로 칠한다(부분 배치가 없으므로 색도 부분이면 안 된다).
+        // 판정은 자리가 속한 모듈 보드 기준이라 어느 모듈에서든 프리뷰가 맞게 뜬다.
+        Color color = AreaPlace.CanPlace(area, kind) ? painter.okColor : painter.denyColor;
+
+        foreach (Vector2Int cell in area.Cells)
         {
-            Paint(tile, painter.okColor);
-        }
-        else
-        {
-            Paint(tile, painter.denyColor);
+            if (area.Board.TryGetCell(cell, out Tile tile))
+            {
+                Paint(tile, color);
+            }
         }
     }
 

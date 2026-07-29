@@ -7,6 +7,7 @@ using UnityEngine.SceneManagement;
 public class TitleUI : MonoBehaviour
 {
     [SerializeField] private GameObject settingPanel;
+    [SerializeField] private GameObject QuitAlert;
     [SerializeField] private AudioMixer mixer;
 
     private void Awake()
@@ -14,6 +15,7 @@ public class TitleUI : MonoBehaviour
         ApplyResolution().Forget();
         ApplyVolume();
         settingPanel.SetActive(false);
+        QuitAlert.SetActive(false);
     }
 
     private async UniTaskVoid ApplyResolution()
@@ -51,6 +53,16 @@ public class TitleUI : MonoBehaviour
     public void OnSetting()
     {
         settingPanel.SetActive(true);
+    }
+
+    public void OnQuitAlert()
+    {
+        QuitAlert.SetActive(true);
+    }
+
+    public void OnCancel()
+    {
+        QuitAlert.SetActive(false);
     }
 
     public void OnQuit()

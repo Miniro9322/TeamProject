@@ -5,6 +5,7 @@ public class PlaceAction
 {
     // MapCommand가 조립할 때 넣어준다
     public PlacePalette palette;
+    public PointerPick pointerPick;
     public UnitPlacer placer;
     public UnitRemover remover;
     public UnitReplace replace;
@@ -23,10 +24,14 @@ public class PlaceAction
         if (!palette.TryCurrentSlot(out Placeable slot)) return;   // 슬롯 없으면 중단(검사 게이트)
         HeroRosterEntry entry = palette.CurrentRuntimeEntry;       // 배치 전에 미리 캡처(성공 후 모드가 바뀔 수 있음)
         if (entry != null && entry.State == HeroRosterState.Placed) return; // 이미 배치된 엔트리(개체 하나뿐) 중복 배치 방지
-        if (!tile.Board.CanPlace(tile.Coord, slot.kind)) return; // 배치 불가면 중단(클릭된 타일이 속한 모듈 보드 기준)
+
+        // 배치물이 차지하는 칸만큼 덮는 자리를 구한다(1칸짜리는 클릭한 칸 그대로).
+        PlacementArea area = pointerPick.GetArea(view.PlacingSize);
+        if (area == null) return;
+        if (!AreaPlace.CanPlace(area, slot.kind)) return; // 한 칸이라도 막히면 중단
         if (!buildingUi.CanBuild()) { Debug.Log("밤에는 배치할 수 없습니다."); return; } // 테스트용
 
-        if (placer.TryPlace(tile, slot, placeYOffset, out GameObject placedUnit))
+        if (placer.TryPlace(area, slot, placeYOffset, out GameObject placedUnit))
         {
             if (entry != null)
             {
@@ -51,9 +56,12 @@ public class PlaceAction
         view.Select(tile);
     }
 
-    public void Drop(Tile tile)
+    public void Drop(PlacementArea area)
     {
-        if (replace.TryDrop(tile, placeYOffset)) view.Select(tile);
+        if (!replace.TryDrop(area, placeYOffset)) return;
+
+        // 선택 표시는 칸 하나에 붙으므로 덮은 칸 중 시작 칸을 대표로 쓴다.
+        if (area.Board.TryGetCell(area.Origin, out Tile tile)) view.Select(tile);
     }
 
     public void ClearAllPlacedUnit()

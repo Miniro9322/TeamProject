@@ -1,11 +1,9 @@
 using System;
-using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
-using VContainer;
 
 public class UiManager : MonoBehaviour
 {
@@ -13,11 +11,14 @@ public class UiManager : MonoBehaviour
     [SerializeField] private RequestSupportUi requestSupportUi;
     [SerializeField] private GameObject GamaOverUi;
     [SerializeField] private GameObject GameSpeedUi;
+    [SerializeField] private GameObject MenuPanel;
+    [SerializeField] private Key MenuKey = Key.T;
     public bool BuildingUiOpen => buildingUi.gameObject.activeSelf;
     public byte UnlockedHero;
     public byte UnlockedEnemy;
 
     public event Action UnlockChanged;
+    private Keyboard keyboard;
 
     private void Awake()
     {
@@ -25,17 +26,26 @@ public class UiManager : MonoBehaviour
         requestSupportUi.gameObject.SetActive(false);
         GamaOverUi.SetActive(false);
         GameSpeedUi.SetActive(false);
+        MenuPanel.SetActive(false);
         requestSupportUi.OnUnlock += UpdateUnlock;
+        keyboard = Keyboard.current;
     }
 
     private void Update()
     {
-        if (Keyboard.current.escapeKey.wasPressedThisFrame)
+        if (keyboard == null) return;
+
+        if (keyboard.escapeKey.wasPressedThisFrame)
         {
             if (buildingUi.gameObject.activeSelf)
             {
                 CloseBuildingUi();
             }
+        }
+
+        if (keyboard[MenuKey].wasPressedThisFrame)
+        {
+            MenuPanel.SetActive(true);
         }
     }
 
