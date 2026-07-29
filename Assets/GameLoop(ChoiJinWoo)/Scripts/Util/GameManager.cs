@@ -16,6 +16,7 @@ public class GameManager : MonoBehaviour
     private bool canBuild = true;
     private FacilityManager facilityManager;
     private UiManager uiManager;
+    public UiManager UiManager => uiManager;
     private SpawnerManager waveSpawner;
     private int dayCount = 0;
     [SerializeField] private int hp = 20;

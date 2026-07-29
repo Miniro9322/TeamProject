@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -13,7 +12,12 @@ public class AddCitizen : MonoBehaviour
     [SerializeField] private TMP_InputField amountInput;
     [SerializeField] private TextMeshProUGUI costText;
     [SerializeField] private int costAmount;
+    [SerializeField] private Key closeKey = Key.Escape;
     private int amount = 0;
+    private Keyboard keyboard;
+    private Mouse mouse;
+    private RectTransform rectTransform;
+    private int openedFrame;
 
     [Inject]
     private void Construct(CitizenManager citizenManager, ResourcesManager resourcesManager)
@@ -22,16 +26,39 @@ public class AddCitizen : MonoBehaviour
         this.resourcesManager = resourcesManager;
     }
 
+    private void Awake()
+    {
+        rectTransform = (RectTransform)transform;
+    }
+
     public void OpenPanel()
     {
-        gameObject.SetActive(true);
-        amount = 0;
-        UpdatePanel();
+        if(gameObject.activeSelf)
+            gameObject.SetActive(false);
+        else
+        {
+            gameObject.SetActive(true);
+            keyboard = Keyboard.current;
+            mouse = Mouse.current;
+            openedFrame = Time.frameCount;
+            amount = 0;
+            UpdatePanel();
+        }
     }
 
     private void Update()
     {
-        if (Keyboard.current.escapeKey.wasPressedThisFrame || Mouse.current.rightButton.wasPressedThisFrame)
+        if (keyboard == null || mouse == null) return;
+        if (keyboard[closeKey].wasPressedThisFrame || mouse.rightButton.wasPressedThisFrame)
+        {
+            gameObject.SetActive(false);
+            return;
+        }
+
+        if (Time.frameCount == openedFrame) return; // 패널이 열린 바로 그 프레임의 클릭은 무시
+
+        if (mouse.leftButton.wasPressedThisFrame &&
+            !RectTransformUtility.RectangleContainsScreenPoint(rectTransform, mouse.position.ReadValue(), null))
         {
             gameObject.SetActive(false);
         }
@@ -39,10 +66,7 @@ public class AddCitizen : MonoBehaviour
 
     private void UpdatePanel()
     {
-        var cost = new Dictionary<ProductionType, int>()
-        {
-            {ProductionType.Food, amount * -costAmount }
-        };
+        var cost = new (ProductionType Type, int Amount)[] { (ProductionType.Food, amount * -costAmount) };
         amountInput.text = $"{amount}";
         costText.text = $"자원 소모: {ProductionType.Food} {amount * costAmount}";
         costText.color = resourcesManager.CheckResources(cost) ? Color.white : Color.red;
@@ -91,10 +115,7 @@ public class AddCitizen : MonoBehaviour
 
     public void CreateCitizen()
     {
-        var cost = new Dictionary<ProductionType, int>()
-        {
-            {ProductionType.Food, amount * -costAmount }
-        };
+        var cost = new (ProductionType Type, int Amount)[] { (ProductionType.Food, amount * -costAmount) };
 
         if (citizenManager.CheckCanIncreaseCitizen(amount) && resourcesManager.CheckResources(cost))
         {

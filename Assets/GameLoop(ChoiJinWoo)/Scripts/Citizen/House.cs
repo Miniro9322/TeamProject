@@ -6,10 +6,8 @@ using VContainer;
 public class House : MonoBehaviour, IPlaceAble
 {
     [SerializeField] private int maxCitizenAmount;
-    [Header("건설에 필요한 자원 종류")]
-    [SerializeField] private List<ProductionType> products;
-    [Header("건설에 필요한 자원량")]
-    [SerializeField] private List<int> amount;
+    [Header("건설에 필요한 자원")]
+    [SerializeField] private List<ResourceCost> cost;
     [Header("건물 이름")]
     [SerializeField] private string houseName;
     [Header("건물 설명")]
@@ -17,26 +15,18 @@ public class House : MonoBehaviour, IPlaceAble
     private CitizenManager manager;
     private ResourcesManager resourcesManager;
     private MapBoard board;
-    public Dictionary<ProductionType, int> Resources
+    public (ProductionType Type, int Amount)[] Resources
     {
         get
         {
-            if(products.Count != amount.Count)
-            {
-                Debug.LogError("자원 종류와 자원량이 매치되지 않습니다.");
-                return null;
-            }
-            else
-            {
-                var temp = new Dictionary<ProductionType, int>();
+            var temp = new (ProductionType, int)[cost.Count];
 
-                for (int i = 0; i < products.Count; i++)
-                {
-                    temp[products[i]] = -amount[i];
-                }
-
-                return temp;
+            for (int i = 0; i < cost.Count; i++)
+            {
+                temp[i] = (cost[i].Type, -cost[i].Amount);
             }
+
+            return temp;
         }
     }
 
@@ -49,10 +39,11 @@ public class House : MonoBehaviour, IPlaceAble
 
     public void OnDestroy()
     {
-        var refund = new Dictionary<ProductionType, int>();
-        foreach (var kv in Resources)
+        var resources = Resources;
+        var refund = new (ProductionType Type, int Amount)[resources.Length];
+        for (int i = 0; i < resources.Length; i++)
         {
-            refund[kv.Key] = -kv.Value;
+            refund[i] = (resources[i].Type, -resources[i].Amount);
         }
 
         resourcesManager.ProductChanged(refund);

@@ -1,3 +1,4 @@
+using Cysharp.Threading.Tasks;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Audio;
@@ -10,13 +11,15 @@ public class TitleUI : MonoBehaviour
 
     private void Awake()
     {
-        ApplyResolution();
+        ApplyResolution().Forget();
         ApplyVolume();
         settingPanel.SetActive(false);
     }
 
-    private void ApplyResolution()
+    private async UniTaskVoid ApplyResolution()
     {
+        await UniTask.Yield();
+
         int width = PlayerPrefs.GetInt("ResWidth", Screen.currentResolution.width);
         int height = PlayerPrefs.GetInt("ResHeight", Screen.currentResolution.height);
         var mode = (FullScreenMode)PlayerPrefs.GetInt("ScreenMode", (int)FullScreenMode.FullScreenWindow);

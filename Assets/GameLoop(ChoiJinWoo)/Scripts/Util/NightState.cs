@@ -5,6 +5,7 @@ using UnityEngine;
 public class NightState : IState
 {
     private GameManager gameManager;
+    
     public NightState(GameManager manager)
     {
         this.gameManager = manager;
@@ -28,6 +29,7 @@ public class NightState : IState
     private async UniTaskVoid Night()
     {
         await UniTask.WaitUntil(() => gameManager.CanSpawnEnemy);
+        gameManager.UiManager.ToggleGameSpeedUi(true);
         gameManager.SpawnEnemy();
     }
 }

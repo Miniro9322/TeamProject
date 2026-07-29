@@ -1,6 +1,7 @@
 using System.Text;
 using TMPro;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 public class BuildingPanel : MonoBehaviour
@@ -11,6 +12,29 @@ public class BuildingPanel : MonoBehaviour
     [SerializeField] private TextMeshProUGUI FacilityLevelText;
     [SerializeField] private Button upgradeButton;
     private ProductionFacility facility;
+    private RectTransform rectTransform;
+    private int openedFrame;
+
+    private void Awake()
+    {
+        rectTransform = (RectTransform)transform;
+    }
+
+    private void OnEnable()
+    {
+        openedFrame = Time.frameCount;
+    }
+
+    private void Update()
+    {
+        if (Time.frameCount == openedFrame) return; // 패널이 열린 바로 그 프레임의 클릭은 무시
+
+        if (Mouse.current.leftButton.wasPressedThisFrame &&
+            !RectTransformUtility.RectangleContainsScreenPoint(rectTransform, Mouse.current.position.ReadValue(), null))
+        {
+            gameObject.SetActive(false);
+        }
+    }
 
     public void OnMinusButton()
     {
@@ -30,13 +54,14 @@ public class BuildingPanel : MonoBehaviour
 
     private void UpdatePanel()
     {
+        if (workerText == null || perProductText == null || upgradeCostText == null || FacilityLevelText == null) return;
         workerText.text = $"{facility.WorkerAmount}/{facility.MaxWorker}";
         upgradeButton.interactable = facility.CheckCanUpgrade();
         perProductText.text = $"{facility.ProductionType} {facility.ProductAmount * facility.WorkerAmount}/day";
         var sb = new StringBuilder();
         foreach(var cost in facility.UpgradeCostCopy)
         {
-            sb.Append($"{cost.Key} : {-cost.Value}\n");
+            sb.Append($"{cost.Type} : {-cost.Amount}\n");
         }
         sb.Length--;
         upgradeCostText.text = sb.ToString();

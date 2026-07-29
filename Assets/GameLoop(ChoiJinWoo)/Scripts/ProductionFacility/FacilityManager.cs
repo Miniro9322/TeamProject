@@ -5,7 +5,7 @@ using VContainer;
 public class FacilityManager
 {
     private List<ProductionFacility> facilities = new();
-    private Dictionary<ProductionType, int> products = new();
+    private List<(ProductionType Type, int Amount)> products = new();
 
     private ResourcesManager resourcesManager;
     private BuildingPool objectPool;
@@ -34,17 +34,19 @@ public class FacilityManager
             var product = facility.ProduceProduction();
             if (product == default)
                 continue;
-            if(!products.ContainsKey(product.Item1))
+
+            int index = products.FindIndex(p => p.Type == product.Item1);
+            if (index < 0)
             {
-                products[product.Item1] = product.Item2;
+                products.Add((product.Item1, product.Item2));
             }
             else
             {
-                products[product.Item1] += product.Item2;
+                products[index] = (product.Item1, products[index].Amount + product.Item2);
             }
         }
 
-        resourcesManager.ProductChanged(products);
+        resourcesManager.ProductChanged(products.ToArray());
         products.Clear();
     }
 }

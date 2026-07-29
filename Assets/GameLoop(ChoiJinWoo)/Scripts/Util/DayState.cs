@@ -13,6 +13,7 @@ public class DayState : IState
 
     public void Enter()
     {
+        gameManager.UiManager.ToggleGameSpeedUi(false);
         gameManager.ChangeCanBuild(true);
         gameManager.IncreaseDayCount();
         Debug.Log($"{gameManager.DayCount}일차");

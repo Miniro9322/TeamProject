@@ -45,7 +45,9 @@ public class SettingUI : MonoBehaviour
         };
         screenMode.AddOptions(options);
 
-        screenMode.value = PlayerPrefs.GetInt("ScreenMode");
+        int savedMode = PlayerPrefs.GetInt("ScreenMode", (int)FullScreenMode.FullScreenWindow);
+        int modeIndex = Array.IndexOf(screenModes, (FullScreenMode)savedMode);
+        screenMode.value = modeIndex >= 0 ? modeIndex : 0;
         screenMode.RefreshShownValue();
 
         screenMode.onValueChanged.AddListener(ChangeScreenMode);
@@ -137,8 +139,8 @@ public class SettingUI : MonoBehaviour
         var mode = screenModes[index];
         if (Screen.fullScreenMode == mode) return;
 
-        Screen.fullScreenMode = screenModes[index];
-        PlayerPrefs.SetInt("ScreenMode", index);
+        Screen.fullScreenMode = mode;
+        PlayerPrefs.SetInt("ScreenMode", (int)mode); // 인덱스 대신 실제 enum 값 저장
     }
 
     private void SetVolume(string paramName, float sliderValue)

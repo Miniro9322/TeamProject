@@ -12,6 +12,7 @@ public class UiManager : MonoBehaviour
     [SerializeField] private BuildingPanel buildingUi;
     [SerializeField] private RequestSupportUi requestSupportUi;
     [SerializeField] private GameObject GamaOverUi;
+    [SerializeField] private GameObject GameSpeedUi;
     public bool BuildingUiOpen => buildingUi.gameObject.activeSelf;
     public byte UnlockedHero;
     public byte UnlockedEnemy;
@@ -23,6 +24,7 @@ public class UiManager : MonoBehaviour
         buildingUi.gameObject.SetActive(false);
         requestSupportUi.gameObject.SetActive(false);
         GamaOverUi.SetActive(false);
+        GameSpeedUi.SetActive(false);
         requestSupportUi.OnUnlock += UpdateUnlock;
     }
 
@@ -35,6 +37,11 @@ public class UiManager : MonoBehaviour
                 CloseBuildingUi();
             }
         }
+    }
+
+    public void ToggleGameSpeedUi(bool value)
+    {
+        GameSpeedUi.SetActive(value);
     }
 
     public void OpenBuildingUi(ProductionFacility facility)
