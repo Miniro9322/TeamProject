@@ -24,9 +24,16 @@ public class ProductionValue : ScriptableObject
     [SerializeField] private List<ProductionType> upgradeCostProduct;
     [Header("생산 건물 업그레이드에 필요한 초기 자원량(자원 종류 순서에 맞게 설정해주세요)")]
     [SerializeField] private List<int> upgradeCostAmount;
+    [Header("맵에서 차지하는 가로 칸 수")]
+    [Min(1)][SerializeField] private int tileWidth = 1;
+    [Header("맵에서 차지하는 세로 칸 수")]
+    [Min(1)][SerializeField] private int tileHeight = 1;
 
 
     public ProductionType Type => type;
+
+    // 이 생산 건물이 맵에서 차지하는 칸 수. 저작은 위의 두 숫자로 하고, 쓰는 쪽은 이 값을 읽는다.
+    public Vector2Int TileSize => new(tileWidth, tileHeight);
     public int DefaultAmount => defaultAmount;
     public int DefaultHp => defaulthp;
     public int DefaultMaxWorker => defaultMaxWorker;

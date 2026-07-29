@@ -11,12 +11,17 @@ public class MapBoard : MonoBehaviour
 
     [SerializeField] private Grid _grid; // 좌표계의 단일 소스. 셀 크기·원점·Swizzle을 모두 쥔다.
     private Bounds _worldBounds;
+    private RectInt _playRect;
     private ModuleLogic _module; // 소속 모듈. Awake에서 한 번만 잡는다(매 호출 GetComponent 금지).
 
     public IReadOnlyDictionary<Vector2Int, Tile> Cells => _cells;
     public int CellCount => _cells.Count;
     public Bounds WorldBounds => _worldBounds;
     public float CellSize => _grid.cellSize.x;
+
+    /// <summary>맵 안쪽 칸 범위. 외곽 장식 줄(Special)은 맵 밖으로 보고 뺀 직사각형이다.
+    /// 여러 칸을 차지하는 배치물의 시작 칸을 이 범위에 맞춰 옮겨, 덮는 칸이 맵 밖으로 삐져나가지 않게 한다.</summary>
+    public RectInt PlayRect => _playRect;
 
     private bool HasEndpoints => _spawns.Count > 0 && _cores.Count > 0;
 
@@ -89,19 +94,41 @@ public class MapBoard : MonoBehaviour
             
         }
 
-        // 2) 격자 크기: 로그 표기용 바운딩 박스. 좌표는 Grid 원점 기준이라 0 이상이다.
-        int cols = 0;
-        int rows = 0;
-        foreach (Tile tile in _cells.Values)
-        {
-            if (tile.State.Col >= cols) { cols = tile.State.Col + 1; }
-            if (tile.State.Row >= rows) { rows = tile.State.Row + 1; }
-        }
+        // 2) 안쪽 칸 범위: 장식(Special)을 뺀 타일들의 바운딩 박스. 외곽 한 줄이 장식이라 그만큼 좁다.
+        _playRect = InnerRect();
 
-        Debug.Log($"[MapBoard] 타일 {_cells.Count}개 ({cols}×{rows}, 셀크기 {CellSize:0.###}), 스폰 {_spawns.Count}, 본진 {_cores.Count}", this);
+        Debug.Log($"[MapBoard] 타일 {_cells.Count}개 (안쪽 {_playRect.width}×{_playRect.height} @{_playRect.min}, " +
+            $"셀크기 {CellSize:0.###}), 스폰 {_spawns.Count}, 본진 {_cores.Count}", this);
 
         if (!HasEndpoints)
             Debug.LogWarning("[MapBoard] 스폰(isEnemySpawn) 또는 본진(Terrain=Core) 타일을 찾지 못했습니다.", this);
+    }
+
+    // 장식이 아닌 타일들을 감싸는 직사각형. 장식 줄이 사방 한 줄이라 전체보다 한 칸씩 안쪽으로 들어온다.
+    private RectInt InnerRect()
+    {
+        int minCol = int.MaxValue;
+        int minRow = int.MaxValue;
+        int maxCol = int.MinValue;
+        int maxRow = int.MinValue;
+
+        foreach (Tile tile in _cells.Values)
+        {
+            if (tile.IsSpecial) { continue; }
+
+            Vector2Int coord = tile.Coord;
+            if (coord.x < minCol) { minCol = coord.x; }
+            if (coord.x > maxCol) { maxCol = coord.x; }
+            if (coord.y < minRow) { minRow = coord.y; }
+            if (coord.y > maxRow) { maxRow = coord.y; }
+        }
+
+        if (maxCol < minCol)
+        {
+            return new RectInt();   // 장식뿐인 판 — 맞출 기준이 없으니 배치 판정에 맡긴다
+        }
+
+        return new RectInt(minCol, minRow, maxCol - minCol + 1, maxRow - minRow + 1);
     }
 
     // ---- 경로 ----
