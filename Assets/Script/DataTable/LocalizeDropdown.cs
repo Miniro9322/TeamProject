@@ -17,13 +17,26 @@ public class LocalizeDropdown : MonoBehaviour
 
     private void OnEnable()
     {
+        if (dropdown == null) dropdown = GetComponent<TMP_Dropdown>();
+
         LocalizeTextManager.OnLanguageChanged += Refresh;
+        // 값이 바뀌면 스스로 언어를 전환한다. 이게 없으면 인스펙터에서
+        // onValueChanged를 LocalizeText.OnDropdownChanged에 손으로 연결해야만 동작한다.
+        dropdown.onValueChanged.AddListener(OnValueChanged);
         Refresh();
     }
 
     private void OnDisable()
     {
         LocalizeTextManager.OnLanguageChanged -= Refresh;
+        if (dropdown != null) dropdown.onValueChanged.RemoveListener(OnValueChanged);
+    }
+
+    // 옵션 순서가 Language enum 순서와 같으므로(Refresh가 그렇게 채운다) 인덱스가 곧 언어값이다.
+    // 이미 같은 언어면 SetLanguage가 조기 반환하므로, 인스펙터 연결이 남아 있어도 중복 발생하지 않는다.
+    private void OnValueChanged(int index)
+    {
+        LocalizeTextManager.SetLanguage((Language)index);
     }
 
     public void Refresh()
@@ -46,9 +59,11 @@ public class LocalizeDropdown : MonoBehaviour
             options.Add(new TMP_Dropdown.OptionData(stringTable.Get(key)));
         }
 
-        int prevValue = dropdown.value;
         dropdown.options = options;
-        dropdown.SetValueWithoutNotify(Mathf.Clamp(prevValue, 0, options.Count - 1));
+        // 표시값은 실제 현재 언어에 맞춘다(직전 인덱스를 보존하면 UI와 실제 언어가 어긋날 수 있다).
+        // SetValueWithoutNotify라 OnValueChanged가 다시 불리지 않는다 → 무한 루프 없음.
+        dropdown.SetValueWithoutNotify(
+            Mathf.Clamp((int)StringTable.CurrentLanguage, 0, options.Count - 1));
         dropdown.RefreshShownValue();
     }
     private static string Capitalize(string name)
