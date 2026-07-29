@@ -14,6 +14,9 @@ public struct AttackContext
     public HeroAnimEvents animEvents;
     public Transform muzzle;
     public System.Func<Projectile, IObjectPool<Projectile>> getProjectilePool;
+    public System.Func<GameObject, Vector3, Quaternion, float, GameObject> spawnEffect;
+    public System.Func<GameObject, Vector3, Quaternion, GameObject> spawnPersistentEffect;
+    public System.Action<GameObject, GameObject> despawnEffect;
     public System.Func<Vector3, int, RangeShape, List<IDamageAble>> getEnemiesInRange;
     public System.Func<Vector3, int, RangeShape, List<Transform>> getEnemyTargetsInRange;
     public System.Func<Vector3, int, RangeShape, List<GameObject>> getEnemyObjectsInRange;

@@ -19,7 +19,8 @@ public class HealAttackExecutor : IAttackExecutor
         // 힐 장판은 대상보다 시전자(힐러) 발밑에 까는 편이 자연스럽다.
         if (data.groundZone != null)
             AttackDamageUtil.SpawnGroundZone(data.groundZone, ctx.self.position,
-                ctx.getEnemyObjectsInRange, ctx.getAllyObjectsInRange, ctx.sc, ctx.buffManager, ct);
+                ctx.getEnemyObjectsInRange, ctx.getAllyObjectsInRange, ctx.sc, ctx.buffManager,
+                ctx.spawnEffect, ctx.spawnPersistentEffect, ctx.despawnEffect, ct);
 
         try
         {
@@ -28,11 +29,15 @@ public class HealAttackExecutor : IAttackExecutor
             int hits = 0;
             while (await window.MoveNextHit(ct))
             {
+                ctx.spawnEffect(data.attackEffect, ctx.self.position, Quaternion.identity, data.attackEffectLifetime);
                 await AttackDamageUtil.ApplyInstantHeal(data, ctx, ct);
                 hits++;
             }
             if (hits == 0)
+            {
+                ctx.spawnEffect(data.attackEffect, ctx.self.position, Quaternion.identity, data.attackEffectLifetime);
                 await AttackDamageUtil.ApplyInstantHeal(data, ctx, ct);
+            }
         }
         finally
         {

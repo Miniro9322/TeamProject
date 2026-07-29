@@ -15,6 +15,9 @@ public static class GroundZoneRunner
         Func<Vector3, int, RangeShape, List<GameObject>> getAllyObjectsInRange,
         StatContainer attackerStats,
         BuffManager buffManager,
+        Func<GameObject, Vector3, Quaternion, float, GameObject> spawnEffect,
+        Func<GameObject, Vector3, Quaternion, GameObject> spawnPersistentEffect,
+        Action<GameObject, GameObject> despawnEffect,
         Func<bool> keepAliveWhilePersistent, // duration<=0(오라)일 때만 참조
         CancellationToken token)
     {
@@ -24,25 +27,34 @@ public static class GroundZoneRunner
         bool persistent = data.duration <= 0f;
         float elapsed = 0f, tickTimer = 0f;
 
-        while (!token.IsCancellationRequested && (persistent ? keepAliveWhilePersistent() : elapsed < data.duration))
+        GameObject landEffectGo = spawnPersistentEffect(data.landEffect, center, Quaternion.identity);
+        try
         {
-            float dt = Time.deltaTime;
-            tickTimer += dt;
-            if (!persistent) elapsed += dt;
-
-            if (tickTimer >= data.tickInterval)
+            while (!token.IsCancellationRequested && (persistent ? keepAliveWhilePersistent() : elapsed < data.duration))
             {
-                tickTimer = 0f;
-                Tick(center, data, getEnemyObjectsInRange, getAllyObjectsInRange, attackerStats, buffManager, source);
+                float dt = Time.deltaTime;
+                tickTimer += dt;
+                if (!persistent) elapsed += dt;
+
+                if (tickTimer >= data.tickInterval)
+                {
+                    tickTimer = 0f;
+                    Tick(center, data, getEnemyObjectsInRange, getAllyObjectsInRange, attackerStats, buffManager, spawnEffect, source);
+                }
+                await UniTask.Yield(token);
             }
-            await UniTask.Yield(token);
+        }
+        finally
+        {
+            despawnEffect(data.landEffect, landEffectGo);
         }
     }
 
     private static void Tick(Vector3 center, GroundZoneDataSO data,
         Func<Vector3, int, RangeShape, List<GameObject>> getEnemyObjectsInRange,
         Func<Vector3, int, RangeShape, List<GameObject>> getAllyObjectsInRange,
-        StatContainer attackerStats, BuffManager buffManager, object source)
+        StatContainer attackerStats, BuffManager buffManager,
+        Func<GameObject, Vector3, Quaternion, float, GameObject> spawnEffect, object source)
     {
         if (data.mode == GroundZoneMode.Heal)
         {
@@ -51,13 +63,16 @@ public static class GroundZoneRunner
 
             Hero target = AttackDamageUtil.FindLowestHpAlly(getAllyObjectsInRange(center, data.radius, data.shape));
             target?.Heal(heal);
+            if (target != null)
+                spawnEffect(data.hitEffect, center, Quaternion.identity, data.hitEffectLifetime);
             return;
         }
 
         int dmg = Mathf.RoundToInt(attackerStats[StatType.ATK] * data.damagePer);
         float debuffDuration = data.tickInterval + 0.15f; // 다음 틱까지 갱신 못 받으면(=영역 이탈) 곧 만료 — 이탈 시 디버프 제거를 흉내
 
-        foreach (GameObject go in getEnemyObjectsInRange(center, data.radius, data.shape))
+        List<GameObject> targets = getEnemyObjectsInRange(center, data.radius, data.shape);
+        foreach (GameObject go in targets)
         {
             if (dmg > 0 && go.GetComponentInParent<IDamageAble>() is IDamageAble d)
                 d.TakeDamage(dmg);
@@ -68,5 +83,7 @@ public static class GroundZoneRunner
                     buffManager.ApplyStackingModifier(unit, debuff.statType, debuff.modifierType,
                         debuff.value, debuffDuration, debuff.maxStacks, source);
         }
+        if (targets.Count > 0)
+            spawnEffect(data.hitEffect, center, Quaternion.identity, data.hitEffectLifetime);
     }
 }
