@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 [DisallowMultipleComponent]
 public class PathTrail : MonoBehaviour
@@ -19,7 +18,6 @@ public class PathTrail : MonoBehaviour
     [SerializeField] private float moveSpeed = 8f; //실제 값은 inspector에서 조절한다.
     [SerializeField] private float trailLift = 0.15f;
     [SerializeField] private float loopGap = 1.2f;
-    [FormerlySerializedAs("autoPlay")]
     [SerializeField] private bool isAutoPlay = true;
 
     private readonly List<TrailRun> runs = new();
