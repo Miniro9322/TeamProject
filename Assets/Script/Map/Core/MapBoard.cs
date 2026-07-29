@@ -19,16 +19,12 @@ public class MapBoard : MonoBehaviour
     public Bounds WorldBounds => _worldBounds;
     public float CellSize => _grid.cellSize.x;
 
-    /// <summary>맵 안쪽 칸 범위. 외곽 장식 줄(Special)은 맵 밖으로 보고 뺀 직사각형이다.
-    /// 여러 칸을 차지하는 배치물의 시작 칸을 이 범위에 맞춰 옮겨, 덮는 칸이 맵 밖으로 삐져나가지 않게 한다.</summary>
+    // 외곽 장식 줄을 뺀 맵 안쪽 칸 범위. 배치물이 맵 밖으로 삐져나가지 않게 맞추는 기준.
     public RectInt PlayRect => _playRect;
 
     private bool HasEndpoints => _spawns.Count > 0 && _cores.Count > 0;
 
-    /// <summary>
-    /// 이 보드의 모듈이 열려 있는가. 모듈이 아예 없는 보드(테스트용)만 열린 것으로 본다.
-    /// 비활성 오브젝트는 Awake가 안 돌아 _module이 비어 있으므로 여기서 한 번 더 잡는다.
-    /// </summary>
+    // 이 보드의 모듈이 해금됐는가(잠긴 모듈에는 아무것도 놓을 수 없다).
     public bool IsUnlocked => _module.IsUnlocked;
  
 
@@ -174,7 +170,7 @@ public class MapBoard : MonoBehaviour
                 yield return nb;
     }
 
-    /// <summary>가장 가까운 본진까지의 맨해튼 거리(A* 휴리스틱). 4방향 균일비용에서 admissible → 최단 보장.</summary>
+    // 가장 가까운 본진까지의 칸 거리. 경로 찾기가 어느 쪽을 먼저 뒤질지 정하는 데 쓴다.
     private int HeuristicToNearestCore(Tile tile)
     {
         int best = int.MaxValue;
@@ -201,11 +197,7 @@ public class MapBoard : MonoBehaviour
 
     public bool TryGetCell(Vector2Int coord, out Tile tile) => _cells.TryGetValue(coord, out tile);
 
-    /// <summary>
-    /// 화면 광선이 가리키는 타일(좌표·높이 기반). 각 타일의 실제 윗면 높이에서 광선과
-    /// 교차해 그 칸 정사각 안에 드는지 보고, 카메라에 가장 가까운(위로 솟아 가려지지 않은) 타일을 고른다.
-    /// High처럼 높이가 다른 타일도 윗면을 그대로 클릭할 수 있다.
-    /// </summary>
+    // 화면 광선이 가리키는 타일. 타일마다 제 윗면 높이에서 맞혀 보므로 높이가 다른 타일도 그대로 클릭된다.
     public Tile CellFromRay(Ray ray)
     {
         if (Mathf.Abs(ray.direction.y) < 1e-6f) return null; // 수평 시선이면 top면과 안 만남
@@ -229,10 +221,7 @@ public class MapBoard : MonoBehaviour
         return best;
     }
 
-    /// <summary>
-    /// 광선 아래 타일이 있으면 그 타일, 없으면(그리드 밖) 광선을 수평면에 투영한 지점에서
-    /// XZ 거리가 가장 가까운 타일. 집은 유닛 프리뷰를 가장자리로 클램프해 따라가게 할 때 쓴다.
-    /// </summary>
+    // 광선 아래 타일, 없으면 맵 밖이라도 가장 가까운 타일. 집은 유닛이 가장자리에 붙어 따라오게 한다.
     public Tile NearestCellFromRay(Ray ray)
     {
         Tile hit = CellFromRay(ray);
@@ -285,7 +274,7 @@ public class MapBoard : MonoBehaviour
     // 적은 타일 점유(OccupantObject)와 별개다: 한 칸에 여러 마리가 드나들 수 있다.
     // 적 이동 컴포넌트가 월드 위치를 알려주면, 칸이 바뀐 경우에만 이전/새 타일을 갱신한다.
 
-    /// <summary>[자유 이동 적] 월드 위치를 보고받아 WorldToCell로 현재 칸을 역산해 갱신한다.</summary>
+    // 적이 제 월드 위치를 알려오면 지금 서 있는 칸을 다시 잡는다.
     public void MoveEnemy(GameObject enemy, Vector3 world)
     {
         if (enemy == null) return;
@@ -312,7 +301,7 @@ public class MapBoard : MonoBehaviour
         }
     }
 
-    /// <summary>적이 사라질 때 호출하여 현재 칸에서 제거한다.</summary>
+    // 적이 사라질 때 서 있던 칸에서 지운다.
     public void RemoveEnemy(GameObject enemy)
     {
         if (enemy == null || !_enemyCell.TryGetValue(enemy, out Tile tile)) return;
@@ -358,12 +347,24 @@ public class MapBoard : MonoBehaviour
     // ---- 공간 질의 (상호작용 틀) ----
     // 맵은 "몇 칸 이내에 무엇이 있나"만 계산해 후보를 돌려준다. 타겟 선정·공격·데미지는 담당 몫.
 
-    /// <summary>월드 위치를 칸 좌표로 변환(연속 이동하는 적의 현재 칸 파악용).
-    /// Grid가 계산하므로 베이크된 Col/Row와 항상 같은 기준이다. Swizzle XZY라 높이는 cell.z로 빠진다.</summary>
+    // 월드 위치가 어느 칸인지. 변환은 Grid가 하므로 타일에 새겨진 좌표와 항상 같은 기준이다.
     public Vector2Int WorldToCell(Vector3 world)
     {
         Vector3Int cell = _grid.WorldToCell(world);
         return new Vector2Int(cell.x, cell.y);
+    }
+
+    // 월드 지점이 칸 안 어디인지까지 소수점으로. 칸 모서리가 정수, 한가운데가 x.5다.
+    public Vector2 WorldToCellPoint(Vector3 world)
+    {
+        Vector3 cell = _grid.LocalToCellInterpolated(_grid.WorldToLocal(world));
+        return new Vector2(cell.x, cell.y);
+    }
+
+    // 소수점 칸 좌표가 가리키는 월드 지점. 높이는 쓰는 쪽에서 갈아 끼운다.
+    public Vector3 CellPointToWorld(Vector2 point)
+    {
+        return _grid.LocalToWorld(_grid.CellToLocalInterpolated(new Vector3(point.x, point.y, 0f)));
     }
 
     public List<Tile> GetTiles(Vector2Int origin, int range, bool square = false)
