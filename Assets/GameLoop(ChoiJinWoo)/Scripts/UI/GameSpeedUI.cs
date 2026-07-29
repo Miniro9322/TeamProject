@@ -1,15 +1,21 @@
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.UI;
 
 public class GameSpeedUI : MonoBehaviour
 {
+    [SerializeField] private Key timeIncreaseKey = Key.Tab;
+    [SerializeField] private Key timeStopKey = Key.Space;
     private float beforeTimeSpeed = 1f;
+    private Keyboard keyboard;
+
+    private void Awake()
+    {
+        keyboard = Keyboard.current;
+    }
 
     private void Update()
     {
-        if (Keyboard.current.tabKey.wasPressedThisFrame)
+        if (keyboard[timeIncreaseKey].wasPressedThisFrame)
         {
             if(Time.timeScale < 0.5f)
             {
@@ -29,7 +35,7 @@ public class GameSpeedUI : MonoBehaviour
             }
         }
 
-        if (Keyboard.current.spaceKey.wasPressedThisFrame)
+        if (keyboard[timeStopKey].wasPressedThisFrame)
         {
             if(Time.timeScale > 0f)
             {

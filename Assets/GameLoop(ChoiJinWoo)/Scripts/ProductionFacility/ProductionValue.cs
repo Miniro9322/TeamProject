@@ -16,15 +16,11 @@ public class ProductionValue : ScriptableObject
     [SerializeField] private int defaulthp;
     [Header("생산 건물 초기 최대 주민 배치 수")]
     [SerializeField] private int defaultMaxWorker;
-    [Header("생산 건물 건설에 필요한 자원 종류")]
-    [SerializeField] private List<ProductionType> constructProduct;
-    [Header("생산 건물 건설에 필요한 초기 자원량(자원 종류 순서에 맞게 설정해주세요)")]
-    [SerializeField] private List<int> constructAmount;
-    [Header("생산 건물 업그레이드에 필요한 자원 종류")]
-    [SerializeField] private List<ProductionType> upgradeCostProduct;
-    [Header("생산 건물 업그레이드에 필요한 초기 자원량(자원 종류 순서에 맞게 설정해주세요)")]
-    [SerializeField] private List<int> upgradeCostAmount;
-    [Header("맵에서 차지하는 가로 칸 수")]
+    [Header("생산 건물 건설에 필요한 자원")]
+    [SerializeField] private List<ResourceCost> constructCost;
+    [Header("생산 건물 업그레이드에 필요한 초기 자원")]
+    [SerializeField] private List<ResourceCost> upgradeCost;
+        [Header("맵에서 차지하는 가로 칸 수")]
     [Min(1)][SerializeField] private int tileWidth = 1;
     [Header("맵에서 차지하는 세로 칸 수")]
     [Min(1)][SerializeField] private int tileHeight = 1;
@@ -39,49 +35,33 @@ public class ProductionValue : ScriptableObject
     public int DefaultMaxWorker => defaultMaxWorker;
     public string FacilityName => facilityName;
     public string FacilityInfo => facilityInfo;
-    public Dictionary<ProductionType, int> ConstructProduct
-    { 
-        get
-        {
-            if(constructProduct.Count != constructAmount.Count)
-            {
-                Debug.LogError("생산 건물에 필요한 자원과 자원량이 매칭되지 않습니다. 다시 설정해주세요");
-                return null;
-            }
-            else
-            {
-                Dictionary<ProductionType, int> temp = new();
-
-                for (int i = 0; i < constructProduct.Count; i++)
-                {
-                    temp[constructProduct[i]] = -constructAmount[i];
-                }
-
-                return temp;
-            }
-        }
-    }
-
-    public Dictionary<ProductionType, int> UpgradeCost
+    public (ProductionType Type, int Amount)[] ConstructProduct
     {
         get
         {
-            if (upgradeCostProduct.Count != upgradeCostAmount.Count)
-            {
-                Debug.LogError("생산 건물에 필요한 자원과 자원량이 매칭되지 않습니다. 다시 설정해주세요");
-                return null;
-            }
-            else
-            {
-                Dictionary<ProductionType, int> temp = new();
+            var temp = new (ProductionType, int)[constructCost.Count];
 
-                for (int i = 0; i < upgradeCostProduct.Count; i++)
-                {
-                    temp[upgradeCostProduct[i]] = -upgradeCostAmount[i];
-                }
-
-                return temp;
+            for (int i = 0; i < constructCost.Count; i++)
+            {
+                temp[i] = (constructCost[i].Type, -constructCost[i].Amount);
             }
+
+            return temp;
+        }
+    }
+
+    public (ProductionType Type, int Amount)[] UpgradeCost
+    {
+        get
+        {
+            var temp = new (ProductionType, int)[upgradeCost.Count];
+
+            for (int i = 0; i < upgradeCost.Count; i++)
+            {
+                temp[i] = (upgradeCost[i].Type, -upgradeCost[i].Amount);
+            }
+
+            return temp;
         }
     }
 }

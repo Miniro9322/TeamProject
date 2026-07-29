@@ -41,7 +41,7 @@ public class BuildFacilityPanel : MonoBehaviour
             sb.Append($"{temp.BasicValue.FacilityName}\n{temp.BasicValue.FacilityInfo}\n생산 자원: {temp.ProductionType}\n건설 소모 자원\n");
             foreach (var item in temp.BasicValue.ConstructProduct)
             {
-                sb.Append($"{item.Key}: {-item.Value} ");
+                sb.Append($"{item.Type}: {-item.Amount} ");
             }
             facilityInfoText.text = sb.ToString().Trim();
             facilityInfoPanel.SetActive(true);
@@ -54,7 +54,7 @@ public class BuildFacilityPanel : MonoBehaviour
             sb.Append($"{house.HouseName}\n{house.HouseInfo}\n건설 소모 자원\n");
             foreach (var item in house.Resources)
             {
-                sb.Append($"{item.Key}: {-item.Value} ");
+                sb.Append($"{item.Type}: {-item.Amount} ");
             }
             facilityInfoText.text = sb.ToString().Trim();
             facilityInfoPanel.SetActive(true);

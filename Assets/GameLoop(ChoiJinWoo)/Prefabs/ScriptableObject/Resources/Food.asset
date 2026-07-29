@@ -18,7 +18,13 @@ MonoBehaviour:
   defaultAmount: 10
   defaulthp: 10
   defaultMaxWorker: 4
-  constructProduct: 0000000004000000
-  constructAmount: 140000001e000000
-  upgradeCostProduct: 01000000
-  upgradeCostAmount: 32000000
+  constructCost:
+  - Type: 0
+    Amount: 20
+  - Type: 4
+    Amount: 30
+  upgradeCost:
+  - Type: 1
+    Amount: 50
+  tileWidth: 3
+  tileHeight: 2

@@ -16,5 +16,12 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 44e5e86a5d4627c458282a2950bd3254, type: 2}
   selectors: []
   procs: []
-  costType: 00000000020000000300000004000000
-  costAmount: 64000000640000006400000064000000
+  cost:
+  - Type: 0
+    Amount: 100
+  - Type: 2
+    Amount: 100
+  - Type: 3
+    Amount: 100
+  - Type: 4
+    Amount: 100
