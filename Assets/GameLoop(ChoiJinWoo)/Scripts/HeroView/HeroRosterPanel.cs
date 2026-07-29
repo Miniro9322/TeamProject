@@ -36,6 +36,9 @@ public class HeroRosterPanel : MonoBehaviour, IBeginDragHandler, IScrollHandler
         {
             HeroRosterIcon icon = Instantiate(iconPrefab, container);
             icon.Set(entry, OnIconClicked);
+            if (entry.PlacedUnit != null)
+                if (entry.PlacedUnit.GetComponent<Hero>() is Hero hero)
+                    icon.UpdateLevel(hero);
         }
     }
 
