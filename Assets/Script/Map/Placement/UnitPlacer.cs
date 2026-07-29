@@ -14,9 +14,10 @@ public class UnitPlacer
     public ResourcesManager resourcesManager;
     public BuildingPool pool;
 
-    // 슬롯을 칸에 놓는다: 생성→보드 배치→(성공 시)장부·커버 등록.
+    // 슬롯을 자리에 놓는다: 생성→보드 배치→(성공 시)장부·커버 등록.
+    // 자리는 한 칸일 수도 여러 칸일 수도 있다(PlacementArea가 덮는 칸을 모두 들고 있다).
     // 성공하면 놓인 오브젝트를 반환(true), 실패하면 만든 오브젝트를 파괴한다(false).
-    public bool TryPlace(Tile tile, Placeable slot, float yOffset, out GameObject placedUnit)
+    public bool TryPlace(PlacementArea area, Placeable slot, float yOffset, out GameObject placedUnit)
     {
         placedUnit = null;
 
@@ -26,11 +27,12 @@ public class UnitPlacer
             return false;
         }
 
-        BindBoard(unit, tile.Board);         // 생성한 오브젝트에 "놓이는 타일의" 모듈 보드 참조 전달
+        BindBoard(unit, area.Board);         // 생성한 오브젝트에 "놓이는 자리의" 모듈 보드 참조 전달
 
-        if (tile.Board.TryPlace(tile.Coord, unit, slot.kind, yOffset))
+        if (AreaPlace.CanPlace(area, slot.kind))
         {
-            RegisterUnit(unit, tile, slot);   // 성공 → 사거리 장부·커버 등록
+            AreaPlace.Place(area, unit, slot.kind, yOffset);
+            RegisterUnit(unit, area, slot);   // 성공 → 사거리 장부·커버 등록
             placedUnit = unit;
             return true;
         }
@@ -99,18 +101,19 @@ public class UnitPlacer
     }
 
     // 배치된 유닛의 사거리를 장부에 올리고, 판에 사거리 커버를 등록한다.
-    private void RegisterUnit(GameObject unit, Tile tile, Placeable slot)
+    private void RegisterUnit(GameObject unit, PlacementArea area, Placeable slot)
     {
         unitList.Add(unit, slot.attackRange);
-        RegisterCover(unit, tile, slot.kind, slot.attackRange);
+        RegisterCover(unit, area, slot.kind, slot.attackRange);
     }
 
     // 유닛이 덮는 사거리 칸을 자기 모듈 판에만 표시한다(건물은 사거리 없음 → 제외).
-    private static void RegisterCover(GameObject unit, Tile tile, OccupantKind kind, int range)
+    // 여러 칸을 차지해도 커버는 시작 칸 하나를 중심으로 잡는다(사거리가 있는 영웅은 아직 1×1).
+    private static void RegisterCover(GameObject unit, PlacementArea area, OccupantKind kind, int range)
     {
         if (kind == OccupantKind.Building) return;
 
-        tile.Board.SetRangeCover(unit, tile.Coord, Mathf.Max(0, range));
+        area.Board.SetRangeCover(unit, area.Origin, Mathf.Max(0, range));
     }
 
     private static void CheckPrefab(Placeable slot)

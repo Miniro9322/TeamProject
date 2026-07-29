@@ -64,7 +64,7 @@ public class MapCommand : MonoBehaviour
     {
         if (replace.IsHolding)
         {
-            Tile target = pointerPick.NearestCell();
+            PlacementArea target = HeldArea();
             if (target != null)
             {
                 action.Drop(target);
@@ -105,14 +105,14 @@ public class MapCommand : MonoBehaviour
             return;
         }
 
-        Tile target = pointerPick.NearestCell();
+        PlacementArea target = HeldArea();
         if (target != null)
         {
             action.Drop(target);
         }
     }
 
-    // 집은 유닛 프리뷰가 목표 타일 윗면을 따라가게 한다.
+    // 집은 유닛 프리뷰가 목표 자리 한가운데를 따라가게 한다.
     private void FollowHeld()
     {
         if (palette.Mode != PlaceMode.Replace)
@@ -125,11 +125,17 @@ public class MapCommand : MonoBehaviour
             return;
         }
 
-        Tile target = pointerPick.NearestCell();
+        PlacementArea target = HeldArea();
         if (target != null)
         {
             replace.MoveHeldTo(target, placeYOffset);
         }
+    }
+
+    // 집은 유닛이 지금 포인터 위치에 놓인다면 덮게 될 자리(집기 전 크기를 그대로 쓴다).
+    private PlacementArea HeldArea()
+    {
+        return pointerPick.GetArea(replace.HeldSize);
     }
 
     // 다른 타일 위에서 뗐거나 화면상 충분히 움직였으면 드래그로 본다(제자리 클릭과 구분).

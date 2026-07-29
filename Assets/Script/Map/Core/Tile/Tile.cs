@@ -58,7 +58,11 @@ public partial class Tile : MonoBehaviour
     /// <summary>적 통행 가능 지형인가. 고지·빈 타일은 막힘, 지상·본진은 통행(설계: 고지=이동 차단).</summary>
     public bool Walkable => State.Terrain is TerrainType.Ground or TerrainType.Core;
 
-    /// <summary>타일 윗면 중앙의 월드 좌표(배치·경로 웨이포인트 기준).</summary>
+    /// <summary>
+    /// 타일 윗면 중앙의 월드 좌표(배치·경로 웨이포인트 기준).
+    /// 높이는 MapBoard.Build가 SetTop으로 채워주는 캐시라 Build 이전에는 0이다 —
+    /// 플레이를 거치지 않는 에디터 도구는 이 값을 읽지 말고 렌더러 바운즈에서 직접 구해야 한다.
+    /// </summary>
     public Vector3 WorldTop => new(transform.position.x, _topY, transform.position.z);
 
     /// <summary>MapBoard가 스캔 시 윗면 높이를 캐시해 준다(WorldTop·배치·경로 기준).</summary>
