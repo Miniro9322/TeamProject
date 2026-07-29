@@ -3524,8 +3524,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Healer
   citizenAmount: 2
-  costType: 
-  costAmount: 
+  costType: 00000000020000000300000004000000
+  costAmount: 1e00000032000000140000001e000000
+  statUpgradeCostType: 00000000020000000300000004000000
+  statUpgradeCostAmount: 0a0000000a0000000a0000000a000000
+  upgradeDatas:
+  - {fileID: 11400000, guid: e49aeb40aaf6e0a41adff4f16efb55cb, type: 2}
+  - {fileID: 11400000, guid: f93954c4747b7434b993fd535229b9b1, type: 2}
+  - {fileID: 11400000, guid: 10ffec894dcfda24d8addaf23fdc03e5, type: 2}
   basePattern:
   - {fileID: 11400000, guid: 9386eca0c07f29e439c141a69d3c3435, type: 2}
   selectors: []

@@ -14248,12 +14248,17 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Mage
   citizenAmount: 2
-  costType: 
-  costAmount: 
+  costType: 00000000020000000300000004000000
+  costAmount: 320000003c0000000a0000001e000000
+  statUpgradeCostType: 00000000020000000300000004000000
+  statUpgradeCostAmount: 0a0000000a0000000a0000000a000000
+  upgradeDatas:
+  - {fileID: 11400000, guid: 1d450f14685a9274d9bc105d03df06cb, type: 2}
+  - {fileID: 11400000, guid: 2b762bba13edccf4db538c8d5c1a008e, type: 2}
+  - {fileID: 11400000, guid: ffc47afd9a8a789428b4107c94522400, type: 2}
   basePattern:
-  - {fileID: 11400000, guid: c86fad42437ee1747a4325a8938839fb, type: 2}
-  selectors:
-  - {fileID: 11400000, guid: 94d9be99fc8c5e0448369841faf4ed18, type: 2}
+  - {fileID: 11400000, guid: 127bbc211d754c04a9a535a12b34656a, type: 2}
+  selectors: []
   procs: []
   anim: {fileID: 5966798527436522038}
   animEvents: {fileID: 2471352903922337075}
