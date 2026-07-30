@@ -117,6 +117,8 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
     [SerializeField] private HeroActiveSkillDataSO activeSkill;
     public HeroActiveSkillDataSO ActiveSkill => activeSkill;
     private CancellationTokenSource _skillCts;
+    private float _skillCooldownRemaining = 0f;
+    public bool IsSkillReady => activeSkill == null || _skillCooldownRemaining <= 0f;
 
     // 이펙트 풀은 Hero 인스턴스 소유(Archer/Mage의 projectilePools와 동일한 패턴) —
     // 씬이 언로드돼 이 Hero가 파괴되면 풀도 함께 사라지므로, 파괴된 인스턴스를 다시 꺼내 쓰는 일이 없다.
@@ -262,6 +264,7 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
         if (gameManager != null)
         {
             gameManager.ChangeToDay += Resurrection;
+            gameManager.ChangeToDay += ResetSkillCooldown;
         }
         //끝
         StartAuras();
@@ -285,6 +288,7 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
         if (gameManager != null)
         {
             gameManager.ChangeToDay -= Resurrection;
+            gameManager.ChangeToDay -= ResetSkillCooldown;
         }
         OnResur -= StartAuras;
         _auraCts?.Cancel();
@@ -318,6 +322,8 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
     {
         if (activeSkill == null || isDead || targetTile == null || targetTile.Board != board)
             return false;
+        if (!IsSkillReady)
+            return false;
 
         if (activeSkill.targetScope == SkillTargetScope.Self)
         {
@@ -347,12 +353,17 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
                 SpawnEffect(activeSkill.instantHitEffect, targetTile.WorldTop, Quaternion.identity, activeSkill.instantHitEffectLifetime);
         }
 
+        _skillCooldownRemaining = activeSkill.cooldown;
         return true;
     }
+
+    private void ResetSkillCooldown() => _skillCooldownRemaining = 0f;
 
     protected virtual void Update()
     {
         stateMachine.CurrentState.Update();
+        if (_skillCooldownRemaining > 0f)
+            _skillCooldownRemaining -= Time.deltaTime;
         if (target != null)
             CheckTargetStillInRange();
         if (target == null)

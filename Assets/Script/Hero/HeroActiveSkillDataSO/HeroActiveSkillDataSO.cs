@@ -15,4 +15,8 @@ public class HeroActiveSkillDataSO : ScriptableObject
     public float instantDamagePer = 0f;
     public GameObject instantHitEffect;
     public float instantHitEffectLifetime = 1f;
+
+    [Header("쿨타임")]
+    [Tooltip("스킬 사용 후 재사용까지 걸리는 시간(초). Stat(CDR)은 아직 적용되지 않음.")]
+    public float cooldown = 0f;
 }
