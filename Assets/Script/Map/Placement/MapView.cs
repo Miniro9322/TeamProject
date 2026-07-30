@@ -56,6 +56,21 @@ public class MapView : MonoBehaviour
 
     // 지금 배치하려는 것이 포인터 위치에서 덮게 될 자리(프리뷰가 읽는다).
     public PlacementArea HoverArea { get { return pointerPick != null ? pointerPick.GetArea(PlacingSize) : null; } }
+
+    // 지금 배치하려는 것의 프리팹(미리보기가 읽는다). 슬롯이 비면 null.
+    public GameObject PlacingPrefab
+    {
+        get
+        {
+            if (palette.TryCurrentSlot(out Placeable slot))
+            {
+                return slot.prefab;
+            }
+
+            return null;
+        }
+    }
+
     public string PlacingLabel { get { return palette.CurrentSlot().label; } }
     public int PlacingRange { get { return palette.PreviewRange(); } }
     public Tile Selected { get { return tileSelect.Selected; } }

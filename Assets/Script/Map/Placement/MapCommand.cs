@@ -14,6 +14,7 @@ public class MapCommand : MonoBehaviour
     public UnitReplace replace;
     public BuildingUiLink buildingUi;
     public PlaceAction action;
+    public PlaceGhost ghost;
     public Dictionary<PlaceMode, Action<Tile>> dispatch;
     public float placeYOffset;
 
@@ -32,6 +33,7 @@ public class MapCommand : MonoBehaviour
     private void Update()
     {
         FollowHeld();
+        ghost.FollowCursor();
     }
 
     // 재배치 모드면 재배치 입력을, 아니면 현재 모드의 기능을 실행한다.

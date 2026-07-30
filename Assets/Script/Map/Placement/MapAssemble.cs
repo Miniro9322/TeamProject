@@ -50,6 +50,7 @@ public class MapAssemble : MonoBehaviour
         command.replace = replace;
         command.buildingUi = buildingUi;
         command.action = action;
+        command.ghost = new PlaceGhost(view, placeYOffset);
         command.placeYOffset = placeYOffset;
         command.dispatch = new Dictionary<PlaceMode, Action<Tile>>
         {
