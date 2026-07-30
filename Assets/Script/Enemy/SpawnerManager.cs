@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using VContainer;
 
@@ -30,6 +31,8 @@ public class SpawnerManager : MonoBehaviour
     public GameObject infoTextPrefab;
     [Tooltip("포탈 기준 텍스트 오프셋(월드 좌표).")]
     public Vector3 infoTextOffset = new Vector3(1.5f, 1f, 0f);
+    [Tooltip("스테이지 정보 팝업 캔버스의 정렬 기준값(+지역번호). 메인 HUD(0)보다 낮게 둬야 HUD를 덮지 않는다.")]
+    public int stageInfoSortingOrder = -10;
     // 지역번호 → 클릭 시 띄운 정보 텍스트 인스턴스
     private readonly Dictionary<int,GameObject> _infoTexts = new();
     // 해금된 모든 지역의 적이 전멸했을 때 1회 발생.
@@ -88,6 +91,10 @@ public class SpawnerManager : MonoBehaviour
         if (cam == null || Mouse.current == null) return;
         if(Time.timeScale==0)return;
         if(!Mouse.current.leftButton.wasPressedThisFrame) return;
+        // 팝업(월드 스페이스 캔버스) 위를 클릭한 거면 여기선 아무것도 하지 않는다.
+        // 이 가드가 없으면 아이콘을 눌러도 레이가 스폰 타일을 못 맞춰 HideStageInfos()가 돌고
+        // 툴팁이 뜨는 같은 프레임에 팝업이 사라진다.
+        if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject()) return;
 
         Ray ray = cam.ScreenPointToRay(Mouse.current.position.ReadValue());
         foreach (var kv in _byRegion)
@@ -222,8 +229,25 @@ public class SpawnerManager : MonoBehaviour
             go.transform.position = pos;
         }
 
-        spawner.text = go.GetComponentInChildren<TMP_Text>(true);
-        spawner.OnClickStage(region, CurrentDay, UnlockedRegions()); // 텍스트에 웨이브/증원/보스 정보 기록
+        // 오버레이 캔버스로 바꾼 경우: 루트 Transform이 무시되므로 위 pos 대입은 효과가 없다.
+        // 대신 패널을 매 프레임 포탈의 스크린 좌표로 옮긴다(안개가 월드 캔버스를 덮는 문제 회피).
+        // 컴포넌트가 없으면(=아직 월드 스페이스 캔버스) 위 pos 대입이 그대로 유효하다.
+        var follow = go.GetComponent<StageInfoFollow>();
+        if (follow != null) follow.Follow(portal.transform, infoTextOffset, cam);
+
+        // 지역이 여러 개 열려 있으면 팝업도 여럿 떠 있을 수 있다. 오버레이엔 깊이 정렬이 없어
+        // 겹치는 순서가 임의로 정해지므로 지역 번호로 고정한다.
+        // 음수여도 오버레이 캔버스는 3D 씬 위에 그려진다. sortingOrder는 캔버스끼리의 순서일 뿐이라
+        // 메인 HUD(sortingOrder 0)보다 낮게 둬야 팝업이 HUD를 덮지 않는다.
+        Canvas canvas = go.GetComponentInChildren<Canvas>(true);
+        if (canvas != null) canvas.sortingOrder = stageInfoSortingOrder + region;
+
+        // 새 팝업(아이콘 행 + 툴팁)이면 StageInfoView로, 아직 구버전 프리팹이면 TMP_Text로 폴백.
+        // GetComponentInChildren<TMP_Text>는 행마다 TMP가 생기면 아무거나 집어오므로 View가 있을 때는 쓰지 않는다.
+        StageInfoView view = go.GetComponent<StageInfoView>() ?? go.GetComponentInChildren<StageInfoView>(true);
+        spawner.infoView = view;
+        spawner.text = view != null ? null : go.GetComponentInChildren<TMP_Text>(true);
+        spawner.OnClickStage(region, CurrentDay, UnlockedRegions()); // 웨이브/증원/보스 정보 기록
     }
 
     // 클릭한 칸과 같은 격자 좌표에 서 있는 포탈을 찾는다. 없으면 null(그 칸은 이번 라운드에 안 뽑힌 스폰 지점).
@@ -244,9 +268,13 @@ public class SpawnerManager : MonoBehaviour
     {
         foreach (var kv in _infoTexts)
         {
-            if (kv.Value != null) PoolManager.Instance.Despawn(kv.Value);
             if (_byRegion.TryGetValue(kv.Key, out var spawner) && spawner != null)
-                spawner.text = null; // 반납된 풀 오브젝트를 계속 참조하지 않도록 해제
+            {
+                spawner.ResetText();  // 떠 있던 툴팁/행을 먼저 정리 (풀 오브젝트는 자식이 남는다)
+                spawner.text = null;  // 반납된 풀 오브젝트를 계속 참조하지 않도록 해제
+                spawner.infoView = null;
+            }
+            if (kv.Value != null) PoolManager.Instance.Despawn(kv.Value);
         }
         _infoTexts.Clear();
     }

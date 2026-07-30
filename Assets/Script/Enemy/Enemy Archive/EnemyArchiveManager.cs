@@ -7,13 +7,38 @@ using UnityEngine.UI;
 
 public class EnemyArchiveManager : MonoBehaviour
 {
+    // 스테이지 정보 팝업은 풀링 프리팹이라 씬 오브젝트를 인스펙터로 참조할 수 없다 → 런타임 창구.
+    public static EnemyArchiveManager Instance { get; private set; }
+
     public GameObject archive;
     public GameObject guardPanal;
     public Button hidePanal;
     public Button infoOpenButton;
     public Button infoCloseButton;
+    [Tooltip("적 목록 컴포넌트. 비워두면 archive 하위에서 찾는다.")]
+    [SerializeField] private EnemyArchive archiveList;
     private CancellationTokenSource cts;
     private bool isOpenCheck;
+
+    void Awake() => Instance = this;
+
+    // 도감을 열고 그 적 페이지를 띄운다. 이미 열려 있으면 페이지만 갈아끼운다.
+    public void OpenAt(EnemyTable.Data data)
+    {
+        if (data == null || archive == null) return;
+
+        // OpenArchiveCor는 첫 await 전까지 동기로 도므로 archive.SetActive(true)가 여기서 이미 끝난다.
+        // → 그 뒤에 ShowEnemy를 불러야 EnemyArchive.OnEnable(Build) 다음 순서가 된다.
+        if (!isOpenCheck) OnClickOpenArchive();
+
+        if (archiveList == null) archiveList = archive.GetComponentInChildren<EnemyArchive>(true);
+        if (archiveList == null)
+        {
+            Debug.LogWarning("EnemyArchiveManager: archive 하위에 EnemyArchive가 없어 페이지를 띄울 수 없습니다.", this);
+            return;
+        }
+        archiveList.ShowEnemy(data);
+    }
 
     void Start()
     {
@@ -49,6 +74,7 @@ public class EnemyArchiveManager : MonoBehaviour
     }
     void OnDestroy()
     {
+        if (Instance == this) Instance = null;
         LocalizeTextManager.OnLanguageChanged -= ApplyButtonLabel; // static 이벤트라 해제 필수(누수 방지)
         cts?.Cancel();
         cts?.Dispose();

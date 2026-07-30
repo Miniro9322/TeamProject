@@ -55,6 +55,15 @@ public class EnemyArchive : MonoBehaviour
         if (infoPanel != null) infoPanel.Info(data);
     }
 
+    // 외부(스테이지 정보 툴팁의 도감 버튼)에서 특정 적 페이지를 바로 띄울 때.
+    // 목록에서 그 적 버튼을 누른 것과 같은 상태가 된다.
+    public void ShowEnemy(EnemyTable.Data data)
+    {
+        if (data == null) return;
+        Build();   // OnEnable 전에 불릴 수도 있으니 목록을 먼저 확보한다(이미 지었으면 무시됨)
+        OnClickEnemy(data);
+    }
+
     private void RefreshAll()
     {
         foreach (var b in buttons.Values) b.Refresh();
