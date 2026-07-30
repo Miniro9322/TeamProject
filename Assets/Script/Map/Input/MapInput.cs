@@ -8,6 +8,8 @@ public class MapInput : MonoBehaviour
 {
     public event Action Pressed;
     public event Action Released;
+    public event Action RightPressed;
+    public event Action RightReleased;
 
     [SerializeField] private bool _blocked;
 
@@ -22,6 +24,8 @@ public class MapInput : MonoBehaviour
         if (EventSystem.current.IsPointerOverGameObject()) return;
         if (Mouse.current.leftButton.wasPressedThisFrame) Pressed?.Invoke();
         if (Mouse.current.leftButton.wasReleasedThisFrame) Released?.Invoke();
+        if (Mouse.current.rightButton.wasPressedThisFrame) RightPressed?.Invoke();
+        if (Mouse.current.rightButton.wasReleasedThisFrame) RightReleased?.Invoke();
     }
 
     public void SetBlock(bool value)
