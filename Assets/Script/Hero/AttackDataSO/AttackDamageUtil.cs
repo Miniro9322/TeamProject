@@ -22,6 +22,7 @@ public static class AttackDamageUtil
                 ApplyTargetDebuffs(e as IUnit, data.buffList, ctx.buffManager, data);
                 ApplyHealOptions(data, ctx.self.position, ctx.healSelf, ctx.getAllyObjectsInRange, baseDamage, ctx.sc[StatType.ATK]);
             }
+            ctx.spawnEffect(data.hitEffect, ctx.target.position, Quaternion.identity, data.hitEffectLifetime);
             return;
         }
 
@@ -34,6 +35,7 @@ public static class AttackDamageUtil
                 ApplyTargetDebuffs(go.GetComponentInParent<IUnit>(), data.buffList, ctx.buffManager, data);
                 ApplyHealOptions(data, ctx.self.position, ctx.healSelf, ctx.getAllyObjectsInRange, baseDamage, ctx.sc[StatType.ATK]);
             }
+            ctx.spawnEffect(data.hitEffect, ctx.target.position, Quaternion.identity, data.hitEffectLifetime);
             return;
         }
 
@@ -44,6 +46,7 @@ public static class AttackDamageUtil
                 d.TakeDamage((int)baseDamage);
                 ApplyTargetDebuffs(d as IUnit, data.buffList, ctx.buffManager, data);
                 ApplyHealOptions(data, ctx.self.position, ctx.healSelf, ctx.getAllyObjectsInRange, baseDamage, ctx.sc[StatType.ATK]);
+                ctx.spawnEffect(data.hitEffect, ctx.target.position, Quaternion.identity, data.hitEffectLifetime);
             }
             return;
         }
@@ -57,6 +60,7 @@ public static class AttackDamageUtil
                 t.TakeDamage((int)baseDamage);
                 ApplyTargetDebuffs(t as IUnit, data.buffList, ctx.buffManager, data);
                 ApplyHealOptions(data, ctx.self.position, ctx.healSelf, ctx.getAllyObjectsInRange, baseDamage, ctx.sc[StatType.ATK]);
+                ctx.spawnEffect(data.hitEffect, (t as Component)?.transform.position ?? ctx.self.position, Quaternion.identity, data.hitEffectLifetime);
             }, data.shotInterval, ct);
             return;
         }
@@ -73,6 +77,7 @@ public static class AttackDamageUtil
                     ApplyTargetDebuffs(e as IUnit, data.buffList, ctx.buffManager, data);
                     ApplyHealOptions(data, ctx.self.position, ctx.healSelf, ctx.getAllyObjectsInRange, baseDamage, ctx.sc[StatType.ATK]);
                 }
+                ctx.spawnEffect(data.hitEffect, ctx.self.position, Quaternion.identity, data.hitEffectLifetime);
                 //SplashHighlighter.Instance?.Flash(ctx.self.position, data.areaRange, aoeShape);
                 if (i < data.attackCount - 1)
                     await UniTask.Delay(TimeSpan.FromSeconds(data.shotInterval), cancellationToken: ct);
@@ -91,6 +96,7 @@ public static class AttackDamageUtil
                 ApplyTargetDebuffs(e as IUnit, data.buffList, ctx.buffManager, data);
                 ApplyHealOptions(data, ctx.self.position, ctx.healSelf, ctx.getAllyObjectsInRange, baseDamage, ctx.sc[StatType.ATK]);
             }
+            ctx.spawnEffect(data.hitEffect, go.transform.position, Quaternion.identity, data.hitEffectLifetime);
             //SplashHighlighter.Instance?.Flash(go.transform.position, data.areaRange, aoeShape);
         }, data.shotInterval, ct);
     }
@@ -106,7 +112,10 @@ public static class AttackDamageUtil
         if (data.attackType == AttackType.Single)
         {
             if (ctx.target != null && ctx.target.GetComponent<Hero>() is Hero singleAlly)
+            {
                 singleAlly.Heal(healAmount);
+                ctx.spawnEffect(data.hitEffect, ctx.target.position, Quaternion.identity, data.hitEffectLifetime);
+            }
             return UniTask.CompletedTask;
         }
 
@@ -114,6 +123,7 @@ public static class AttackDamageUtil
         foreach (GameObject go in ctx.getAllyObjectsInRange(ctx.self.position, data.areaRange, aoeShape))
             if (go.GetComponent<Hero>() is Hero areaAlly)
                 areaAlly.Heal(healAmount);
+        ctx.spawnEffect(data.hitEffect, ctx.self.position, Quaternion.identity, data.hitEffectLifetime);
 
         return UniTask.CompletedTask;
     }
@@ -183,10 +193,14 @@ public static class AttackDamageUtil
     public static void SpawnGroundZone(GroundZoneDataSO zoneData, Vector3 center,
         Func<Vector3, int, RangeShape, List<GameObject>> getEnemyObjectsInRange,
         Func<Vector3, int, RangeShape, List<GameObject>> getAllyObjectsInRange,
-        StatContainer attackerStats, BuffManager buffManager, CancellationToken ct)
+        StatContainer attackerStats, BuffManager buffManager,
+        Func<GameObject, Vector3, Quaternion, float, GameObject> spawnEffect,
+        Func<GameObject, Vector3, Quaternion, GameObject> spawnPersistentEffect,
+        Action<GameObject, GameObject> despawnEffect, CancellationToken ct)
     {
         if (zoneData == null) return;
-        GroundZoneRunner.Run(center, zoneData, getEnemyObjectsInRange, getAllyObjectsInRange, attackerStats, buffManager, () => true, ct).Forget();
+        GroundZoneRunner.Run(center, zoneData, getEnemyObjectsInRange, getAllyObjectsInRange, attackerStats, buffManager,
+            spawnEffect, spawnPersistentEffect, despawnEffect, () => true, ct).Forget();
     }
 
     private static async UniTask FireEach<T>(List<T> items, Action<T> apply, float interval, CancellationToken ct)

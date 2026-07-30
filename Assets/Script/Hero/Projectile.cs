@@ -22,6 +22,9 @@ public struct ProjectileAoEConfig
     public GroundZoneDataSO groundZone;
     public StatContainer attackerStats;
     public Vector3 casterPos; // 피흡/아군 힐 대상 조회 중심 — 착탄 지점(transform.position)이 아니라 발사자 기준이어야 한다.
+    public System.Func<GameObject, Vector3, Quaternion, float, GameObject> spawnEffect;
+    public System.Func<GameObject, Vector3, Quaternion, GameObject> spawnPersistentEffect;
+    public System.Action<GameObject, GameObject> despawnEffect;
 }
 
 public class Projectile : MonoBehaviour
@@ -112,6 +115,7 @@ public class Projectile : MonoBehaviour
                 AttackDamageUtil.ApplyTargetDebuffs(go.GetComponentInParent<IUnit>(), cfg.buffList, cfg.buffManager, cfg.source);
                 ApplyHealOptions(damage);
             }
+            SpawnHitEffect();
         }
         else if (cfg.attackType == AttackType.Area)
         {
@@ -121,6 +125,7 @@ public class Projectile : MonoBehaviour
                 AttackDamageUtil.ApplyTargetDebuffs(enemy as IUnit, cfg.buffList, cfg.buffManager, cfg.source);
                 ApplyHealOptions(damage);
             }
+            SpawnHitEffect();
             //SplashHighlighter.Instance?.Flash(transform.position, cfg.areaRange, aoeShape);
         }
         else if (target != null && target.GetComponentInParent<IDamageAble>() is IDamageAble damageable)
@@ -128,12 +133,21 @@ public class Projectile : MonoBehaviour
             damageable.TakeDamage((int)damage);
             AttackDamageUtil.ApplyTargetDebuffs(target.GetComponentInParent<IUnit>(), cfg.buffList, cfg.buffManager, cfg.source);
             ApplyHealOptions(damage);
+            SpawnHitEffect();
         }
 
         AttackDamageUtil.SpawnGroundZone(cfg.groundZone, transform.position,
-            cfg.getEnemyObjectsInRange, cfg.getAllyObjectsInRange, cfg.attackerStats, cfg.buffManager, CancellationToken.None);
+            cfg.getEnemyObjectsInRange, cfg.getAllyObjectsInRange, cfg.attackerStats, cfg.buffManager,
+            cfg.spawnEffect, cfg.spawnPersistentEffect, cfg.despawnEffect, CancellationToken.None);
 
         Return();
+    }
+
+    // cfg.source는 발사한 AttackDataSO 인스턴스 — 그걸로 착탄 지점(transform.position)의 hitEffect를 스폰한다.
+    private void SpawnHitEffect()
+    {
+        if (cfg.source is AttackDataSO data)
+            cfg.spawnEffect(data.hitEffect, transform.position, Quaternion.identity, data.hitEffectLifetime);
     }
 
     // cfg.source는 발사한 AttackDataSO 인스턴스 — 그걸로 피흡/아군 힐 옵션을 조회해 적용한다.
