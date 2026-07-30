@@ -1,22 +1,21 @@
 using UnityEngine;
 
-// 카메라의 궤도 값(초점·좌우각·상하각·거리)을 실제 트랜스폼과 렌즈에 반영한다.
-// 값을 누가 어떻게 바꾸는지는 관여하지 않는다 — 조작은 CameraInput, 이동 범위는 ExpandFocus가 넣어준다.
+// 카메라의 궤도 값(초점·좌우각·상하각·거리)  
 [ExecuteAlways]
 [RequireComponent(typeof(Camera))]
 public class CameraRig : MonoBehaviour
 {
-    [Header("Orbit")]
+    [Header("각도")]
     public Vector3 focus;
     public float yaw = 45f;
     public float pitch = 45f;
     public float distance = 40f;
 
-    [Header("Lens")]
+    [Header("렌즈")]
     public bool perspective = true;
     [Range(10f, 70f)] public float fieldOfView = 30f;
 
-    [Header("제한")]
+    [Header("한계")]
     public float minPitch = 5f;
     public float maxPitch = 89f;
     public float minDistance = 5f;
@@ -26,13 +25,30 @@ public class CameraRig : MonoBehaviour
     [Tooltip("세로 이동 한계: 낮출수록 위·아래로 더 이동(여백↑). 위쪽 타일 윗면 여유가 필요하면 낮춘다.")]
     [SerializeField, Range(0.4f, 1f)] private float fillV = 0.8f;
 
+    [Header("부드러움")]
+    [Tooltip("카메라가 목표를 따라가는 시간(초). 클수록 더 부드럽고 느긋하게 붙는다. 0=즉시(끔).")]
+    [SerializeField, Range(0f, 0.4f)] private float smoothTime = 0.12f;
+
     private Camera cam;
     private readonly CameraClamp clamp = new();
     private Bounds area;
     private bool hasArea;
 
-    private Quaternion Rotation => Quaternion.Euler(pitch, yaw, 0f);
+    // 화면에 실제로 그리는 표시 상태. focus/yaw/pitch/distance는 '목표'이고 이 값이 매 프레임 목표로
+    private Vector3 showFocus;
+    private float showYaw;
+    private float showPitch;
+    private float showDist;
+    private Vector3 focusVel;
+    private float yawVel;
+    private float pitchVel;
+    private float distVel;
+    private bool showReady;
 
+    private Quaternion Rotation => Quaternion.Euler(pitch, yaw, 0f);
+    private Quaternion ShowRotation => Quaternion.Euler(showPitch, showYaw, 0f);
+
+    // 카메라가 켜질 때 한 번: 카메라 부품을 챙기고 화면에 반영한다.
     private void OnEnable()
     {
         cam = GetComponent<Camera>();
@@ -55,15 +71,36 @@ public class CameraRig : MonoBehaviour
         ApplyNow();
     }
 
+    // 지금 값들을 화면(카메라 위치·각도·줌)에 한 번에 반영한다.
     public void ApplyNow()
     {
         ApplyLimit();
+        Damp();
         ApplyLens();
         ApplyOrbit();
     }
 
-    // 범위를 벗어난 값이 들어왔을 때 되돌린다. 입력이 있었던 프레임에만 CameraInput이 부른다.
-    // (매 프레임 부르면 Play 중 인스펙터 타이핑을 덮어써서 값이 튄다.)
+    // 화면에 보이는 값을 목표값 쪽으로 조금씩 부드럽게 옮긴다(움직임 딱딱함 방지).
+    private void Damp()
+    {
+        if (!Application.isPlaying || smoothTime <= 0f || !showReady)
+        {
+            showFocus = focus;
+            showYaw = yaw;
+            showPitch = pitch;
+            showDist = distance;
+            showReady = true;
+            return;
+        }
+
+        float dt = Time.unscaledDeltaTime;
+        showFocus = Vector3.SmoothDamp(showFocus, focus, ref focusVel, smoothTime, Mathf.Infinity, dt);
+        showYaw = Mathf.SmoothDampAngle(showYaw, yaw, ref yawVel, smoothTime, Mathf.Infinity, dt);
+        showPitch = Mathf.SmoothDamp(showPitch, pitch, ref pitchVel, smoothTime, Mathf.Infinity, dt);
+        showDist = Mathf.SmoothDamp(showDist, distance, ref distVel, smoothTime, Mathf.Infinity, dt);
+    }
+
+    // 범위를 벗어난 값이 들어왔을 때 되돌린다.
     public void ClampState()
     {
         maxPitch = Mathf.Max(maxPitch, minPitch);
@@ -72,6 +109,7 @@ public class CameraRig : MonoBehaviour
         distance = Mathf.Clamp(distance, minDistance, maxDistance);
     }
 
+    // 초점이 맵 밖으로 나가지 않게 경계 안으로 되돌린다.
     private void ApplyLimit()
     {
         if (!hasArea)
@@ -81,20 +119,22 @@ public class CameraRig : MonoBehaviour
         focus = clamp.FitFocus(focus, area, Rotation, distance, fieldOfView, cam.aspect, fillH, fillV);
     }
 
+    // 원근/직교 여부와 줌 크기를 카메라 렌즈에 반영한다.
     private void ApplyLens()
     {
         cam.orthographic = !perspective;
         cam.fieldOfView = fieldOfView;
         // 원근·직교를 오가도 화면상 크기가 유지되도록 distance에서 직교 크기를 유도한다.
-        cam.orthographicSize = distance * Mathf.Tan(fieldOfView * 0.5f * Mathf.Deg2Rad);
+        cam.orthographicSize = showDist * Mathf.Tan(fieldOfView * 0.5f * Mathf.Deg2Rad);
         cam.nearClipPlane = 0.1f;
-        cam.farClipPlane = Mathf.Max(1000f, distance * 4f);
+        cam.farClipPlane = Mathf.Max(1000f, showDist * 4f);
     }
 
+    // 표시값으로 카메라의 실제 위치와 바라보는 방향을 정한다.
     private void ApplyOrbit()
     {
-        Quaternion rot = Rotation;
+        Quaternion rot = ShowRotation;
         transform.rotation = rot;
-        transform.position = focus - rot * Vector3.forward * distance;
+        transform.position = showFocus - rot * Vector3.forward * showDist;
     }
 }

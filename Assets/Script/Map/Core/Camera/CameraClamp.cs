@@ -16,6 +16,7 @@ public class CameraClamp
     private float tanH;
     private float tanV;
 
+    // 맵이 화면 밖으로 새지 않도록 초점을 경계 안으로 맞춘 값을 돌려준다.
     public Vector3 FitFocus(Vector3 focus, Bounds area, Quaternion rotation, float distance,
                             float fieldOfView, float aspect, float fillH, float fillV)
     {
@@ -82,6 +83,7 @@ public class CameraClamp
         return shift / slope;
     }
 
+    // 맵 경계 상자의 8개 꼭짓점 좌표를 채운다.
     private void FillCorners(Bounds area)
     {
         Vector3 low = area.min;
@@ -119,6 +121,7 @@ public class CameraClamp
         return ToNdc(inv * (box.center - camPos));
     }
 
+    // 카메라 기준 좌표를 화면 좌표(±1이 화면 끝)로 바꾼다.
     private Vector2 ToNdc(Vector3 local)
     {
         float depth = Mathf.Max(local.z, 0.01f);
