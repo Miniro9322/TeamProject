@@ -26,7 +26,7 @@ public class MeleeAttackExecutor : IAttackExecutor
             int hits = 0;
             while (await window.MoveNextHit(ct))
             {
-                ctx.spawnEffect(data.attackEffect, ctx.self.position, Quaternion.identity, data.attackEffectLifetime);
+                ctx.spawnEffect(data.attackEffect, ctx.self.position, ctx.self.rotation, data.attackEffectLifetime);
                 await AttackDamageUtil.ApplyInstantDamage(data, ctx, ct);
                 hits++;
             }
@@ -35,7 +35,7 @@ public class MeleeAttackExecutor : IAttackExecutor
             // 최소 1회는 보장 적용한다. (취소 시엔 MoveNextHit가 예외를 던져 여기 도달하지 않음)
             if (hits == 0)
             {
-                ctx.spawnEffect(data.attackEffect, ctx.self.position, Quaternion.identity, data.attackEffectLifetime);
+                ctx.spawnEffect(data.attackEffect, ctx.self.position, ctx.self.rotation, data.attackEffectLifetime);
                 await AttackDamageUtil.ApplyInstantDamage(data, ctx, ct);
             }
         }
