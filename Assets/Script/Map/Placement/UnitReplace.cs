@@ -45,7 +45,7 @@ public class UnitReplace
     public void MoveHeldTo(PlacementArea area, float yOffset)
     {
         Vector3 position = area.Center;
-        position.y = AreaPlace.TopY(area) + yOffset;
+        position.y = AreaPlace.TopY(area, _heldKind) + yOffset;
         _heldUnit.transform.position = position;
     }
 
