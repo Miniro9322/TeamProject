@@ -1,4 +1,4 @@
- using System;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -33,7 +33,7 @@ public class MapAssemble : MonoBehaviour
 
         view.pointerPick = pointerPick;
         view.replace = replace;
-        view.rangeInfo = new RangeInfo(mapGame.Units);
+        view.rangeInfo = new RangeInfo();
         view.citizenManager = mapGame.CitizenManager;
         view.resourcesManager = mapGame.ResourcesManager;
 

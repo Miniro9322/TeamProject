@@ -1,18 +1,30 @@
 using UnityEngine;
 
-// 배치된 유닛의 사거리를 장부에서 읽어 준다(음수면 0).
+// 영웅에게 설정된 실제 사거리 정보를 읽는다.
 public class RangeInfo
 {
-    private readonly UnitList _unitList;
-
-    public RangeInfo(UnitList unitList)
+    public bool TryGet(
+        GameObject unit,
+        out int range,
+        out RangeShape shape)
     {
-        _unitList = unitList;
-    }
+        range = 0;
+        shape = RangeShape.Diamond;
 
-    public int RangeOf(GameObject unit)
-    {
-        _unitList.TryGetRange(unit, out int range);
-        return Mathf.Max(0, range);
+        bool hasUnit = unit != null;
+        if (!hasUnit)
+        {
+            return false;
+        }
+
+        bool hasHero = unit.TryGetComponent(out Hero hero);
+        if (!hasHero)
+        {
+            return false;
+        }
+
+        range = Mathf.Max(0, hero.Range);
+        shape = hero.RangeShape;
+        return true;
     }
 }

@@ -19,6 +19,8 @@ public class UnitReplace
 
     public bool IsHolding => _heldUnit != null;
     public Tile HeldFromTile => _heldFromTile;
+    public GameObject HeldUnit => _heldUnit;
+    public OccupantKind HeldKind => _heldKind;
     public Vector2Int HeldSize => _heldSize;
 
     // 칸의 유닛을 집어 든다: 덮고 있던 칸을 모두 떼고 프리뷰 상태로 전환. 성공하면 true(빈 칸이면 false).
