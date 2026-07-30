@@ -16,7 +16,10 @@ public class WaveSpawner : MonoBehaviour
     [SerializeField] private int region = 1;
     public int Region => region;
     public int Enemycount;
+    [Tooltip("구버전 표시용 폴백. 팝업 프리팹에 StageInfoView가 붙어 있으면 쓰이지 않는다.")]
     public TMP_Text text;
+    [Tooltip("스테이지 정보 팝업(아이콘 행 + 툴팁). SpawnerManager가 클릭 때마다 넣어준다.")]
+    public StageInfoView infoView;
     [Tooltip("보스 라운드에서 일반 몹은 즉시, 보스는 이 시간(초) 뒤에 등장.")]
     [SerializeField] private float bossSpawnDelay = 10f;
     
@@ -142,8 +145,9 @@ public class WaveSpawner : MonoBehaviour
     }
     public void ResetText()
     {
+        if (infoView != null) infoView.Clear();
         if(text == null || string.IsNullOrEmpty(text.text))return;
-        
+
         text.text = string.Empty;
     }
     public void SpawnWave(int currentStage)
@@ -231,39 +235,53 @@ public class WaveSpawner : MonoBehaviour
 
     public void AddSpawnCount(int n) => Enemycount += n;
 
+    // 스테이지 정보 표시. infoView가 있으면 적 아이콘 + x마릿수 행으로, 없으면 예전처럼 텍스트 한 덩어리로 쓴다.
+    // (프리팹에 StageInfoView를 아직 붙이지 않은 상태에서도 게임이 돌아가도록 폴백을 남겨둠)
     public void OnClickStage(int region,int currentstage, IEnumerable<int> reinforcementSources = null)
     {
-        if (waveTable == null || text == null) return; // Start 전 클릭/텍스트 미할당 방어
-        var st = DataTableManager.StringTable;
-        // 헤더는 문장 통째로 한 키. 언어마다 어순이 달라("1지역 5일차" vs "Region 1 - Day 5")
-        // 단어만 키로 빼면 순서를 못 맞춘다. {0}=지역번호 {1}=일차.
-        text.text = string.Format(st.Get("Ui_StageHeader"), region, currentstage) + "\n";
+        if (waveTable == null) return;                          // Start 전 클릭 방어
+        if (infoView == null && text == null) return;           // 표시할 대상이 아무것도 없음
+
         int lookupId = GetStageLookupId(currentstage);
+        // 이번 클릭 내용만 남게 매번 비우고 시작한다(안 비우면 클릭할수록 목록이 쌓인다).
+        if (infoView != null) infoView.Begin();
+        else text.text = string.Empty;
+
         foreach(var w in waveTable.GetWave(region,lookupId))
-        {
-            int count = GetScaleCount(w.Count, currentstage);
-            text.text += $"{st.Get(w.MonsterName)} x {count}\n";
-        }
+            AddStageLine(w.MonsterName, GetScaleCount(w.Count, currentstage), null);
+
         if (reinforcementSources != null)
         {
             foreach (int src in reinforcementSources)
             {
                 if (src == region) continue;
                 foreach (var w in waveTable.GetWave(src, ReinforceId))
-                {
-                    int count = GetScaleCount(w.Count, currentstage);
-                    
-                    text.text += $"{st.Get(w.MonsterName)} x {count}({st.Get("Ui_Add")})\n";
-                }
+                    AddStageLine(w.MonsterName, GetScaleCount(w.Count, currentstage), "Ui_Add");
             }
         }
         if(currentstage>10&&currentstage%10==0&&region==1)
         {
             foreach(var w in waveTable.GetWave(1,10))
-            {
-                text.text +=$"({st.Get("Ui_Boss")}){st.Get(w.MonsterName)} x {w.Count}";
-            }
+                AddStageLine(w.MonsterName, w.Count, "Ui_Boss");
         }
+    }
+
+    // 적 한 종류를 한 줄로 추가. badgeKey: "Ui_Add"(증원) / "Ui_Boss"(보스) / null(일반).
+    // WaveTable.MonsterName과 EnemyTable.Name은 같은 키라 그대로 조회한다(아이콘·설명도 이 키 기준).
+    private void AddStageLine(string monsterName, int count, string badgeKey)
+    {
+        if (infoView != null)
+        {
+            EnemyTable.Data data = DataTableManager.EnemyTable?.Get(monsterName);
+            if (data != null) { infoView.AddRow(data, count, badgeKey); return; }
+            // EnemyTable에 행이 없는 몹은 아이콘/설명을 만들 수 없다 → 이름만이라도 남긴다.
+            Debug.LogWarning($"WaveSpawner: EnemyTable에 '{monsterName}' 없음 — 이름만 표시");
+        }
+        if (text == null) return;
+
+        var st = DataTableManager.StringTable;
+        string badge = string.IsNullOrEmpty(badgeKey) ? string.Empty : $"({st.Get(badgeKey)})";
+        text.text += $"{st.Get(monsterName)} x {count}{badge}\n";
     }
 
     public static int GetScaleCount(int baseCount,int currentStage)
