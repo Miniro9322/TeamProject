@@ -10,24 +10,17 @@ public class HeroSkillCastController
     {
         if (tile == null || buildingUi.CanBuild()) return; // 낮에는 동작 안 함(CanBuild==true가 낮)
 
-        Hero clickedHero = null;
-        if (tile.OccupantObject != null)
-            tile.OccupantObject.TryGetComponent(out clickedHero);
-        bool clickedIsCastable = clickedHero != null && clickedHero.ActiveSkill != null && !clickedHero.IsDead;
-
         if (selectedCaster == null)
         {
-            if (clickedIsCastable) selectedCaster = clickedHero;
+            Hero clickedHero = null;
+            if (tile.OccupantObject != null)
+                tile.OccupantObject.TryGetComponent(out clickedHero);
+            if (clickedHero != null && clickedHero.ActiveSkill != null && !clickedHero.IsDead)
+                selectedCaster = clickedHero;
             return;
         }
 
-        if (clickedIsCastable && clickedHero != selectedCaster)
-        {
-            selectedCaster = clickedHero; // 다른 시전 가능 영웅 클릭 시 대상 전환
-            return;
-        }
-
-        selectedCaster.TryUseActiveSkill(tile); // 성공/범위밖 실패 무관하게 선택 해제
+        selectedCaster.TryUseActiveSkill(tile); // 타일 위에 다른 영웅이 있어도 타겟 클릭으로 취급
         selectedCaster = null;
     }
 

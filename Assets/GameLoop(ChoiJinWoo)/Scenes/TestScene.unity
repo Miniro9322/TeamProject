@@ -1986,6 +1986,7 @@ MonoBehaviour:
   hidePanal: {fileID: 1302357297}
   infoOpenButton: {fileID: 584979853}
   infoCloseButton: {fileID: 1251147143}
+  archiveList: {fileID: 0}
 --- !u!4 &250356135
 Transform:
   m_ObjectHideFlags: 0
@@ -2578,6 +2579,7 @@ MonoBehaviour:
   expand: {fileID: 937669907}
   dragPixels: 8
   placeYOffset: 0
+  tilePaintView: {fileID: 1235437630}
 --- !u!1 &322741156
 GameObject:
   m_ObjectHideFlags: 0
@@ -11257,6 +11259,7 @@ MonoBehaviour:
   spawnPoint: {fileID: 7456569907757309849, guid: bea80f4b41e53ed419d66ed07388c193, type: 3}
   infoTextPrefab: {fileID: 7556058626658315482, guid: 4e2497c728adeb14d84e5b1905c18242, type: 3}
   infoTextOffset: {x: 2, y: 4, z: 0}
+  stageInfoSortingOrder: -10
   cam: {fileID: 0}
 --- !u!4 &1403437580
 Transform:
