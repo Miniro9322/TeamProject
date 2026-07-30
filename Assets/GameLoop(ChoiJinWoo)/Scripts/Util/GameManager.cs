@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -19,6 +20,7 @@ public class GameManager : MonoBehaviour
     private SpawnerManager waveSpawner;
     private int dayCount = 0;
     [SerializeField] private int hp = 20;
+    [SerializeField] private List<BaseUpgradeData> hpUpgrades;
     private bool requestSupport = false;
     public int DayCount => dayCount;
     public bool CanBuild => canBuild;
@@ -37,13 +39,15 @@ public class GameManager : MonoBehaviour
     public bool isGameOver = false;
 
     [Inject]
-    private void Construct(UiManager uiManager, SpawnerManager waveSpawner)
+    private void Construct(UiManager uiManager, SpawnerManager waveSpawner, UpgradeState upgradeState)
     {
         this.uiManager = uiManager;
         this.waveSpawner = waveSpawner;
         unlockedHero = (byte)initialUnlockedHero;
         uiManager.UnlockedEnemy = UnlockedEnemy;
         uiManager.UnlockedHero = unlockedHero;
+
+        hp += (int)upgradeState.GetTotalEffect(hpUpgrades);
     }
 
     private void Start()

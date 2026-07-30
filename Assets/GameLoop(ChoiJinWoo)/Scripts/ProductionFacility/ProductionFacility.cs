@@ -1,10 +1,14 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using VContainer;
 
 public class ProductionFacility : MonoBehaviour, IPlaceAble
 {
     [SerializeField] private ProductionValue basicValue;
+    [SerializeField] private List<BaseUpgradeData> constructCostUpgrades;
+    [SerializeField] private List<BaseUpgradeData> upgradeCostUpgrades;
+    [SerializeField] private List<BaseUpgradeData> productAmountUpgrades;
     private int productAmount;
     private int workerAmount = 0;
     private int maxWorker;
@@ -12,6 +16,9 @@ public class ProductionFacility : MonoBehaviour, IPlaceAble
     private BuildingPool buildingPool;
     private CitizenManager citizenManager;
     private FacilityManager facilityManager;
+    private float constructCostDiscount;
+    private float upgradeCostDiscount;
+    private int productAmountBonus;
     public ProductionType ProductionType => basicValue.Type;
 
     public event Action OnWorkerChanged;
@@ -35,22 +42,34 @@ public class ProductionFacility : MonoBehaviour, IPlaceAble
     public int UpgradeCount => upgradeCount;
 
     [Inject]
-    private void Construct(ResourcesManager resourcesManager, CitizenManager citizenManager, BuildingPool buildingPool, FacilityManager facilityManager)
+    private void Construct(ResourcesManager resourcesManager, CitizenManager citizenManager, BuildingPool buildingPool, FacilityManager facilityManager, UpgradeState upgradeState)
     {
         this.resourcesManager = resourcesManager;
         this.citizenManager = citizenManager;
         this.buildingPool = buildingPool;
         this.facilityManager = facilityManager;
+
+        constructCostDiscount = upgradeState.GetTotalEffect(constructCostUpgrades);
+        upgradeCostDiscount = upgradeState.GetTotalEffect(upgradeCostUpgrades);
+        productAmountBonus = (int)upgradeState.GetTotalEffect(productAmountUpgrades);
+    }
+
+    private static (ProductionType Type, int Amount)[] ApplyDiscount((ProductionType Type, int Amount)[] cost, float discount)
+    {
+        var result = new (ProductionType, int)[cost.Length];
+        for (int i = 0; i < cost.Length; i++)
+            result[i] = (cost[i].Type, Mathf.RoundToInt(cost[i].Amount * (1f - discount)));
+        return result;
     }
 
     public void Init()
     {
-        productAmount = basicValue.DefaultAmount + amountUpgrade * 10;
+        productAmount = basicValue.DefaultAmount + amountUpgrade * 10 + productAmountBonus;
         maxWorker = basicValue.DefaultMaxWorker + citizenUpgrade;
         workerAmount = 0;
-        upgradeCostCopy = BasicValue.UpgradeCost;
+        upgradeCostCopy = ApplyDiscount(BasicValue.UpgradeCost, upgradeCostDiscount);
 
-        resourcesManager.ProductChanged(basicValue.ConstructProduct);
+        resourcesManager.ProductChanged(ApplyDiscount(basicValue.ConstructProduct, constructCostDiscount));
         facilityManager.AddFacility(this);
     }
 
@@ -142,7 +161,7 @@ public class ProductionFacility : MonoBehaviour, IPlaceAble
 
         resourcesManager.ProductChanged(upgradeCostCopy);
 
-        var baseCost = basicValue.UpgradeCost;
+        var baseCost = ApplyDiscount(basicValue.UpgradeCost, upgradeCostDiscount);
         for (int i = 0; i < upgradeCostCopy.Length; i++)
         {
             upgradeCostCopy[i] = (baseCost[i].Type, baseCost[i].Amount * upgradeCount);

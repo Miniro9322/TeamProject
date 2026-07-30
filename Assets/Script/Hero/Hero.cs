@@ -10,8 +10,11 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
     [Header("유닛 생성 비용")]
     [SerializeField] private int citizenAmount = 2;
     [SerializeField] private List<ResourceCost> cost;
+    [SerializeField] private List<BaseUpgradeData> costUpgrades;
 
     [SerializeField] private List<ResourceCost> statUpgradeCost;
+    [SerializeField] private List<BaseUpgradeData> statUpgradeCostUpgrades;
+    [SerializeField] private List<BaseUpgradeData> statUpgrades;
     [SerializeField] private List<HeroUpgradeData> upgradeDatas;
     private int skillLevel = 0;
     private int statLevel = 0;
@@ -22,11 +25,12 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
     {
         get
         {
+            float discount = upgradeState != null ? upgradeState.GetTotalEffect(costUpgrades) : 0f;
             var temp = new (ProductionType, int)[cost.Count];
 
             for (int i = 0; i < cost.Count; i++)
             {
-                temp[i] = (cost[i].Type, -cost[i].Amount);
+                temp[i] = (cost[i].Type, -Mathf.RoundToInt(cost[i].Amount * (1f - discount)));
             }
 
             return temp;
@@ -37,11 +41,13 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
     {
         get
         {
+            float discount = upgradeState != null ? upgradeState.GetTotalEffect(statUpgradeCostUpgrades) : 0f;
             var temp = new (ProductionType, int)[statUpgradeCost.Count];
 
             for (int i = 0; i < statUpgradeCost.Count; i++)
             {
-                temp[i] = (statUpgradeCost[i].Type, -(statUpgradeCost[i].Amount + statUpgradeCost[i].Amount * statLevel));
+                int baseAmount = statUpgradeCost[i].Amount + statUpgradeCost[i].Amount * statLevel;
+                temp[i] = (statUpgradeCost[i].Type, -Mathf.RoundToInt(baseAmount * (1f - discount)));
             }
 
             return temp;
@@ -112,14 +118,16 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
     private GameManager gameManager;
     private ResourcesManager resourcesManager;
     protected BuffManager buffManager;
-    
+    private UpgradeState upgradeState;
+
     public int CitizenAmount => citizenAmount;
     [Inject]
-    private void Construct(GameManager gameManager, BuffManager buffManager, ResourcesManager resourcesManager)
+    private void Construct(GameManager gameManager, BuffManager buffManager, ResourcesManager resourcesManager, UpgradeState upgradeState)
     {
         this.gameManager = gameManager;
         this.buffManager = buffManager;
         this.resourcesManager = resourcesManager;
+        this.upgradeState = upgradeState;
     }
 
     public void Die()
@@ -172,6 +180,7 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
     protected virtual void Start()
     {
         SetCurrentTile();
+        ApplyStatUpgradeBonus();
         //테스트용 코드
         if (gameManager != null)
         {
@@ -179,6 +188,17 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
         }
         //끝
         StartAuras();
+    }
+
+    private void ApplyStatUpgradeBonus()
+    {
+        if (upgradeState == null) return;
+
+        float bonus = upgradeState.GetTotalEffect(statUpgrades);
+        if (bonus == 0f) return;
+
+        sc.AddModifier(StatType.ATK, new Modifier(ModifierType.Flat, bonus, 0f, StatLayer.Equip, this));
+        sc.AddModifier(StatType.DEF, new Modifier(ModifierType.Flat, bonus, 0f, StatLayer.Equip, this));
     }
 
     //테스트용 코드
