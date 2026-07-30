@@ -182,8 +182,8 @@ public static class TileSwap
         return 0f;
     }
 
-    /// <summary>이 타일의 윗면 높이 — 위에 판을 얹을 자리.</summary>
-    private static float TopY(Tile tile)
+    /// <summary>이 타일의 윗면 높이 — 위에 판이나 장식을 얹을 자리.</summary>
+    public static float TopY(Tile tile)
     {
         float top = tile.transform.position.y;
         bool measured = false;

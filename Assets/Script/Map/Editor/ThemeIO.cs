@@ -1,0 +1,233 @@
+using System.Collections.Generic;
+using UnityEditor;
+using UnityEngine;
+
+/// <summary>
+/// 테마 에셋을 모으고, 열어 둔 모듈이 쓰고 있는 프리팹으로 새 테마를 뽑는 에디터 전용 도구.
+///
+/// 뽑기가 필요한 이유: 모듈은 이미 저작돼 있는데 무슨 프리팹을 쓰는지가 어디에도 적혀 있지 않다.
+/// 손으로 슬롯을 채우면 실제로 쓰는 것과 어긋나고, 어긋난 세트로 교체하면
+/// 테마가 맞던 타일이 엉뚱한 큐브로 바뀐다.
+///
+/// 에셋은 스크립트 폴더가 아니라 Assets/Map/Themes에 둔다 — 저작 설정이라 팀이 같은 것을 봐야 한다.
+/// </summary>
+public static class ThemeIO
+{
+    private const string RootPath = "Assets/Map";
+    private const string FolderPath = "Assets/Map/Themes";
+
+    /// <summary>프로젝트의 모든 테마. 이름순으로 정렬해 탭 순서가 매번 같게 한다.</summary>
+    public static List<TileTheme> LoadAll()
+    {
+        var themes = new List<TileTheme>();
+        foreach (string guid in AssetDatabase.FindAssets("t:TileTheme"))
+        {
+            string path = AssetDatabase.GUIDToAssetPath(guid);
+            var theme = AssetDatabase.LoadAssetAtPath<TileTheme>(path);
+            if (theme != null)
+            {
+                themes.Add(theme);
+            }
+        }
+
+        themes.Sort((a, b) => string.Compare(a.Title, b.Title, System.StringComparison.Ordinal));
+        return themes;
+    }
+
+    /// <summary>이 모듈이 기본으로 쓰는 테마. 가리키는 테마가 없으면 null.</summary>
+    public static TileTheme Best(List<TileTheme> themes, Grid module)
+    {
+        GameObject source = ModuleScan.SourcePrefab(module);
+        if (source == null)
+        {
+            return null;
+        }
+
+        foreach (TileTheme theme in themes)
+        {
+            if (theme.Owns(source))
+            {
+                return theme;
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary>슬롯이 빈 테마를 하나 만든다.</summary>
+    public static TileTheme CreateEmpty(string label)
+    {
+        var theme = ScriptableObject.CreateInstance<TileTheme>();
+        theme.Label = label;
+        Save(theme, label);
+        return theme;
+    }
+
+    /// <summary>
+    /// 이 모듈이 지금 쓰고 있는 프리팹을 붓별로 모아 테마로 만든다.
+    /// 프리팹 링크가 없는 타일(복제로 만든 오브젝트)은 원본이 없어 건너뛴다.
+    /// </summary>
+    public static TileTheme Extract(Grid module, string label)
+    {
+        var found = new Dictionary<MapBrush, List<GameObject>>();
+        int linked = 0;
+        int loose = 0;
+
+        GameObject source = ModuleScan.SourcePrefab(module);
+        string modulePath = source != null ? AssetDatabase.GetAssetPath(source) : string.Empty;
+
+        foreach (Tile tile in ModuleScan.CollectTiles(module))
+        {
+            GameObject prefab = Origin(tile.gameObject, modulePath);
+            if (prefab == null)
+            {
+                loose++;
+                continue;
+            }
+
+            linked++;
+            Collect(found, BrushOf(tile.State.Terrain), prefab);
+        }
+
+        Transform decor = DecorPlace.Find(module);
+        if (decor != null)
+        {
+            foreach (Transform child in decor)
+            {
+                GameObject prefab = Origin(child.gameObject, modulePath);
+                if (prefab != null)
+                {
+                    Collect(found, MapBrush.Decor, prefab);
+                }
+            }
+        }
+
+        var theme = ScriptableObject.CreateInstance<TileTheme>();
+        theme.Label = label;
+        theme.Slots = Build(found);
+
+        if (source != null)
+        {
+            theme.Modules = new[] { source };
+        }
+
+        Save(theme, label);
+        Report(theme, linked, loose);
+        return theme;
+    }
+
+    // 모은 목록을 붓 순서대로 슬롯 배열로 만든다. 비어 있는 붓은 슬롯을 만들지 않는다.
+    private static TileTheme.Slot[] Build(Dictionary<MapBrush, List<GameObject>> found)
+    {
+        var slots = new List<TileTheme.Slot>();
+        foreach (MapBrush brush in TileTheme.Painters())
+        {
+            if (!found.TryGetValue(brush, out List<GameObject> prefabs))
+            {
+                continue;
+            }
+
+            slots.Add(new TileTheme.Slot { Brush = brush, Prefabs = prefabs.ToArray() });
+        }
+
+        return slots.ToArray();
+    }
+
+    private static void Collect(Dictionary<MapBrush, List<GameObject>> found, MapBrush brush, GameObject prefab)
+    {
+        if (!found.TryGetValue(brush, out List<GameObject> prefabs))
+        {
+            prefabs = new List<GameObject>();
+            found[brush] = prefabs;
+        }
+
+        if (!prefabs.Contains(prefab))
+        {
+            prefabs.Add(prefab);
+        }
+    }
+
+    /// <summary>
+    /// 이 오브젝트를 만든 원본 프리팹 에셋. 프리팹에서 온 것이 아니면 null.
+    ///
+    /// 한 단계가 아니라 맨 처음 원본까지 거슬러 올라간다 — 모듈 프리팹 안에 큐브 프리팹이 겹쳐 있어서,
+    /// 한 단계만 보면 "MapModule_A 안의 Prod_1_1"이 나온다. 그것은 따로 찍을 수 있는 프리팹이 아니다.
+    /// 찍으려면 진짜 원본(Cube_PlowedGround 같은 것)의 루트여야 한다.
+    ///
+    /// 그래서 모듈 프리팹 자신으로 되돌아오는 오브젝트는 원본이 없는 것으로 본다 —
+    /// 그 타일은 모듈 안에 직접 놓인 것이고, 갈아끼울 원본 프리팹을 갖고 있지 않다.
+    /// </summary>
+    private static GameObject Origin(GameObject made, string modulePath)
+    {
+        GameObject source = PrefabUtility.GetCorrespondingObjectFromOriginalSource(made);
+        if (source == null)
+        {
+            return null;
+        }
+
+        string path = AssetDatabase.GetAssetPath(source);
+        if (string.IsNullOrEmpty(path) || path == modulePath)
+        {
+            return null;
+        }
+
+        return AssetDatabase.LoadAssetAtPath<GameObject>(path);
+    }
+
+    private static MapBrush BrushOf(TerrainType terrain)
+    {
+        switch (terrain)
+        {
+            case TerrainType.High: return MapBrush.High;
+            case TerrainType.Core: return MapBrush.Core;
+            case TerrainType.Special: return MapBrush.Special;
+            case TerrainType.Empty: return MapBrush.Empty;
+            default: return MapBrush.Ground;
+        }
+    }
+
+    private static void Save(TileTheme theme, string label)
+    {
+        EnsureFolder();
+        string name = string.IsNullOrEmpty(label) ? "TileTheme" : label;
+        string path = AssetDatabase.GenerateUniqueAssetPath($"{FolderPath}/{name}.asset");
+
+        AssetDatabase.CreateAsset(theme, path);
+        AssetDatabase.SaveAssets();
+    }
+
+    private static void EnsureFolder()
+    {
+        if (AssetDatabase.IsValidFolder(FolderPath))
+        {
+            return;
+        }
+
+        if (!AssetDatabase.IsValidFolder(RootPath))
+        {
+            AssetDatabase.CreateFolder("Assets", "Map");
+        }
+
+        AssetDatabase.CreateFolder(RootPath, "Themes");
+    }
+
+    // 뽑은 결과를 알린다. 링크 없는 타일이 많으면 그 모듈은 뽑을 원본이 거의 없다는 뜻이다.
+    private static void Report(TileTheme theme, int linked, int loose)
+    {
+        int kinds = 0;
+        foreach (TileTheme.Slot slot in theme.Slots)
+        {
+            kinds += slot.Prefabs.Length;
+        }
+
+        if (kinds == 0)
+        {
+            Debug.LogWarning("[Map Maker] 뽑을 프리팹이 없습니다 — 이 모듈의 타일은 프리팹 링크가 없습니다" +
+                $" (링크 없는 타일 {loose}개). 다른 모듈에서 뽑은 테마를 쓰거나 교체로 프리팹을 깔아 주세요.", theme);
+            return;
+        }
+
+        Debug.Log($"[Map Maker] 테마를 뽑았습니다 — 프리팹 {kinds}종 " +
+            $"(링크 있는 타일 {linked}개, 링크 없는 타일 {loose}개) · {AssetDatabase.GetAssetPath(theme)}", theme);
+    }
+}

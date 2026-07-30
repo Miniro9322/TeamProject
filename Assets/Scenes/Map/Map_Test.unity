@@ -608,7 +608,7 @@ GameObject:
   - component: {fileID: 124960408}
   - component: {fileID: 124960409}
   m_Layer: 0
-  m_Name: Main Camera
+  m_Name: GameCamera
   m_TagString: MainCamera
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -681,8 +681,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 124960401}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.43837115, y: 0, z: 0, w: 0.89879405}
-  m_LocalPosition: {x: 22, y: 45.704624, z: -20.708366}
+  m_LocalRotation: {x: 0.53729963, y: 0, z: 0, w: 0.8433914}
+  m_LocalPosition: {x: 21, y: 52.565853, z: -12.711856}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -760,18 +760,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 006a2b67724c46f43b10621fbe7eafd5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CameraRig
-  focus: {x: 22, y: 0, z: 15}
+  focus: {x: 21, y: 0, z: 11.8}
   yaw: 0
-  pitch: 52
+  pitch: 65
   distance: 58
   perspective: 1
   fieldOfView: 30
   minPitch: 0
-  maxPitch: 150
+  maxPitch: 60
   minDistance: 20
   maxDistance: 120
   fillH: 1
   fillV: 0.8
+  smoothTime: 0.12
 --- !u!114 &124960408
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1794,9 +1795,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TilePainter
   board: {fileID: 2512691319082104341}
   pathColor: {r: 0.22, g: 0.85, b: 0.54, a: 1}
-  okColor: {r: 0.21, g: 0.77, b: 0.41, a: 1}
+  okColor: {r: 0.21176472, g: 0.7686275, b: 0.41176474, a: 1}
   denyColor: {r: 0.85, g: 0.29, b: 0.27, a: 1}
-  rangeColor: {r: 0.3, g: 0.6, b: 1, a: 1}
+  rangeColor: {r: 0.21176471, g: 0.76862746, b: 0.4117647, a: 1}
   enemyColor: {r: 0.9, g: 0.25, b: 0.2, a: 1}
   blockColor: {r: 0.95, g: 0.55, b: 0.1, a: 1}
   tintShader: {fileID: 0}
@@ -1957,6 +1958,7 @@ MonoBehaviour:
   expand: {fileID: 807758960}
   dragPixels: 8
   placeYOffset: 0
+  ghostAlpha: 0.45
 --- !u!4 &325526703 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 6150888897033959060, guid: 2a68ec03577869b449ea1d5f1fb2c174, type: 3}
