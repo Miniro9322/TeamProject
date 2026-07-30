@@ -27,7 +27,9 @@ public static class GroundZoneRunner
         bool persistent = data.duration <= 0f;
         float elapsed = 0f, tickTimer = 0f;
 
-        GameObject landEffectGo = spawnPersistentEffect(data.landEffect, center, Quaternion.identity);
+        GameObject landEffectGo = spawnPersistentEffect(data.landEffect, center, Quaternion.Euler(data.landEffectRotation));
+        ApplyLandEffectScale(landEffectGo, data.radius, data.landEffectRadius);
+        if (!persistent) FitToDuration(landEffectGo, data.duration);
         try
         {
             while (!token.IsCancellationRequested && (persistent ? keepAliveWhilePersistent() : elapsed < data.duration))
@@ -48,6 +50,30 @@ public static class GroundZoneRunner
         {
             despawnEffect(data.landEffect, landEffectGo);
         }
+    }
+
+    // landEffect의 각 자식 파티클 시스템을 duration에 맞춘다. 이미 반복(loop)으로 authored된 자식은
+    // 그대로 자연스러운 속도로 계속 반복되게 두고(예: Trail), 1회성(loop=false)으로 authored된 자식만
+    // "자기 자신의 원래 duration → 목표 duration" 배율로 simulationSpeed를 조정해 정확히 한 번 재생하고
+    // 끝나도록 한다. 여러 자식마다 원래 길이가 제각각이므로(RainLightning처럼) 배율은 자식별로 따로 계산한다.
+    private static void FitToDuration(GameObject go, float targetDuration)
+    {
+        if (go == null || targetDuration <= 0f) return;
+        foreach (ParticleSystem ps in go.GetComponentsInChildren<ParticleSystem>(true))
+        {
+            ParticleSystem.MainModule main = ps.main;
+            if (main.loop) continue; // 원래도 반복되는 자식은 그대로 둔다.
+            if (main.duration <= 0f) continue;
+            main.simulationSpeed = main.duration / targetDuration;
+        }
+    }
+
+    // landEffectRadius(프리팹이 기본 크기로 나타내는 반경, 타일 수)를 기준으로 실제 radius에 맞게
+    // 균일 스케일한다. 예: landEffectRadius=1인데 radius=3이면 3배 크기로 표시.
+    private static void ApplyLandEffectScale(GameObject go, int radius, float landEffectRadius)
+    {
+        if (go == null || landEffectRadius <= 0f) return;
+        go.transform.localScale = Vector3.one * (radius / landEffectRadius);
     }
 
     private static void Tick(Vector3 center, GroundZoneDataSO data,
@@ -75,7 +101,10 @@ public static class GroundZoneRunner
         foreach (GameObject go in targets)
         {
             if (dmg > 0 && go.GetComponentInParent<IDamageAble>() is IDamageAble d)
+            {
                 d.TakeDamage(dmg);
+                spawnEffect(data.hitEffect, go.transform.position, Quaternion.identity, data.hitEffectLifetime);
+            }
 
             // NOTE: EnemyBase가 아직 IUnit을 구현하지 않아(기존 버그, 별도 작업 예정) 아래는 현재 실제 적에겐 no-op.
             if (data.debuffs != null && go.GetComponentInParent<IUnit>() is IUnit unit)
@@ -83,7 +112,5 @@ public static class GroundZoneRunner
                     buffManager.ApplyStackingModifier(unit, debuff.statType, debuff.modifierType,
                         debuff.value, debuffDuration, debuff.maxStacks, source);
         }
-        if (targets.Count > 0)
-            spawnEffect(data.hitEffect, center, Quaternion.identity, data.hitEffectLifetime);
     }
 }
