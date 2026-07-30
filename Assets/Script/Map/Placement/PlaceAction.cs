@@ -13,10 +13,12 @@ public class PlaceAction
     public MapView view;
     public HeroRoster heroRoster;
     public float placeYOffset;
+    public HeroSkillCastController skillCast;
 
     public void SelectTile(Tile tile)
     {
         view.Select(tile);
+        skillCast?.HandleClick(tile);
     }
 
     public void PlaceUnit(Tile tile)

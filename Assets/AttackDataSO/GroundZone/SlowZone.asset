@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 6148b18a47abbe44ca242829bb247459, type: 3}
-  m_Name: FrozenZone
+  m_Name: SlowZone
   m_EditorClassIdentifier: Assembly-CSharp::GroundZoneDataSO
   mode: 0
   shape: 1
@@ -18,12 +18,14 @@ MonoBehaviour:
   tickInterval: 0.2
   damagePer: 0.05
   healPer: 0
-  duration: 2
+  duration: 20
   debuffs:
   - statType: 5
     modifierType: 1
     value: -0.7
     maxStacks: 1
-  landEffect: {fileID: 0}
+  landEffect: {fileID: 4692690454220826946, guid: 615aecb8e91bc294ab5f68dbadc6947d, type: 3}
+  landEffectRotation: {x: -90, y: 0, z: 0}
+  landEffectRadius: 1
   hitEffect: {fileID: 0}
   hitEffectLifetime: 0.5
