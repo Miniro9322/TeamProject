@@ -4,6 +4,7 @@ public class HeroSkillCastController
 {
     public BuildingUiLink buildingUi;
     private Hero selectedCaster;
+    public Hero SelectedCaster => selectedCaster;
 
     public void HandleClick(Tile tile)
     {

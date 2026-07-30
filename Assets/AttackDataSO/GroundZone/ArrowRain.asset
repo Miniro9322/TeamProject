@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GroundZoneDataSO
   mode: 0
   shape: 1
-  radius: 2
+  radius: 1
   tickInterval: 0.1
   damagePer: 0.4
   healPer: 0
@@ -22,6 +22,6 @@ MonoBehaviour:
   debuffs: []
   landEffect: {fileID: 114774, guid: 11e2e6655f9b7c6488fb090ed99d2d9e, type: 3}
   landEffectRotation: {x: -90, y: 0, z: 0}
-  landEffectRadius: 1
+  landEffectRadius: 0
   hitEffect: {fileID: 1029544359644514, guid: aab2daf1fd2b23f4a9bdbbb38fc95704, type: 3}
   hitEffectLifetime: 0.5

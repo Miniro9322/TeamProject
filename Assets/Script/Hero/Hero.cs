@@ -94,6 +94,7 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
     [SerializeField] protected int range = 1;
     [SerializeField] protected RangeShape rangeShape = RangeShape.Diamond;
     public int Range => range;
+    public RangeShape RangeShape => rangeShape;
     [SerializeField] private List<GroundZoneDataSO> auraZones = new();
     private CancellationTokenSource _auraCts;
 

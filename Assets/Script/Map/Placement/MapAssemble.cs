@@ -14,6 +14,7 @@ public class MapAssemble : MonoBehaviour
     [SerializeField] private ExpandEvent expand;
     [SerializeField] private float dragPixels = 8f;
     [SerializeField] private float placeYOffset = 0f;
+    [SerializeField] private TilePaintView tilePaintView;
 
     private List<PathTrail> pathTrails;
     private HeroSkillCastController skillCast;
@@ -30,6 +31,7 @@ public class MapAssemble : MonoBehaviour
         buildingUi.rule = mapGame.Rule;
 
         skillCast = new HeroSkillCastController { buildingUi = buildingUi };
+        if (tilePaintView != null) tilePaintView.skillCast = skillCast;
 
         view.pointerPick = pointerPick;
         view.replace = replace;
