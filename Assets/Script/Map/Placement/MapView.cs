@@ -113,7 +113,7 @@ public class MapView : MonoBehaviour
                 else
                     return false;
             case OccupantKind.Resource:
-                if (resourcesManager.CheckResources(slot.prefab.GetComponent<ProductionFacility>().BasicValue.ConstructProduct))
+                if (resourcesManager.CheckResources(slot.prefab.GetComponent<ProductionFacility>().GetConstructCost()))
                     return true;
                 else
                     return false;

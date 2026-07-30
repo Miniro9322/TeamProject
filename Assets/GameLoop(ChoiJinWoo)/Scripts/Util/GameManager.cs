@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -17,8 +18,10 @@ public class GameManager : MonoBehaviour
     private UiManager uiManager;
     public UiManager UiManager => uiManager;
     private SpawnerManager waveSpawner;
+    private UpgradeState upgradeState;
     private int dayCount = 0;
     [SerializeField] private int hp = 20;
+    [SerializeField] private List<BaseUpgradeData> hpUpgrades;
     private bool requestSupport = false;
     public int DayCount => dayCount;
     public bool CanBuild => canBuild;
@@ -35,15 +38,20 @@ public class GameManager : MonoBehaviour
     public byte UnlockHero => unlockedHero;
     private byte UnlockedEnemy = 0b000111;
     public bool isGameOver = false;
+    public event Action HpChanged;
+    public int Hp => hp;
 
     [Inject]
-    private void Construct(UiManager uiManager, SpawnerManager waveSpawner)
+    private void Construct(UiManager uiManager, SpawnerManager waveSpawner, UpgradeState upgradeState)
     {
         this.uiManager = uiManager;
         this.waveSpawner = waveSpawner;
+        this.upgradeState = upgradeState;
         unlockedHero = (byte)initialUnlockedHero;
         uiManager.UnlockedEnemy = UnlockedEnemy;
         uiManager.UnlockedHero = unlockedHero;
+
+        hp += (int)upgradeState.GetTotalEffect(hpUpgrades);
     }
 
     private void Start()
@@ -51,7 +59,7 @@ public class GameManager : MonoBehaviour
         day = new DayState(this);
         night = new NightState(this);
         result = new ResultState(this, uiManager);
-        gameover = new GameOverState(this);
+        gameover = new GameOverState(this, upgradeState);
         waveSpawner.AllRegionsClear += OnResult;
         fsm.ChangeState(day);
         uiManager.UnlockChanged += UpdateUnlock;
@@ -139,8 +147,8 @@ public class GameManager : MonoBehaviour
                 hp = 0;
                 break;
         }
-        Debug.Log($"현재 체력: {hp}");
-        if(hp <= 0)
+        HpChanged?.Invoke();
+        if (hp <= 0)
         {
             hp = 0;
             fsm.ChangeState(gameover);

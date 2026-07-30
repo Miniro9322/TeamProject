@@ -65,7 +65,7 @@ public class BuildingPanel : MonoBehaviour
         }
         sb.Length--;
         upgradeCostText.text = sb.ToString();
-        FacilityLevelText.text = $"Lv. {facility.UpgradeCount - 1}";
+        FacilityLevelText.text = $"Lv. {facility.UpgradeCount}";
     }
 
     public void InitFacilityInfo(ProductionFacility facility)
