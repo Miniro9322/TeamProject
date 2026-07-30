@@ -16,6 +16,7 @@ public class MapAssemble : MonoBehaviour
     [SerializeField] private float placeYOffset = 0f;
 
     private List<PathTrail> pathTrails;
+    private HeroSkillCastController skillCast;
 
     private void Start()
     {
@@ -27,6 +28,8 @@ public class MapAssemble : MonoBehaviour
         BuildingUiLink buildingUi = new BuildingUiLink();
         buildingUi.ui = mapGame.Ui;
         buildingUi.rule = mapGame.Rule;
+
+        skillCast = new HeroSkillCastController { buildingUi = buildingUi };
 
         view.pointerPick = pointerPick;
         view.replace = replace;
@@ -44,6 +47,7 @@ public class MapAssemble : MonoBehaviour
         action.view = view;
         action.heroRoster = mapGame.HeroRoster;
         action.placeYOffset = placeYOffset;
+        action.skillCast = skillCast;
 
         command.pointerPick = pointerPick;
         command.dragDetect = new DragDetect(dragPixels);
@@ -66,6 +70,7 @@ public class MapAssemble : MonoBehaviour
         
 
         mapGame.Rule.ChangeToNight += view.ClearMode;
+        mapGame.Rule.ChangeToNight += skillCast.ClearSelection;
 
         // 확장 이벤트: 5일마다 GameManager가 쏘고, 밤이 되면 선택을 무른다.
         // 미배선이면 확장만 꺼지고 나머지 조립은 그대로 돈다.
@@ -78,6 +83,10 @@ public class MapAssemble : MonoBehaviour
     private void OnDestroy()
     {
         mapGame.Rule.ChangeToNight -= view.ClearMode;
+        if (skillCast != null)
+        {
+            mapGame.Rule.ChangeToNight -= skillCast.ClearSelection;
+        }
         if (expand != null)
         {
             mapGame.Rule.ChangeToNight -= expand.CancelChoices;
