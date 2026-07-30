@@ -1,3 +1,4 @@
+using System;
 using System.Threading;
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
@@ -8,7 +9,9 @@ using UnityEngine;
 public class FogController : MonoBehaviour
 {
     [SerializeField] private MapRegistry registry;
-    [SerializeField] private float openDuration = 4f;   // 안개가 완전히 걷히는 시간(초)
+    [SerializeField, Min(0.05f)] private float openDuration = 4f;   // 안개가 완전히 걷히는 시간(초)
+
+    public static event Action<int> RevealDone;
 
     [Header("Edge")]
     [Tooltip("잠긴 모듈 외곽 밖으로 안개를 더 밀어낼 칸 수. 경계 노이즈가 외곽 타일을 깎아먹는 걸 막는다.")]
@@ -174,6 +177,14 @@ public class FogController : MonoBehaviour
             ApplyOpenState();
             await UniTask.Yield(token);
         }
+
+        NotifyDone(index);
+    }
+
+    private void NotifyDone(int index)
+    {
+        int moduleId = _modules[index].ModuleId; // 안개가 걷힌 지역 번호를 가져온다.
+        RevealDone?.Invoke(moduleId); // 해당 지역의 안개 제거 완료를 알린다.
     }
 
     private void ApplyAreas()
