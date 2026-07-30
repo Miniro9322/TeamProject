@@ -16,7 +16,8 @@ public class MeleeAttackExecutor : IAttackExecutor
 
         if (data.groundZone != null && ctx.target != null)
             AttackDamageUtil.SpawnGroundZone(data.groundZone, ctx.target.position,
-                ctx.getEnemyObjectsInRange, ctx.getAllyObjectsInRange, ctx.sc, ctx.buffManager, ct);
+                ctx.getEnemyObjectsInRange, ctx.getAllyObjectsInRange, ctx.sc, ctx.buffManager,
+                ctx.spawnEffect, ctx.spawnPersistentEffect, ctx.despawnEffect, ct);
 
         try
         {
@@ -25,6 +26,7 @@ public class MeleeAttackExecutor : IAttackExecutor
             int hits = 0;
             while (await window.MoveNextHit(ct))
             {
+                ctx.spawnEffect(data.attackEffect, ctx.self.position, ctx.self.rotation, data.attackEffectLifetime);
                 await AttackDamageUtil.ApplyInstantDamage(data, ctx, ct);
                 hits++;
             }
@@ -32,7 +34,10 @@ public class MeleeAttackExecutor : IAttackExecutor
             // 타격이 0회가 되어 데미지가 통째로 사라진다. window가 취소 없이 정상 종료됐다면
             // 최소 1회는 보장 적용한다. (취소 시엔 MoveNextHit가 예외를 던져 여기 도달하지 않음)
             if (hits == 0)
+            {
+                ctx.spawnEffect(data.attackEffect, ctx.self.position, ctx.self.rotation, data.attackEffectLifetime);
                 await AttackDamageUtil.ApplyInstantDamage(data, ctx, ct);
+            }
         }
         finally
         {

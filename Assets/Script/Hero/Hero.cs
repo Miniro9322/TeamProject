@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using UnityEngine;
+using UnityEngine.Pool;
 using VContainer;
 
 public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
@@ -101,6 +102,64 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
     public int Range => range;
     [SerializeField] private List<GroundZoneDataSO> auraZones = new();
     private CancellationTokenSource _auraCts;
+
+    // 이펙트 풀은 Hero 인스턴스 소유(Archer/Mage의 projectilePools와 동일한 패턴) —
+    // 씬이 언로드돼 이 Hero가 파괴되면 풀도 함께 사라지므로, 파괴된 인스턴스를 다시 꺼내 쓰는 일이 없다.
+    private readonly Dictionary<GameObject, IObjectPool<GameObject>> effectPools = new();
+
+    private IObjectPool<GameObject> GetEffectPool(GameObject prefab)
+    {
+        if (!effectPools.TryGetValue(prefab, out var pool))
+        {
+            pool = new ObjectPool<GameObject>(
+                createFunc: () => Instantiate(prefab),
+                actionOnGet: go => { if (go != null) go.SetActive(true); },
+                actionOnRelease: go => { if (go != null) go.SetActive(false); },
+                actionOnDestroy: go => { if (go != null) Destroy(go); },
+                collectionCheck: true,
+                defaultCapacity: 8,
+                maxSize: 256);
+            effectPools[prefab] = pool;
+        }
+        return pool;
+    }
+
+    protected GameObject SpawnEffect(GameObject prefab, Vector3 pos, Quaternion rot, float lifetime)
+    {
+        GameObject go = SpawnPersistentEffect(prefab, pos, rot);
+        if (go != null && lifetime > 0f)
+            ReturnEffectAfter(prefab, go, lifetime).Forget();
+        return go;
+    }
+
+    protected GameObject SpawnPersistentEffect(GameObject prefab, Vector3 pos, Quaternion rot)
+    {
+        if (prefab == null) return null;
+        IObjectPool<GameObject> pool = GetEffectPool(prefab);
+        GameObject go = pool.Get();
+        while (go == null) // 다른 경로로 파괴된 채 풀에 있던 인스턴스는 버리고 새로 받는다
+            go = pool.Get();
+        go.transform.SetPositionAndRotation(pos, rot);
+        foreach (ParticleSystem ps in go.GetComponentsInChildren<ParticleSystem>(true))
+        {
+            ps.Clear(true);
+            ps.Play(true);
+        }
+        return go;
+    }
+
+    protected void DespawnEffect(GameObject prefab, GameObject instance)
+    {
+        if (prefab == null || instance == null) return;
+        GetEffectPool(prefab).Release(instance);
+    }
+
+    private async UniTask ReturnEffectAfter(GameObject prefab, GameObject go, float delay)
+    {
+        await UniTask.Delay(TimeSpan.FromSeconds(delay));
+        if (go == null) return; // 대기 중 다른 경로로 이미 파괴됐으면 접근하지 않는다
+        DespawnEffect(prefab, go);
+    }
 
     private StatContainer sc = new();
     public StatContainer SC => sc;
@@ -228,7 +287,7 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
             // AttackDamageUtil.SpawnGroundZone은 항상 keepAlive=true를 넘겨 임시 장판용이므로,
             // 사망 시 멈춰야 하는 오라는 GroundZoneRunner.Run을 직접 호출해 !IsDead를 넘긴다.
             GroundZoneRunner.Run(transform.position, zone, GetEnemyObjectsInRange, GetAllyObjectsInRange, sc, buffManager,
-                () => !IsDead, _auraCts.Token).Forget();
+                SpawnEffect, SpawnPersistentEffect, DespawnEffect, () => !IsDead, _auraCts.Token).Forget();
         }
     }
     protected virtual void Update()
