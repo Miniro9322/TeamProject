@@ -6,6 +6,7 @@ using UnityEngine;
 public class UpgradeSaveData
 {
     public List<string> unlockedIds = new();
+    public int points;
 }
 
 // 해금 상태를 들고 있는 서비스. 지금은 PlayerPrefs에 임시로 저장하지만,
@@ -22,6 +23,25 @@ public class UpgradeState
     }
 
     public bool IsUnlocked(string id) => data.unlockedIds.Contains(id);
+
+    public int Points => data.points;
+
+    public bool CanAfford(int cost) => data.points >= cost;
+
+    public void AddPoints(int amount)
+    {
+        if (amount <= 0) return;
+        data.points += amount;
+        Save();
+    }
+
+    public bool TrySpendPoints(int cost)
+    {
+        if (!CanAfford(cost)) return false;
+        data.points -= cost;
+        Save();
+        return true;
+    }
 
     // 해당 계열(branch)에서 해금된 단계들의 effectAmount를 전부 더한 값
     public float GetTotalEffect(IEnumerable<BaseUpgradeData> branch)
@@ -40,6 +60,28 @@ public class UpgradeState
         if (data.unlockedIds.Contains(id)) return;
 
         data.unlockedIds.Add(id);
+        Save();
+    }
+
+    // 해금된 업그레이드들의 cost 합계를 포인트로 환불하고, 해금 상태를 전부 리셋한다(리스펙).
+    public void ResetAll(IEnumerable<BaseUpgradeData> allUpgrades)
+    {
+        int refund = 0;
+        foreach (var upgrade in allUpgrades)
+        {
+            if (IsUnlocked(upgrade.id))
+                refund += upgrade.cost;
+        }
+
+        data.unlockedIds.Clear();
+        data.points += refund;
+        Save();
+    }
+
+    // 디버그용 — 자원 환불 없이 해금 상태만 초기화
+    public void DebugResetWithoutRefund()
+    {
+        data.unlockedIds.Clear();
         Save();
     }
 

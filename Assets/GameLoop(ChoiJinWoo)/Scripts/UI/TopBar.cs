@@ -10,28 +10,34 @@ public class TopBar : MonoBehaviour
     [SerializeField] private TextMeshProUGUI goldText;
     [SerializeField] private TextMeshProUGUI foodText;
     [SerializeField] private TextMeshProUGUI citizenText;
+    [SerializeField] private TextMeshProUGUI LifeText;
     private ResourcesManager resourcesManager;
     private CitizenManager citizenManager;
+    private GameManager gameManager;
 
     [Inject]
-    private void Construct(ResourcesManager resourcesManager, CitizenManager citizenManager)
+    private void Construct(ResourcesManager resourcesManager, CitizenManager citizenManager, GameManager gameManager)
     {
         this.resourcesManager = resourcesManager;
         this.citizenManager = citizenManager;
+        this.gameManager = gameManager;
     }
 
     private void Awake()
     {
         resourcesManager.ProductUpdate += UpdateResourcesUI;
         citizenManager.CitizenChanged += UpdateCitizenUi;
+        gameManager.HpChanged += UpdateLife;
         UpdateResourcesUI();
         UpdateCitizenUi();
+        UpdateLife();
     }
 
     private void OnDestroy()
     {
         resourcesManager.ProductUpdate -= UpdateResourcesUI;
         citizenManager.CitizenChanged -= UpdateCitizenUi;
+        gameManager.HpChanged -= UpdateLife;
     }
 
     private void UpdateResourcesUI()
@@ -41,6 +47,12 @@ public class TopBar : MonoBehaviour
         ironText.text = $"{resourcesManager.Iron}";
         goldText.text = $"{resourcesManager.Gold}";
         foodText.text = $"{resourcesManager.Food}";
+    }
+
+    private void UpdateLife()
+    {
+        if (LifeText == null) return;
+        LifeText.text = $"{gameManager.Hp}";
     }
 
     private void UpdateCitizenUi()

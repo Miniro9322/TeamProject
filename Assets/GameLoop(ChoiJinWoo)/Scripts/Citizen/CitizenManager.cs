@@ -20,7 +20,9 @@ public class CitizenManager : MonoBehaviour
     [Inject]
     private void Construct(UpgradeState upgradeState)
     {
-        maxCitizen += (int)upgradeState.GetTotalEffect(maxCitizenUpgrades);
+        int bonus = (int)upgradeState.GetTotalEffect(maxCitizenUpgrades);
+        maxCitizen += bonus;
+        currentCitizen += bonus;
     }
 
     public void IncreaseMaxCitizen(int amount)

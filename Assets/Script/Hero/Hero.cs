@@ -22,11 +22,16 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
     public int SkillLevel => skillLevel;
     public int StatLevel => statLevel;
 
+    // slot.prefab.GetComponent<Hero>()처럼 Instantiate/Inject를 거치지 않은 프리팹 원본에서
+    // Cost를 읽는 경우 upgradeState가 주입돼 있지 않다. UpgradeState는 PlayerPrefs만 읽으면 되는
+    // 가벼운 객체라, 주입이 안 된 경우 즉석에서 하나 만들어 최신 해금 상태를 반영한다.
+    private UpgradeState UpgradeStateOrFallback => upgradeState ?? new UpgradeState();
+
     public (ProductionType Type, int Amount)[] Cost
     {
         get
         {
-            float discount = upgradeState != null ? upgradeState.GetTotalEffect(costUpgrades) : 0f;
+            float discount = UpgradeStateOrFallback.GetTotalEffect(costUpgrades);
             var temp = new (ProductionType, int)[cost.Count];
 
             for (int i = 0; i < cost.Count; i++)
@@ -42,7 +47,7 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
     {
         get
         {
-            float discount = upgradeState != null ? upgradeState.GetTotalEffect(statUpgradeCostUpgrades) : 0f;
+            float discount = UpgradeStateOrFallback.GetTotalEffect(statUpgradeCostUpgrades);
             var temp = new (ProductionType, int)[statUpgradeCost.Count];
 
             for (int i = 0; i < statUpgradeCost.Count; i++)
@@ -90,6 +95,11 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
 
     [SerializeField] private StatDataSO statData;
     public StatDataSO StatData => statData;
+
+    // 생성 전 미리보기(정보 패널)용 — 배치된 인스턴스가 아니라 StatContainer가 없으므로,
+    // 기본값에 해금된 Hero/Stat 보너스를 직접 더해서 계산한다.
+    public float PreviewAttackPower => statData.attackPower + UpgradeStateOrFallback.GetTotalEffect(statUpgrades);
+    public float PreviewDefence => statData.defence + UpgradeStateOrFallback.GetTotalEffect(statUpgrades);
 
     [SerializeField] private MapBoard board;
     public MapBoard Board => board;

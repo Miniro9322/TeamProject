@@ -16,10 +16,20 @@ public class ProductionFacility : MonoBehaviour, IPlaceAble
     private BuildingPool buildingPool;
     private CitizenManager citizenManager;
     private FacilityManager facilityManager;
-    private float constructCostDiscount;
-    private float upgradeCostDiscount;
-    private int productAmountBonus;
+    private UpgradeState upgradeState;
     public ProductionType ProductionType => basicValue.Type;
+
+    // slot.prefab.GetComponent<ProductionFacility>()처럼 Instantiate/Inject를 거치지 않은
+    // 프리팹 원본에서 값을 읽는 경우 upgradeState가 주입돼 있지 않다. UpgradeState는 PlayerPrefs만
+    // 읽으면 되는 가벼운 객체라, 주입이 안 된 경우 즉석에서 하나 만들어 최신 해금 상태를 반영한다.
+    private UpgradeState UpgradeStateOrFallback => upgradeState ?? new UpgradeState();
+    private float ConstructCostDiscount => UpgradeStateOrFallback.GetTotalEffect(constructCostUpgrades);
+    private float UpgradeCostDiscount => UpgradeStateOrFallback.GetTotalEffect(upgradeCostUpgrades);
+    private int ProductAmountBonus => (int)UpgradeStateOrFallback.GetTotalEffect(productAmountUpgrades);
+
+    // 건설 비용 미리보기/체크용 — Init() 전에도(배치 전 정보 패널, 자원 체크) 안전하게 호출 가능.
+    public (ProductionType Type, int Amount)[] GetConstructCost() =>
+        ApplyDiscount(basicValue.ConstructProduct, ConstructCostDiscount);
 
     public event Action OnWorkerChanged;
     public event Action OnBreak;
@@ -31,7 +41,7 @@ public class ProductionFacility : MonoBehaviour, IPlaceAble
     public MapBoard Board => board;
 
     private int maxUpgrade = 4;
-    private int upgradeCount = 1;
+    private int upgradeCount = 0;
     private int amountUpgrade = 0;
     private int citizenUpgrade = 0;
     public int WorkerAmount => workerAmount;
@@ -48,10 +58,7 @@ public class ProductionFacility : MonoBehaviour, IPlaceAble
         this.citizenManager = citizenManager;
         this.buildingPool = buildingPool;
         this.facilityManager = facilityManager;
-
-        constructCostDiscount = upgradeState.GetTotalEffect(constructCostUpgrades);
-        upgradeCostDiscount = upgradeState.GetTotalEffect(upgradeCostUpgrades);
-        productAmountBonus = (int)upgradeState.GetTotalEffect(productAmountUpgrades);
+        this.upgradeState = upgradeState;
     }
 
     private static (ProductionType Type, int Amount)[] ApplyDiscount((ProductionType Type, int Amount)[] cost, float discount)
@@ -64,12 +71,12 @@ public class ProductionFacility : MonoBehaviour, IPlaceAble
 
     public void Init()
     {
-        productAmount = basicValue.DefaultAmount + amountUpgrade * 10 + productAmountBonus;
+        productAmount = basicValue.DefaultAmount + amountUpgrade * 10 + ProductAmountBonus;
         maxWorker = basicValue.DefaultMaxWorker + citizenUpgrade;
         workerAmount = 0;
-        upgradeCostCopy = ApplyDiscount(BasicValue.UpgradeCost, upgradeCostDiscount);
+        upgradeCostCopy = ApplyDiscount(BasicValue.UpgradeCost, UpgradeCostDiscount);
 
-        resourcesManager.ProductChanged(ApplyDiscount(basicValue.ConstructProduct, constructCostDiscount));
+        resourcesManager.ProductChanged(GetConstructCost());
         facilityManager.AddFacility(this);
     }
 
@@ -156,12 +163,12 @@ public class ProductionFacility : MonoBehaviour, IPlaceAble
         else
         {
             citizenUpgrade++;
-            maxWorker += citizenUpgrade;
+            maxWorker = basicValue.DefaultMaxWorker + citizenUpgrade;
         }
 
         resourcesManager.ProductChanged(upgradeCostCopy);
 
-        var baseCost = ApplyDiscount(basicValue.UpgradeCost, upgradeCostDiscount);
+        var baseCost = ApplyDiscount(basicValue.UpgradeCost, UpgradeCostDiscount);
         for (int i = 0; i < upgradeCostCopy.Length; i++)
         {
             upgradeCostCopy[i] = (baseCost[i].Type, baseCost[i].Amount * upgradeCount);
@@ -172,7 +179,7 @@ public class ProductionFacility : MonoBehaviour, IPlaceAble
 
     public bool CheckCanUpgrade()
     {
-        return upgradeCount <= maxUpgrade && resourcesManager.CheckResources(upgradeCostCopy);
+        return upgradeCount < maxUpgrade && resourcesManager.CheckResources(upgradeCostCopy);
     }
 
     //건물 마다 업그레이드
