@@ -171,35 +171,6 @@ public class TilePaintView : MonoBehaviour
         int range,
         RangeShape shape,
         Color color)
-    // 영웅을 클릭해 스킬 시전자로 선택된 상태일 때, 스킬이 "실제로 때리는 범위"를 미리 보여준다.
-    // (targetScope는 "어디를 클릭할 수 있는가"일 뿐, 여기서 칠하는 건 그 지점 중심의 타격 범위다.)
-    private void PaintSkillRange()
-    {
-        if (skillCast == null) return;
-        Hero caster = skillCast.SelectedCaster;
-        if (caster == null || caster.ActiveSkill == null) return;
-
-        HeroActiveSkillDataSO skill = caster.ActiveSkill;
-        int hitRadius = skill.groundZone != null ? skill.groundZone.radius : 0;
-        RangeShape hitShape = skill.groundZone != null ? skill.groundZone.shape : RangeShape.Diamond;
-
-        Tile origin;
-        if (skill.targetScope == SkillTargetScope.Self)
-        {
-            origin = caster.CurrentTile;
-        }
-        else
-        {
-            origin = game != null ? game.HoverTile : null;
-            if (origin != null && origin.Board != caster.Board) origin = null;
-        }
-        if (origin == null) return;
-
-        foreach (Tile tile in TileShapeQuery.GetTiles(caster.Board, origin.Coord, hitRadius, hitShape))
-            Paint(tile, painter.rangeColor);
-    }
-
-    private void PaintRange(Tile center, int range)
     {
         List<Tile> tiles = TileShapeQuery.GetTiles(
             center.Board,
@@ -211,6 +182,68 @@ public class TilePaintView : MonoBehaviour
         {
             Paint(tile, color);
         }
+    }
+
+    // 영웅을 클릭해 스킬 시전자로 선택된 상태일 때, 스킬이 "실제로 때리는 범위"를 미리 보여준다.
+    // (targetScope는 "어디를 클릭할 수 있는가"일 뿐, 여기서 칠하는 건 그 지점 중심의 타격 범위다.)
+    private void PaintSkillRange()
+    {
+        if (skillCast == null)
+        {
+            return;
+        }
+
+        Hero caster = skillCast.SelectedCaster;
+        if (caster == null || caster.ActiveSkill == null)
+        {
+            return;
+        }
+
+        HeroActiveSkillDataSO skill = caster.ActiveSkill;
+        int hitRadius = 0;
+        RangeShape hitShape = RangeShape.Diamond;
+        GroundZoneDataSO zone = skill.groundZone;
+        if (zone != null)
+        {
+            hitRadius = zone.radius;
+            hitShape = zone.shape;
+        }
+
+        Tile origin = SkillOrigin(caster, skill);
+        if (origin == null)
+        {
+            return;
+        }
+
+        PaintRange(
+            origin,
+            hitRadius,
+            hitShape,
+            painter.rangeColor);
+    }
+
+    private Tile SkillOrigin(
+        Hero caster,
+        HeroActiveSkillDataSO skill)
+    {
+        bool isSelf = skill.targetScope == SkillTargetScope.Self;
+        if (isSelf)
+        {
+            return caster.CurrentTile;
+        }
+
+        if (game == null)
+        {
+            return null;
+        }
+
+        Tile origin = game.HoverTile;
+        if (origin == null || origin.Board != caster.Board)
+        {
+            return null;
+        }
+
+        return origin;
     }
 
     private void Paint(Tile tile, Color color)
