@@ -122,7 +122,7 @@ public class CameraFreeLook : MonoBehaviour
         freeLook = true;
         returning = false;
         input.enabled = false;
-        expand.CancelPan();
+        expand.CancelMove();
         flyYaw = rig.yaw;
         flyPitch = rig.pitch;
         flyPos = rig.transform.position;
@@ -149,7 +149,7 @@ public class CameraFreeLook : MonoBehaviour
     // 비행 한 프레임: 마우스로 시선, WASD/QE로 이동, 스크롤로 속도. 트랜스폼을 직접 세팅(클램프 우회).
     private void FlyStep()
     {
-        expand.CancelPan(); // 비행 중 확장 자동팬 억제
+        expand.CancelMove(); // 비행 중 확장 자동 이동 억제
         Look();
         Move();
         rig.transform.SetPositionAndRotation(flyPos, Quaternion.Euler(flyPitch, flyYaw, 0f));
@@ -208,7 +208,7 @@ public class CameraFreeLook : MonoBehaviour
             rig.minPitch = freePitch.x; // 넓은 pitch에서 부드럽게 내려오도록 복귀 끝까지 유지
             rig.maxPitch = freePitch.y;
         }
-        expand.CancelPan();
+        expand.CancelMove();
         focusVel = Vector3.zero;
         yawVel = 0f;
         pitchVel = 0f;

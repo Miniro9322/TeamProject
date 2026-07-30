@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using UnityEngine;
 using VContainer;
 
@@ -31,8 +30,8 @@ public class ProductionFacility : MonoBehaviour, IPlaceAble
     public int WorkerAmount => workerAmount;
     public int MaxWorker => maxWorker;
     public int ProductAmount => productAmount;
-    private Dictionary<ProductionType, int> upgradeCostCopy = new();
-    public Dictionary<ProductionType, int> UpgradeCostCopy => upgradeCostCopy;
+    private (ProductionType Type, int Amount)[] upgradeCostCopy = Array.Empty<(ProductionType, int)>();
+    public (ProductionType Type, int Amount)[] UpgradeCostCopy => upgradeCostCopy;
     public int UpgradeCount => upgradeCount;
 
     [Inject]
@@ -74,10 +73,11 @@ public class ProductionFacility : MonoBehaviour, IPlaceAble
 
     public void Release()
     {
-        var refund = new System.Collections.Generic.Dictionary<ProductionType, int>();
-        foreach (var kv in basicValue.ConstructProduct)
+        var construct = basicValue.ConstructProduct;
+        var refund = new (ProductionType Type, int Amount)[construct.Length];
+        for (int i = 0; i < construct.Length; i++)
         {
-            refund[kv.Key] = -kv.Value;
+            refund[i] = (construct[i].Type, -construct[i].Amount);
         }
         resourcesManager.ProductChanged(refund);
         buildingPool.Return(gameObject);
@@ -142,9 +142,10 @@ public class ProductionFacility : MonoBehaviour, IPlaceAble
 
         resourcesManager.ProductChanged(upgradeCostCopy);
 
-        foreach (var key in new List<ProductionType>(upgradeCostCopy.Keys))
+        var baseCost = basicValue.UpgradeCost;
+        for (int i = 0; i < upgradeCostCopy.Length; i++)
         {
-            upgradeCostCopy[key] = basicValue.UpgradeCost[key] * upgradeCount;
+            upgradeCostCopy[i] = (baseCost[i].Type, baseCost[i].Amount * upgradeCount);
         }
 
         UpdateInfo();

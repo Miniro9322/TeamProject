@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class ResourcesManager : MonoBehaviour
@@ -23,48 +22,45 @@ public class ResourcesManager : MonoBehaviour
         ProductUpdate?.Invoke();
     }
 
-    public void ProductChanged(Dictionary<ProductionType, int> products)
+    public void ProductChanged((ProductionType Type, int Amount)[] products)
     {
-        if(products.ContainsKey(ProductionType.Wood))
-            wood += products[ProductionType.Wood];
-        if (products.ContainsKey(ProductionType.Food))
-            food += products[ProductionType.Food];
-        if (products.ContainsKey(ProductionType.Gold))
-            gold += products[ProductionType.Gold];
-        if (products.ContainsKey(ProductionType.Iron))
-            iron += products[ProductionType.Iron];
-        if (products.ContainsKey(ProductionType.Stone))
-            stone += products[ProductionType.Stone];
+        foreach (var product in products)
+        {
+            switch (product.Type)
+            {
+                case ProductionType.Wood: wood += product.Amount; break;
+                case ProductionType.Food: food += product.Amount; break;
+                case ProductionType.Gold: gold += product.Amount; break;
+                case ProductionType.Iron: iron += product.Amount; break;
+                case ProductionType.Stone: stone += product.Amount; break;
+            }
+        }
 
         ProductUpdate?.Invoke();
     }
 
-    public bool CheckResources(Dictionary<ProductionType, int> resources)
+    public bool CheckResources((ProductionType Type, int Amount)[] resources)
     {
-        if (resources.ContainsKey(ProductionType.Wood))
+        foreach (var resource in resources)
         {
-            if (-resources[ProductionType.Wood] > wood)
-                return false;
-        }
-        if (resources.ContainsKey(ProductionType.Stone))
-        {
-            if (-resources[ProductionType.Stone] > stone)
-                return false;
-        }
-        if (resources.ContainsKey(ProductionType.Gold))
-        {
-            if (-resources[ProductionType.Gold] > gold)
-                return false;
-        }
-        if (resources.ContainsKey(ProductionType.Iron))
-        {
-            if (-resources[ProductionType.Iron] > iron)
-                return false;
-        }
-        if (resources.ContainsKey(ProductionType.Food))
-        {
-            if (-resources[ProductionType.Food] > food)
-                return false;
+            switch (resource.Type)
+            {
+                case ProductionType.Wood:
+                    if (-resource.Amount > wood) return false;
+                    break;
+                case ProductionType.Stone:
+                    if (-resource.Amount > stone) return false;
+                    break;
+                case ProductionType.Gold:
+                    if (-resource.Amount > gold) return false;
+                    break;
+                case ProductionType.Iron:
+                    if (-resource.Amount > iron) return false;
+                    break;
+                case ProductionType.Food:
+                    if (-resource.Amount > food) return false;
+                    break;
+            }
         }
 
         return true;

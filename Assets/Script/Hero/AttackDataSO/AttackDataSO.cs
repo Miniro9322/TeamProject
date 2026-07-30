@@ -35,6 +35,13 @@ public class AttackDataSO : ScriptableObject
     public List<BuffEffect> buffList;
     public GroundZoneDataSO groundZone; // null이면 이 공격은 장판을 깔지 않음
 
+    public GameObject attackEffect;
+    [Tooltip("attackEffect가 풀로 회수되기까지의 시간(초). 0 이하면 회수 타이머를 걸지 않음")]
+    public float attackEffectLifetime = 1f;
+    public GameObject hitEffect;
+    [Tooltip("hitEffect가 풀로 회수되기까지의 시간(초). 0 이하면 회수 타이머를 걸지 않음")]
+    public float hitEffectLifetime = 1f;
+
     [Header("아군 힐 / 피흡")]
     public float lifestealPercent = 0f; // 0 = 없음. 가한 데미지의 N%만큼 공격자 회복
     public float allyHealAmount = 0f;                      // 0 = 없음. 적중 시 범위 내 최저 체력 아군 1명을 casterATK * allyHealAmount만큼 회복

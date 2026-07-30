@@ -89,6 +89,7 @@ public class RangedAttackExecutor : IAttackExecutor
     {
         Projectile arrow = pool.Get();
         arrow.transform.SetPositionAndRotation(ctx.muzzle.position, ctx.muzzle.rotation);
+        ctx.spawnEffect(data.attackEffect, ctx.muzzle.position, ctx.muzzle.rotation, data.attackEffectLifetime);
 
         if (data.attackType == AttackType.Area && data.areaShape == AreaShape.Line)
         {
@@ -100,8 +101,10 @@ public class RangedAttackExecutor : IAttackExecutor
                 AttackDamageUtil.ApplyTargetDebuffs(e as IUnit, data.buffList, ctx.buffManager, data);
                 AttackDamageUtil.ApplyHealOptions(data, ctx.self.position, ctx.healSelf, ctx.getAllyObjectsInRange, damage, ctx.sc[StatType.ATK]);
             }
+            ctx.spawnEffect(data.hitEffect, target.position, Quaternion.identity, data.hitEffectLifetime);
             AttackDamageUtil.SpawnGroundZone(data.groundZone, target.position,
-                ctx.getEnemyObjectsInRange, ctx.getAllyObjectsInRange, ctx.sc, ctx.buffManager, CancellationToken.None);
+                ctx.getEnemyObjectsInRange, ctx.getAllyObjectsInRange, ctx.sc, ctx.buffManager,
+                ctx.spawnEffect, ctx.spawnPersistentEffect, ctx.despawnEffect, CancellationToken.None);
             Vector3 endPoint = ctx.getLineEndPoint(ctx.self.position, dir, data.lineLength);
             arrow.LaunchVisualOnly(endPoint, pool);
             return;
@@ -126,6 +129,9 @@ public class RangedAttackExecutor : IAttackExecutor
             source = data,
             groundZone = data.groundZone,
             attackerStats = ctx.sc,
+            spawnEffect = ctx.spawnEffect,
+            spawnPersistentEffect = ctx.spawnPersistentEffect,
+            despawnEffect = ctx.despawnEffect,
         };
         arrow.Launch(target, damage, pool, cfg);
     }

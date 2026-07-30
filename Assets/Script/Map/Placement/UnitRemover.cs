@@ -26,9 +26,11 @@ public class UnitRemover
 
     public GameObject UnitRemove(Tile tile)
     {
-        GameObject unit = tile.Board.RemoveUnit(tile.Coord);   // 그 타일이 속한 모듈 보드에서 뗀다
+        GameObject unit = tile.OccupantObject;
 
         if(unit == null) return null;
+
+        AreaPlace.Remove(tile, unit);   // 여러 칸을 덮고 있어도 전부 비운다(어느 칸을 눌러도 같은 결과)
 
         _unitList.Remove(unit);
         DestroyOrReturnToPool(unit);
@@ -44,8 +46,9 @@ public class UnitRemover
             foreach (Tile tile in board.Cells.Values)
             {
                 if (tile.OccupantObject == null) continue;
-                GameObject unit = board.RemoveUnit(tile.Coord);
-                if (unit != null) Object.Destroy(unit);
+                GameObject unit = tile.OccupantObject;
+                AreaPlace.Remove(tile, unit);   // 같은 유닛의 나머지 칸도 함께 비워져 아래 순회에서 자연히 건너뛴다
+                Object.Destroy(unit);
             }
         }
         _unitList.Clear();

@@ -11,13 +11,14 @@ public class PathTrail : MonoBehaviour
         public TrailRenderer Trail;
         public Transform Runner;
         public float Length;
+        public int Index;
     }
 
     [SerializeField] private TrailRenderer trailPrefab;
     [SerializeField] private float moveSpeed = 8f; //실제 값은 inspector에서 조절한다.
     [SerializeField] private float trailLift = 0.15f;
     [SerializeField] private float loopGap = 1.2f;
-    [SerializeField] private bool autoPlay = true;
+    [SerializeField] private bool isAutoPlay = true;
 
     private readonly List<TrailRun> runs = new();
     private WaveSpawner spawner; //활성화된 스폰 지점 참조.
@@ -25,7 +26,7 @@ public class PathTrail : MonoBehaviour
     private bool isLooping;
     private bool isPlaying;
     private bool isWaiting; 
-    private bool isPending; //재생 요청이 큐에 들어가 있는지 여부. 재생 중이면 무시.
+    private bool isRefreshPending; //재생 요청이 대기 중인지 여부. 재생 중이면 무시.
     private float elapsed;
     private float moveTime;
 
@@ -45,7 +46,7 @@ public class PathTrail : MonoBehaviour
     // 초기 자동 재생을 요청합니다.
     private void Start()
     {
-        if (!autoPlay || !module.IsPreparing) return;
+        if (!isAutoPlay || !module.IsPreparing) return;
 
         PlayLoop();
     }
@@ -74,13 +75,13 @@ public class PathTrail : MonoBehaviour
     // 포털 갱신 다음 프레임에 최신 활성 경로를 반복 재생합니다.
     public async void PlayLoop()
     {
-        if (!module.IsPreparing || isPending) return;
+        if (!module.IsPreparing || isRefreshPending) return;
 
-        isPending = true;
-        bool canceled = await UniTask.NextFrame(this.GetCancellationTokenOnDestroy()).SuppressCancellationThrow();
-        isPending = false;
+        isRefreshPending = true;
+        bool isCanceled = await UniTask.NextFrame(this.GetCancellationTokenOnDestroy()).SuppressCancellationThrow();
+        isRefreshPending = false;
 
-        if (canceled || !isActiveAndEnabled || !module.IsPreparing) return;
+        if (isCanceled || !isActiveAndEnabled || !module.IsPreparing) return;
 
         LoadPoints();
         isLooping = true;
@@ -195,6 +196,8 @@ public class PathTrail : MonoBehaviour
         run.Runner.position = run.Points[0];
         run.Trail.Clear();
         run.Trail.emitting = true;
+        run.Trail.AddPosition(run.Points[0]);
+        run.Index = 1;
     }
 
     // 공통 진행률로 모든 Trail의 위치를 갱신합니다.
@@ -223,14 +226,20 @@ public class PathTrail : MonoBehaviour
             Vector3 start = run.Points[i - 1];
             Vector3 target = run.Points[i];
             float length = Vector3.Distance(start, target);
-            if (distance > length)
+            if (distance < length)
             {
-                distance -= length;
-                continue;
+                Vector3 position = Vector3.MoveTowards(start, target, distance);
+                run.Runner.position = position;
+                if (position == start) return;
+
+                run.Trail.AddPosition(position);
+                return;
             }
 
-            run.Runner.position = Vector3.MoveTowards(start, target, distance);
-            return;
+            distance -= length;
+            if (i < run.Index) continue;
+            run.Trail.AddPosition(target);
+            run.Index = i + 1;
         }
 
         run.Runner.position = run.Points[run.Points.Count - 1];
@@ -288,7 +297,7 @@ public class PathTrail : MonoBehaviour
     // 모듈이 준비 상태가 되면 자동 반복 재생을 요청합니다.
     private void HandleState(ModuleState state)
     {
-        if (!autoPlay || state != ModuleState.Preparing) return;
+        if (!isAutoPlay || state != ModuleState.Preparing) return;
 
         PlayLoop();
     }

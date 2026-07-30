@@ -90,10 +90,7 @@ public class EnemyLanes : MonoBehaviour
     // MapBoard 참조와 기본 LaneBuilder가 준비되었는지 확인합니다.
     private void Prepare()
     {
-        if (board == null)
-        {
-            board = GetComponent<MapBoard>();
-        }
+        board = GetComponent<MapBoard>();
 
         if (builder == null)
         {
@@ -104,7 +101,7 @@ public class EnemyLanes : MonoBehaviour
     // 레인을 계산할 MapBoard와 셀이 준비되었는지 확인합니다.
     private bool CanBuild()
     {
-        return board != null && board.CellCount > 0;
+        return board.CellCount > 0;
     }
 
     // MapBoard의 셀에서 스폰과 코어를 수집해 LaneInput을 만듭니다.

@@ -12950,10 +12950,24 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SwordMan
   citizenAmount: 2
-  costType: 
-  costAmount: 
-  skillLevel: 0
-  statLevel: 0
+  cost:
+  - Type: 0
+    Amount: 30
+  - Type: 2
+    Amount: 20
+  - Type: 3
+    Amount: 30
+  - Type: 4
+    Amount: 30
+  statUpgradeCost:
+  - Type: 0
+    Amount: 10
+  - Type: 2
+    Amount: 10
+  - Type: 3
+    Amount: 10
+  - Type: 4
+    Amount: 10
   upgradeDatas:
   - {fileID: 11400000, guid: 06facc2a30c566440a917c4538152a67, type: 2}
   - {fileID: 11400000, guid: db5ad37a712523b4ca6c2daa5732842c, type: 2}

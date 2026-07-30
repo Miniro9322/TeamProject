@@ -3281,10 +3281,32 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6deb4eeb61823d14e85febf5c0cf9d3c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SwordMan
+  citizenAmount: 2
+  cost:
+  - Type: 0
+    Amount: 30
+  - Type: 2
+    Amount: 40
+  - Type: 3
+    Amount: 50
+  - Type: 4
+    Amount: 10
+  statUpgradeCost:
+  - Type: 0
+    Amount: 10
+  - Type: 2
+    Amount: 10
+  - Type: 3
+    Amount: 10
+  - Type: 4
+    Amount: 10
+  upgradeDatas:
+  - {fileID: 11400000, guid: c09447f29ac478c46aa21e50ff7017a4, type: 2}
+  - {fileID: 11400000, guid: 3f05858a2dab11049bf54de13e07d8b7, type: 2}
+  - {fileID: 11400000, guid: db3f14bf47b943d4daa7a0f5c23c1975, type: 2}
   basePattern:
-  - {fileID: 11400000, guid: 8efa5dcaabb0bf1429315aba67fb67d0, type: 2}
-  selectors:
-  - {fileID: 11400000, guid: ff4a238cf2f9e144789879eaf416ec8e, type: 2}
+  - {fileID: 11400000, guid: 25070dd5e990e96418d119222c67f57a, type: 2}
+  selectors: []
   procs: []
   anim: {fileID: 4961962971643976453}
   animEvents: {fileID: 6012942502851000738}
@@ -3294,7 +3316,6 @@ MonoBehaviour:
   rangeShape: 0
   auraZones: []
   unattackableTarget: 3
-  citizenAmount: 2
 --- !u!1 &1184476059935144041
 GameObject:
   m_ObjectHideFlags: 0

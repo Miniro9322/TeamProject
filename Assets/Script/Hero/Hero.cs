@@ -3,38 +3,49 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using UnityEngine;
+using UnityEngine.Pool;
 using VContainer;
 
 public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
 {
     [Header("유닛 생성 비용")]
     [SerializeField] private int citizenAmount = 2;
-    [SerializeField] private List<ProductionType> costType;
-    [SerializeField] private List<int> costAmount;
-    [SerializeField] private int skillLevel = 0;
-    [SerializeField] private int statLevel = 0;
-    [SerializeField] private List<HeroUpgradeData> upgradeDatas;
+    [SerializeField] private List<ResourceCost> cost;
 
-    public Dictionary<ProductionType, int> Cost
+    [SerializeField] private List<ResourceCost> statUpgradeCost;
+    [SerializeField] private List<HeroUpgradeData> upgradeDatas;
+    private int skillLevel = 0;
+    private int statLevel = 0;
+    public int SkillLevel => skillLevel;
+    public int StatLevel => statLevel;
+
+    public (ProductionType Type, int Amount)[] Cost
     {
         get
         {
-            if (costType.Count != costAmount.Count)
-            {
-                Debug.LogError("생산 건물에 필요한 자원과 자원량이 매칭되지 않습니다. 다시 설정해주세요");
-                return null;
-            }
-            else
-            {
-                Dictionary<ProductionType, int> temp = new();
+            var temp = new (ProductionType, int)[cost.Count];
 
-                for (int i = 0; i < costType.Count; i++)
-                {
-                    temp[costType[i]] = -costAmount[i];
-                }
-
-                return temp;
+            for (int i = 0; i < cost.Count; i++)
+            {
+                temp[i] = (cost[i].Type, -cost[i].Amount);
             }
+
+            return temp;
+        }
+    }
+
+    public (ProductionType Type, int Amount)[] StatUpgradeCost
+    {
+        get
+        {
+            var temp = new (ProductionType, int)[statUpgradeCost.Count];
+
+            for (int i = 0; i < statUpgradeCost.Count; i++)
+            {
+                temp[i] = (statUpgradeCost[i].Type, -(statUpgradeCost[i].Amount + statUpgradeCost[i].Amount * statLevel));
+            }
+
+            return temp;
         }
     }
 
@@ -86,6 +97,64 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
     [SerializeField] private List<GroundZoneDataSO> auraZones = new();
     private CancellationTokenSource _auraCts;
 
+    // 이펙트 풀은 Hero 인스턴스 소유(Archer/Mage의 projectilePools와 동일한 패턴) —
+    // 씬이 언로드돼 이 Hero가 파괴되면 풀도 함께 사라지므로, 파괴된 인스턴스를 다시 꺼내 쓰는 일이 없다.
+    private readonly Dictionary<GameObject, IObjectPool<GameObject>> effectPools = new();
+
+    private IObjectPool<GameObject> GetEffectPool(GameObject prefab)
+    {
+        if (!effectPools.TryGetValue(prefab, out var pool))
+        {
+            pool = new ObjectPool<GameObject>(
+                createFunc: () => Instantiate(prefab),
+                actionOnGet: go => { if (go != null) go.SetActive(true); },
+                actionOnRelease: go => { if (go != null) go.SetActive(false); },
+                actionOnDestroy: go => { if (go != null) Destroy(go); },
+                collectionCheck: true,
+                defaultCapacity: 8,
+                maxSize: 256);
+            effectPools[prefab] = pool;
+        }
+        return pool;
+    }
+
+    protected GameObject SpawnEffect(GameObject prefab, Vector3 pos, Quaternion rot, float lifetime)
+    {
+        GameObject go = SpawnPersistentEffect(prefab, pos, rot);
+        if (go != null && lifetime > 0f)
+            ReturnEffectAfter(prefab, go, lifetime).Forget();
+        return go;
+    }
+
+    protected GameObject SpawnPersistentEffect(GameObject prefab, Vector3 pos, Quaternion rot)
+    {
+        if (prefab == null) return null;
+        IObjectPool<GameObject> pool = GetEffectPool(prefab);
+        GameObject go = pool.Get();
+        while (go == null) // 다른 경로로 파괴된 채 풀에 있던 인스턴스는 버리고 새로 받는다
+            go = pool.Get();
+        go.transform.SetPositionAndRotation(pos, rot);
+        foreach (ParticleSystem ps in go.GetComponentsInChildren<ParticleSystem>(true))
+        {
+            ps.Clear(true);
+            ps.Play(true);
+        }
+        return go;
+    }
+
+    protected void DespawnEffect(GameObject prefab, GameObject instance)
+    {
+        if (prefab == null || instance == null) return;
+        GetEffectPool(prefab).Release(instance);
+    }
+
+    private async UniTask ReturnEffectAfter(GameObject prefab, GameObject go, float delay)
+    {
+        await UniTask.Delay(TimeSpan.FromSeconds(delay));
+        if (go == null) return; // 대기 중 다른 경로로 이미 파괴됐으면 접근하지 않는다
+        DespawnEffect(prefab, go);
+    }
+
     private StatContainer sc = new();
     public StatContainer SC => sc;
     public StatContainer Stats => sc;
@@ -100,13 +169,16 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
     [SerializeField] private EnemyAttribute unattackableTarget = EnemyAttribute.Fly | EnemyAttribute.Cloaking;
     //테스트용 코드
     private GameManager gameManager;
+    private ResourcesManager resourcesManager;
     protected BuffManager buffManager;
+    
     public int CitizenAmount => citizenAmount;
     [Inject]
-    private void Construct(GameManager gameManager, BuffManager buffManager)
+    private void Construct(GameManager gameManager, BuffManager buffManager, ResourcesManager resourcesManager)
     {
         this.gameManager = gameManager;
         this.buffManager = buffManager;
+        this.resourcesManager = resourcesManager;
     }
 
     public void Die()
@@ -195,7 +267,7 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
             // AttackDamageUtil.SpawnGroundZone은 항상 keepAlive=true를 넘겨 임시 장판용이므로,
             // 사망 시 멈춰야 하는 오라는 GroundZoneRunner.Run을 직접 호출해 !IsDead를 넘긴다.
             GroundZoneRunner.Run(transform.position, zone, GetEnemyObjectsInRange, GetAllyObjectsInRange, sc, buffManager,
-                () => !IsDead, _auraCts.Token).Forget();
+                SpawnEffect, SpawnPersistentEffect, DespawnEffect, () => !IsDead, _auraCts.Token).Forget();
         }
     }
     protected virtual void Update()
@@ -424,16 +496,24 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
         {
             return;
         }
-        upgradeDatas[skillLevel++].Upgrade(this);
+        if (resourcesManager.CheckResources(upgradeDatas[skillLevel].Cost))
+        {
+            resourcesManager.ProductChanged(upgradeDatas[skillLevel].Cost);
+            upgradeDatas[skillLevel++].Upgrade(this);
+        }
     }
     public void StatUpgrade()
     {
-        statLevel++;
-        Modifier mod = new Modifier(ModifierType.Additive, 0.1f, 0f, StatLayer.Equip, this);
-        sc.AddModifier(StatType.HP, mod);
-        mod = new Modifier(ModifierType.Additive, 0.05f, 0f, StatLayer.Equip, this);
-        sc.AddModifier(StatType.ATK, mod);
-        mod = new Modifier(ModifierType.Flat, 1f, 0f, StatLayer.Equip, this);
-        sc.AddModifier(StatType.DEF, mod);
+        if (resourcesManager.CheckResources(StatUpgradeCost))
+        {
+            resourcesManager.ProductChanged(StatUpgradeCost);
+            statLevel++;
+            Modifier mod = new Modifier(ModifierType.Additive, 0.1f, 0f, StatLayer.Equip, this);
+            sc.AddModifier(StatType.HP, mod);
+            mod = new Modifier(ModifierType.Additive, 0.05f, 0f, StatLayer.Equip, this);
+            sc.AddModifier(StatType.ATK, mod);
+            mod = new Modifier(ModifierType.Flat, 1f, 0f, StatLayer.Equip, this);
+            sc.AddModifier(StatType.DEF, mod);
+        }
     }
 }

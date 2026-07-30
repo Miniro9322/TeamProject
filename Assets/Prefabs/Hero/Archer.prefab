@@ -22589,10 +22589,24 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Archer
   citizenAmount: 2
-  costType: 
-  costAmount: 
-  skillLevel: 0
-  statLevel: 0
+  cost:
+  - Type: 0
+    Amount: 30
+  - Type: 2
+    Amount: 30
+  - Type: 3
+    Amount: 40
+  - Type: 4
+    Amount: 20
+  statUpgradeCost:
+  - Type: 0
+    Amount: 10
+  - Type: 2
+    Amount: 10
+  - Type: 3
+    Amount: 10
+  - Type: 4
+    Amount: 10
   upgradeDatas:
   - {fileID: 11400000, guid: ba950b713d499c9458a10b1ea69cf9a9, type: 2}
   - {fileID: 11400000, guid: cc4316d74848d014d8053de37b7be01e, type: 2}
