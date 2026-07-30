@@ -53,6 +53,7 @@ public class MapAssemble : MonoBehaviour
 
         command.pointerPick = pointerPick;
         command.dragDetect = new DragDetect(dragPixels);
+        command.rightDragDetect = new DragDetect(dragPixels);
         command.replace = replace;
         command.buildingUi = buildingUi;
         command.action = action;
