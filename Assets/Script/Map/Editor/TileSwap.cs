@@ -74,6 +74,24 @@ public static class TileSwap
         return Replace(bottom, prefab, terrain, cell);
     }
 
+    /// <summary>
+    /// 이 칸에서 제일 위 한 겹을 없앤다. 지운 뒤 남은 대표 타일을 돌려준다(다 지웠으면 null).
+    ///
+    /// 한 번에 한 겹만 지운다 — 고지 칸에서 판만 걷고 밑판은 남기고 싶은 경우가 대부분이고,
+    /// 통째로 지우는 것은 두 번 누르면 되지만 잘못 지운 것은 눈치채기 어렵다.
+    /// </summary>
+    public static Tile Erase(Grid module, Vector2Int coord)
+    {
+        List<Tile> layers = Stack(module, coord);
+        if (layers.Count == 0)
+        {
+            return null;
+        }
+
+        Undo.DestroyObjectImmediate(layers[layers.Count - 1].gameObject);
+        return layers.Count >= 2 ? layers[layers.Count - 2] : null;
+    }
+
     // 밑판을 같은 자리에 다른 프리팹으로 교체한다. 좌표·스폰 표식은 옮기고, 배치 허용은 새 지형 기본값으로 둔다.
     private static Tile Replace(Tile old, GameObject prefab, TerrainType terrain, float cell)
     {
@@ -164,8 +182,8 @@ public static class TileSwap
         return 0f;
     }
 
-    /// <summary>이 타일의 윗면 높이 — 위에 판을 얹을 자리.</summary>
-    private static float TopY(Tile tile)
+    /// <summary>이 타일의 윗면 높이 — 위에 판이나 장식을 얹을 자리.</summary>
+    public static float TopY(Tile tile)
     {
         float top = tile.transform.position.y;
         bool measured = false;

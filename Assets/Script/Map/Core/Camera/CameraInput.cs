@@ -21,6 +21,7 @@ public class CameraInput : MonoBehaviour
     public float dragSpeed = 1.5f;
     public float keySpeed = 20f;
 
+    // 시작할 때 같은 오브젝트에 붙은 CameraRig를 챙긴다.
     private void Awake()
     {
         rig = GetComponent<CameraRig>();
@@ -36,6 +37,7 @@ public class CameraInput : MonoBehaviour
         }
     }
 
+    // 매 프레임 입력(회전·이동·줌)을 읽어 카메라 값에 반영한다.
     private void Update()
     {
         bool moved = Rotate();

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Resources;
 using UnityEngine;
 
 // UI가 읽을 맵 상태(선택 타일·상태 문구·현재 모드·사거리)를 보관하고 내준다.
@@ -28,7 +27,20 @@ public class MapView : MonoBehaviour
 
     public bool IsHolding { get { return replace.IsHolding; } }
     public bool InputBlocked { get { return input.Blocked; } }
-    public Tile HoverTile { get { return pointerPick != null ? pointerPick.UnderPointer() : null; } }
+    public GameObject HeldUnit { get { return replace.HeldUnit; } }
+    public OccupantKind HeldKind { get { return replace.HeldKind; } }
+    public Tile HoverTile
+    {
+        get
+        {
+            if (pointerPick == null)
+            {
+                return null;
+            }
+
+            return pointerPick.UnderPointer();
+        }
+    }
     public bool IsPlacing { get { return palette.Mode == PlaceMode.Place; } }
     public bool IsReplacing { get { return palette.Mode == PlaceMode.Replace; } }
     public bool IsOff { get { return palette.Mode == PlaceMode.Off; } }
@@ -55,9 +67,47 @@ public class MapView : MonoBehaviour
     }
 
     // 지금 배치하려는 것이 포인터 위치에서 덮게 될 자리(프리뷰가 읽는다).
-    public PlacementArea HoverArea { get { return pointerPick != null ? pointerPick.GetArea(PlacingSize) : null; } }
+    public PlacementArea HoverArea
+    {
+        get
+        {
+            if (pointerPick == null)
+            {
+                return null;
+            }
+
+            return pointerPick.GetArea(PlacingSize);
+        }
+    }
+
+    public PlacementArea HeldArea
+    {
+        get
+        {
+            if (pointerPick == null || replace == null || !replace.IsHolding)
+            {
+                return null;
+            }
+
+            return pointerPick.GetArea(replace.HeldSize);
+        }
+    }
+
+    // 지금 배치하려는 것의 프리팹(미리보기가 읽는다). 슬롯이 비면 null.
+    public GameObject PlacingPrefab
+    {
+        get
+        {
+            if (palette.TryCurrentSlot(out Placeable slot))
+            {
+                return slot.prefab;
+            }
+
+            return null;
+        }
+    }
+
     public string PlacingLabel { get { return palette.CurrentSlot().label; } }
-    public int PlacingRange { get { return palette.PreviewRange(); } }
     public Tile Selected { get { return tileSelect.Selected; } }
     public string Mode { get { return palette.Mode.ToString(); } }
     public IReadOnlyList<Placeable> Items { get { return palette.Slots; } }
@@ -68,14 +118,21 @@ public class MapView : MonoBehaviour
     {
         get
         {
-            if (palette.Mode != PlaceMode.Place) return -1;
+            if (palette.Mode != PlaceMode.Place)
+            {
+                return -1;
+            }
+
             return palette.CurrentIndex;
         }
     }
 
-    public int UnitRange(GameObject unit)
+    public bool TryRange(
+        GameObject unit,
+        out int range,
+        out RangeShape shape)
     {
-        return rangeInfo.RangeOf(unit);
+        return rangeInfo.TryGet(unit, out range, out shape);
     }
 
     // ---- 모드 전환(PanelLogic 버튼이 부른다) ----
@@ -102,17 +159,21 @@ public class MapView : MonoBehaviour
                 return false;
             case OccupantKind.MeleeHero:
             case OccupantKind.RangedHero:
-                {
-                    Hero hero = slot.prefab.GetComponent<Hero>();
-                    var cost = hero.Cost;
-                    return citizenManager.CheckCanUseCitizen(hero.CitizenAmount) && cost != null && resourcesManager.CheckResources(cost);
-                }
+            {
+                Hero hero = slot.prefab.GetComponent<Hero>();
+                var cost = hero.Cost;
+                return citizenManager.CheckCanUseCitizen(hero.CitizenAmount) && cost != null && resourcesManager.CheckResources(cost);
+            }
             case OccupantKind.Building:
-                if (resourcesManager.CheckResources(slot.prefab.GetComponent<House>().Resources))
-                    return true;
-                else
-                    return false;
+            {
+                House house = slot.prefab.GetComponent<House>();
+                return resourcesManager.CheckResources(house.Resources);
+            }
             case OccupantKind.Resource:
+            {
+                ProductionFacility facility = slot.prefab.GetComponent<ProductionFacility>();
+                return resourcesManager.CheckResources(facility.BasicValue.ConstructProduct);
+            }
                 if (resourcesManager.CheckResources(slot.prefab.GetComponent<ProductionFacility>().GetConstructCost()))
                     return true;
                 else

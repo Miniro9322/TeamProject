@@ -171,7 +171,30 @@ public class TileGridView
         {
             EditorGUI.DrawRect(new Rect(rect.x, rect.y, 3f, rect.height), MapMakerPalette.Problem);
         }
+
+        DrawLetter(rect, tile, cellPixels, lit);
     }
+
+    // 칸 글자(P·G·H·B·C). 색만으로는 생산 바닥과 전투 지상이 둘 다 초록이라 갈리지 않는다.
+    // 칸이 너무 작으면 글자가 뭉개져 오히려 방해되므로 그때는 색만 남긴다.
+    private static void DrawLetter(Rect rect, Tile tile, int cellPixels, bool lit)
+    {
+        if (cellPixels < 15)
+        {
+            return;
+        }
+
+        if (_letter == null)
+        {
+            _letter = new GUIStyle(EditorStyles.miniBoldLabel) { alignment = TextAnchor.MiddleCenter };
+        }
+
+        Color ink = lit ? MapMakerPalette.Letter : MapMakerPalette.Dim(MapMakerPalette.Letter);
+        _letter.normal.textColor = ink;
+        GUI.Label(rect, TileZone.Letter(tile), _letter);
+    }
+
+    private static GUIStyle _letter;
 
     /// <summary>
     /// 켜진 허용 표식. 지금 규칙에서 효력이 있으면 꽉 찬 네모, 없으면 속 빈 네모다.

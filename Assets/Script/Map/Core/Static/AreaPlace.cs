@@ -18,23 +18,25 @@ public static class AreaPlace
         return true;
     }
 
-    // 덮는 칸들 중 가장 높은 윗면(높이가 다른 칸에 걸치면 가장 높은 칸에 맞춘다).
-    // 커서 아래 타일 높이는 쓰지 않는다 — 시작 칸이 맵 안쪽으로 옮겨지면 커서 밑에는 덮지도 않는
-    // 장식 타일(가장 높다)이 남아, 그 높이로 유닛이 떠서 놓인다.
-    // 프리뷰와 확정이 같은 값을 쓰도록 높이는 여기서 한 번만 정한다.
-    public static float TopY(PlacementArea area)
+    // 유닛이 설 높이 — 놓을 수 있는 칸들 중 가장 높은 윗면.
+    public static float TopY(PlacementArea area, OccupantKind kind)
     {
         float top = float.MinValue;
 
         foreach (Vector2Int cell in area.Cells)
         {
+            if (!area.Board.CanPlace(cell, kind))
+            {
+                continue;
+            }
+
             if (area.Board.TryGetCell(cell, out Tile tile) && tile.WorldTop.y > top)
             {
                 top = tile.WorldTop.y;
             }
         }
 
-        return top > float.MinValue ? top : area.Center.y;   // 덮는 칸에 타일이 하나도 없을 때만 앵커 높이
+        return top > float.MinValue ? top : area.Center.y;   // 놓을 수 있는 칸이 하나도 없을 때만 앵커 높이
     }
 
     // 덮는 칸을 모두 점유하고 유닛을 한가운데 세운다. CanPlace가 통과한 자리에만 부른다.
@@ -44,7 +46,7 @@ public static class AreaPlace
         OccupantKind kind,
         float yOffset)
     {
-        float top = TopY(area);
+        float top = TopY(area, kind);
 
         foreach (Vector2Int cell in area.Cells)
         {

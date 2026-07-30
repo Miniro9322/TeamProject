@@ -23,6 +23,17 @@ public class MapMakerWindow : EditorWindow
     private const int MinCell = 14;
     private const int MaxCell = 40;
 
+    /// <summary>선반이 기본으로 차지하는 최대 높이 — 썸네일 두 줄. 넘치면 선반 안에서 스크롤한다.</summary>
+    private const float ShelfHeight = 168f;
+
+    /// <summary>선반의 탭. 셋 다 저작 중 계속 보고 싶은 것이라 접이식으로 자리를 나눠 쓴다.</summary>
+    private enum ShelfTab
+    {
+        Prefab,
+        Lane,
+        Problem
+    }
+
     private Grid[] _modules = System.Array.Empty<Grid>();
     private string[] _moduleNames = System.Array.Empty<string>();
     private int _moduleIndex;
@@ -30,10 +41,17 @@ public class MapMakerWindow : EditorWindow
 
     private MapBrush _brush = MapBrush.None;
     private int _cellPixels = 20;
-    private bool _showProblems = true;
     private bool _showInert;
-    private bool _swap;
-    private TilePrefabSet _prefabs;
+
+    private ShelfTab _shelf = ShelfTab.Prefab;
+    private bool _shelfOpen = true;
+    private Vector2 _shelfScroll;
+    private int _lanePick = -1;
+    private MapTool _tool = MapTool.Select;
+    private List<TileTheme> _themes;
+    private TileTheme _theme;
+    private GameObject _pick;
+    private int _themeModule = -1;
     private readonly HashSet<Vector2Int> _swapped = new();
     private int _strokeGroup;
     private Vector2Int _hover = new(-1, -1);
@@ -68,6 +86,9 @@ public class MapMakerWindow : EditorWindow
 
     private void Refresh()
     {
+        _themes = null;    // 편집 대상이 바뀌었다 — 테마도 다시 모으고 모듈에 맞춰 다시 고른다
+        _themeModule = -1;
+
         List<Grid> found = ModuleScan.FindModules();
         _modules = found.ToArray();
         _moduleNames = new string[_modules.Length];
@@ -96,7 +117,6 @@ public class MapMakerWindow : EditorWindow
         }
 
         DrawToolbar(target);
-        DrawSwapNotice();
 
         if (_modules.Length == 0)
         {
@@ -112,6 +132,10 @@ public class MapMakerWindow : EditorWindow
             Refresh();
             return;
         }
+
+        EnsureThemes(module);
+        DrawToolRow();
+        SyncPick();
 
         List<Tile> tiles = ModuleScan.CollectTiles(module);
         Dictionary<Vector2Int, Tile> cells = ModuleScan.MapCells(tiles, out _, out _);
@@ -144,7 +168,7 @@ public class MapMakerWindow : EditorWindow
         {
             if (roomForLeft)
             {
-                DrawTerrainPanel(cells);
+                DrawTerrainPanel(module, cells);
             }
 
             DrawGridArea(view, cells, lanes, overrides);
@@ -159,7 +183,7 @@ public class MapMakerWindow : EditorWindow
         {
             if (!roomForLeft)
             {
-                DrawTerrainPanel(cells);
+                DrawTerrainPanel(module, cells);
             }
 
             if (!roomForBoth)
@@ -175,11 +199,20 @@ public class MapMakerWindow : EditorWindow
         DrawStatusBar(cells, view, lanes, problems.Count, overrideCount);
         DrawMarkerLegend(overrideCount);
         DrawBrushNote();
+        DrawShelf(module, lanes, problems);
+    }
 
-        if (_showProblems)
-        {
-            DrawProblems(problems);
-        }
+    /// <summary>
+    /// 판 구성이 바뀌었으니 이 프레임은 접고 처음부터 다시 그린다.
+    ///
+    /// IMGUI는 요소 자리를 Layout 이벤트에서 한 번 재서 목록으로 두고, 뒤따르는 이벤트(클릭·이동)가
+    /// 그 목록을 순서대로 꺼내 쓴다. 그래서 클릭 도중에 줄이 하나 붙거나 떨어지면 이후 요소가 남의 자리를 집는다 —
+    /// 폭이 엉뚱하게 늘어나고, 스크롤 판 자리에 일반 줄이 걸리면 형변환 오류로 그리기가 끊긴다.
+    /// </summary>
+    private void Relayout()
+    {
+        Repaint();
+        GUIUtility.ExitGUI();
     }
 
     // ---- 위: 대상 ----
@@ -189,81 +222,145 @@ public class MapMakerWindow : EditorWindow
         using (new EditorGUILayout.HorizontalScope(EditorStyles.toolbar))
         {
             // 붓질 한 번 = 되돌리기 한 단계. 키보드 초점이 어디 있든 눌리도록 버튼으로도 둔다.
+            // 둘 다 격자·모듈 목록을 바꾼다 — 바뀐 것으로 다시 재려면 이 프레임을 접어야 한다.
             if (GUILayout.Button("되돌리기", EditorStyles.toolbarButton, GUILayout.Width(56)))
             {
                 Undo.PerformUndo();
+                Relayout();
             }
 
             if (GUILayout.Button("새로고침", EditorStyles.toolbarButton, GUILayout.Width(56)))
             {
                 Refresh();
+                Relayout();
             }
 
             if (_modules.Length > 0)
             {
-                _moduleIndex = EditorGUILayout.Popup(
+                int picked = EditorGUILayout.Popup(
                     _moduleIndex, _moduleNames, EditorStyles.toolbarPopup, GUILayout.Width(140));
+
+                if (picked != _moduleIndex)
+                {
+                    _moduleIndex = picked;
+                    Relayout();
+                }
             }
 
             GUILayout.Label(target, EditorStyles.miniLabel);
             GUILayout.FlexibleSpace();
 
             GUILayout.Label("칸 크기", EditorStyles.miniLabel);
-            _cellPixels = (int)GUILayout.HorizontalSlider(_cellPixels, MinCell, MaxCell, GUILayout.Width(60));
-
-            _showProblems = GUILayout.Toggle(
-                _showProblems, "검사", EditorStyles.toolbarButton, GUILayout.Width(40));
+            int cell = (int)GUILayout.HorizontalSlider(_cellPixels, MinCell, MaxCell, GUILayout.Width(60));
+            if (cell != _cellPixels)
+            {
+                _cellPixels = cell;
+                Relayout(); // 격자 폭이 바뀌면 곁판이 격자 옆에서 아래로 옮겨 앉는다
+            }
 
             // 붓과 무관하게 무효 조합 칸(지상의 CanRanged 등)을 격자에 상시 표시한다.
-            _showInert = GUILayout.Toggle(
+            bool inert = GUILayout.Toggle(
                 _showInert, "무효", EditorStyles.toolbarButton, GUILayout.Width(40));
 
-            // 켜면 지형 붓이 State만 바꾸는 대신 그 칸 타일을 지형 프리팹으로 실제 교체한다.
-            _swap = GUILayout.Toggle(
-                _swap, "스왑", EditorStyles.toolbarButton, GUILayout.Width(40));
-        }
-    }
-
-    // 실물(큐브)이 걸린 붓만 스왑 대상이다. 스폰·배치 허용은 같은 큐브 위의 데이터라 바꿀 실물이 없다.
-    private static bool IsTerrainBrush(MapBrush brush)
-    {
-        return brush == MapBrush.Ground || brush == MapBrush.High
-            || brush == MapBrush.Core || brush == MapBrush.Special;
-    }
-
-    private void EnsurePrefabSet()
-    {
-        if (_prefabs == null)
-        {
-            _prefabs = TilePrefabSetIO.Load();
-        }
-    }
-
-    // 스왑이 켜졌는데 매핑 에셋(TilePrefabSet)이 없으면 여기서 바로 만들 수 있게 안내한다.
-    private void DrawSwapNotice()
-    {
-        if (!_swap)
-        {
-            return;
-        }
-
-        EnsurePrefabSet();
-        if (_prefabs != null)
-        {
-            return;
-        }
-
-        using (new EditorGUILayout.HorizontalScope(EditorStyles.helpBox))
-        {
-            GUILayout.Label(
-                "스왑하려면 지형→프리팹 매핑(TilePrefabSet)이 필요합니다.", EditorStyles.miniLabel);
-            GUILayout.FlexibleSpace();
-            if (GUILayout.Button("기본 세트 만들기", EditorStyles.miniButton, GUILayout.Width(100)))
+            if (inert != _showInert)
             {
-                _prefabs = TilePrefabSetIO.CreateDefault();
-                Selection.activeObject = _prefabs;
+                _showInert = inert;
+                Relayout(); // 표식 뜻풀이 줄이 생기거나 사라진다
             }
         }
+    }
+
+    // 도구 줄. 팔레트(무엇을)와 도구(어떻게)를 나눠, 같은 클릭이 상황마다 다른 뜻이 되지 않게 한다.
+    private void DrawToolRow()
+    {
+        using (new EditorGUILayout.HorizontalScope())
+        {
+            ToolButton(MapTool.Select);
+            ToolButton(MapTool.Paint);
+            ToolButton(MapTool.Swap);
+            ToolButton(MapTool.Erase);
+            ToolButton(MapTool.Pick);
+            GUILayout.FlexibleSpace();
+        }
+    }
+
+    private void ToolButton(MapTool tool)
+    {
+        bool pressed = GUILayout.Toggle(
+            _tool == tool, MapToolWord.Name(tool), EditorStyles.miniButton, GUILayout.Width(58));
+
+        if (pressed)
+        {
+            _tool = tool;
+        }
+    }
+
+    // ---- 테마 ----
+
+    private void EnsureThemes(Grid module)
+    {
+        if (_themes == null)
+        {
+            _themes = ThemeIO.LoadAll();
+        }
+
+        SyncTheme(module);
+    }
+
+    // 모듈을 갈아타면 그 모듈이 기본으로 쓰는 테마로 옮긴다. 가리키는 테마가 없으면 지금 것을 그대로 둔다.
+    private void SyncTheme(Grid module)
+    {
+        if (_themeModule == _moduleIndex && _theme != null)
+        {
+            return;
+        }
+
+        _themeModule = _moduleIndex;
+        TileTheme best = ThemeIO.Best(_themes, module);
+
+        if (best != null)
+        {
+            _theme = best;
+            _pick = null;
+            return;
+        }
+
+        if (_theme == null && _themes.Count > 0)
+        {
+            _theme = _themes[0];
+        }
+    }
+
+    // 고른 프리팹이 지금 붓·테마의 목록에 없으면 첫 번째로 돌린다 —
+    // 붓을 바꿨는데 이전 붓의 프리팹이 남아 있으면 엉뚱한 실물이 깔린다.
+    private void SyncPick()
+    {
+        if (_theme == null)
+        {
+            _pick = null;
+            return;
+        }
+
+        if (_pick != null && _theme.Has(_brush, _pick))
+        {
+            return;
+        }
+
+        _pick = _theme.First(_brush);
+    }
+
+    private void Extract(Grid module)
+    {
+        TileTheme made = ThemeIO.Extract(module, _moduleNames[_moduleIndex]);
+
+        _themes = null;
+        _theme = made;
+        _themeModule = _moduleIndex;
+        _pick = null;
+
+        Selection.activeObject = made;
+        EditorGUIUtility.PingObject(made);
+        Relayout(); // 테마 탭이 하나 늘었다
     }
 
     /// <summary>
@@ -283,7 +380,7 @@ public class MapMakerWindow : EditorWindow
 
     // ---- 왼쪽: 지형(큰 분류) ----
 
-    private void DrawTerrainPanel(Dictionary<Vector2Int, Tile> cells)
+    private void DrawTerrainPanel(Grid module, Dictionary<Vector2Int, Tile> cells)
     {
         using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox, GUILayout.Width(LeftWidth)))
         {
@@ -293,6 +390,12 @@ public class MapMakerWindow : EditorWindow
             TerrainRow(cells, MapBrush.Special, "외곽", TerrainType.Special);
             TerrainRow(cells, MapBrush.Core, "본진", TerrainType.Core);
             TerrainRow(cells, MapBrush.Empty, "빈(벽)", TerrainType.Empty);
+
+            GUILayout.Space(6);
+            GUILayout.Label("겉모습", EditorStyles.miniBoldLabel);
+
+            // 장식은 칸 수가 아니라 얹힌 개수를 센다 — 한 칸에 여러 개가 올라갈 수 있다.
+            BrushRow(MapBrush.Decor, "장식", MapMakerPalette.Decor, DecorPlace.Total(module));
 
             GUILayout.Space(6);
             GUILayout.Label("표식", EditorStyles.miniBoldLabel);
@@ -378,9 +481,10 @@ public class MapMakerWindow : EditorWindow
 
             bool active = _brush == brush;
             bool pressed = GUILayout.Toggle(active, label, EditorStyles.miniButton, GUILayout.MinWidth(36));
-            if (pressed)
+            if (pressed && !active)
             {
                 _brush = brush;
+                Relayout(); // 붓에 따라 설명 줄이 붙거나 떨어진다
             }
 
             GUILayout.Label(count.ToString(), EditorStyles.miniLabel, GUILayout.Width(24));
@@ -393,16 +497,16 @@ public class MapMakerWindow : EditorWindow
         IReadOnlyList<LaneData> lanes,
         HashSet<Vector2Int> overrides)
     {
+        // 프레임을 접을 때 짝이 맞게 풀리도록 스크롤 판을 scope로 연다 — 입력 처리가 이 안에서 프레임을 접는다.
         using (new EditorGUILayout.VerticalScope())
+        using (var scroll = new EditorGUILayout.ScrollViewScope(_scroll))
         {
-            _scroll = EditorGUILayout.BeginScrollView(_scroll);
+            _scroll = scroll.scrollPosition;
 
             Rect area = GUILayoutUtility.GetRect(view.PixelWidth(_cellPixels), view.PixelHeight(_cellPixels));
             HandleHover(area, view);
             HandleStroke(area, view, cells);
             view.Draw(area, _cellPixels, lanes, _hover, overrides, _showInert);
-
-            EditorGUILayout.EndScrollView();
         }
     }
 
@@ -419,16 +523,15 @@ public class MapMakerWindow : EditorWindow
             return; // 가리키는 칸이 없으면 자리를 차지하지 않는다
         }
 
-        EnsurePrefabSet();
         bool turnOff = Event.current.alt;
 
         string action = TileActionPreview.Describe(
-            module, _hover, tile, _brush, _swap, _prefabs, turnOff);
-        string stack = TileActionPreview.DescribeStack(module, _hover);
+            module, _hover, tile, _tool, _brush, _pick, turnOff);
+        string stack = TileActionPreview.DescribeStack(module, _hover, tile);
 
         using (new EditorGUILayout.HorizontalScope(EditorStyles.helpBox))
         {
-            GUILayout.Label(_swap ? "스왑 ▶" : "클릭 ▶", EditorStyles.miniBoldLabel, GUILayout.Width(46));
+            GUILayout.Label($"{MapToolWord.Name(_tool)} ▶", EditorStyles.miniBoldLabel, GUILayout.Width(52));
             GUILayout.Label(action, EditorStyles.miniBoldLabel);
             GUILayout.FlexibleSpace();
             GUILayout.Label($"지금 {stack}", EditorStyles.miniLabel);
@@ -541,6 +644,14 @@ public class MapMakerWindow : EditorWindow
                 "Core는 색이 아니라 경로의 도착점입니다. 여럿 찍으면 가장 가까운 곳이 목표가 되고, 배치는 전부 막힙니다.",
                 MessageType.Info);
         }
+
+        if (_brush == MapBrush.Decor)
+        {
+            EditorGUILayout.HelpBox(
+                "장식은 규칙 데이터가 아닙니다 — 경로·배치·격자에 잡히지 않는 겉모습이라 교체 도구로만 얹히고, " +
+                "지우기는 타일보다 장식을 먼저 걷습니다.",
+                MessageType.Info);
+        }
     }
 
     // ---- 입력 ----
@@ -553,7 +664,7 @@ public class MapMakerWindow : EditorWindow
         if (input.type == EventType.MouseLeaveWindow)
         {
             _hover = new Vector2Int(-1, -1);
-            Repaint();
+            Relayout(); // 예고줄이 사라진다
             return;
         }
 
@@ -576,15 +687,15 @@ public class MapMakerWindow : EditorWindow
         }
 
         _hover = coord;
-        Repaint();
+        Relayout(); // 격자 안팎을 넘나들면 예고줄이 생기거나 사라진다
     }
 
     // 누른 순간 되돌리기 그룹을 열고, 끄는 동안 지나간 칸을 찍고, 뗄 때 한 단계로 접는다.
     private void HandleStroke(Rect area, TileGridView view, Dictionary<Vector2Int, Tile> cells)
     {
-        if (_brush == MapBrush.None)
+        if (MapToolWord.Writes(_tool) && _brush == MapBrush.None && _tool != MapTool.Erase)
         {
-            return; // 읽기 전용 모드 — 입력을 아예 받지 않는다
+            return; // 칠할 것을 안 골랐다 — 지우기는 팔레트가 필요 없어 예외다
         }
 
         Event input = Event.current;
@@ -593,19 +704,20 @@ public class MapMakerWindow : EditorWindow
             return;
         }
 
+        // 이벤트를 먼저 삼킨다 — 찍은 뒤에는 프레임을 접으므로 이 줄로 돌아오지 않는다.
         if (input.type == EventType.MouseDown)
         {
+            input.Use();
             _swapped.Clear(); // 새 붓질 — 이번에 교체한 칸 기록을 비운다
             _strokeGroup = TileStamp.BeginStroke();
             StampAt(input.mousePosition, area, view, cells, input.alt);
-            input.Use();
             return;
         }
 
         if (input.type == EventType.MouseDrag)
         {
-            StampAt(input.mousePosition, area, view, cells, input.alt);
             input.Use();
+            StampAt(input.mousePosition, area, view, cells, input.alt);
             return;
         }
 
@@ -623,62 +735,145 @@ public class MapMakerWindow : EditorWindow
         bool exists = cells.TryGetValue(coord, out Tile tile);
         if (!exists)
         {
-            return; // 격자 밖이거나 타일이 없는 칸 — 1단계에서는 칸을 만들지 않는다
+            return; // 격자 밖이거나 타일이 없는 칸 — 아직 없는 칸을 새로 만들지는 않는다
         }
 
-        if (TrySwap(coord, cells))
+        _hover = coord;
+
+        switch (_tool)
+        {
+            case MapTool.Select:
+                Selection.activeGameObject = tile.gameObject;
+                EditorGUIUtility.PingObject(tile.gameObject);
+                break;
+
+            case MapTool.Pick:
+                _brush = BrushOf(tile.Terrain);
+                break;
+
+            case MapTool.Erase:
+                Wipe(coord, cells);
+                break;
+
+            case MapTool.Swap:
+                TrySwap(coord, cells);
+                break;
+
+            default:
+                if (_brush == MapBrush.Decor)
+                {
+                    break; // 장식은 기록할 지형 값이 없다 — 예고줄이 교체로 얹으라고 말한다
+                }
+
+                TileStamp.Stamp(tile, _brush, !turnOff);
+                break;
+        }
+
+        Relayout(); // 경로가 바로 다시 계산돼 보이도록. 찍으면서 예고줄·붓이 바뀌므로 프레임을 접는다
+    }
+
+    // 제일 위 한 겹을 지운다. 한 붓질에 같은 칸을 두 번 지우지 않는다 —
+    // 드래그로 지나가기만 해도 겹이 우수수 사라지면 되돌리기 전엔 알아채기 어렵다.
+    private void Wipe(Vector2Int coord, Dictionary<Vector2Int, Tile> cells)
+    {
+        if (!_swapped.Add(coord))
         {
             return;
         }
 
-        TileStamp.Stamp(tile, _brush, !turnOff);
-        _hover = coord;
-        Repaint(); // 경로가 바로 다시 계산돼 보이도록
+        Grid module = _modules[_moduleIndex];
+
+        // 장식이 얹혀 있으면 그것이 제일 위다 — 타일보다 먼저 걷는다.
+        if (cells.TryGetValue(coord, out Tile on) && DecorPlace.Remove(module, on))
+        {
+            SceneView.RepaintAll();
+            return;
+        }
+
+        Tile left = TileSwap.Erase(module, coord);
+        if (left != null)
+        {
+            cells[coord] = left;
+        }
+        else
+        {
+            cells.Remove(coord); // 마지막 겹까지 지웠다 — 그 칸은 이제 타일이 없다
+        }
+
+        SceneView.RepaintAll();
     }
 
-    // 스왑이 켜졌고 이 붓이 프리팹을 가진 지형이면 타일 실물을 갈아끼운다.
-    // 한 붓질에 같은 칸을 두 번 스왑하지 않는다 — 드래그 이벤트마다 교체하면 GameObject가 우수수 생겼다 사라진다.
-    private bool TrySwap(Vector2Int coord, Dictionary<Vector2Int, Tile> cells)
+    // 붓 이름. 왼쪽 판의 줄 이름과 같은 말을 쓴다.
+    private static string BrushWord(MapBrush brush)
     {
-        if (!_swap)
+        switch (brush)
         {
-            return false;
+            case MapBrush.Ground: return "지상";
+            case MapBrush.High: return "고지";
+            case MapBrush.Special: return "외곽";
+            case MapBrush.Core: return "본진";
+            case MapBrush.Empty: return "빈(벽)";
+            case MapBrush.Decor: return "장식";
+            case MapBrush.Spawn: return "스폰";
+            case MapBrush.Melee: return "근접";
+            case MapBrush.Ranged: return "원거리";
+            case MapBrush.Build: return "생산";
+            default: return "읽기만";
+        }
+    }
+
+    // 스포이드가 집어 온 지형에 맞는 팔레트.
+    private static MapBrush BrushOf(TerrainType terrain)
+    {
+        switch (terrain)
+        {
+            case TerrainType.High: return MapBrush.High;
+            case TerrainType.Core: return MapBrush.Core;
+            case TerrainType.Special: return MapBrush.Special;
+            case TerrainType.Empty: return MapBrush.Empty;
+            default: return MapBrush.Ground;
+        }
+    }
+
+    // 이 칸의 실물을 고른 프리팹으로 갈아끼운다(장식은 위에 얹는다).
+    // 한 붓질에 같은 칸을 두 번 교체하지 않는다 — 드래그 이벤트마다 갈면 GameObject가 우수수 생겼다 사라진다.
+    private void TrySwap(Vector2Int coord, Dictionary<Vector2Int, Tile> cells)
+    {
+        if (!TileActionPreview.Swaps(_brush))
+        {
+            // 스폰·배치 허용은 같은 큐브 위의 데이터라 바꿀 실물이 없다.
+            Debug.LogWarning("[Map Maker] 교체는 지형·장식 팔레트에만 씁니다 — " +
+                "스폰·배치 허용은 칠하기로 바꾸세요.");
+            return;
         }
 
-        TerrainType terrain = TileActionPreview.TerrainOf(_brush);
-        if (!IsTerrainBrush(_brush))
+        // 고른 프리팹이 없으면 아무것도 하지 않는다. 데이터만 칠하고 넘어가면 겉과 속이 갈라진다.
+        if (_pick == null)
         {
-            return false; // 스폰·배치 허용 붓은 실물과 무관하다 → 데이터 칠로 넘어간다
-        }
-
-        // 매핑이 아직 없으면 여기서 만든다. 조용히 데이터 칠로 떨어지면
-        // 스왑을 켰는데 큐브가 안 바뀌는 이유를 알 길이 없다.
-        EnsurePrefabSet();
-        if (_prefabs == null)
-        {
-            _prefabs = TilePrefabSetIO.CreateDefault();
-            Debug.Log("[Map Maker] 스왑 매핑을 새로 만들었습니다 — " +
-                AssetDatabase.GetAssetPath(_prefabs) + " (슬롯은 인스펙터에서 바꿀 수 있습니다).", _prefabs);
-        }
-
-        GameObject prefab = _prefabs.For(terrain);
-        if (prefab == null)
-        {
-            // 슬롯이 빈 지형. 데이터만 칠하면 겉과 속이 갈라지므로 아예 하지 않고 이유를 알린다.
-            Debug.LogWarning($"[Map Maker] {terrain} 슬롯이 비어 스왑할 프리팹이 없습니다 — " +
-                "TilePrefabSet에서 채우세요.", _prefabs);
-            return true;
+            Debug.LogWarning("[Map Maker] 고른 프리팹이 없습니다 — 아래 선반의 프리팹 탭에서 하나 고르세요. " +
+                "테마가 비어 있으면 '이 모듈에서 뽑기'로 채울 수 있습니다.", _theme);
+            return;
         }
 
         if (!_swapped.Add(coord))
         {
-            return true; // 이번 붓질에 이미 손댄 칸 — 다시 만들지 않고 삼킨다
+            return; // 이번 붓질에 이미 손댄 칸 — 다시 만들지 않고 삼킨다
         }
 
-        Tile made = TileSwap.Apply(_modules[_moduleIndex], coord, prefab, terrain);
-        if (made != null)
+        Grid module = _modules[_moduleIndex];
+
+        if (_brush == MapBrush.Decor)
         {
-            cells[coord] = made; // 붓질 내내 dict를 최신으로 — 뒤 이벤트가 파괴된 타일을 잡지 않도록
+            cells.TryGetValue(coord, out Tile under);
+            DecorPlace.Add(module, under, _pick);
+        }
+        else
+        {
+            Tile made = TileSwap.Apply(module, coord, _pick, TileActionPreview.TerrainOf(_brush));
+            if (made != null)
+            {
+                cells[coord] = made; // 붓질 내내 dict를 최신으로 — 뒤 이벤트가 파괴된 타일을 잡지 않도록
+            }
         }
 
         _hover = coord;
@@ -687,17 +882,146 @@ public class MapMakerWindow : EditorWindow
         // 실물이 바뀌었으니 씬 뷰에도 알린다 — 이 창만 다시 그리면
         // 오브젝트는 교체됐는데 화면은 그대로여서 "반영이 안 된다"로 보인다.
         SceneView.RepaintAll();
-        return true;
     }
 
 
-    // ---- 검사 ----
+    // ---- 아래: 선반 ----
+
+    /// <summary>
+    /// 창 아래 선반. 프리팹·경로·문제를 탭으로 나눠 남는 세로 공간에 놓는다.
+    ///
+    /// 격자는 어떤 경우에도 밀지 않는다 — 내용이 넘치면 선반 안에서만 스크롤한다.
+    /// 탭 이름에 수를 붙인다: 탭을 열지 않아도 상태가 보이고, 문제가 0인 것과 아직 안 본 것이 구분된다.
+    /// </summary>
+    private void DrawShelf(Grid module, IReadOnlyList<LaneData> lanes, List<string> problems)
+    {
+        int picks = _theme != null ? _theme.For(_brush).Length : 0;
+
+        using (new EditorGUILayout.HorizontalScope(EditorStyles.toolbar))
+        {
+            ShelfButton(ShelfTab.Prefab, $"프리팹 {picks}");
+            ShelfButton(ShelfTab.Lane, $"경로 {ValidLanes(lanes)}/{lanes.Count}");
+            ShelfButton(ShelfTab.Problem, $"문제 {problems.Count}");
+
+            GUILayout.FlexibleSpace();
+            bool open = GUILayout.Toggle(
+                _shelfOpen, _shelfOpen ? "접기" : "펼치기", EditorStyles.toolbarButton, GUILayout.Width(48));
+
+            if (open != _shelfOpen)
+            {
+                _shelfOpen = open;
+                Relayout(); // 선반 속이 통째로 생기거나 사라진다
+            }
+        }
+
+        if (!_shelfOpen)
+        {
+            return;
+        }
+
+        using (var view = new EditorGUILayout.ScrollViewScope(_shelfScroll, GUILayout.MaxHeight(ShelfHeight)))
+        {
+            _shelfScroll = view.scrollPosition;
+
+            switch (_shelf)
+            {
+                case ShelfTab.Lane:
+                    _lanePick = LaneList.Draw(lanes, _lanePick);
+                    break;
+
+                case ShelfTab.Problem:
+                    DrawProblems(problems);
+                    break;
+
+                default:
+                    DrawPrefabShelf(module);
+                    break;
+            }
+        }
+    }
+
+    private void ShelfButton(ShelfTab tab, string label)
+    {
+        bool pressed = GUILayout.Toggle(
+            _shelf == tab, label, EditorStyles.toolbarButton, GUILayout.Width(80));
+
+        if (pressed && _shelf != tab)
+        {
+            _shelf = tab;
+            _shelfScroll = Vector2.zero;
+            Relayout(); // 탭마다 속이 다르다
+        }
+    }
+
+    // 프리팹 탭. 테마 탭을 여기 둔다 — 테마는 "무슨 프리팹을 쓸 수 있나"만 정하므로 프리팹과 붙어 있어야 한다.
+    private void DrawPrefabShelf(Grid module)
+    {
+        using (new EditorGUILayout.HorizontalScope())
+        {
+            if (_themes.Count > 0)
+            {
+                GUILayout.Label("테마", EditorStyles.miniBoldLabel, GUILayout.Width(28));
+
+                TileTheme picked = ThemeBar.DrawTabs(_themes, _theme);
+                if (picked != _theme)
+                {
+                    _theme = picked;
+                    Relayout(); // 테마가 가진 프리팹 수에 따라 썸네일 줄 수가 바뀐다
+                }
+            }
+            else
+            {
+                GUILayout.Label("테마가 없습니다 — 이 모듈이 쓰는 프리팹으로 뽑을 수 있습니다.",
+                    EditorStyles.wordWrappedMiniLabel);
+            }
+
+            GUILayout.FlexibleSpace();
+
+            if (GUILayout.Button("이 모듈에서 뽑기", EditorStyles.miniButton, GUILayout.Width(96)))
+            {
+                Extract(module);
+            }
+
+            if (_theme != null
+                && GUILayout.Button("에셋", EditorStyles.miniButton, GUILayout.Width(34)))
+            {
+                Selection.activeObject = _theme;
+                EditorGUIUtility.PingObject(_theme);
+            }
+        }
+
+        if (!TileActionPreview.Swaps(_brush))
+        {
+            // 실물이 걸리지 않는 붓(스폰·배치 허용·읽기만)에는 고를 프리팹이 없다.
+            GUILayout.Label($"{BrushWord(_brush)} 붓은 데이터만 바꿉니다 — 고를 프리팹이 없습니다.",
+                EditorStyles.wordWrappedMiniLabel);
+            return;
+        }
+
+        _pick = ThemeBar.DrawPicks(_theme, _brush, _pick, position.width - 24f);
+    }
+
+    private static int ValidLanes(IReadOnlyList<LaneData> lanes)
+    {
+        int valid = 0;
+        for (int i = 0; i < lanes.Count; i++)
+        {
+            if (lanes[i].IsValid)
+            {
+                valid++;
+            }
+        }
+
+        return valid;
+    }
 
     private void DrawProblems(List<string> problems)
     {
         if (problems.Count == 0)
         {
-            return; // 문제가 없으면 자리를 차지하지 않는다 — 격자에 한 줄이라도 더 준다
+            // 0을 빈 화면으로 두면 "깨끗한 것"과 "아직 안 돌린 것"이 구분되지 않는다.
+            EditorGUILayout.HelpBox("문제 없음 — 경로·좌표·배치 허용 모두 지금 규칙에 맞습니다.", MessageType.Info);
+            return;
         }
 
         foreach (string problem in problems)

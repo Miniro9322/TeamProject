@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -28,6 +29,30 @@ public static class ModuleScan
         }
 
         return SceneManager.GetActiveScene().name;
+    }
+
+    /// <summary>
+    /// 이 모듈의 원본 프리팹 에셋. 테마가 "내가 기본인 모듈"을 가리킬 때 쓰는 값이다.
+    /// 프리팹 스테이지면 지금 열어 둔 에셋, 씬이면 그 인스턴스의 원본이다.
+    ///
+    /// 계층 루트가 아니라 Grid에서 가장 가까운 인스턴스 뿌리를 본다 —
+    /// 모듈이 MapRoot 같은 상위 프리팹 안에 들어 있으면 루트를 보면 전부 같은 프리팹으로 나온다.
+    /// </summary>
+    public static GameObject SourcePrefab(Grid module)
+    {
+        PrefabStage stage = PrefabStageUtility.GetCurrentPrefabStage();
+        if (stage != null)
+        {
+            return AssetDatabase.LoadAssetAtPath<GameObject>(stage.assetPath);
+        }
+
+        GameObject near = PrefabUtility.GetNearestPrefabInstanceRoot(module.gameObject);
+        if (near == null)
+        {
+            return null; // 프리팹에서 온 모듈이 아니다 — 가리킬 원본이 없다
+        }
+
+        return PrefabUtility.GetCorrespondingObjectFromSource(near);
     }
 
     /// <summary>편집 대상 안의 모든 Grid = 모듈 목록.</summary>
