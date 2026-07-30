@@ -11,6 +11,7 @@ public class MapCommand : MonoBehaviour
     // MapAssemble이 조립할 때 넣어준다
     public PointerPick pointerPick;
     public DragDetect dragDetect;
+    public DragDetect rightDragDetect;
     public UnitReplace replace;
     public BuildingUiLink buildingUi;
     public PlaceAction action;
@@ -21,12 +22,16 @@ public class MapCommand : MonoBehaviour
     {
         input.Pressed += OnPress;
         input.Released += OnRelease;
+        input.RightPressed += OnRightPress;
+        input.RightReleased += OnRightRelease;
     }
 
     private void OnDisable()
     {
         input.Pressed -= OnPress;
         input.Released -= OnRelease;
+        input.RightPressed -= OnRightPress;
+        input.RightReleased -= OnRightRelease;
     }
 
     private void Update()
@@ -48,6 +53,7 @@ public class MapCommand : MonoBehaviour
 
         if (tile == null)
         {
+            action.skillCast?.ClearSelection(); // 타일 밖 클릭 = 스킬 시전 취소
             buildingUi.CloseUnlessOverUi();
             return;
         }
@@ -58,6 +64,18 @@ public class MapCommand : MonoBehaviour
         }
 
         dispatch[palette.Mode](tile);
+    }
+
+    // 제자리 우클릭(뗄 때까지 거의 안 움직임)이면 스킬 시전 취소. 우클릭 드래그는 카메라 팬/회전이라 무시한다.
+    private void OnRightPress()
+    {
+        rightDragDetect.MarkPress();
+    }
+
+    private void OnRightRelease()
+    {
+        if (rightDragDetect.MovedEnough()) return;
+        action.skillCast?.ClearSelection();
     }
 
     private void ReplacePress(Tile tile)

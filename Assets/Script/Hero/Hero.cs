@@ -94,8 +94,13 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
     [SerializeField] protected int range = 1;
     [SerializeField] protected RangeShape rangeShape = RangeShape.Diamond;
     public int Range => range;
+    public RangeShape RangeShape => rangeShape;
     [SerializeField] private List<GroundZoneDataSO> auraZones = new();
     private CancellationTokenSource _auraCts;
+
+    [SerializeField] private HeroActiveSkillDataSO activeSkill;
+    public HeroActiveSkillDataSO ActiveSkill => activeSkill;
+    private CancellationTokenSource _skillCts;
 
     // 이펙트 풀은 Hero 인스턴스 소유(Archer/Mage의 projectilePools와 동일한 패턴) —
     // 씬이 언로드돼 이 Hero가 파괴되면 풀도 함께 사라지므로, 파괴된 인스턴스를 다시 꺼내 쓰는 일이 없다.
@@ -187,7 +192,10 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
         anim.SetBool(HeroAnimHash.idle, false);
         stateMachine.ChangeState(deathState);
         OnBreak?.Invoke();
-        
+        _skillCts?.Cancel();
+        _skillCts?.Dispose();
+        _skillCts = null;
+
         // ResurrectionAfter10s().Forget();
     }
     public void TakeDamage(int damage)
@@ -251,6 +259,9 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
         OnResur -= StartAuras;
         _auraCts?.Cancel();
         _auraCts?.Dispose();
+        _skillCts?.Cancel();
+        _skillCts?.Dispose();
+        _skillCts = null;
     }
     //끝
 
@@ -270,6 +281,45 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
                 SpawnEffect, SpawnPersistentEffect, DespawnEffect, () => !IsDead, _auraCts.Token).Forget();
         }
     }
+
+    // 밤 전투 중 HeroSkillCastController에서만 호출. targetTile은 호출자가 이미 board 소속까지
+    // 검증해 넘긴다(멀티 모듈에서 같은 좌표의 다른 보드 타일과 혼동 방지).
+    public bool TryUseActiveSkill(Tile targetTile)
+    {
+        if (activeSkill == null || isDead || targetTile == null || targetTile.Board != board)
+            return false;
+
+        if (activeSkill.targetScope == SkillTargetScope.Self)
+        {
+            Vector2Int casterCell = board.WorldToCell(transform.position);
+            if (targetTile.Coord != casterCell) return false;
+        }
+        // AnywhereOnBoard: 위에서 이미 targetTile.Board == board를 확인했으므로 거리 제한 없이 통과.
+
+        if (activeSkill.buffList is { Count: > 0 })
+            AttackDamageUtil.ApplySelfBuffs(this, activeSkill.buffList, buffManager, activeSkill);
+
+        if (activeSkill.groundZone != null)
+        {
+            _skillCts ??= new CancellationTokenSource();
+            AttackDamageUtil.SpawnGroundZone(activeSkill.groundZone, targetTile.WorldTop,
+                GetEnemyObjectsInRange, GetAllyObjectsInRange, sc, buffManager,
+                SpawnEffect, SpawnPersistentEffect, DespawnEffect, _skillCts.Token);
+        }
+
+        if (activeSkill.instantDamagePer > 0f)
+        {
+            int dmg = Mathf.RoundToInt(sc[StatType.ATK] * activeSkill.instantDamagePer);
+            foreach (GameObject enemy in GetEnemyObjectsInRange(targetTile.WorldTop, 0, RangeShape.Diamond))
+                if (enemy.GetComponentInParent<IDamageAble>() is IDamageAble d)
+                    d.TakeDamage(dmg);
+            if (activeSkill.instantHitEffect != null)
+                SpawnEffect(activeSkill.instantHitEffect, targetTile.WorldTop, Quaternion.identity, activeSkill.instantHitEffectLifetime);
+        }
+
+        return true;
+    }
+
     protected virtual void Update()
     {
         stateMachine.CurrentState.Update();
