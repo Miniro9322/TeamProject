@@ -127,7 +127,6 @@ public class UpgradeUI : MonoBehaviour
     {
         upgradeState.ResetAll(nodes.Keys);
         RefreshAll();
-        upgradeInfoPanel.gameObject.SetActive(false);
     }
 
     // 디버그용 리셋 버튼의 OnClick에 연결 — 자원 환불 없이 해금 상태만 초기화
