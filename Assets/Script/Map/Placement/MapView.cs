@@ -165,15 +165,11 @@ public class MapView : MonoBehaviour
                 return citizenManager.CheckCanUseCitizen(hero.CitizenAmount) && cost != null && resourcesManager.CheckResources(cost);
             }
             case OccupantKind.Building:
-            {
-                House house = slot.prefab.GetComponent<House>();
-                return resourcesManager.CheckResources(house.Resources);
-            }
+                if (resourcesManager.CheckResources(slot.prefab.GetComponent<House>().Resources))
+                    return true;
+                else
+                    return false;
             case OccupantKind.Resource:
-            {
-                ProductionFacility facility = slot.prefab.GetComponent<ProductionFacility>();
-                return resourcesManager.CheckResources(facility.BasicValue.ConstructProduct);
-            }
                 if (resourcesManager.CheckResources(slot.prefab.GetComponent<ProductionFacility>().GetConstructCost()))
                     return true;
                 else
