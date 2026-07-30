@@ -53,7 +53,7 @@ public class UnitPlacer
             ProductionFacility facility = slot.prefab.GetComponent<ProductionFacility>();
             if (facility != null)
             {
-                if (!resourcesManager.CheckResources(facility.BasicValue.ConstructProduct))
+                if (!resourcesManager.CheckResources(facility.GetConstructCost()))
                 {
                     return null;   // 자원 부족 → 생성하지 않음
                 }

@@ -10,7 +10,6 @@ GameObject:
   m_Component:
   - component: {fileID: 7421086729262976415}
   - component: {fileID: 1984490433635416295}
-  - component: {fileID: 7584261124630511029}
   m_Layer: 0
   m_Name: Iron
   m_TagString: Untagged
@@ -28,8 +27,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -0, y: 0, z: -0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 2, y: 2, z: 2}
+  m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 1563762835324403329}
   m_Father: {fileID: 0}
@@ -47,27 +46,24 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProductionFacility
   basicValue: {fileID: 11400000, guid: 4bdf258408677074fb10fb32afe4d52b, type: 2}
---- !u!65 &7584261124630511029
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2836901075419073204}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 1
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 1, z: 1}
-  m_Center: {x: 0, y: 0, z: 0}
+  constructCostUpgrades:
+  - {fileID: 11400000, guid: d1de5450ccfd4fd4f9e27b762dd737ee, type: 2}
+  - {fileID: 11400000, guid: b9e357f428a868e4aa9f30e05b18baf1, type: 2}
+  - {fileID: 11400000, guid: 55e64d450fbc6db46ba70410a0b8eda4, type: 2}
+  - {fileID: 11400000, guid: a8b5fa225d6ecc74b9ab667e447f4475, type: 2}
+  - {fileID: 11400000, guid: 8f11614da176e914abd811cb92255aef, type: 2}
+  upgradeCostUpgrades:
+  - {fileID: 11400000, guid: b482e4332816c0747972287a834285a4, type: 2}
+  - {fileID: 11400000, guid: bf65a47469640af4a96ab780d8e61612, type: 2}
+  - {fileID: 11400000, guid: c2559fccf288fa945b46556610c8cc70, type: 2}
+  - {fileID: 11400000, guid: a0f442023fa79a74093494b02d29538f, type: 2}
+  - {fileID: 11400000, guid: a226b1d6eddded34caa6815681a7fece, type: 2}
+  productAmountUpgrades:
+  - {fileID: 11400000, guid: d7a260ff05970e34fa9868ba6780920b, type: 2}
+  - {fileID: 11400000, guid: 742cb699907d29b4aac75be9071c373f, type: 2}
+  - {fileID: 11400000, guid: 0d935bc1159d4bb45a2778baf9aa985b, type: 2}
+  - {fileID: 11400000, guid: acf0118090cb3414fb1e41e2c015be68, type: 2}
+  - {fileID: 11400000, guid: 40eff0daf3da87e44bbe6d3420ecf975, type: 2}
 --- !u!1001 &1313119790542002538
 PrefabInstance:
   m_ObjectHideFlags: 0

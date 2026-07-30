@@ -1,5 +1,6 @@
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class MenuUI : MonoBehaviour
 {
@@ -35,5 +36,10 @@ public class MenuUI : MonoBehaviour
     {
         if (QuitAlert.activeSelf)
             QuitAlert.SetActive(false);
+    }
+
+    public void OnTitle()
+    {
+        SceneManager.LoadScene("TempTitle");
     }
 }

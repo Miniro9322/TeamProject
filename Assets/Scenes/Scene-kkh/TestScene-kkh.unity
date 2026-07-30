@@ -20,7 +20,7 @@ RenderSettings:
   m_FogDensity: 0.01
   m_LinearFogStart: 0
   m_LinearFogEnd: 300
-  m_AmbientSkyColor: {r: 0.3963874, g: 0.3963874, b: 0.40789992, a: 1}
+  m_AmbientSkyColor: {r: 0.32694554, g: 0.32694554, b: 0.34617382, a: 1}
   m_AmbientEquatorColor: {r: 0.114, g: 0.125, b: 0.133, a: 1}
   m_AmbientGroundColor: {r: 0.047, g: 0.043, b: 0.035, a: 1}
   m_AmbientIntensity: 1
@@ -710,6 +710,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a2e518a6e399a0a4ab581d88de39b520, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameSpeedUI
+  timeIncreaseKey: 3
+  timeStopKey: 1
 --- !u!114 &85864929
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2667,6 +2669,9 @@ MonoBehaviour:
   rangeColor: {r: 0.3, g: 0.6, b: 1, a: 1}
   enemyColor: {r: 0.9, g: 0.25, b: 0.2, a: 1}
   blockColor: {r: 0.95, g: 0.55, b: 0.1, a: 1}
+  tintShader: {fileID: 0}
+  tintAlpha: 0.45
+  lift: 0.02
 --- !u!114 &314587628
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2816,6 +2821,7 @@ MonoBehaviour:
   expand: {fileID: 937669907}
   dragPixels: 8
   placeYOffset: 0
+  tilePaintView: {fileID: 1235437630}
 --- !u!1 &321320276
 GameObject:
   m_ObjectHideFlags: 0
@@ -3278,58 +3284,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 347813475}
   m_CullTransparentMesh: 1
---- !u!1 &422220351
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 422220353}
-  - component: {fileID: 422220352}
-  m_Layer: 0
-  m_Name: WaveSpawner
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &422220352
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 422220351}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b15503c1ee9227547aa76b4511c9db1e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::WaveSpawner
-  board: {fileID: 2512691319082104341}
-  region: 1
-  Enemycount: 13
-  text: {fileID: 0}
-  bossSpawnDelay: 10
-  enemyLanes: {fileID: 0}
-  minActivePortals: 1
-  maxActivePortals: 3
---- !u!4 &422220353
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 422220351}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -18.65442, y: 0, z: -13.72216}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &438268154
 GameObject:
   m_ObjectHideFlags: 0
@@ -4990,54 +4944,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 665834957}
   m_CullTransparentMesh: 1
---- !u!1 &670345960
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 670345962}
-  - component: {fileID: 670345963}
-  m_Layer: 0
-  m_Name: enemyspawner
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 2147483647
-  m_IsActive: 1
---- !u!4 &670345962
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 670345960}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -8.58096, y: 0, z: -26.81446}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &670345963
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 670345960}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f5d78efd37543d843a970a74d48fcc04, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::EnemyUnit
-  speed: 2
-  yOffset: 0.5
-  destroyOnArrive: 1
-  board: {fileID: 0}
 --- !u!1 &676769914
 GameObject:
   m_ObjectHideFlags: 0
@@ -5816,8 +5722,8 @@ MonoBehaviour:
   maxPitch: 150
   minDistance: 5
   maxDistance: 120
-  fillH: 0.6
-  fillV: 0.8
+  fillH: 0.9
+  fillV: 0.9
 --- !u!114 &755029711
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5949,7 +5855,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ExpandFocus
   registry: {fileID: 1862994567}
-  panTime: 0.4
+  moveTime: 0.4
 --- !u!1 &756783498
 GameObject:
   m_ObjectHideFlags: 0
@@ -7806,6 +7712,8 @@ MonoBehaviour:
   amountInput: {fileID: 1629296172}
   costText: {fileID: 952484016}
   costAmount: 10
+  closeKey: 60
+  openButtonRect: {fileID: 0}
 --- !u!114 &1075593976
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -8817,8 +8725,8 @@ Light:
   m_Enabled: 1
   serializedVersion: 12
   m_Type: 1
-  m_Color: {r: 0.7927748, g: 0.7927748, b: 0.8388248, a: 1}
-  m_Intensity: 0.7812623
+  m_Color: {r: 0.6538911, g: 0.6538911, b: 0.73080415, a: 1}
+  m_Intensity: 0.6346628
   m_Range: 10
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
@@ -12260,6 +12168,7 @@ MonoBehaviour:
   rosterPanel: {fileID: 2048319985}
   view: {fileID: 314587628}
   game: {fileID: 314587623}
+  closeKey: 60
 --- !u!114 &1373249054
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -20334,10 +20243,8 @@ SceneRoots:
   m_Roots:
   - {fileID: 1303599632}
   - {fileID: 755029714}
-  - {fileID: 670345962}
   - {fileID: 314587625}
   - {fileID: 1681537971}
-  - {fileID: 422220353}
   - {fileID: 1832749584}
   - {fileID: 347216668}
   - {fileID: 1862994568}

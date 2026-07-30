@@ -12,9 +12,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6148b18a47abbe44ca242829bb247459, type: 3}
   m_Name: FrozenZone
   m_EditorClassIdentifier: Assembly-CSharp::GroundZoneDataSO
+  mode: 0
   shape: 1
   radius: 1
   tickInterval: 0.2
   damagePer: 0.05
+  healPer: 0
   duration: 2
-  debuffs: []
+  debuffs:
+  - statType: 5
+    modifierType: 1
+    value: -0.7
+    maxStacks: 1
+  landEffect: {fileID: 0}
+  hitEffect: {fileID: 0}
+  hitEffectLifetime: 0.5

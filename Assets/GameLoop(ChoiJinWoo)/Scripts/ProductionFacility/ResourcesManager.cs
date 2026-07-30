@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
+using VContainer;
 
 public class ResourcesManager : MonoBehaviour
 {
@@ -8,6 +10,7 @@ public class ResourcesManager : MonoBehaviour
     [SerializeField] private int gold = 500;
     [SerializeField] private int iron = 500;
     [SerializeField] private int stone = 500;
+    [SerializeField] private List<BaseUpgradeData> startingResourceUpgrades;
 
     public int Wood => wood;
     public int Food => food;
@@ -16,6 +19,17 @@ public class ResourcesManager : MonoBehaviour
     public int Stone => stone;
 
     public event Action ProductUpdate;
+
+    [Inject]
+    private void Construct(UpgradeState upgradeState)
+    {
+        int bonus = (int)upgradeState.GetTotalEffect(startingResourceUpgrades);
+        wood += bonus;
+        food += bonus;
+        gold += bonus;
+        iron += bonus;
+        stone += bonus;
+    }
 
     private void Start()
     {

@@ -35,6 +35,7 @@ public class GameLifeTimeScope : LifetimeScope
         builder.Register<FacilityManager>(Lifetime.Singleton).AsSelf();
         builder.Register<BuffManager>(Lifetime.Singleton).As<ITickable>().AsSelf();
         builder.Register<HeroRoster>(Lifetime.Singleton).AsSelf();
+        builder.Register<UpgradeState>(Lifetime.Singleton);
 
         if (sunLight != null)
         {
@@ -50,14 +51,6 @@ public class GameLifeTimeScope : LifetimeScope
         builder.RegisterComponentInHierarchy<MapGame>();
         builder.RegisterComponentInHierarchy<AddCitizen>();
         builder.RegisterComponentInHierarchy<SpawnerManager>().AsSelf();
-        builder.RegisterBuildCallback(resolver =>
-        {
-            var testObjects = FindObjectsByType<StatContainerTest>(FindObjectsSortMode.None);
-            foreach (var obj in testObjects)
-            {
-                resolver.InjectGameObject(obj.gameObject);
-            }
-        });
 
         // PoolManager는 RegisterComponentOnNewGameObject라 아무도 Resolve하지 않으면 실제로 생성되지 않는다(lazy).
         // 여기서 강제로 한 번 Resolve해 _resolver가 붙은 상태로 즉시 만들어지게 한다.

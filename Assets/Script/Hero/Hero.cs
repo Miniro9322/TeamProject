@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using UnityEngine;
+using UnityEngine.Pool;
 using VContainer;
 
 public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
@@ -10,23 +11,32 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
     [Header("유닛 생성 비용")]
     [SerializeField] private int citizenAmount = 2;
     [SerializeField] private List<ResourceCost> cost;
+    [SerializeField] private List<BaseUpgradeData> costUpgrades;
 
     [SerializeField] private List<ResourceCost> statUpgradeCost;
+    [SerializeField] private List<BaseUpgradeData> statUpgradeCostUpgrades;
+    [SerializeField] private List<BaseUpgradeData> statUpgrades;
     [SerializeField] private List<HeroUpgradeData> upgradeDatas;
     private int skillLevel = 0;
     private int statLevel = 0;
     public int SkillLevel => skillLevel;
     public int StatLevel => statLevel;
 
+    // slot.prefab.GetComponent<Hero>()처럼 Instantiate/Inject를 거치지 않은 프리팹 원본에서
+    // Cost를 읽는 경우 upgradeState가 주입돼 있지 않다. UpgradeState는 PlayerPrefs만 읽으면 되는
+    // 가벼운 객체라, 주입이 안 된 경우 즉석에서 하나 만들어 최신 해금 상태를 반영한다.
+    private UpgradeState UpgradeStateOrFallback => upgradeState ?? new UpgradeState();
+
     public (ProductionType Type, int Amount)[] Cost
     {
         get
         {
+            float discount = UpgradeStateOrFallback.GetTotalEffect(costUpgrades);
             var temp = new (ProductionType, int)[cost.Count];
 
             for (int i = 0; i < cost.Count; i++)
             {
-                temp[i] = (cost[i].Type, -cost[i].Amount);
+                temp[i] = (cost[i].Type, -Mathf.RoundToInt(cost[i].Amount * (1f - discount)));
             }
 
             return temp;
@@ -37,11 +47,13 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
     {
         get
         {
+            float discount = UpgradeStateOrFallback.GetTotalEffect(statUpgradeCostUpgrades);
             var temp = new (ProductionType, int)[statUpgradeCost.Count];
 
             for (int i = 0; i < statUpgradeCost.Count; i++)
             {
-                temp[i] = (statUpgradeCost[i].Type, -(statUpgradeCost[i].Amount + statUpgradeCost[i].Amount * statLevel));
+                int baseAmount = statUpgradeCost[i].Amount + statUpgradeCost[i].Amount * statLevel;
+                temp[i] = (statUpgradeCost[i].Type, -Mathf.RoundToInt(baseAmount * (1f - discount)));
             }
 
             return temp;
@@ -84,6 +96,11 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
     [SerializeField] private StatDataSO statData;
     public StatDataSO StatData => statData;
 
+    // 생성 전 미리보기(정보 패널)용 — 배치된 인스턴스가 아니라 StatContainer가 없으므로,
+    // 기본값에 해금된 Hero/Stat 보너스를 직접 더해서 계산한다.
+    public float PreviewAttackPower => statData.attackPower + UpgradeStateOrFallback.GetTotalEffect(statUpgrades);
+    public float PreviewDefence => statData.defence + UpgradeStateOrFallback.GetTotalEffect(statUpgrades);
+
     [SerializeField] private MapBoard board;
     public MapBoard Board => board;
     protected Vector2Int origin;
@@ -93,8 +110,71 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
     [SerializeField] protected int range = 1;
     [SerializeField] protected RangeShape rangeShape = RangeShape.Diamond;
     public int Range => range;
+    public RangeShape RangeShape => rangeShape;
     [SerializeField] private List<GroundZoneDataSO> auraZones = new();
     private CancellationTokenSource _auraCts;
+
+    [SerializeField] private HeroActiveSkillDataSO activeSkill;
+    public HeroActiveSkillDataSO ActiveSkill => activeSkill;
+    private CancellationTokenSource _skillCts;
+
+    // 이펙트 풀은 Hero 인스턴스 소유(Archer/Mage의 projectilePools와 동일한 패턴) —
+    // 씬이 언로드돼 이 Hero가 파괴되면 풀도 함께 사라지므로, 파괴된 인스턴스를 다시 꺼내 쓰는 일이 없다.
+    private readonly Dictionary<GameObject, IObjectPool<GameObject>> effectPools = new();
+
+    private IObjectPool<GameObject> GetEffectPool(GameObject prefab)
+    {
+        if (!effectPools.TryGetValue(prefab, out var pool))
+        {
+            pool = new ObjectPool<GameObject>(
+                createFunc: () => Instantiate(prefab),
+                actionOnGet: go => { if (go != null) go.SetActive(true); },
+                actionOnRelease: go => { if (go != null) go.SetActive(false); },
+                actionOnDestroy: go => { if (go != null) Destroy(go); },
+                collectionCheck: true,
+                defaultCapacity: 8,
+                maxSize: 256);
+            effectPools[prefab] = pool;
+        }
+        return pool;
+    }
+
+    protected GameObject SpawnEffect(GameObject prefab, Vector3 pos, Quaternion rot, float lifetime)
+    {
+        GameObject go = SpawnPersistentEffect(prefab, pos, rot);
+        if (go != null && lifetime > 0f)
+            ReturnEffectAfter(prefab, go, lifetime).Forget();
+        return go;
+    }
+
+    protected GameObject SpawnPersistentEffect(GameObject prefab, Vector3 pos, Quaternion rot)
+    {
+        if (prefab == null) return null;
+        IObjectPool<GameObject> pool = GetEffectPool(prefab);
+        GameObject go = pool.Get();
+        while (go == null) // 다른 경로로 파괴된 채 풀에 있던 인스턴스는 버리고 새로 받는다
+            go = pool.Get();
+        go.transform.SetPositionAndRotation(pos, rot);
+        foreach (ParticleSystem ps in go.GetComponentsInChildren<ParticleSystem>(true))
+        {
+            ps.Clear(true);
+            ps.Play(true);
+        }
+        return go;
+    }
+
+    protected void DespawnEffect(GameObject prefab, GameObject instance)
+    {
+        if (prefab == null || instance == null) return;
+        GetEffectPool(prefab).Release(instance);
+    }
+
+    private async UniTask ReturnEffectAfter(GameObject prefab, GameObject go, float delay)
+    {
+        await UniTask.Delay(TimeSpan.FromSeconds(delay));
+        if (go == null) return; // 대기 중 다른 경로로 이미 파괴됐으면 접근하지 않는다
+        DespawnEffect(prefab, go);
+    }
 
     private StatContainer sc = new();
     public StatContainer SC => sc;
@@ -112,14 +192,16 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
     private GameManager gameManager;
     private ResourcesManager resourcesManager;
     protected BuffManager buffManager;
-    
+    private UpgradeState upgradeState;
+
     public int CitizenAmount => citizenAmount;
     [Inject]
-    private void Construct(GameManager gameManager, BuffManager buffManager, ResourcesManager resourcesManager)
+    private void Construct(GameManager gameManager, BuffManager buffManager, ResourcesManager resourcesManager, UpgradeState upgradeState)
     {
         this.gameManager = gameManager;
         this.buffManager = buffManager;
         this.resourcesManager = resourcesManager;
+        this.upgradeState = upgradeState;
     }
 
     public void Die()
@@ -128,7 +210,10 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
         anim.SetBool(HeroAnimHash.idle, false);
         stateMachine.ChangeState(deathState);
         OnBreak?.Invoke();
-        
+        _skillCts?.Cancel();
+        _skillCts?.Dispose();
+        _skillCts = null;
+
         // ResurrectionAfter10s().Forget();
     }
     public void TakeDamage(int damage)
@@ -172,6 +257,7 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
     protected virtual void Start()
     {
         SetCurrentTile();
+        ApplyStatUpgradeBonus();
         //테스트용 코드
         if (gameManager != null)
         {
@@ -179,6 +265,17 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
         }
         //끝
         StartAuras();
+    }
+
+    private void ApplyStatUpgradeBonus()
+    {
+        if (upgradeState == null) return;
+
+        float bonus = upgradeState.GetTotalEffect(statUpgrades);
+        if (bonus == 0f) return;
+
+        sc.AddModifier(StatType.ATK, new Modifier(ModifierType.Flat, bonus, 0f, StatLayer.Equip, this));
+        sc.AddModifier(StatType.DEF, new Modifier(ModifierType.Flat, bonus, 0f, StatLayer.Equip, this));
     }
 
     //테스트용 코드
@@ -192,6 +289,9 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
         OnResur -= StartAuras;
         _auraCts?.Cancel();
         _auraCts?.Dispose();
+        _skillCts?.Cancel();
+        _skillCts?.Dispose();
+        _skillCts = null;
     }
     //끝
 
@@ -208,9 +308,48 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
             // AttackDamageUtil.SpawnGroundZone은 항상 keepAlive=true를 넘겨 임시 장판용이므로,
             // 사망 시 멈춰야 하는 오라는 GroundZoneRunner.Run을 직접 호출해 !IsDead를 넘긴다.
             GroundZoneRunner.Run(transform.position, zone, GetEnemyObjectsInRange, GetAllyObjectsInRange, sc, buffManager,
-                () => !IsDead, _auraCts.Token).Forget();
+                SpawnEffect, SpawnPersistentEffect, DespawnEffect, () => !IsDead, _auraCts.Token).Forget();
         }
     }
+
+    // 밤 전투 중 HeroSkillCastController에서만 호출. targetTile은 호출자가 이미 board 소속까지
+    // 검증해 넘긴다(멀티 모듈에서 같은 좌표의 다른 보드 타일과 혼동 방지).
+    public bool TryUseActiveSkill(Tile targetTile)
+    {
+        if (activeSkill == null || isDead || targetTile == null || targetTile.Board != board)
+            return false;
+
+        if (activeSkill.targetScope == SkillTargetScope.Self)
+        {
+            Vector2Int casterCell = board.WorldToCell(transform.position);
+            if (targetTile.Coord != casterCell) return false;
+        }
+        // AnywhereOnBoard: 위에서 이미 targetTile.Board == board를 확인했으므로 거리 제한 없이 통과.
+
+        if (activeSkill.buffList is { Count: > 0 })
+            AttackDamageUtil.ApplySelfBuffs(this, activeSkill.buffList, buffManager, activeSkill);
+
+        if (activeSkill.groundZone != null)
+        {
+            _skillCts ??= new CancellationTokenSource();
+            AttackDamageUtil.SpawnGroundZone(activeSkill.groundZone, targetTile.WorldTop,
+                GetEnemyObjectsInRange, GetAllyObjectsInRange, sc, buffManager,
+                SpawnEffect, SpawnPersistentEffect, DespawnEffect, _skillCts.Token);
+        }
+
+        if (activeSkill.instantDamagePer > 0f)
+        {
+            int dmg = Mathf.RoundToInt(sc[StatType.ATK] * activeSkill.instantDamagePer);
+            foreach (GameObject enemy in GetEnemyObjectsInRange(targetTile.WorldTop, 0, RangeShape.Diamond))
+                if (enemy.GetComponentInParent<IDamageAble>() is IDamageAble d)
+                    d.TakeDamage(dmg);
+            if (activeSkill.instantHitEffect != null)
+                SpawnEffect(activeSkill.instantHitEffect, targetTile.WorldTop, Quaternion.identity, activeSkill.instantHitEffectLifetime);
+        }
+
+        return true;
+    }
+
     protected virtual void Update()
     {
         stateMachine.CurrentState.Update();

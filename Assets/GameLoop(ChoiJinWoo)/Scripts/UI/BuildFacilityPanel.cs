@@ -39,7 +39,7 @@ public class BuildFacilityPanel : MonoBehaviour
             facilityIcon.sprite = view.GetSlot(label).icon;
             var sb = new StringBuilder();
             sb.Append($"{temp.BasicValue.FacilityName}\n{temp.BasicValue.FacilityInfo}\n생산 자원: {temp.ProductionType}\n건설 소모 자원\n");
-            foreach (var item in temp.BasicValue.ConstructProduct)
+            foreach (var item in temp.GetConstructCost())
             {
                 sb.Append($"{item.Type}: {-item.Amount} ");
             }

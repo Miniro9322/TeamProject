@@ -1,10 +1,14 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using VContainer;
 
 public class ProductionFacility : MonoBehaviour, IPlaceAble
 {
     [SerializeField] private ProductionValue basicValue;
+    [SerializeField] private List<BaseUpgradeData> constructCostUpgrades;
+    [SerializeField] private List<BaseUpgradeData> upgradeCostUpgrades;
+    [SerializeField] private List<BaseUpgradeData> productAmountUpgrades;
     private int productAmount;
     private int workerAmount = 0;
     private int maxWorker;
@@ -12,7 +16,20 @@ public class ProductionFacility : MonoBehaviour, IPlaceAble
     private BuildingPool buildingPool;
     private CitizenManager citizenManager;
     private FacilityManager facilityManager;
+    private UpgradeState upgradeState;
     public ProductionType ProductionType => basicValue.Type;
+
+    // slot.prefab.GetComponent<ProductionFacility>()처럼 Instantiate/Inject를 거치지 않은
+    // 프리팹 원본에서 값을 읽는 경우 upgradeState가 주입돼 있지 않다. UpgradeState는 PlayerPrefs만
+    // 읽으면 되는 가벼운 객체라, 주입이 안 된 경우 즉석에서 하나 만들어 최신 해금 상태를 반영한다.
+    private UpgradeState UpgradeStateOrFallback => upgradeState ?? new UpgradeState();
+    private float ConstructCostDiscount => UpgradeStateOrFallback.GetTotalEffect(constructCostUpgrades);
+    private float UpgradeCostDiscount => UpgradeStateOrFallback.GetTotalEffect(upgradeCostUpgrades);
+    private int ProductAmountBonus => (int)UpgradeStateOrFallback.GetTotalEffect(productAmountUpgrades);
+
+    // 건설 비용 미리보기/체크용 — Init() 전에도(배치 전 정보 패널, 자원 체크) 안전하게 호출 가능.
+    public (ProductionType Type, int Amount)[] GetConstructCost() =>
+        ApplyDiscount(basicValue.ConstructProduct, ConstructCostDiscount);
 
     public event Action OnWorkerChanged;
     public event Action OnBreak;
@@ -24,7 +41,7 @@ public class ProductionFacility : MonoBehaviour, IPlaceAble
     public MapBoard Board => board;
 
     private int maxUpgrade = 4;
-    private int upgradeCount = 1;
+    private int upgradeCount = 0;
     private int amountUpgrade = 0;
     private int citizenUpgrade = 0;
     public int WorkerAmount => workerAmount;
@@ -35,22 +52,31 @@ public class ProductionFacility : MonoBehaviour, IPlaceAble
     public int UpgradeCount => upgradeCount;
 
     [Inject]
-    private void Construct(ResourcesManager resourcesManager, CitizenManager citizenManager, BuildingPool buildingPool, FacilityManager facilityManager)
+    private void Construct(ResourcesManager resourcesManager, CitizenManager citizenManager, BuildingPool buildingPool, FacilityManager facilityManager, UpgradeState upgradeState)
     {
         this.resourcesManager = resourcesManager;
         this.citizenManager = citizenManager;
         this.buildingPool = buildingPool;
         this.facilityManager = facilityManager;
+        this.upgradeState = upgradeState;
+    }
+
+    private static (ProductionType Type, int Amount)[] ApplyDiscount((ProductionType Type, int Amount)[] cost, float discount)
+    {
+        var result = new (ProductionType, int)[cost.Length];
+        for (int i = 0; i < cost.Length; i++)
+            result[i] = (cost[i].Type, Mathf.RoundToInt(cost[i].Amount * (1f - discount)));
+        return result;
     }
 
     public void Init()
     {
-        productAmount = basicValue.DefaultAmount + amountUpgrade * 10;
+        productAmount = basicValue.DefaultAmount + amountUpgrade * 10 + ProductAmountBonus;
         maxWorker = basicValue.DefaultMaxWorker + citizenUpgrade;
         workerAmount = 0;
-        upgradeCostCopy = BasicValue.UpgradeCost;
+        upgradeCostCopy = ApplyDiscount(BasicValue.UpgradeCost, UpgradeCostDiscount);
 
-        resourcesManager.ProductChanged(basicValue.ConstructProduct);
+        resourcesManager.ProductChanged(GetConstructCost());
         facilityManager.AddFacility(this);
     }
 
@@ -137,12 +163,12 @@ public class ProductionFacility : MonoBehaviour, IPlaceAble
         else
         {
             citizenUpgrade++;
-            maxWorker += citizenUpgrade;
+            maxWorker = basicValue.DefaultMaxWorker + citizenUpgrade;
         }
 
         resourcesManager.ProductChanged(upgradeCostCopy);
 
-        var baseCost = basicValue.UpgradeCost;
+        var baseCost = ApplyDiscount(basicValue.UpgradeCost, UpgradeCostDiscount);
         for (int i = 0; i < upgradeCostCopy.Length; i++)
         {
             upgradeCostCopy[i] = (baseCost[i].Type, baseCost[i].Amount * upgradeCount);
@@ -153,7 +179,7 @@ public class ProductionFacility : MonoBehaviour, IPlaceAble
 
     public bool CheckCanUpgrade()
     {
-        return upgradeCount <= maxUpgrade && resourcesManager.CheckResources(upgradeCostCopy);
+        return upgradeCount < maxUpgrade && resourcesManager.CheckResources(upgradeCostCopy);
     }
 
     //건물 마다 업그레이드

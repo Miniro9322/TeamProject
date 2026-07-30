@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fda09b493337e504681411b80c3e5672, type: 3}
+  m_Name: Cost4
+  m_EditorClassIdentifier: Assembly-CSharp::BaseUpgradeData
+  id: Cost4
+  displayName: CostUpgrade4
+  icon: {fileID: 0}
+  cost: 1
+  anchoredPosition: {x: 0, y: -88}
+  description: 
+  prerequisites:
+  - {fileID: 11400000, guid: 55e64d450fbc6db46ba70410a0b8eda4, type: 2}
+  effectAmount: 0.05

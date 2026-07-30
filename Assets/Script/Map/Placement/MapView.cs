@@ -174,6 +174,10 @@ public class MapView : MonoBehaviour
                 ProductionFacility facility = slot.prefab.GetComponent<ProductionFacility>();
                 return resourcesManager.CheckResources(facility.BasicValue.ConstructProduct);
             }
+                if (resourcesManager.CheckResources(slot.prefab.GetComponent<ProductionFacility>().GetConstructCost()))
+                    return true;
+                else
+                    return false;
             default:
                 return false;
         }

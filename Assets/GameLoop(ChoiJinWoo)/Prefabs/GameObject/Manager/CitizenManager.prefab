@@ -46,5 +46,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CitizenManager
   maxCitizen: 20
   currentCitizen: 10
-  usedCitizen: 3
-  canUseCitizen: 7
+  maxCitizenUpgrades:
+  - {fileID: 11400000, guid: ef3509205cb018348953bddd2b7d314c, type: 2}
+  - {fileID: 11400000, guid: 46139507f2663564189e0b654fbb7a2a, type: 2}
+  - {fileID: 11400000, guid: f4edae8811e8eb94fa6558a9fb507b93, type: 2}
+  - {fileID: 11400000, guid: d3399fe033954ec47a608b21daee96b6, type: 2}
+  - {fileID: 11400000, guid: 26692e38c63b7534a95d48f6d3e49cfe, type: 2}
