@@ -20,7 +20,7 @@ RenderSettings:
   m_FogDensity: 0.01
   m_LinearFogStart: 0
   m_LinearFogEnd: 300
-  m_AmbientSkyColor: {r: 0.32517266, g: 0.32517266, b: 0.3445979, a: 1}
+  m_AmbientSkyColor: {r: 0.29847372, g: 0.29847372, b: 0.3208655, a: 1}
   m_AmbientEquatorColor: {r: 0.114, g: 0.125, b: 0.133, a: 1}
   m_AmbientGroundColor: {r: 0.047, g: 0.043, b: 0.035, a: 1}
   m_AmbientIntensity: 1
@@ -2578,6 +2578,7 @@ MonoBehaviour:
   expand: {fileID: 937669907}
   dragPixels: 8
   placeYOffset: 0
+  tilePaintView: {fileID: 1235437630}
 --- !u!1 &322741156
 GameObject:
   m_ObjectHideFlags: 0
@@ -5201,7 +5202,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ExpandFocus
   registry: {fileID: 1862994567}
-  panTime: 0.4
+  moveTime: 0.4
 --- !u!114 &755029716
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7958,8 +7959,8 @@ Light:
   m_Enabled: 1
   serializedVersion: 12
   m_Type: 1
-  m_Color: {r: 0.6503453, g: 0.6503453, b: 0.72804636, a: 1}
-  m_Intensity: 0.63092005
+  m_Color: {r: 0.59694743, g: 0.59694743, b: 0.6865147, a: 1}
+  m_Intensity: 0.5745556
   m_Range: 10
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
