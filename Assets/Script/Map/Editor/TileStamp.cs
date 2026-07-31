@@ -89,7 +89,11 @@ public static class TileStamp
     }
 }
 
-/// <summary>메이커 창의 붓 종류. None은 읽기 전용(기존 Path Preview와 같은 동작).</summary>
+/// <summary>
+/// 메이커 창의 붓 종류. None은 읽기 전용(기존 Path Preview와 같은 동작).
+/// Decor는 지형이 아니라 타일 위에 얹는 겉모습이라 칠하기로는 찍히지 않는다(교체 도구로 얹는다).
+/// 값이 테마 에셋에 직렬화되므로 새 붓은 끝에만 붙인다 — 중간에 끼우면 저장된 슬롯이 밀린다.
+/// </summary>
 public enum MapBrush
 {
     None,
@@ -101,5 +105,6 @@ public enum MapBrush
     Spawn,
     Melee,
     Ranged,
-    Build
+    Build,
+    Decor
 }

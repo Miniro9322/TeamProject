@@ -12,6 +12,13 @@ using UnityEngine;
 /// </summary>
 public static class TileActionPreview
 {
+    /// <summary>이 붓이 실물을 갈아끼우는 붓인가. 장식은 지형이 아니지만 얹을 실물이 있다.</summary>
+    public static bool Swaps(MapBrush brush)
+    {
+        return brush == MapBrush.Ground || brush == MapBrush.High || brush == MapBrush.Core
+            || brush == MapBrush.Special || brush == MapBrush.Empty || brush == MapBrush.Decor;
+    }
+
     /// <summary>지형 붓이 가리키는 지형. 지형 붓이 아니면 Empty로 떨어진다.</summary>
     public static TerrainType TerrainOf(MapBrush brush)
     {
@@ -26,31 +33,54 @@ public static class TileActionPreview
         }
     }
 
-    /// <summary>이 칸에 쌓인 겹을 사람 말로. 예: "2겹 — 외곽 + 고지 판"</summary>
-    public static string DescribeStack(Grid module, Vector2Int coord)
+    /// <summary>이 칸에 쌓인 겹을 사람 말로. 예: "2겹 — 외곽 + 고지 판 · 장식 1"</summary>
+    public static string DescribeStack(Grid module, Vector2Int coord, Tile tile)
     {
         List<Tile> layers = TileSwap.Stack(module, coord);
-        if (layers.Count <= 1)
+        string stack = "1겹";
+
+        if (layers.Count > 1)
         {
-            return "1겹";
+            var words = new List<string>();
+            foreach (Tile layer in layers)
+            {
+                words.Add(Word(layer.State.Terrain));
+            }
+
+            stack = $"{layers.Count}겹 — {string.Join(" + ", words)}";
         }
 
-        var words = new List<string>();
-        foreach (Tile layer in layers)
+        int decor = DecorPlace.Count(module, tile);
+        if (decor > 0)
         {
-            words.Add(Word(layer.State.Terrain));
+            stack += $" · 장식 {decor}";
         }
 
-        return $"{layers.Count}겹 — {string.Join(" + ", words)}";
+        return stack;
     }
 
     /// <summary>클릭하면 무엇이 되는지. turnOff는 Alt를 누르고 있는 상태(끄는 쪽으로 찍기).</summary>
     public static string Describe(Grid module, Vector2Int coord, Tile tile,
-        MapBrush brush, bool swap, TilePrefabSet prefabs, bool turnOff)
+        MapTool tool, MapBrush brush, GameObject pick, bool turnOff)
     {
+        if (tool == MapTool.Select)
+        {
+            return "계층에서 이 타일을 고릅니다 — 데이터는 바뀌지 않습니다";
+        }
+
+        if (tool == MapTool.Pick)
+        {
+            return $"이 칸의 {Word(tile.Terrain)}을(를) 팔레트로 가져옵니다";
+        }
+
+        if (tool == MapTool.Erase)
+        {
+            return EraseWord(module, coord, tile);
+        }
+
         if (brush == MapBrush.None)
         {
-            return "읽기 전용 — 클릭해도 아무것도 바뀌지 않습니다";
+            return "팔레트에서 무엇을 칠할지 먼저 고르세요";
         }
 
         if (brush == MapBrush.Spawn)
@@ -63,17 +93,32 @@ public static class TileActionPreview
             return PlaceWord(tile, brush, turnOff);
         }
 
-        TerrainType want = TerrainOf(brush);
-        if (swap)
+        // 장식은 지형 값이 없다 — 칠하기로는 기록할 자리가 없고 교체로만 얹힌다.
+        if (brush == MapBrush.Decor)
         {
-            GameObject prefab = prefabs != null ? prefabs.For(want) : null;
-            if (prefab != null)
+            if (tool != MapTool.Swap)
             {
-                return SwapWord(module, coord, want, prefab);
+                return "장식은 규칙 데이터가 아닙니다 — 교체 도구로 얹으세요";
             }
 
-            return $"{Word(tile.Terrain)} → {Word(want)} · 데이터만 " +
-                   $"(스왑 슬롯이 비어 큐브는 그대로 — {SlotHint(prefabs)})";
+            if (pick == null)
+            {
+                return "얹을 장식 프리팹을 먼저 고르세요 (테마에 장식이 없으면 에셋에 추가)";
+            }
+
+            int on = DecorPlace.Count(module, tile);
+            return $"이 칸 위에 {pick.name}을(를) 얹습니다 (장식 {on}개 → {on + 1}개)";
+        }
+
+        TerrainType want = TerrainOf(brush);
+        if (tool == MapTool.Swap)
+        {
+            if (pick == null)
+            {
+                return $"{Word(want)}에 고른 프리팹이 없습니다 — 아래 선반에서 하나 고르세요";
+            }
+
+            return SwapWord(module, coord, want, pick);
         }
 
         if (tile.Terrain == want)
@@ -82,6 +127,32 @@ public static class TileActionPreview
         }
 
         return $"{Word(tile.Terrain)} → {Word(want)} · 데이터만 (큐브는 그대로라 겉모습이 어긋납니다)";
+    }
+
+    // 지우기는 제일 위 한 겹만 없앤다. 마지막 겹이면 그 칸에 타일이 아예 없어진다.
+    // 장식이 얹혀 있으면 그것이 제일 위라 먼저 걷힌다 — 실제 지우기와 같은 순서로 말한다.
+    private static string EraseWord(Grid module, Vector2Int coord, Tile tile)
+    {
+        int decor = DecorPlace.Count(module, tile);
+        if (decor > 0)
+        {
+            string name = DecorPlace.TopName(module, tile);
+            return $"장식 {name} 하나를 걷어냅니다 (장식 {decor}개 → {decor - 1}개, 타일은 그대로)";
+        }
+
+        List<Tile> layers = TileSwap.Stack(module, coord);
+        if (layers.Count == 0)
+        {
+            return "타일이 없는 칸 — 지울 것이 없습니다";
+        }
+
+        Tile top = layers[layers.Count - 1];
+        if (layers.Count == 1)
+        {
+            return $"마지막 {Word(top.State.Terrain)} 한 겹을 지웁니다 — 이 칸에 타일이 없어집니다";
+        }
+
+        return $"{Word(top.State.Terrain)} 한 겹을 걷어냅니다 ({layers.Count}겹 → {layers.Count - 1}겹)";
     }
 
     // 스왑이 실제로 할 일. TileSwap.Apply의 분기와 같은 순서로 판단한다.
@@ -160,11 +231,6 @@ public static class TileActionPreview
             case MapBrush.Ranged: return "원거리";
             default: return "생산";
         }
-    }
-
-    private static string SlotHint(TilePrefabSet prefabs)
-    {
-        return prefabs == null ? "매핑 에셋 없음" : "TilePrefabSet 확인";
     }
 
     private static string Word(TerrainType terrain)

@@ -11,23 +11,32 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
     [Header("유닛 생성 비용")]
     [SerializeField] private int citizenAmount = 2;
     [SerializeField] private List<ResourceCost> cost;
+    [SerializeField] private List<BaseUpgradeData> costUpgrades;
 
     [SerializeField] private List<ResourceCost> statUpgradeCost;
+    [SerializeField] private List<BaseUpgradeData> statUpgradeCostUpgrades;
+    [SerializeField] private List<BaseUpgradeData> statUpgrades;
     [SerializeField] private List<HeroUpgradeData> upgradeDatas;
     private int skillLevel = 0;
     private int statLevel = 0;
     public int SkillLevel => skillLevel;
     public int StatLevel => statLevel;
 
+    // slot.prefab.GetComponent<Hero>()처럼 Instantiate/Inject를 거치지 않은 프리팹 원본에서
+    // Cost를 읽는 경우 upgradeState가 주입돼 있지 않다. UpgradeState는 PlayerPrefs만 읽으면 되는
+    // 가벼운 객체라, 주입이 안 된 경우 즉석에서 하나 만들어 최신 해금 상태를 반영한다.
+    private UpgradeState UpgradeStateOrFallback => upgradeState ?? new UpgradeState();
+
     public (ProductionType Type, int Amount)[] Cost
     {
         get
         {
+            float discount = UpgradeStateOrFallback.GetTotalEffect(costUpgrades);
             var temp = new (ProductionType, int)[cost.Count];
 
             for (int i = 0; i < cost.Count; i++)
             {
-                temp[i] = (cost[i].Type, -cost[i].Amount);
+                temp[i] = (cost[i].Type, -Mathf.RoundToInt(cost[i].Amount * (1f - discount)));
             }
 
             return temp;
@@ -38,11 +47,13 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
     {
         get
         {
+            float discount = UpgradeStateOrFallback.GetTotalEffect(statUpgradeCostUpgrades);
             var temp = new (ProductionType, int)[statUpgradeCost.Count];
 
             for (int i = 0; i < statUpgradeCost.Count; i++)
             {
-                temp[i] = (statUpgradeCost[i].Type, -(statUpgradeCost[i].Amount + statUpgradeCost[i].Amount * statLevel));
+                int baseAmount = statUpgradeCost[i].Amount + statUpgradeCost[i].Amount * statLevel;
+                temp[i] = (statUpgradeCost[i].Type, -Mathf.RoundToInt(baseAmount * (1f - discount)));
             }
 
             return temp;
@@ -84,6 +95,11 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
 
     [SerializeField] private StatDataSO statData;
     public StatDataSO StatData => statData;
+
+    // 생성 전 미리보기(정보 패널)용 — 배치된 인스턴스가 아니라 StatContainer가 없으므로,
+    // 기본값에 해금된 Hero/Stat 보너스를 직접 더해서 계산한다.
+    public float PreviewAttackPower => statData.attackPower + UpgradeStateOrFallback.GetTotalEffect(statUpgrades);
+    public float PreviewDefence => statData.defence + UpgradeStateOrFallback.GetTotalEffect(statUpgrades);
 
     [SerializeField] private MapBoard board;
     public MapBoard Board => board;
@@ -176,14 +192,16 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
     private GameManager gameManager;
     private ResourcesManager resourcesManager;
     protected BuffManager buffManager;
-    
+    private UpgradeState upgradeState;
+
     public int CitizenAmount => citizenAmount;
     [Inject]
-    private void Construct(GameManager gameManager, BuffManager buffManager, ResourcesManager resourcesManager)
+    private void Construct(GameManager gameManager, BuffManager buffManager, ResourcesManager resourcesManager, UpgradeState upgradeState)
     {
         this.gameManager = gameManager;
         this.buffManager = buffManager;
         this.resourcesManager = resourcesManager;
+        this.upgradeState = upgradeState;
     }
 
     public void Die()
@@ -239,6 +257,7 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
     protected virtual void Start()
     {
         SetCurrentTile();
+        ApplyStatUpgradeBonus();
         //테스트용 코드
         if (gameManager != null)
         {
@@ -246,6 +265,17 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
         }
         //끝
         StartAuras();
+    }
+
+    private void ApplyStatUpgradeBonus()
+    {
+        if (upgradeState == null) return;
+
+        float bonus = upgradeState.GetTotalEffect(statUpgrades);
+        if (bonus == 0f) return;
+
+        sc.AddModifier(StatType.ATK, new Modifier(ModifierType.Flat, bonus, 0f, StatLayer.Equip, this));
+        sc.AddModifier(StatType.DEF, new Modifier(ModifierType.Flat, bonus, 0f, StatLayer.Equip, this));
     }
 
     //테스트용 코드

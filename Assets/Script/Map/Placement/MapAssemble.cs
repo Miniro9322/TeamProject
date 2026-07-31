@@ -1,4 +1,4 @@
- using System;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -14,6 +14,9 @@ public class MapAssemble : MonoBehaviour
     [SerializeField] private ExpandEvent expand;
     [SerializeField] private float dragPixels = 8f;
     [SerializeField] private float placeYOffset = 0f;
+    [Range(0f, 1f)]
+    [Tooltip("배치 미리보기의 진하기. 낮출수록 투명해진다.")]
+    [SerializeField] private float ghostAlpha = 0.45f;
     [SerializeField] private TilePaintView tilePaintView;
 
     private List<PathTrail> pathTrails;
@@ -35,7 +38,7 @@ public class MapAssemble : MonoBehaviour
 
         view.pointerPick = pointerPick;
         view.replace = replace;
-        view.rangeInfo = new RangeInfo(mapGame.Units);
+        view.rangeInfo = new RangeInfo();
         view.citizenManager = mapGame.CitizenManager;
         view.resourcesManager = mapGame.ResourcesManager;
 
@@ -57,6 +60,7 @@ public class MapAssemble : MonoBehaviour
         command.replace = replace;
         command.buildingUi = buildingUi;
         command.action = action;
+        command.ghost = new PlaceGhost(view, placeYOffset, ghostAlpha);
         command.placeYOffset = placeYOffset;
         command.dispatch = new Dictionary<PlaceMode, Action<Tile>>
         {

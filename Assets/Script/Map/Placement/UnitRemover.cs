@@ -30,6 +30,12 @@ public class UnitRemover
 
         if(unit == null) return null;
 
+        if (IsHouse(unit))
+        {
+            Debug.Log("집은 재배치만 가능합니다.");
+            return null;
+        }
+
         AreaPlace.Remove(tile, unit);   // 여러 칸을 덮고 있어도 전부 비운다(어느 칸을 눌러도 같은 결과)
 
         _unitList.Remove(unit);
@@ -54,19 +60,19 @@ public class UnitRemover
         _unitList.Clear();
     }
 
-    // 생산건물이면 풀에 반납, 집이면 제거 거부, 영웅(로스터 출신)이면 로스터로 되돌리고 파괴.
+    // 집은 제거 대상이 아니다(재배치만 허용). 칸을 비우기 전에 판정해야 점유만 풀린 집이 남지 않는다.
+    private static bool IsHouse(GameObject unit)
+    {
+        return unit.TryGetComponent<House>(out _);
+    }
+
+    // 생산건물이면 풀에 반납, 영웅(로스터 출신)이면 로스터로 되돌리고 파괴.
     private void DestroyOrReturnToPool(GameObject unit)
     {
         ProductionFacility facility = unit.GetComponent<ProductionFacility>();
-        var house = unit.GetComponent<House>();
         if (facility != null)
         {
             facility.Release();
-        }
-        else if(house != null)
-        {
-            Debug.Log("집은 재배치만 가능합니다.");
-            return;
         }
         else
         {
