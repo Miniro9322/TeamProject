@@ -53,18 +53,10 @@ public class MapView : MonoBehaviour
 
     public event Action OnOffMode;
 
-    public int UnitIndex
-    {
-        get
-        {
-            if (palette.Mode != PlaceMode.Place)
-            {
-                return -1;
-            }
+    public int UnitIndex => palette.CurrentIndex;
+   
 
-            return palette.CurrentIndex;
-        }
-    }
+    public bool IsPressing => input.LeftHolding;
 
     public bool TryRange(
         GameObject unit,
@@ -76,45 +68,31 @@ public class MapView : MonoBehaviour
 
     // ---- 모드 전환(PanelLogic 버튼이 부른다) ----
 
-    public void SetUnit(int index) { palette.SelectSlot(index); }
-    public void SetUnit(string label) { palette.SelectSlot(label); }
-    public Placeable GetSlot(string label) { return palette.GetSlot(label); }
-    public void SetHero(HeroRosterEntry entry) { palette.SelectRuntimeSlot(entry); }
+    public void SetUnit(int index)  => palette.SelectSlot(index); 
+    public void SetUnit(string label) => palette.SelectSlot(label); 
+    public Placeable GetSlot(string label) => palette.GetSlot(label);
+    public void SetHero(HeroRosterEntry entry) => palette.SelectRuntimeSlot(entry); 
     public void SetReplace()
     {
         palette.SelectReplace();
     }
-    public void SetRemove() { palette.SelectRemove(); }
-    public void ClearMode() { palette.ClearMode(); OnOffMode?.Invoke(); }
-    public void SetBlock(bool value) { input.SetBlock(value); }
+    public void SetRemove() => palette.SelectRemove();
+    public void ClearMode() 
+    {
+        palette.ClearMode(); 
+        OnOffMode?.Invoke(); 
+    }
+    public void SetBlock(bool value) => input.SetBlock(value);
 
+    // 이 슬롯을 지금 놓을 여유가 있는지(UI 버튼 활성화용). 자리가 되는지는 보지 않는다.
     public bool CheckCanBuild(string label)
     {
-        var slot = palette.GetSlot(label);
-
-        switch (slot.kind)
+        if (!PlaceCost.TryGet(palette.GetSlot(label), out PlaceCost cost))
         {
-            case OccupantKind.None:
-                return false;
-            case OccupantKind.MeleeHero:
-            case OccupantKind.RangedHero:
-            {
-                Hero hero = slot.prefab.GetComponent<Hero>();
-                var cost = hero.Cost;
-                return citizenManager.CheckCanUseCitizen(hero.CitizenAmount) && cost != null && resourcesManager.CheckResources(cost);
-            }
-            case OccupantKind.Building:
-                if (resourcesManager.CheckResources(slot.prefab.GetComponent<House>().Resources))
-                    return true;
-                else
-                    return false;
-            case OccupantKind.Resource:
-                if (resourcesManager.CheckResources(slot.prefab.GetComponent<ProductionFacility>().GetConstructCost()))
-                    return true;
-                else
-                    return false;
-            default:
-                return false;
+            return false;
         }
+
+        return citizenManager.CheckCanUseCitizen(cost.Citizens)
+            && resourcesManager.CheckResources(cost.Resources);
     }
 }

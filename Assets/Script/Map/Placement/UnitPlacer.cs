@@ -39,50 +39,56 @@ public class UnitPlacer
         return true;
     }
 
-    // 슬롯의 프리팹으로 오브젝트를 만든다(생산건물은 자원 확인 후 풀에서 대여, 그 외는 새로 생성).
+    // 슬롯의 프리팹으로 오브젝트를 만든다. 비용을 못 내면 만들기 전에 멈춘다.
     private GameObject Create(Placeable slot)
     {
         CheckPrefab(slot);
 
+        if (!CanAfford(slot))
+        {
+            return null;
+        }
+
+        return Spawn(slot);
+    }
+
+    // 영웅은 로스터 "생성" 단계(HeroSetPanel)에서 이미 비용을 치렀으므로 여기선 다시 검사하지 않는다.
+    private bool CanAfford(Placeable slot)
+    {
+        if (slot.kind != OccupantKind.Building && slot.kind != OccupantKind.Resource)
+        {
+            return true;
+        }
+
+        return PlaceCost.TryGet(slot, out PlaceCost cost)
+            && resourcesManager.CheckResources(cost.Resources);
+    }
+
+    // 생산 시설은 풀에서 빌리고, 나머지는 새로 만든다.
+    private GameObject Spawn(Placeable slot)
+    {
         if (slot.kind == OccupantKind.Resource)
         {
-            ProductionFacility facility = slot.prefab.GetComponent<ProductionFacility>();
-            if (facility != null)
+            if (!slot.prefab.TryGetComponent(out ProductionFacility facility))
             {
-                if (!resourcesManager.CheckResources(facility.GetConstructCost()))
-                {
-                    return null;   // 자원 부족 → 생성하지 않음
-                }
+                return null;
+            }
 
-                return pool.Rent(facility.ProductionType);
-            }
-            else return null;
-            // (보존 결함) 자원이 모자라도 아래로 떨어져 프리팹을 그냥 생성함. 원래 동작이라 그대로 둠.
+            return pool.Rent(facility.ProductionType);
         }
-        else if(slot.kind == OccupantKind.Building)
-        {
-            House house = slot.prefab.GetComponent<House>();
-            if (house != null)
-            {
-                if (!resourcesManager.CheckResources(house.Resources))
-                {
-                    return null;   // 자원 부족 → 생성하지 않음
-                }
 
-                return resolver.Instantiate(slot.prefab);
-            }
-            else return null;
-        }
-        else
+        if (slot.kind == OccupantKind.Building)
         {
-            // 영웅은 로스터 "생성" 단계(HeroSetPanel)에서 이미 비용을 치렀으므로 여기선 다시 검사하지 않는다.
-            var hero = slot.prefab.GetComponent<Hero>();
-            if (hero != null)
-            {
-                return resolver.Instantiate(slot.prefab);
-            }
-            else return null;
+            return resolver.Instantiate(slot.prefab);   // 집이 없는 슬롯은 CanAfford가 이미 걸렀다
         }
+
+        // 영웅은 비용 검사를 건너뛰므로 여기서 처음 컴포넌트를 확인한다.
+        if (!slot.prefab.TryGetComponent(out Hero _))
+        {
+            return null;
+        }
+
+        return resolver.Instantiate(slot.prefab);
     }
 
     // 생성한 오브젝트에 보드 참조를 넘긴다(유닛이 스스로 보드를 알아야 하는 경우).
