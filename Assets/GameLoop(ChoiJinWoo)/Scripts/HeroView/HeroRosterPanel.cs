@@ -48,6 +48,7 @@ public class HeroRosterPanel : MonoBehaviour, IBeginDragHandler, IScrollHandler
         {
             cameraRig.focus = entry.PlacedUnit.transform.position;
             cameraRig.ApplyNow();
+            HeroSelectionService.Select(entry.PlacedUnit.GetComponent<Hero>());
             if (currentObject != entry.PlacedUnit)
             {
                 currentObject = entry.PlacedUnit;

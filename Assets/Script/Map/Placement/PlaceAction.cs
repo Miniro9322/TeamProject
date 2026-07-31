@@ -19,6 +19,11 @@ public class PlaceAction
     {
         view.Select(tile);
         skillCast?.HandleClick(tile);
+
+        if (tile.OccupantObject != null && tile.OccupantObject.TryGetComponent(out Hero hero))
+            HeroSelectionService.Select(hero);
+        else
+            HeroSelectionService.Clear();
     }
 
     public void PlaceUnit(Tile tile)
@@ -48,14 +53,18 @@ public class PlaceAction
 
     public void RemoveUnit(Tile tile)
     {
+        Hero hero = tile.OccupantObject != null ? tile.OccupantObject.GetComponent<Hero>() : null;
         if (!remover.TryRemoveUnit(tile)) return;
         if (view.IsSelected(tile)) view.ClearSelection();
+        HeroSelectionService.ClearIfSelected(hero);
     }
 
     public void PickUpUnit(Tile tile)
     {
+        Hero hero = tile.OccupantObject != null ? tile.OccupantObject.GetComponent<Hero>() : null;
         if (!replace.PickUp(tile)) return;
         view.Select(tile);
+        if (hero != null) HeroSelectionService.Select(hero);
     }
 
     public void Drop(PlacementArea area)
