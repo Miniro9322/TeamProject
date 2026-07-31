@@ -248,20 +248,9 @@ public class MapBoard : MonoBehaviour
 
     public bool CanPlace(Vector2Int coord, OccupantKind kind)
     {
-        ModuleLogic module = _module;
-        return _cells.TryGetValue(coord, out Tile tile) && TilePlacementRule.CanPlace(tile.State, kind);
+        return _cells.TryGetValue(coord, out Tile tile) 
+            && TilePlacementRule.CanPlace(tile.State, kind);
     }
-
-    public bool TryPlace(Vector2Int coord, GameObject unit, OccupantKind kind, float yOffset)
-    {
-        if (!CanPlace(coord, kind)) return false;
-
-        Tile tile = _cells[coord];
-        unit.transform.position = tile.WorldTop + Vector3.up * yOffset;
-        tile.SetOccupant(unit, kind);
-        return true;
-    }
-
     public GameObject RemoveUnit(Vector2Int coord)
     {
         if (!_cells.TryGetValue(coord, out Tile tile) || !tile.HasUnit) return null;
