@@ -28709,7 +28709,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &4730586149953611958
 Transform:
   m_ObjectHideFlags: 0
@@ -28772,7 +28772,7 @@ MonoBehaviour:
   text: {fileID: 0}
   infoView: {fileID: 0}
   bossSpawnDelay: 10
-  enemyLanes: {fileID: 0}
+  enemyLanes: {fileID: 2242342951500690271}
   minActivePortals: 1
   maxActivePortals: 3
 --- !u!114 &7423437774529506930
@@ -28787,8 +28787,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 31478ffa6d3e4dd4a8b4e366106fa1a8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyPathView
-  enemyLanes: {fileID: 0}
-  pathVisible: 1
+  enemyLanes: {fileID: 2242342951500690271}
+  pathVisible: 0
 --- !u!114 &2242342951500690271
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -28814,7 +28814,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 195be9878b0db794c9aaf144e6353d35, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PathTrail
-  trailPrefab: {fileID: 0}
+  trailPrefab: {fileID: 7689584652585815418, guid: f8698a2a5b09bbc4ea4dcf9c230e43e4, type: 3}
   moveSpeed: 8
   trailLift: 0.15
   loopGap: 1.2
