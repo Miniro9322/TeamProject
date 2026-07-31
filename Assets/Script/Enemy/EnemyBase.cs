@@ -7,7 +7,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using VContainer;
 
-public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit
+public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble
 {
     [SerializeField] protected string enemyKey;
     [SerializeField] protected List<SkillDataSO> skills = new();
@@ -115,7 +115,7 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit
 
     private float _stunExpiry;      // Time.time 기준 스턴 만료 시각 — 코루틴 없이 지연 만료(풀링 안전, Shield와 동일 패턴)
     private bool _stunAnimActive;   // Animator에 보고한 마지막 스턴 상태 — 바뀐 프레임에만 SetBool("Stun") 호출
-    private bool _hasStunParam;     // 애니메이터에 Bool "Stun" 파라미터가 있는지(1회 검사 후 캐시)
+    private bool _hasStunParam;
     private bool _stunParamChecked;
     public bool IsStunned => Time.time < _stunExpiry; // 스턴 중엔 이동/공격/스킬 시전이 모두 멈춘다
     protected virtual void Awake()
@@ -238,7 +238,7 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit
         else
             animator.speed = stunned ? 0f : 1f;  // fallback: 파라미터 없으면 현재 프레임에서 얼림 → 풀리면 원복
     }
-
+    
     // 애니메이터에 Bool "Stun" 파라미터가 있는지 1회 검사 후 캐시(파라미터 목록은 런타임에 안 바뀜).
     private bool HasStunParam()
     {
