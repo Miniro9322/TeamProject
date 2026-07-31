@@ -1,5 +1,6 @@
 using UnityEngine;
 using VContainer;
+using VContainer.Unity;
 
 // 기반시설 UI에서 곧장 건물을 짓는 담당. UnitPlacer와 달리 PlacementArea/MapBoard가 없다 -
 // 지역 슬롯은 좌표를 갖지 않으므로 자원 확인 -> 생성 -> 슬롯 배정까지만 하면 끝.
