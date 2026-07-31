@@ -33,6 +33,7 @@ public class GameLifeTimeScope : LifetimeScope
         builder.RegisterComponentOnNewGameObject<PoolManager>(Lifetime.Singleton).AsSelf();
         builder.Register<BuildingPool>(Lifetime.Singleton);
         builder.Register<FacilityManager>(Lifetime.Singleton).AsSelf();
+        builder.Register<BaseConstructor>(Lifetime.Singleton).AsSelf();
         builder.Register<BuffManager>(Lifetime.Singleton).As<ITickable>().AsSelf();
         builder.Register<HeroRoster>(Lifetime.Singleton).AsSelf();
         builder.Register<UpgradeState>(Lifetime.Singleton);
