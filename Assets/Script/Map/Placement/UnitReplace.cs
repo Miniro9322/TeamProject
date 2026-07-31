@@ -6,22 +6,19 @@ public class UnitReplace
 {
     private readonly UnitList _unitList;
 
-    private GameObject _heldUnit;   // 집어 든 유닛(보드에서 뗀 채 포인터를 따라간다).
-    private Tile _heldFromTile;     // 집은 출발 칸(제자리 판별용).
-    private OccupantKind _heldKind;
-    private int _heldRange;
-    private Vector2Int _heldSize = Vector2Int.one;   // 집기 전에 덮고 있던 칸 수 — 내려놓을 때 같은 크기로 돌아간다.
+    // 집어 든 것 하나. 다섯 값을 함께 채우고 함께 비운다.
+    private HeldData held;
 
     public UnitReplace(UnitList unitList)
     {
         _unitList = unitList;
     }
 
-    public bool IsHolding => _heldUnit != null;
-    public Tile HeldFromTile => _heldFromTile;
-    public GameObject HeldUnit => _heldUnit;
-    public OccupantKind HeldKind => _heldKind;
-    public Vector2Int HeldSize => _heldSize;
+    public bool IsHolding => held.Unit != null;
+    public Tile HeldFromTile => held.FromTile;
+    public GameObject HeldUnit => held.Unit;
+    public OccupantKind HeldKind => held.Kind;
+    public Vector2Int HeldSize => held.Size;
 
     // 칸의 유닛을 집어 든다: 덮고 있던 칸을 모두 떼고 프리뷰 상태로 전환. 성공하면 true(빈 칸이면 false).
     public bool PickUp(Tile tile)
@@ -32,20 +29,18 @@ public class UnitReplace
             return false;
         }
 
-        OccupantKind kind = tile.State.Occupant;   // 떼기 전에 종류를 읽어 둔다(ClearOccupant가 None으로 바꿈).
-        _heldSize = AreaPlace.Remove(tile, unit);  // 여러 칸을 덮고 있었으면 전부 비우고 그 크기를 받아 둔다
-        _heldUnit = unit;
-        _heldFromTile = tile;
-        _heldKind = kind;
+        OccupantKind kind = tile.State.Occupant;         // 떼기 전에 종류를 읽어 둔다(ClearOccupant가 None으로 바꿈).
+        Vector2Int size = AreaPlace.Remove(tile, unit);  // 여러 칸을 덮고 있었으면 전부 비우고 그 크기를 받아 둔다
         _unitList.TryGetRange(unit, out int range);
-        _heldRange = range;
+
+        held = new HeldData(unit, tile, kind, range, size);
         return true;
     }
 
     // 집은 유닛 프리뷰를 목표 자리 한가운데로 옮긴다(포인터 따라다니기).
     public void MoveHeldTo(PlaceData data)
     {
-        _heldUnit.transform.position = data.Position;
+        held.Unit.transform.position = data.Position;
     }
 
     // 집은 유닛을 자리에 내려놓는다. 배치 규칙 통과 시 재배치하고 true, 아니면 집은 채 유지한다.
@@ -57,10 +52,10 @@ public class UnitReplace
             return false;
         }
 
-        AreaPlace.Place(data, _heldUnit, _heldKind);
+        AreaPlace.Place(data, held.Unit, held.Kind);
         RegisterCover(data.Area);
         //
-        Hero hero = _heldUnit.GetComponent<Hero>();
+        Hero hero = held.Unit.GetComponent<Hero>();
         if (hero != null)
         {
             hero.SetBoard(data.Area.Board);
@@ -74,23 +69,19 @@ public class UnitReplace
     // 집은 유닛을 파괴하고 프리뷰 상태를 해제(전체 제거 시 보드에 없는 프리뷰 고아 방지).
     public void CancelHeldAndDestroy()
     {
-        Object.Destroy(_heldUnit);
+        Object.Destroy(held.Unit);
         ClearHeld();
     }
 
     // 재배치한 유닛의 사거리 커버를 "내려놓은 자리의" 보드에 다시 등록(건물은 사거리 없음 → 제외).
     private void RegisterCover(PlacementArea area)
     {
-        if (_heldKind == OccupantKind.Building) return;   // 건물은 사거리 없음(널 방어 아님·실제 분기).
-        area.Board.SetRangeCover(_heldUnit, area.Origin, Mathf.Max(0, _heldRange));
+        if (held.Kind == OccupantKind.Building) return;   // 건물은 사거리 없음(널 방어 아님·실제 분기).
+        area.Board.SetRangeCover(held.Unit, area.Origin, Mathf.Max(0, held.Range));
     }
 
     private void ClearHeld()
     {
-        _heldUnit = null;
-        _heldFromTile = null;
-        _heldKind = OccupantKind.None;
-        _heldRange = 0;
-        _heldSize = Vector2Int.one;
+        held = default;
     }
 }
