@@ -5,7 +5,8 @@ public class BaseUpgradeData : ScriptableObject
 {
     public string id;
     public string displayName;
-    public Sprite icon;
+    public Sprite lockedIcon;
+    public Sprite unlockedIcon;
     public int cost;
     public Vector2 anchoredPosition;
     public string description;
