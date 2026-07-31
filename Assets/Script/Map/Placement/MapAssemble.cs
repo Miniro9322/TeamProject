@@ -18,6 +18,7 @@ public class MapAssemble : MonoBehaviour
     [Tooltip("배치 미리보기의 진하기. 낮출수록 투명해진다.")]
     [SerializeField] private float ghostAlpha = 0.45f;
     [SerializeField] private TilePaintView tilePaintView;
+    [SerializeField] private RangeInput rangeInput;
 
     private List<PathTrail> pathTrails;
     private PlaceGhost ghost;
@@ -48,6 +49,10 @@ public class MapAssemble : MonoBehaviour
             tilePaintView.rangeStore = rangeStore;
         }
 
+        rangeInput.pointerPick = pointerPick;
+        rangeInput.rangeCalc = rangeCalc;
+        rangeInput.rangeStore = rangeStore;
+
         view.pointerPick = pointerPick;
         view.replace = replace;
         view.rangeInfo = rangeInfo;
@@ -74,8 +79,6 @@ public class MapAssemble : MonoBehaviour
         ghost = new PlaceGhost(ghostAlpha);
         command.ghost = ghost;
         command.finder = finder;
-        command.rangeCalc = rangeCalc;
-        command.rangeStore = rangeStore;
         command.dispatch = new Dictionary<PlaceMode, Action<Tile>>
         {
             { PlaceMode.Off, action.SelectTile },

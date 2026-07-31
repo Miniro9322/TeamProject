@@ -17,8 +17,6 @@ public class MapCommand : MonoBehaviour
     public PlaceAction action;
     public PlaceGhost ghost;
     public PlaceFinder finder;
-    public RangeCalc rangeCalc;
-    public RangeStore rangeStore;
     public Dictionary<PlaceMode, Action<Tile>> dispatch;
 
     private void OnEnable()
@@ -41,19 +39,6 @@ public class MapCommand : MonoBehaviour
     {
         FollowHeld();
         FollowGhost();
-        DropRange();
-    }
-
-    // 버튼에서 손을 떼면 사거리 표시를 끝낸다.
-    // UI 위에서 떼면 뗌 신호가 오지 않으므로 눌림 상태를 직접 본다.
-    private void DropRange()
-    {
-        if (input.LeftHolding)
-        {
-            return;
-        }
-
-        rangeStore.ClearRange();
     }
 
     // 배치 모드면 미리보기를 커서 자리에 세우고, 아니면 감춘다.
@@ -85,7 +70,6 @@ public class MapCommand : MonoBehaviour
     {
         dragDetect.MarkPress();
         Tile tile = pointerPick.UnderPointer();
-        rangeStore.KeepRange(rangeCalc.GetRange(tile));
 
         if (palette.Mode == PlaceMode.Replace)
         {
