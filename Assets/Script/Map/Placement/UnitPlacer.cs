@@ -14,12 +14,17 @@ public class UnitPlacer
     public ResourcesManager resourcesManager;
     public BuildingPool pool;
 
-    // 슬롯을 자리에 놓는다: 생성→보드 배치→(성공 시)장부·커버 등록.
+    // 슬롯을 자리에 놓는다: 자리 확인→생성→보드 배치→장부·커버 등록.
     // 자리는 한 칸일 수도 여러 칸일 수도 있다(PlacementArea가 덮는 칸을 모두 들고 있다).
-    // 성공하면 놓인 오브젝트를 반환(true), 실패하면 만든 오브젝트를 파괴한다(false).
+    // 자리가 막혔으면 만들기 전에 멈춘다 — 결제·풀 대여를 끝낸 뒤 되돌리는 경로를 두지 않는다.
     public bool TryPlace(PlacementArea area, Placeable slot, float yOffset, out GameObject placedUnit)
     {
         placedUnit = null;
+
+        if (!AreaPlace.CanPlace(area, slot.kind))
+        {
+            return false;
+        }
 
         GameObject unit = Create(slot);      // 배치할 오브젝트 생성
         if (unit == null)
@@ -28,19 +33,10 @@ public class UnitPlacer
         }
 
         BindBoard(unit, area.Board);         // 생성한 오브젝트에 "놓이는 자리의" 모듈 보드 참조 전달
-
-        if (AreaPlace.CanPlace(area, slot.kind))
-        {
-            AreaPlace.Place(area, unit, slot.kind, yOffset);
-            RegisterUnit(unit, area, slot);   // 성공 → 사거리 장부·커버 등록
-            placedUnit = unit;
-            return true;
-        }
-
-        // 실패 → 만든 오브젝트 파괴.
-        // (보존 결함) 풀에서 대여한 생산건물도 여기선 반납 없이 Destroy → 풀 오염. 원래 동작이라 그대로 둠.
-        if (unit != null) UnityEngine.Object.Destroy(unit);
-        return false;
+        AreaPlace.Place(area, unit, slot.kind, yOffset);
+        RegisterUnit(unit, area, slot);      // 사거리 장부·커버 등록
+        placedUnit = unit;
+        return true;
     }
 
     // 슬롯의 프리팹으로 오브젝트를 만든다(생산건물은 자원 확인 후 풀에서 대여, 그 외는 새로 생성).
