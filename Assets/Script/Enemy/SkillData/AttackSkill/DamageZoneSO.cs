@@ -15,7 +15,6 @@ public class DamageZoneSO : AttackSkillDataSO
              "range가 늘어나면 여기에 비례해 커진다. 0이면 크기를 안 건드린다(프리팹 그대로).")]
     [SerializeField] private float scaleAtRange1 = 0f;
 
-    private GameObject go;
     private bool loggedScale;
 
     // 이펙트를 range(타일 수)에 비례해 키운다.
@@ -40,6 +39,10 @@ public class DamageZoneSO : AttackSkillDataSO
     public override async UniTask Execute(EnemyBase owner, CancellationToken token)
     {
         if (owner == null || owner.IsDead) return;
+        // 이 SO는 Resources.Load로 모든 적이 공유하는 애셋이다(EnemyStatLoader.ResolveSkills).
+        // 이펙트 핸들을 필드에 두면 나중에 시전한 적이 앞선 적의 핸들을 덮어써서
+        // 남의 살아있는 이펙트를 Despawn하고 자기 것은 풀에 못 돌려주는 누수가 난다. 반드시 지역 변수로.
+        GameObject go = null;
         try
         {
             int cellRange = range > 0f ? Mathf.RoundToInt(range) : 1;

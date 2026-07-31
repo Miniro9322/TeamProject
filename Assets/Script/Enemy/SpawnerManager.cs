@@ -229,16 +229,9 @@ public class SpawnerManager : MonoBehaviour
             go.transform.position = pos;
         }
 
-        // 오버레이 캔버스로 바꾼 경우: 루트 Transform이 무시되므로 위 pos 대입은 효과가 없다.
-        // 대신 패널을 매 프레임 포탈의 스크린 좌표로 옮긴다(안개가 월드 캔버스를 덮는 문제 회피).
-        // 컴포넌트가 없으면(=아직 월드 스페이스 캔버스) 위 pos 대입이 그대로 유효하다.
+
         var follow = go.GetComponent<StageInfoFollow>();
         if (follow != null) follow.Follow(portal.transform, infoTextOffset, cam);
-
-        // 지역이 여러 개 열려 있으면 팝업도 여럿 떠 있을 수 있다. 오버레이엔 깊이 정렬이 없어
-        // 겹치는 순서가 임의로 정해지므로 지역 번호로 고정한다.
-        // 음수여도 오버레이 캔버스는 3D 씬 위에 그려진다. sortingOrder는 캔버스끼리의 순서일 뿐이라
-        // 메인 HUD(sortingOrder 0)보다 낮게 둬야 팝업이 HUD를 덮지 않는다.
         Canvas canvas = go.GetComponentInChildren<Canvas>(true);
         if (canvas != null) canvas.sortingOrder = stageInfoSortingOrder + region;
 

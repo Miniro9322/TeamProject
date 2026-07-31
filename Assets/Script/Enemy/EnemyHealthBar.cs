@@ -26,10 +26,6 @@ public class EnemyHealthBar
 
         _tf = _slider.transform;
         _smoothSpeed = Mathf.Max(0.01f, smoothSpeed);
-
-        // 표시 전용으로 고정.
-        // Transition을 먼저 None으로 꺼야 한다 — ColorTint 상태에서 interactable=false를 주면
-        // Selectable이 Disabled 색(기본 회색·알파 0.5)을 칠해서 바가 흐릿해진다.
         _slider.transition = Selectable.Transition.None;
         _slider.interactable = false;
 
@@ -39,11 +35,6 @@ public class EnemyHealthBar
 
         Reset();
     }
-
-    /// <summary>
-    /// 스폰·스탯 재적용 시 현재 체력으로 즉시 맞춘다(보간 없이).
-    /// 풀에서 재사용될 때 이전 개체의 체력이 남아 스르륵 차오르는 걸 막는다.
-    /// </summary>
     public void ResetTo(float hp, float maxHp)
     {
         if (_slider == null) return;
@@ -57,14 +48,6 @@ public class EnemyHealthBar
     // "다 깎였다"로 볼 비율. 지수 감쇠는 0에 점근하므로 정확히 0이 되길 기다리지 않는다.
     private const float DrainedRatio = 0.005f;
 
-    /// <summary>
-    /// 매 프레임 LateUpdate에서 호출.
-    ///
-    /// 표시 규칙:
-    ///  - 아직 안 맞은 적(풀피)은 바를 띄우지 않는다. 첫 피해를 입는 순간 풀피 상태에서 등장해 깎이는 게 보인다.
-    ///  - 죽을 때는 바로 숨기지 않고 0까지 깎이는 걸 보여준 뒤 사라진다.
-    ///  - forceHidden(은신 중)이면 위 조건과 무관하게 무조건 숨긴다.
-    /// </summary>
     public void Tick(float hp, float maxHp, bool isDead, bool forceHidden)
     {
         if (_slider == null) return;
