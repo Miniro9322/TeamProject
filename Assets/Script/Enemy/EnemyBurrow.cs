@@ -90,6 +90,7 @@ public class EnemyBurrow
     {
         if (!IsSetup || _hidden) return;
         _surfaced = true;
+        
     }
 
     /// <summary>풀 재사용/디스폰 — 마커를 반납하고 숨은 상태로 되돌린다. animator.Rebind() 뒤에 불려야 bool이 남는다.</summary>
