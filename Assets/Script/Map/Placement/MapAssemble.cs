@@ -36,15 +36,21 @@ public class MapAssemble : MonoBehaviour
         buildingUi.rule = mapGame.Rule;
 
         skillCast = new HeroSkillCastController { buildingUi = buildingUi };
+
+        RangeInfo rangeInfo = new RangeInfo();
+        RangeStore rangeStore = new RangeStore();
+        RangeCalc rangeCalc = new RangeCalc(rangeInfo);
+
         if (tilePaintView != null)
         {
             tilePaintView.skillCast = skillCast;
             tilePaintView.finder = finder;
+            tilePaintView.rangeStore = rangeStore;
         }
 
         view.pointerPick = pointerPick;
         view.replace = replace;
-        view.rangeInfo = new RangeInfo();
+        view.rangeInfo = rangeInfo;
         view.citizenManager = mapGame.CitizenManager;
         view.resourcesManager = mapGame.ResourcesManager;
 
@@ -68,6 +74,8 @@ public class MapAssemble : MonoBehaviour
         ghost = new PlaceGhost(ghostAlpha);
         command.ghost = ghost;
         command.finder = finder;
+        command.rangeCalc = rangeCalc;
+        command.rangeStore = rangeStore;
         command.dispatch = new Dictionary<PlaceMode, Action<Tile>>
         {
             { PlaceMode.Off, action.SelectTile },

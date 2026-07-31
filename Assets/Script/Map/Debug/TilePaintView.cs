@@ -14,6 +14,7 @@ public class TilePaintView : MonoBehaviour
     // MapAssemble이 조립 시점에 코드로 넣어준다.
     public HeroSkillCastController skillCast;
     public PlaceFinder finder;
+    public RangeStore rangeStore;
 
     private readonly List<Tile> cellPainted = new();
 
@@ -100,36 +101,13 @@ public class TilePaintView : MonoBehaviour
         PaintPreview(data, game.HeldUnit);
     }
 
-    // 커서 아래 유닛의 사거리를 칠한다.
+    // 누르고 있는 유닛의 사거리를 칠한다.
     private void PaintUnitRange()
     {
-        Tile tile = game.HoverTile;
-        if (tile == null)
+        foreach (Tile tile in rangeStore.Tiles)
         {
-            return;
+            Paint(tile, painter.rangeColor);
         }
-
-        GameObject unit = tile.OccupantObject;
-        if (unit == null)
-        {
-            return;
-        }
-
-        bool hasRange = game.TryRange(
-            unit,
-            out int range,
-            out RangeShape shape);
-
-        if (!hasRange)
-        {
-            return;
-        }
-
-        PaintRange(
-            tile,
-            range,
-            shape,
-            painter.rangeColor);
     }
 
     private void PaintPreview(

@@ -145,6 +145,7 @@ public static class TileSwap
     }
 
     // 밑판을 같은 자리에 다른 프리팹으로 교체한다. 저작값은 그대로 옮기고 지형만 붓이 새로 쓴다.
+    // 지형이 실제로 바뀐 칸만 배치 허용을 기본으로 다시 깐다 — 겉모습만 갈아끼울 때 저작을 지우면 안 된다.
     private static Tile Replace(Tile old, GameObject prefab, TerrainType terrain, float cell)
     {
         Transform from = old.transform;
@@ -154,6 +155,12 @@ public static class TileSwap
         made.name = old.name; // 계층에서 같은 칸을 계속 같은 이름으로 찾게 한다
         Carry(old, made);
         made.State.Terrain = terrain;
+
+        if (old.State.Terrain != terrain)
+        {
+            TileTerrainDefault.Apply(made);
+        }
+
         EditorUtility.SetDirty(made);
 
         Undo.DestroyObjectImmediate(old.gameObject);
@@ -186,7 +193,8 @@ public static class TileSwap
     }
 
     // 밑판 윗면에 고지 판을 얹는다. 밑판은 그대로 두어 옆면이 뚫리지 않게 한다.
-    // 배치 허용은 옮기지 않는다 — 얹은 판은 교체가 아니라 새 겹이고, 걷어내면 밑판의 저작이 그대로 다시 드러난다.
+    // 밑판의 배치 허용은 옮기지 않고 고지 기본(원거리)으로 깐다 — 얹은 판은 교체가 아니라 새 겹이고,
+    // 걷어내면 밑판의 저작이 그대로 다시 드러난다.
     private static Tile Raise(Tile support, GameObject prefab, float cell)
     {
         Transform under = support.transform;
@@ -198,6 +206,7 @@ public static class TileSwap
         made.State.Terrain = TerrainType.High;
         made.State.Col = support.State.Col;
         made.State.Row = support.State.Row;
+        TileTerrainDefault.Apply(made);
         MoveSpawn(support, made);
         EditorUtility.SetDirty(made);
         return made;

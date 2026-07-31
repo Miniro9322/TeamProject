@@ -54,9 +54,6 @@ public class MapView : MonoBehaviour
     public event Action OnOffMode;
 
     public int UnitIndex => palette.CurrentIndex;
-   
-
-    public bool IsPressing => input.LeftHolding;
 
     public bool TryRange(
         GameObject unit,
