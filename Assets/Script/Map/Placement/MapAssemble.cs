@@ -20,6 +20,7 @@ public class MapAssemble : MonoBehaviour
     [SerializeField] private TilePaintView tilePaintView;
 
     private List<PathTrail> pathTrails;
+    private PlaceGhost ghost;
     private HeroSkillCastController skillCast;
 
     private void Start()
@@ -27,6 +28,7 @@ public class MapAssemble : MonoBehaviour
         List<MapBoard> boards = ModuleBoards();
 
         PointerPick pointerPick = new PointerPick(boards);
+        PlaceFinder finder = new PlaceFinder(pointerPick, palette);
         UnitReplace replace = new UnitReplace(mapGame.Units);
 
         BuildingUiLink buildingUi = new BuildingUiLink();
@@ -34,7 +36,11 @@ public class MapAssemble : MonoBehaviour
         buildingUi.rule = mapGame.Rule;
 
         skillCast = new HeroSkillCastController { buildingUi = buildingUi };
-        if (tilePaintView != null) tilePaintView.skillCast = skillCast;
+        if (tilePaintView != null)
+        {
+            tilePaintView.skillCast = skillCast;
+            tilePaintView.finder = finder;
+        }
 
         view.pointerPick = pointerPick;
         view.replace = replace;
@@ -44,7 +50,7 @@ public class MapAssemble : MonoBehaviour
 
         PlaceAction action = new PlaceAction();
         action.palette = palette;
-        action.pointerPick = pointerPick;
+        action.finder = finder;
         action.placer = mapGame.Placer;
         action.remover = new UnitRemover(boards, mapGame.Units, mapGame.HeroRoster);
         action.replace = replace;
@@ -60,7 +66,9 @@ public class MapAssemble : MonoBehaviour
         command.replace = replace;
         command.buildingUi = buildingUi;
         command.action = action;
-        command.ghost = new PlaceGhost(view, placeYOffset, ghostAlpha);
+        ghost = new PlaceGhost(placeYOffset, ghostAlpha);
+        command.ghost = ghost;
+        command.finder = finder;
         command.placeYOffset = placeYOffset;
         command.dispatch = new Dictionary<PlaceMode, Action<Tile>>
         {
@@ -89,6 +97,7 @@ public class MapAssemble : MonoBehaviour
 
     private void OnDestroy()
     {
+        ghost.ClearGhosts();
         mapGame.Rule.ChangeToNight -= view.ClearMode;
         if (skillCast != null)
         {

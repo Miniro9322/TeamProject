@@ -41,16 +41,14 @@ public static class AreaPlace
 
     // 덮는 칸을 모두 점유하고 유닛을 한가운데 세운다. CanPlace가 통과한 자리에만 부른다.
     public static void Place(
-        PlacementArea area,
+        PlaceData data,
         GameObject unit,
         OccupantKind kind,
         float yOffset)
     {
-        float top = TopY(area, kind);
-
-        foreach (Vector2Int cell in area.Cells)
+        foreach (Vector2Int cell in data.Area.Cells)
         {
-            if (!area.Board.TryGetCell(cell, out Tile tile))
+            if (!data.Area.Board.TryGetCell(cell, out Tile tile))
             {
                 continue;   // CanPlace를 건너뛰고 불렀을 때만 닿는다
             }
@@ -58,8 +56,8 @@ public static class AreaPlace
             tile.SetOccupant(unit, kind);
         }
 
-        Vector3 position = area.Center;
-        position.y = top + yOffset;
+        Vector3 position = data.Area.Center;
+        position.y = data.TopY + yOffset;
         unit.transform.position = position;
     }
 

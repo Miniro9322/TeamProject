@@ -13,6 +13,7 @@ public class TilePaintView : MonoBehaviour
     // HeroSkillCastController는 일반 C# 클래스(비-MonoBehaviour)라 인스펙터로 연결할 수 없다 —
     // MapAssemble이 조립 시점에 코드로 넣어준다.
     public HeroSkillCastController skillCast;
+    public PlaceFinder finder;
 
     private readonly List<Tile> cellPainted = new();
 
@@ -57,30 +58,51 @@ public class TilePaintView : MonoBehaviour
     }
     private void PaintHover()
     {
-        if (game == null || game.InputBlocked)
+        if (game.InputBlocked)
         {
             return;
         }
 
         if (game.IsPlacing)
         {
-            PaintPreview(
-                game.HoverArea,
-                game.PlacingPrefab,
-                game.PlacingKind);
+            PaintPlacePreview();
             return;
         }
 
-        bool isHeld = game.IsReplacing && game.IsHolding;
-        if (isHeld)
+        if (game.IsReplacing && game.IsHolding)
         {
-            PaintPreview(
-                game.HeldArea,
-                game.HeldUnit,
-                game.HeldKind);
+            PaintHeldPreview();
             return;
         }
 
+        PaintUnitRange();
+    }
+
+    // 배치하려는 것이 놓일 자리를 칠한다.
+    private void PaintPlacePreview()
+    {
+        if (!finder.TryResolveSlot(out Placeable slot, out PlaceData data))
+        {
+            return;
+        }
+
+        PaintPreview(data, slot.prefab);
+    }
+
+    // 집어 든 유닛이 놓일 자리를 칠한다.
+    private void PaintHeldPreview()
+    {
+        if (!finder.TryResolve(game.HeldKind, game.HeldSize, out PlaceData data))
+        {
+            return;
+        }
+
+        PaintPreview(data, game.HeldUnit);
+    }
+
+    // 커서 아래 유닛의 사거리를 칠한다.
+    private void PaintUnitRange()
+    {
         Tile tile = game.HoverTile;
         if (tile == null)
         {
@@ -88,8 +110,7 @@ public class TilePaintView : MonoBehaviour
         }
 
         GameObject unit = tile.OccupantObject;
-        bool hasUnit = unit != null;
-        if (!hasUnit)
+        if (unit == null)
         {
             return;
         }
@@ -112,20 +133,13 @@ public class TilePaintView : MonoBehaviour
     }
 
     private void PaintPreview(
-        PlacementArea area,
-        GameObject unit,
-        OccupantKind kind)
+        PlaceData data,
+        GameObject unit)
     {
-        if (area == null)
-        {
-            return;
-        }
-
-        bool canPlace = AreaPlace.CanPlace(area, kind);
         Color placeColor;
         Color rangeColor = painter.rangeColor;
 
-        if (canPlace)
+        if (data.CanPlace)
         {
             placeColor = painter.okColor;
         }
@@ -135,8 +149,8 @@ public class TilePaintView : MonoBehaviour
             rangeColor = painter.denyColor;
         }
 
-        bool hasCenter = area.Board.TryGetCell(
-            area.Origin,
+        bool hasCenter = data.Area.Board.TryGetCell(
+            data.Area.Origin,
             out Tile center);
 
         if (hasCenter)
@@ -156,9 +170,9 @@ public class TilePaintView : MonoBehaviour
             }
         }
 
-        foreach (Vector2Int cell in area.Cells)
+        foreach (Vector2Int cell in data.Area.Cells)
         {
-            bool hasTile = area.Board.TryGetCell(cell, out Tile tile);
+            bool hasTile = data.Area.Board.TryGetCell(cell, out Tile tile);
             if (hasTile)
             {
                 Paint(tile, placeColor);
@@ -230,11 +244,6 @@ public class TilePaintView : MonoBehaviour
         if (isSelf)
         {
             return caster.CurrentTile;
-        }
-
-        if (game == null)
-        {
-            return null;
         }
 
         Tile origin = game.HoverTile;

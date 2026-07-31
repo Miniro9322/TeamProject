@@ -17,11 +17,11 @@ public class UnitPlacer
     // 슬롯을 자리에 놓는다: 자리 확인→생성→보드 배치→장부·커버 등록.
     // 자리는 한 칸일 수도 여러 칸일 수도 있다(PlacementArea가 덮는 칸을 모두 들고 있다).
     // 자리가 막혔으면 만들기 전에 멈춘다 — 결제·풀 대여를 끝낸 뒤 되돌리는 경로를 두지 않는다.
-    public bool TryPlace(PlacementArea area, Placeable slot, float yOffset, out GameObject placedUnit)
+    public bool TryPlace(PlaceData data, Placeable slot, float yOffset, out GameObject placedUnit)
     {
         placedUnit = null;
 
-        if (!AreaPlace.CanPlace(area, slot.kind))
+        if (!data.CanPlace)
         {
             return false;
         }
@@ -32,9 +32,9 @@ public class UnitPlacer
             return false;
         }
 
-        BindBoard(unit, area.Board);         // 생성한 오브젝트에 "놓이는 자리의" 모듈 보드 참조 전달
-        AreaPlace.Place(area, unit, slot.kind, yOffset);
-        RegisterUnit(unit, area, slot);      // 사거리 장부·커버 등록
+        BindBoard(unit, data.Area.Board);    // 생성한 오브젝트에 "놓이는 자리의" 모듈 보드 참조 전달
+        AreaPlace.Place(data, unit, slot.kind, yOffset);
+        RegisterUnit(unit, data.Area, slot); // 사거리 장부·커버 등록
         placedUnit = unit;
         return true;
     }

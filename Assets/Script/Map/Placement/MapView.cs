@@ -44,68 +44,7 @@ public class MapView : MonoBehaviour
     public bool IsPlacing { get { return palette.Mode == PlaceMode.Place; } }
     public bool IsReplacing { get { return palette.Mode == PlaceMode.Replace; } }
     public bool IsOff { get { return palette.Mode == PlaceMode.Off; } }
-    public OccupantKind PlacingKind { get { return palette.CurrentSlot().kind; } }
-    // 지금 배치하려는 것이 차지하는 칸 수. 생산 건물만 자기 데이터(ProductionValue)에서 크기를 들고 오고,
-    // 나머지는 한 칸이다. 크기의 원본은 SO 하나뿐이라 슬롯·씬마다 갈리지 않는다.
-    public Vector2Int PlacingSize
-    {
-        get
-        {
-            Placeable slot = palette.CurrentSlot();
-            if (slot == null || slot.prefab == null)
-            {
-                return Vector2Int.one;
-            }
-
-            if (slot.prefab.TryGetComponent(out ProductionFacility facility) && facility.BasicValue != null)
-            {
-                return facility.BasicValue.TileSize;
-            }
-
-            return Vector2Int.one;
-        }
-    }
-
-    // 지금 배치하려는 것이 포인터 위치에서 덮게 될 자리(프리뷰가 읽는다).
-    public PlacementArea HoverArea
-    {
-        get
-        {
-            if (pointerPick == null)
-            {
-                return null;
-            }
-
-            return pointerPick.GetArea(PlacingSize);
-        }
-    }
-
-    public PlacementArea HeldArea
-    {
-        get
-        {
-            if (pointerPick == null || replace == null || !replace.IsHolding)
-            {
-                return null;
-            }
-
-            return pointerPick.GetArea(replace.HeldSize);
-        }
-    }
-
-    // 지금 배치하려는 것의 프리팹(미리보기가 읽는다). 슬롯이 비면 null.
-    public GameObject PlacingPrefab
-    {
-        get
-        {
-            if (palette.TryCurrentSlot(out Placeable slot))
-            {
-                return slot.prefab;
-            }
-
-            return null;
-        }
-    }
+    public Vector2Int HeldSize { get { return replace.HeldSize; } }
 
     public string PlacingLabel { get { return palette.CurrentSlot().label; } }
     public Tile Selected { get { return tileSelect.Selected; } }

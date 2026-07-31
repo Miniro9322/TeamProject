@@ -16,6 +16,7 @@ public class MapCommand : MonoBehaviour
     public BuildingUiLink buildingUi;
     public PlaceAction action;
     public PlaceGhost ghost;
+    public PlaceFinder finder;
     public Dictionary<PlaceMode, Action<Tile>> dispatch;
     public float placeYOffset;
 
@@ -38,7 +39,31 @@ public class MapCommand : MonoBehaviour
     private void Update()
     {
         FollowHeld();
-        ghost.FollowCursor();
+        FollowGhost();
+    }
+
+    // 배치 모드면 미리보기를 커서 자리에 세우고, 아니면 감춘다.
+    private void FollowGhost()
+    {
+        if (!IsPlacing())
+        {
+            ghost.HideGhost();
+            return;
+        }
+
+        // 프리팹 없는 슬롯은 미리보기를 만들 수 없다(배치를 시도하면 UnitPlacer가 알린다).
+        if (!finder.TryResolveSlot(out Placeable slot, out PlaceData data) || slot.prefab == null)
+        {
+            ghost.HideGhost();
+            return;
+        }
+
+        ghost.ShowGhost(slot.prefab, data);
+    }
+
+    private bool IsPlacing()
+    {
+        return !input.Blocked && palette.Mode == PlaceMode.Place;
     }
 
     // 재배치 모드면 재배치 입력을, 아니면 현재 모드의 기능을 실행한다.
@@ -84,10 +109,9 @@ public class MapCommand : MonoBehaviour
     {
         if (replace.IsHolding)
         {
-            PlacementArea target = HeldArea();
-            if (target != null)
+            if (TryHeldData(out PlaceData data))
             {
-                action.Drop(target);
+                action.Drop(data);
             }
             return;
         }
@@ -125,10 +149,9 @@ public class MapCommand : MonoBehaviour
             return;
         }
 
-        PlacementArea target = HeldArea();
-        if (target != null)
+        if (TryHeldData(out PlaceData data))
         {
-            action.Drop(target);
+            action.Drop(data);
         }
     }
 
@@ -145,17 +168,16 @@ public class MapCommand : MonoBehaviour
             return;
         }
 
-        PlacementArea target = HeldArea();
-        if (target != null)
+        if (TryHeldData(out PlaceData data))
         {
-            replace.MoveHeldTo(target, placeYOffset);
+            replace.MoveHeldTo(data, placeYOffset);
         }
     }
 
-    // 집은 유닛이 지금 포인터 위치에 놓인다면 덮게 될 자리(집기 전 크기를 그대로 쓴다).
-    private PlacementArea HeldArea()
+    // 집은 유닛이 지금 포인터 위치에 놓인다면 어떻게 놓일지(집기 전 종류·크기를 그대로 쓴다).
+    private bool TryHeldData(out PlaceData data)
     {
-        return pointerPick.GetArea(replace.HeldSize);
+        return finder.TryResolve(replace.HeldKind, replace.HeldSize, out data);
     }
 
     // 다른 타일 위에서 뗐거나 화면상 충분히 움직였으면 드래그로 본다(제자리 클릭과 구분).
