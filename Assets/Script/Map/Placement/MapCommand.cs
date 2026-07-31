@@ -18,7 +18,6 @@ public class MapCommand : MonoBehaviour
     public PlaceGhost ghost;
     public PlaceFinder finder;
     public Dictionary<PlaceMode, Action<Tile>> dispatch;
-    public float placeYOffset;
 
     private void OnEnable()
     {
@@ -170,7 +169,7 @@ public class MapCommand : MonoBehaviour
 
         if (TryHeldData(out PlaceData data))
         {
-            replace.MoveHeldTo(data, placeYOffset);
+            replace.MoveHeldTo(data);
         }
     }
 

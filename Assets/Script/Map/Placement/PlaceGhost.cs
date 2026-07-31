@@ -16,7 +16,6 @@ public class PlaceGhost
     private static readonly int DstBlendId = Shader.PropertyToID("_DstBlend");
     private static readonly int ZWriteId = Shader.PropertyToID("_ZWrite");
 
-    private readonly float yOffset;
     private readonly float alpha;
     private readonly Dictionary<GameObject, GameObject> ghosts = new();   // 프리팹 → 만들어 둔 미리보기
     private readonly Dictionary<Material, Material> fades = new();        // 원본 머티리얼 → 반투명 사본
@@ -24,9 +23,8 @@ public class PlaceGhost
     private readonly List<Material> slots = new();                        // 렌더러 머티리얼을 담아 두고 다시 쓰는 통
     private GameObject shownGhost;
 
-    public PlaceGhost(float yOffset, float alpha)
+    public PlaceGhost(float alpha)
     {
-        this.yOffset = yOffset;
         this.alpha = alpha;
         holder = new GameObject("Place Ghosts");
     }
@@ -36,7 +34,7 @@ public class PlaceGhost
     {
         MakeGhost(prefab);
         GameObject ghost = ghosts[prefab];
-        ghost.transform.position = GhostPosition(data);
+        ghost.transform.position = data.Position;
         SwapGhost(ghost);
     }
 
@@ -63,14 +61,6 @@ public class PlaceGhost
         }
 
         fades.Clear();
-    }
-
-    // 미리보기가 설 지점을 낸다.
-    private Vector3 GhostPosition(PlaceData data)
-    {
-        Vector3 position = data.Area.Center;
-        position.y = data.TopY + yOffset;
-        return position;
     }
 
     // 장부에 빠진 미리보기를 채운다.

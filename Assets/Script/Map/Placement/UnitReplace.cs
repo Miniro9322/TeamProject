@@ -43,23 +43,21 @@ public class UnitReplace
     }
 
     // 집은 유닛 프리뷰를 목표 자리 한가운데로 옮긴다(포인터 따라다니기).
-    public void MoveHeldTo(PlaceData data, float yOffset)
+    public void MoveHeldTo(PlaceData data)
     {
-        Vector3 position = data.Area.Center;
-        position.y = data.TopY + yOffset;
-        _heldUnit.transform.position = position;
+        _heldUnit.transform.position = data.Position;
     }
 
     // 집은 유닛을 자리에 내려놓는다. 배치 규칙 통과 시 재배치하고 true, 아니면 집은 채 유지한다.
     // 목표 자리의 보드 기준이라, 다른 모듈에 놓으면 커버도 그 모듈에 등록된다(다른 모듈 공격 금지 요구 충족).
-    public bool TryDrop(PlaceData data, float yOffset)
+    public bool TryDrop(PlaceData data)
     {
         if (!data.CanPlace)
         {
             return false;
         }
 
-        AreaPlace.Place(data, _heldUnit, _heldKind, yOffset);
+        AreaPlace.Place(data, _heldUnit, _heldKind);
         RegisterCover(data.Area);
         //
         Hero hero = _heldUnit.GetComponent<Hero>();

@@ -5,13 +5,16 @@ public class PlaceFinder
 {
     private readonly PointerPick pointerPick;
     private readonly PlacePalette palette;
+    private readonly float yOffset;
 
     public PlaceFinder(
         PointerPick pointerPick,
-        PlacePalette palette)
+        PlacePalette palette,
+        float yOffset)
     {
         this.pointerPick = pointerPick;
         this.palette = palette;
+        this.yOffset = yOffset;
     }
 
     // 종류와 크기로 자리를 찾는다. 가리키는 자리가 없으면 false.
@@ -27,7 +30,10 @@ public class PlaceFinder
             return false;
         }
 
-        data = new PlaceData(area, AreaPlace.TopY(area, kind), AreaPlace.CanPlace(area, kind));
+        data = new PlaceData(
+            area,
+            AreaPlace.Position(area, kind, yOffset),
+            AreaPlace.CanPlace(area, kind));
         return true;
     }
 

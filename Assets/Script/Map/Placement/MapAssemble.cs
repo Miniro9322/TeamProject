@@ -28,7 +28,7 @@ public class MapAssemble : MonoBehaviour
         List<MapBoard> boards = ModuleBoards();
 
         PointerPick pointerPick = new PointerPick(boards);
-        PlaceFinder finder = new PlaceFinder(pointerPick, palette);
+        PlaceFinder finder = new PlaceFinder(pointerPick, palette, placeYOffset);
         UnitReplace replace = new UnitReplace(mapGame.Units);
 
         BuildingUiLink buildingUi = new BuildingUiLink();
@@ -57,7 +57,6 @@ public class MapAssemble : MonoBehaviour
         action.buildingUi = buildingUi;
         action.view = view;
         action.heroRoster = mapGame.HeroRoster;
-        action.placeYOffset = placeYOffset;
         action.skillCast = skillCast;
 
         command.pointerPick = pointerPick;
@@ -66,10 +65,9 @@ public class MapAssemble : MonoBehaviour
         command.replace = replace;
         command.buildingUi = buildingUi;
         command.action = action;
-        ghost = new PlaceGhost(placeYOffset, ghostAlpha);
+        ghost = new PlaceGhost(ghostAlpha);
         command.ghost = ghost;
         command.finder = finder;
-        command.placeYOffset = placeYOffset;
         command.dispatch = new Dictionary<PlaceMode, Action<Tile>>
         {
             { PlaceMode.Off, action.SelectTile },

@@ -12,7 +12,6 @@ public class PlaceAction
     public BuildingUiLink buildingUi;
     public MapView view;
     public HeroRoster heroRoster;
-    public float placeYOffset;
     public HeroSkillCastController skillCast;
 
     public void SelectTile(Tile tile)
@@ -32,7 +31,7 @@ public class PlaceAction
         if (!data.CanPlace) return; // 한 칸이라도 막히면 중단
         if (!buildingUi.CanBuild()) { Debug.Log("밤에는 배치할 수 없습니다."); return; } // 테스트용
 
-        if (placer.TryPlace(data, slot, placeYOffset, out GameObject placedUnit))
+        if (placer.TryPlace(data, slot, out GameObject placedUnit))
         {
             if (entry != null)
             {
@@ -59,7 +58,7 @@ public class PlaceAction
 
     public void Drop(PlaceData data)
     {
-        if (!replace.TryDrop(data, placeYOffset)) return;
+        if (!replace.TryDrop(data)) return;
 
         // 선택 표시는 칸 하나에 붙으므로 덮은 칸 중 시작 칸을 대표로 쓴다.
         if (data.Area.Board.TryGetCell(data.Area.Origin, out Tile tile)) view.Select(tile);

@@ -18,8 +18,19 @@ public static class AreaPlace
         return true;
     }
 
-    // 유닛이 설 높이 — 놓을 수 있는 칸들 중 가장 높은 윗면.
-    public static float TopY(PlacementArea area, OccupantKind kind)
+    // 유닛이 설 자리. 높이만 따로 꺼내 가면 부르는 쪽마다 좌표 조립이 갈라진다.
+    public static Vector3 Position(
+        PlacementArea area,
+        OccupantKind kind,
+        float yOffset)
+    {
+        Vector3 position = area.Center;
+        position.y = TopY(area, kind) + yOffset;
+        return position;
+    }
+
+    // 놓을 수 있는 칸들 중 가장 높은 윗면.
+    private static float TopY(PlacementArea area, OccupantKind kind)
     {
         float top = float.MinValue;
 
@@ -43,8 +54,7 @@ public static class AreaPlace
     public static void Place(
         PlaceData data,
         GameObject unit,
-        OccupantKind kind,
-        float yOffset)
+        OccupantKind kind)
     {
         foreach (Vector2Int cell in data.Area.Cells)
         {
@@ -56,9 +66,7 @@ public static class AreaPlace
             tile.SetOccupant(unit, kind);
         }
 
-        Vector3 position = data.Area.Center;
-        position.y = data.TopY + yOffset;
-        unit.transform.position = position;
+        unit.transform.position = data.Position;
     }
 
     // 유닛이 덮고 있던 칸을 모두 비우고, 그 칸들이 이루는 크기를 돌려준다.
