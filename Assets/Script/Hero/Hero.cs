@@ -90,6 +90,13 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
     public Animator Anim => anim;
     public HeroAnimEvents AnimEvents => animEvents;
 
+    private HeroOutlineEffect outlineEffect;
+    public void SetSelected(bool selected)
+    {
+        outlineEffect ??= new HeroOutlineEffect(transform);
+        outlineEffect.SetActive(selected);
+    }
+
     protected GameObject target;
     public GameObject Target => target;
 
@@ -254,6 +261,25 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
         sc.AddStat(StatType.AS, statData.attackSpeed);
         currentHp = sc[StatType.HP];
         OnResur += StartAuras;
+        EnsureClickCollider();
+    }
+
+    // 프리팹에 콜라이더가 없어(순수 렌더러만 있음) 맵의 타일 판정만으로는 캐릭터 모델을 직접 클릭해
+    // 선택할 수 없다. 렌더러 전체를 감싸는 콜라이더를 하나 붙여 PointerPick이 물리 레이캐스트로
+    // "영웅 몸통을 직접 클릭"한 경우를 잡아낼 수 있게 한다.
+    private void EnsureClickCollider()
+    {
+        if (TryGetComponent<Collider>(out _)) return;
+
+        Renderer[] renderers = GetComponentsInChildren<Renderer>(true);
+        if (renderers.Length == 0) return;
+
+        Bounds worldBounds = renderers[0].bounds;
+        for (int i = 1; i < renderers.Length; i++) worldBounds.Encapsulate(renderers[i].bounds);
+
+        BoxCollider collider = gameObject.AddComponent<BoxCollider>();
+        collider.center = transform.InverseTransformPoint(worldBounds.center);
+        collider.size = worldBounds.size;
     }
 
     protected virtual void Start()
