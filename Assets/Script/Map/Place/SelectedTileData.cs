@@ -1,5 +1,5 @@
 // 선택된 타일 하나를 보관한다.
-public class TileSelect
+public class SelectedTileData
 {
     private Tile _selected;
 

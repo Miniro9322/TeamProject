@@ -39,7 +39,7 @@ public class MapAssemble : MonoBehaviour
         skillCast = new HeroSkillCastController { buildingUi = buildingUi };
 
         RangeInfo rangeInfo = new RangeInfo();
-        RangeStore rangeStore = new RangeStore();
+        RangeTileData rangeStore = new RangeTileData();
         RangeCalc rangeCalc = new RangeCalc(rangeInfo);
 
         if (tilePaintView != null)

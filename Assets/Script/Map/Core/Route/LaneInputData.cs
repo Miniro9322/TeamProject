@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class LaneInput
+public class LaneInputData
 {
     private readonly Dictionary<Vector2Int, Tile> cells;
     private readonly List<Tile> spawns;
@@ -12,7 +12,7 @@ public class LaneInput
     public IReadOnlyList<Tile> Cores => cores;
 
     // 셀과 스폰 및 코어 목록을 복사해 경로 계산용 입력을 구성합니다.
-    public LaneInput(
+    public LaneInputData(
         IReadOnlyDictionary<Vector2Int, Tile> source,
         IReadOnlyList<Tile> starts,
         IReadOnlyList<Tile> goals)

@@ -15,7 +15,7 @@ public class MapView : MonoBehaviour
     public CitizenManager citizenManager;
     public ResourcesManager resourcesManager;
 
-    private readonly TileSelect tileSelect = new();
+    private readonly SelectedTileData tileSelect = new();
 
     // ---- 상태 기록(PlaceAction이 결과를 알릴 때 부른다) ----
 

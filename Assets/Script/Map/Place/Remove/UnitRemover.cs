@@ -6,10 +6,10 @@ using UnityEngine;
 public class UnitRemover
 {
     private readonly List<MapBoard> _boards;
-    private readonly UnitList _unitList;
+    private readonly PlacedUnitData _unitList;
     private readonly HeroRoster _heroRoster;
 
-    public UnitRemover(List<MapBoard> boards, UnitList unitList, HeroRoster heroRoster)
+    public UnitRemover(List<MapBoard> boards, PlacedUnitData unitList, HeroRoster heroRoster)
     {
         _boards = boards;
         _unitList = unitList;

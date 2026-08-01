@@ -14,7 +14,7 @@ public class TilePaintView : MonoBehaviour
     // MapAssemble이 조립 시점에 코드로 넣어준다.
     public HeroSkillCastController skillCast;
     public PlaceFinder finder;
-    public RangeStore rangeStore;
+    public RangeTileData rangeStore;
 
     private readonly List<Tile> cellPainted = new();
 

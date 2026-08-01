@@ -9,7 +9,7 @@ public class RangeInput : MonoBehaviour
     // MapAssemble이 조립할 때 넣어준다
     public PointerPick pointerPick;
     public RangeCalc rangeCalc;
-    public RangeStore rangeStore;
+    public RangeTileData rangeStore;
 
     private void OnEnable()
     {

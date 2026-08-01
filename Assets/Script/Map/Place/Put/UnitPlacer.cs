@@ -9,7 +9,7 @@ using VContainer.Unity;
 public class UnitPlacer
 {
     // MapGame(조립자)이 [Inject] 완료 후 직접 넣어준다.
-    public UnitList unitList;
+    public PlacedUnitData unitList;
     public IObjectResolver resolver;
     public ResourcesManager resourcesManager;
     public BuildingPool pool;

@@ -3,7 +3,7 @@ using UnityEngine;
 
 // 배치된 유닛 장부. 지금 판에 올라와 있는 유닛과 그 유닛의 사거리를 기억한다.
 // MapGame(중재자)이 배치/제거/재배치 때 이 장부에 넣고·빼고·물어본다.
-public class UnitList
+public class PlacedUnitData
 {
     private readonly Dictionary<GameObject, int> _attackRangeByUnit = new();
 

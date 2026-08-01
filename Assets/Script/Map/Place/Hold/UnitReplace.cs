@@ -4,12 +4,12 @@ using UnityEngine;
 // 집을 땐 출발 타일의 보드에서 떼고, 놓을 땐 목표 자리의 보드에 놓는다 → 모듈 사이 이동도 자연히 성립.
 public class UnitReplace
 {
-    private readonly UnitList _unitList;
+    private readonly PlacedUnitData _unitList;
 
     // 집어 든 것 하나. 다섯 값을 함께 채우고 함께 비운다.
     private HeldData held;
 
-    public UnitReplace(UnitList unitList)
+    public UnitReplace(PlacedUnitData unitList)
     {
         _unitList = unitList;
     }
