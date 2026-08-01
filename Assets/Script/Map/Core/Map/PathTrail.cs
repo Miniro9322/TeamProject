@@ -63,8 +63,6 @@ public class PathTrail : MonoBehaviour
         StopTrail();
         ClearRuns();
 
-        if (trailPrefab == null) return;
-
         IReadOnlyList<IReadOnlyList<Vector3>> paths = spawner.ActivePaths;
         for (int i = 0; i < paths.Count; i++)
         {

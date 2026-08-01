@@ -89,16 +89,16 @@ public class CameraFreeLook : MonoBehaviour
 
     private void ReadKeys()
     {
-        Keyboard board = Keyboard.current;
-        if (board == null)
+        Keyboard keyboard = Keyboard.current;
+        if (keyboard == null)
         {
             return;
         }
-        if (board[freeLookKey].wasPressedThisFrame)
+        if (keyboard[freeLookKey].wasPressedThisFrame)
         {
             ToggleFree();
         }
-        if (board[resetKey].wasPressedThisFrame)
+        if (keyboard[resetKey].wasPressedThisFrame)
         {
             StartReturn();
         }
@@ -176,19 +176,19 @@ public class CameraFreeLook : MonoBehaviour
 
     private void Move()
     {
-        Keyboard board = Keyboard.current;
-        if (board == null)
+        Keyboard keyboard = Keyboard.current;
+        if (keyboard == null)
         {
             return;
         }
         Quaternion rot = Quaternion.Euler(flyPitch, flyYaw, 0f);
         Vector3 dir = Vector3.zero;
-        if (board.wKey.isPressed) { dir += rot * Vector3.forward; }
-        if (board.sKey.isPressed) { dir -= rot * Vector3.forward; }
-        if (board.dKey.isPressed) { dir += rot * Vector3.right; }
-        if (board.aKey.isPressed) { dir -= rot * Vector3.right; }
-        if (board.eKey.isPressed) { dir += Vector3.up; }
-        if (board.qKey.isPressed) { dir -= Vector3.up; }
+        if (keyboard.wKey.isPressed) { dir += rot * Vector3.forward; }
+        if (keyboard.sKey.isPressed) { dir -= rot * Vector3.forward; }
+        if (keyboard.dKey.isPressed) { dir += rot * Vector3.right; }
+        if (keyboard.aKey.isPressed) { dir -= rot * Vector3.right; }
+        if (keyboard.eKey.isPressed) { dir += Vector3.up; }
+        if (keyboard.qKey.isPressed) { dir -= Vector3.up; }
 
         if (dir != Vector3.zero)
         {
@@ -288,11 +288,11 @@ public class CameraFreeLook : MonoBehaviour
                 return true;
             }
         }
-        Keyboard board = Keyboard.current;
-        if (board != null)
+        Keyboard keyboard = Keyboard.current;
+        if (keyboard != null)
         {
-            if (board.wKey.isPressed || board.aKey.isPressed || board.sKey.isPressed
-                || board.dKey.isPressed || board.qKey.isPressed || board.eKey.isPressed)
+            if (keyboard.wKey.isPressed || keyboard.aKey.isPressed || keyboard.sKey.isPressed
+                || keyboard.dKey.isPressed || keyboard.qKey.isPressed || keyboard.eKey.isPressed)
             {
                 return true;
             }

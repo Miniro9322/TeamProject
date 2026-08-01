@@ -32,8 +32,8 @@ public class CameraInput : MonoBehaviour
     {
         get
         {
-            Keyboard key = Keyboard.current;
-            return key != null && (key.leftAltKey.isPressed || key.rightAltKey.isPressed);
+            Keyboard keyboard = Keyboard.current;
+            return keyboard != null && (keyboard.leftAltKey.isPressed || keyboard.rightAltKey.isPressed);
         }
     }
 
@@ -97,19 +97,19 @@ public class CameraInput : MonoBehaviour
             }
         }
 
-        Keyboard key = Keyboard.current;
-        if (key == null)
+        Keyboard keyboard = Keyboard.current;
+        if (keyboard == null)
         {
             return moved;
         }
 
         Vector3 move = Vector3.zero;
-        if (key.wKey.isPressed) { move += forward; }
-        if (key.sKey.isPressed) { move -= forward; }
-        if (key.dKey.isPressed) { move += right; }
-        if (key.aKey.isPressed) { move -= right; }
-        if (key.eKey.isPressed) { move += Vector3.up; }
-        if (key.qKey.isPressed) { move -= Vector3.up; }
+        if (keyboard.wKey.isPressed) { move += forward; }
+        if (keyboard.sKey.isPressed) { move -= forward; }
+        if (keyboard.dKey.isPressed) { move += right; }
+        if (keyboard.aKey.isPressed) { move -= right; }
+        if (keyboard.eKey.isPressed) { move += Vector3.up; }
+        if (keyboard.qKey.isPressed) { move -= Vector3.up; }
 
         if (move != Vector3.zero)
         {

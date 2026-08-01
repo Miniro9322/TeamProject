@@ -117,8 +117,6 @@ public class FogController : MonoBehaviour
         if (index < 0) return;
 
         MapBoard board = module.GetComponent<MapBoard>();
-        if (board == null) return;
-
         _areas[index] = MeasureCellArea(board);
         ApplyAreas();
     }
