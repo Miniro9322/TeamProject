@@ -45,12 +45,6 @@ public class PlacePalette : MonoBehaviour
         return true;
     }
 
-    // 현재 슬롯의 미리보기 사거리(음수면 0).
-    public int PreviewRange()
-    {
-        return Mathf.Max(0, CurrentSlot().attackRange);
-    }
-
     public void SelectSlot(int index)
     {
         _index = index;

@@ -1,6 +1,6 @@
 using UnityEngine;
 
-// 계산된 자리(PlacementArea)를 실제 판에 반영하는 담당 — 놓을 수 있는지 보고, 칸을 채우고, 다시 비운다.
+// 계산된 자리를 실제 판에 반영하는 담당.
 public static class AreaPlace
 {
     public static bool CanPlace(
@@ -18,7 +18,7 @@ public static class AreaPlace
         return true;
     }
 
-    // 유닛이 설 자리. 높이만 따로 꺼내 가면 부르는 쪽마다 좌표 조립이 갈라진다.
+    // 유닛 몸통이 설 월드 지점.
     public static Vector3 Position(
         PlacementArea area,
         OccupantKind kind,
@@ -47,10 +47,10 @@ public static class AreaPlace
             }
         }
 
-        return top > float.MinValue ? top : area.Center.y;   // 놓을 수 있는 칸이 하나도 없을 때만 앵커 높이
+        return top > float.MinValue ? top : area.Center.y;
     }
 
-    // 덮는 칸을 모두 점유하고 유닛을 한가운데 세운다. CanPlace가 통과한 자리에만 부른다.
+    // 자리가 덮는 칸을 모두 채우고 유닛을 한가운데 세운다.
     public static void Place(
         PlaceData data,
         GameObject unit,
@@ -58,49 +58,20 @@ public static class AreaPlace
     {
         foreach (Vector2Int cell in data.Area.Cells)
         {
-            if (!data.Area.Board.TryGetCell(cell, out Tile tile))
-            {
-                continue;   // CanPlace를 건너뛰고 불렀을 때만 닿는다
-            }
-
+            Tile tile = data.Area.Board.Cells[cell]; 
             tile.SetOccupant(unit, kind);
         }
 
         unit.transform.position = data.Position;
     }
 
-    // 유닛이 덮고 있던 칸을 모두 비우고, 그 칸들이 이루는 크기를 돌려준다.
-    // 점유 좌표를 따로 보관하지 않으므로 판을 훑어 되짚는다(제거는 드물다는 전제).
-    public static Vector2Int Remove(
-        Tile source,
-        GameObject unit)
+    // 자리가 덮는 칸을 모두 비운다.
+    public static void Remove(PlacementArea area)
     {
-        MapBoard board = source.Board;
-
-        // 사거리 커버 해제가 여기 딸려 있어 먼저 부른다. 이 호출로 source 칸은 이미 비워진다.
-        board.RemoveUnit(source.Coord);
-
-        int minCol = source.Coord.x;
-        int maxCol = source.Coord.x;
-        int minRow = source.Coord.y;
-        int maxRow = source.Coord.y;
-
-        foreach (Tile tile in board.Cells.Values)
+        for (int i = 0; i < area.Cells.Count; i++)
         {
-            if (tile.OccupantObject != unit)
-            {
-                continue;
-            }
-
-            Vector2Int coord = tile.Coord;
-            if (coord.x < minCol) { minCol = coord.x; }
-            if (coord.x > maxCol) { maxCol = coord.x; }
-            if (coord.y < minRow) { minRow = coord.y; }
-            if (coord.y > maxRow) { maxRow = coord.y; }
-
+            Tile tile = area.Board.Cells[area.Cells[i]];
             tile.ClearOccupant();
         }
-
-        return new Vector2Int(maxCol - minCol + 1, maxRow - minRow + 1);
     }
 }

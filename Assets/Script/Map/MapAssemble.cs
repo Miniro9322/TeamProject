@@ -63,7 +63,7 @@ public class MapAssemble : MonoBehaviour
         action.palette = palette;
         action.finder = finder;
         action.placer = mapGame.Placer;
-        action.remover = new UnitRemover(boards, mapGame.Units, mapGame.HeroRoster);
+        action.remover = new UnitRemover(mapGame.Units, mapGame.HeroRoster);
         action.replace = replace;
         action.buildingUi = buildingUi;
         action.view = view;

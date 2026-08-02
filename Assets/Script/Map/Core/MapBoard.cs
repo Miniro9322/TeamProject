@@ -251,13 +251,6 @@ public class MapBoard : MonoBehaviour
         return _cells.TryGetValue(coord, out Tile tile) 
             && TilePlacementRule.CanPlace(tile.State, kind);
     }
-    public GameObject RemoveUnit(Vector2Int coord)
-    {
-        if (!_cells.TryGetValue(coord, out Tile tile) || !tile.HasUnit) return null;
-        GameObject unit = tile.ClearOccupant();
-        ClearRangeCover(unit);
-        return unit;
-    }
 
     // ---- 적 격자 점유 (움직이는 적의 현재 칸 추적 — 좌표 기반) ----
     // 적은 타일 점유(OccupantObject)와 별개다: 한 칸에 여러 마리가 드나들 수 있다.
