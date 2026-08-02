@@ -4,7 +4,6 @@ using System.Collections.Generic;
 /// <summary>타일 표시를 전담하며 매 프레임 지우고 다시 그린다.</summary>
 public class TilePaintView : MonoBehaviour
 {
-    [SerializeField] private MapRegistry registry;
     [SerializeField] private MapView game;            // 호버·배치 상태(읽기 전용)
     [SerializeField] private TilePainter painter;
 
@@ -19,12 +18,6 @@ public class TilePaintView : MonoBehaviour
     private void Update()
     {
         RestoreCells();
-
-        foreach (ModuleLogic module in registry.AllModules.Values)
-        {
-            PaintPath(module.GetComponent<EnemyPathView>());
-        }
-
         PaintHover();
         PaintSkillRange();
     }
@@ -38,13 +31,6 @@ public class TilePaintView : MonoBehaviour
         cellPainted.Clear();
     }
 
-    private void PaintPath(EnemyPathView pathView)
-    {
-        foreach (Tile tile in pathView.PathTiles)
-        {
-            Paint(tile, painter.pathColor);
-        }
-    }
     private void PaintHover()
     {
         if (game.InputBlocked)
@@ -199,7 +185,7 @@ public class TilePaintView : MonoBehaviour
             origin,
             hitRadius,
             hitShape,
-            painter.rangeColor);
+            painter.skillColor);
     }
 
     private Tile SkillOrigin(
