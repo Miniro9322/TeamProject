@@ -36,12 +36,6 @@ public class MapBoard : MonoBehaviour
     [ContextMenu("Build")]
     public void Build()
     {
-        if (_grid == null)
-        {
-            Debug.LogError("[MapBoard] Grid가 주입되지 않았습니다. 인스펙터에서 씬의 Grid를 넣으세요.", this);
-            return;
-        }
-
         _cells.Clear();
         _spawns.Clear();
         _cores.Clear();
@@ -50,13 +44,6 @@ public class MapBoard : MonoBehaviour
         // 이 모듈 Grid 하위 타일만 모은다(씬 전체 스캔 금지 — 모듈 격리). Find 미사용.
         var tiles = new List<Tile>();
         tiles.AddRange(_grid.GetComponentsInChildren<Tile>(true));
-
-        if (tiles.Count == 0)
-        {
-            Debug.LogWarning("[MapBoard] Tile 컴포넌트를 가진 타일을 찾지 못했습니다. " +
-                "Tools/Map/Bake Tiles From Cubes로 큐브에 Tile을 부착하세요.", this);
-            return;
-        }
 
         // 1) 타일마다 렌더 캐시 + 격자 등록. 논리 좌표는 각 타일의 State.Col/Row를 신뢰한다(베이크가 새김).
         bool hasBounds = false;
