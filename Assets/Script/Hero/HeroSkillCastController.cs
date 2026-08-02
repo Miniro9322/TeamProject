@@ -15,7 +15,7 @@ public class HeroSkillCastController
             Hero clickedHero = null;
             if (tile.OccupantObject != null)
                 tile.OccupantObject.TryGetComponent(out clickedHero);
-            if (clickedHero != null && clickedHero.ActiveSkill != null && !clickedHero.IsDead)
+            if (clickedHero != null && clickedHero.ActiveSkill != null && !clickedHero.IsDead && clickedHero.IsSkillReady)
                 selectedCaster = clickedHero;
             return;
         }
