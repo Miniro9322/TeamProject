@@ -7,7 +7,6 @@ public class MapBoard : MonoBehaviour
     private readonly List<Tile> _spawns = new();
     private readonly List<Tile> _cores = new();
     private readonly Dictionary<GameObject, Tile> _enemyCell = new(); // 적→현재 칸(직전 칸과 비교해 이동 감지)
-    private readonly Dictionary<GameObject, List<Tile>> _rangeCoverByUnit = new();
 
     [SerializeField] private Grid _grid; // 좌표계의 단일 소스. 셀 크기·원점·Swizzle을 모두 쥔다.
     private Bounds _worldBounds;
@@ -47,7 +46,6 @@ public class MapBoard : MonoBehaviour
         _spawns.Clear();
         _cores.Clear();
         _enemyCell.Clear();
-        _rangeCoverByUnit.Clear();
 
         // 이 모듈 Grid 하위 타일만 모은다(씬 전체 스캔 금지 — 모듈 격리). Find 미사용.
         var tiles = new List<Tile>();
@@ -58,11 +56,6 @@ public class MapBoard : MonoBehaviour
             Debug.LogWarning("[MapBoard] Tile 컴포넌트를 가진 타일을 찾지 못했습니다. " +
                 "Tools/Map/Bake Tiles From Cubes로 큐브에 Tile을 부착하세요.", this);
             return;
-        }
-
-        foreach (Tile tile in tiles)
-        {
-            tile.ClearRangeCovers();
         }
 
         // 1) 타일마다 렌더 캐시 + 격자 등록. 논리 좌표는 각 타일의 State.Col/Row를 신뢰한다(베이크가 새김).
