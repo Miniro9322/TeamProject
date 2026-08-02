@@ -23,7 +23,7 @@ public class MapView : MonoBehaviour
     public void ClearSelection() { tileSelect.Clear(); }
     public bool IsSelected(Tile tile) { return tileSelect.IsSelected(tile); }
 
-    // ---- 읽기(PanelLogic·TilePaintView가 본다) ----
+    // ---- 읽기(TilePaintView가 본다) ----
 
     public bool IsHolding { get { return replace.IsHolding; } }
     public bool InputBlocked { get { return input.Blocked; } }
@@ -63,7 +63,7 @@ public class MapView : MonoBehaviour
         return rangeInfo.TryGet(unit, out range, out shape);
     }
 
-    // ---- 모드 전환(PanelLogic 버튼이 부른다) ----
+    // ---- 모드 전환(UI 버튼이 부른다) ----
 
     public void SetUnit(int index)  => palette.SelectSlot(index); 
     public void SetUnit(string label) => palette.SelectSlot(label); 

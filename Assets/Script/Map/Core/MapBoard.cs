@@ -285,7 +285,7 @@ public class MapBoard : MonoBehaviour
     }
 
     public bool IsBlocked(GameObject enemy)
-        => _enemyCell.TryGetValue(enemy, out Tile tile) && tile.IsBlocked(enemy);
+        => _enemyCell.TryGetValue(enemy, out Tile tile) && BlockCalc.IsBlocked(tile, enemy);
 
      
 
