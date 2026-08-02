@@ -286,48 +286,15 @@ public class MapBoard : MonoBehaviour
     // 적이 사라질 때 서 있던 칸에서 지운다.
     public void RemoveEnemy(GameObject enemy)
     {
-        if (enemy == null || !_enemyCell.TryGetValue(enemy, out Tile tile)) return;
+        if (!_enemyCell.TryGetValue(enemy, out Tile tile)) return;
         _enemyCell.Remove(enemy);
         if (tile != null) { tile.RemoveEnemy(enemy); }
     }
 
     public bool IsBlocked(GameObject enemy)
-        => enemy != null && _enemyCell.TryGetValue(enemy, out Tile tile) && tile.IsBlocked(enemy);
+        => _enemyCell.TryGetValue(enemy, out Tile tile) && tile.IsBlocked(enemy);
 
-    // ---- 아군 공격범위 커버(RangeCover) ----
-    // RangeCover = 아군 유닛의 사거리(손전등 빛)가 이 칸을 비추는 것. 유닛이 칸에 올라선 것(Occupant)과 다르다.
-    // 범위 표시는 뷰가 할 수 있지만, 실제 판정용 "이 타일이 사거리에 덮였는가"는 Tile 상태에 기록한다.
-
-    public void SetRangeCover(GameObject unit, Vector2Int origin, int range, bool square = false, bool includeCenter = true)
-    {
-        ClearRangeCover(unit);
-
-        var covered = new List<Tile>();
-        int safeRange = Mathf.Max(0, range);
-        foreach (Tile tile in GetTiles(origin, safeRange, square))
-        {
-            if (!includeCenter && tile.Coord == origin) continue;
-            tile.AddRangeCover(unit);
-            covered.Add(tile);
-        }
-
-        if (covered.Count > 0)
-            _rangeCoverByUnit[unit] = covered;
-    }
-
-    private void ClearRangeCover(GameObject unit)
-    {
-        if (!_rangeCoverByUnit.TryGetValue(unit, out List<Tile> covered)) return;
-
-        foreach (Tile tile in covered)
-            if (tile != null)
-                tile.RemoveRangeCover(unit);
-
-        _rangeCoverByUnit.Remove(unit);
-    }
-
-    // ---- 공간 질의 (상호작용 틀) ----
-    // 맵은 "몇 칸 이내에 무엇이 있나"만 계산해 후보를 돌려준다. 타겟 선정·공격·데미지는 담당 몫.
+     
 
     // 월드 위치가 어느 칸인지. 변환은 Grid가 하므로 타일에 새겨진 좌표와 항상 같은 기준이다.
     public Vector2Int WorldToCell(Vector3 world)

@@ -113,7 +113,7 @@ public partial class Tile : MonoBehaviour
     //타일에 적 진입 등록
     public void AddEnemy(GameObject enemy)
     {
-        if (enemy != null && !_enemies.Contains(enemy)) _enemies.Add(enemy);
+        if (!_enemies.Contains(enemy)) _enemies.Add(enemy);
     }
 
     //타일에 적 이탈 등록
@@ -125,7 +125,7 @@ public partial class Tile : MonoBehaviour
 
     private static int GetCapacity(GameObject go, OccupantKind kind)
     {
-        if (go == null || kind != OccupantKind.MeleeHero)
+        if (kind != OccupantKind.MeleeHero)
         {
             return 0;
         }
@@ -138,3 +138,4 @@ public partial class Tile : MonoBehaviour
         BlockCapacity = OccupantObject.GetComponent<Hero>().BlockCount;
     }
 }
+    
