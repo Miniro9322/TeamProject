@@ -13,7 +13,7 @@ public class Archer : Hero
     public Transform Muzzle => muzzle;
 
     private readonly Dictionary<Projectile, IObjectPool<Projectile>> projectilePools = new();
-    
+
     private IObjectPool<Projectile> GetProjectilePool(Projectile prefab)
     {
         if (!projectilePools.TryGetValue(prefab, out var pool))
@@ -49,20 +49,16 @@ public class Archer : Hero
             spawnEffect = SpawnEffect,
             spawnPersistentEffect = SpawnPersistentEffect,
             despawnEffect = DespawnEffect,
-            getEnemiesInRange = GetEnemiesInRange,
-            getEnemyTargetsInRange = GetEnemyTransformsInRange,
-            getEnemyObjectsInRange = GetEnemyObjectsInRange,
-            getAllyObjectsInRange = GetAllyObjectsInRange,
+            getObjectsInRange = GetObjectsInRange,
             healSelf = amount => Heal(amount),
-            getTargetableEnemiesInRange = GetTargetableEnemiesInRange,
-            getTargetableEnemyObjectsInRange = GetTargetableEnemyObjectsInRange,
-            getTargetableEnemyTargetsInRange = GetTargetableEnemyTransformsInRange,
             getEnemiesInLine = GetEnemiesInLine,
             getCardinalDirection = GetCardinalDirection,
             getLineEndPoint = GetLineEndPoint,
             buffManager = buffManager,
             sc = SC,
-            selfUnit = this
+            selfUnit = this,
+            onHit = NotifyHit,
+            spawnGroundZone = SpawnGroundZone
         };
         occupantKind = OccupantKind.RangedHero;
     }

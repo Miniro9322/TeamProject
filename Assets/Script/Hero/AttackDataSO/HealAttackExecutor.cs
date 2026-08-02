@@ -3,24 +3,19 @@ using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
-// MeleeAttackExecutor와 동일한 애니메이션/히트 루프 구조지만, ApplyInstantDamage 대신
-// ApplyInstantHeal을 호출해 아군을 회복시킨다(Healer 전용).
 public class HealAttackExecutor : IAttackExecutor
 {
     private readonly Dictionary<AttackDataSO, int> sequentialIndices = new();
 
     public async UniTask Execute(AttackDataSO data, AttackContext ctx, CancellationToken ct)
     {
-        float interval = ctx.sc[StatType.AS] > 0f ? 1f / ctx.sc[StatType.AS] : 1f; // AS = 초당 공격 횟수
+        float interval = ctx.sc[StatType.AS] > 0f ? 1f / ctx.sc[StatType.AS] : 1f;
         AttackAnimSpeedUtil.SetSpeed(ctx.anim, AttackAnimSpeedUtil.ComputeScale(data, interval));
 
         ctx.anim.SetTrigger(PickTrigger(data));
 
-        // 힐 장판은 대상보다 시전자(힐러) 발밑에 까는 편이 자연스럽다.
-        if (data.groundZone != null)
-            AttackDamageUtil.SpawnGroundZone(data.groundZone, ctx.self.position,
-                ctx.getEnemyObjectsInRange, ctx.getAllyObjectsInRange, ctx.sc, ctx.buffManager,
-                ctx.spawnEffect, ctx.spawnPersistentEffect, ctx.despawnEffect, ct);
+        if (data.groundZonePrefab != null)
+            ctx.spawnGroundZone?.Invoke(data.groundZonePrefab, ctx.self.position);
 
         try
         {

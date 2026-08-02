@@ -191,11 +191,11 @@ public class TilePaintView : MonoBehaviour
             return;
         }
 
-        HeroActiveSkillDataSO skill = caster.ActiveSkill;
+        HeroActiveSkill skill = caster.ActiveSkill;
         int hitRadius = 0;
         RangeShape hitShape = RangeShape.Diamond;
-        GroundZoneDataSO zone = skill.groundZone;
-        if (zone != null)
+        GameObject zonePrefab = skill.groundZonePrefab;
+        if (zonePrefab != null && zonePrefab.TryGetComponent(out GroundZoneEffect zone))
         {
             hitRadius = zone.radius;
             hitShape = zone.shape;
@@ -216,7 +216,7 @@ public class TilePaintView : MonoBehaviour
 
     private Tile SkillOrigin(
         Hero caster,
-        HeroActiveSkillDataSO skill)
+        HeroActiveSkill skill)
     {
         bool isSelf = skill.targetScope == SkillTargetScope.Self;
         if (isSelf)

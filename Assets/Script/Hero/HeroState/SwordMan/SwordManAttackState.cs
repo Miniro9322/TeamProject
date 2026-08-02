@@ -17,7 +17,7 @@ public class SwordManAttackState : HeroAttackState
     public override void Enter()
     {
         base.Enter();
-        runner ??= new HeroAttackRunner(swordMan.BasePattern, swordMan.Selectors, swordMan.Procs, new MeleeAttackExecutor());
+        runner ??= new HeroAttackRunner(swordMan, new MeleeAttackExecutor());
 
         float interval = swordMan.SC[StatType.AS] > 0f ? 1f / swordMan.SC[StatType.AS] : 1f;
         float elapsed = Time.time - lastAttackTime;

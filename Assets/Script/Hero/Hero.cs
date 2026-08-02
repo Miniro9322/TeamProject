@@ -6,6 +6,8 @@ using UnityEngine;
 using UnityEngine.Pool;
 using VContainer;
 
+public enum RangeQueryAffinity { Enemy, TargetableEnemy, Ally }
+
 public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
 {
     [Header("유닛 생성 비용")]
@@ -22,9 +24,6 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
     public int SkillLevel => skillLevel;
     public int StatLevel => statLevel;
 
-    // slot.prefab.GetComponent<Hero>()처럼 Instantiate/Inject를 거치지 않은 프리팹 원본에서
-    // Cost를 읽는 경우 upgradeState가 주입돼 있지 않다. UpgradeState는 PlayerPrefs만 읽으면 되는
-    // 가벼운 객체라, 주입이 안 된 경우 즉석에서 하나 만들어 최신 해금 상태를 반영한다.
     private UpgradeState UpgradeStateOrFallback => upgradeState ?? new UpgradeState();
 
     public (ProductionType Type, int Amount)[] Cost
@@ -33,12 +32,8 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
         {
             float discount = UpgradeStateOrFallback.GetTotalEffect(costUpgrades);
             var temp = new (ProductionType, int)[cost.Count];
-
             for (int i = 0; i < cost.Count; i++)
-            {
                 temp[i] = (cost[i].Type, -Mathf.RoundToInt(cost[i].Amount * (1f - discount)));
-            }
-
             return temp;
         }
     }
@@ -49,13 +44,11 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
         {
             float discount = UpgradeStateOrFallback.GetTotalEffect(statUpgradeCostUpgrades);
             var temp = new (ProductionType, int)[statUpgradeCost.Count];
-
             for (int i = 0; i < statUpgradeCost.Count; i++)
             {
                 int baseAmount = statUpgradeCost[i].Amount + statUpgradeCost[i].Amount * statLevel;
                 temp[i] = (statUpgradeCost[i].Type, -Mathf.RoundToInt(baseAmount * (1f - discount)));
             }
-
             return temp;
         }
     }
@@ -64,14 +57,15 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
     [SerializeField] private List<AttackDataSO> basePattern;
     public List<AttackDataSO> BasePattern => basePattern;
 
-    [SerializeField] private List<AttackSelectorSO> selectors = new();
-    public List<AttackSelectorSO> Selectors => selectors;
+    // 트레잇/액티브 스킬은 이제 SO가 아니라 같은 프리팹에 붙은 Component다 — Awake에서 자동 수집한다.
+    private HeroTrait[] traits;
+    public IReadOnlyList<HeroTrait> Traits => traits;
 
-    [SerializeField] private List<AttackProcSO> procs = new();
-    public List<AttackProcSO> Procs => procs;
-
-    public void AddSelector(AttackSelectorSO sel) => selectors.Add(sel);
-    public void AddProc(AttackProcSO proc) => procs.Add(proc);
+    private HeroActiveSkill activeSkill;
+    public HeroActiveSkill ActiveSkill => activeSkill;
+    private float skillCooldownRemaining;
+    public bool IsSkillReady => activeSkill == null || skillCooldownRemaining <= 0f;
+    private CancellationTokenSource skillCts;
 
     protected AttackContext context;
     public AttackContext Context => context;
@@ -81,7 +75,6 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
     public HeroIdleState IdleState => idleState;
     protected HeroAttackState attackState;
     public HeroAttackState AttackState => attackState;
-
     protected HeroDeathState deathState;
     public HeroDeathState DeathState => deathState;
 
@@ -102,9 +95,6 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
 
     [SerializeField] private StatDataSO statData;
     public StatDataSO StatData => statData;
-
-    // 생성 전 미리보기(정보 패널)용 — 배치된 인스턴스가 아니라 StatContainer가 없으므로,
-    // 기본값에 해금된 Hero/Stat 보너스를 직접 더해서 계산한다.
     public float PreviewAttackPower => statData.attackPower + UpgradeStateOrFallback.GetTotalEffect(statUpgrades);
     public float PreviewDefence => statData.defence + UpgradeStateOrFallback.GetTotalEffect(statUpgrades);
 
@@ -118,17 +108,12 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
     [SerializeField] protected RangeShape rangeShape = RangeShape.Diamond;
     public int Range => range;
     public RangeShape RangeShape => rangeShape;
-    [SerializeField] private List<GroundZoneDataSO> auraZones = new();
-    private CancellationTokenSource _auraCts;
 
-    [SerializeField] private HeroActiveSkillDataSO activeSkill;
-    public HeroActiveSkillDataSO ActiveSkill => activeSkill;
-    private CancellationTokenSource _skillCts;
-    private float _skillCooldownRemaining = 0f;
-    public bool IsSkillReady => activeSkill == null || _skillCooldownRemaining <= 0f;
+    [Tooltip("소유자가 죽을 때까지 유지되는 오라 장판(GroundZoneEffect, duration<=0) 프리팹들")]
+    [SerializeField] private List<GameObject> auraZonePrefabs = new();
 
-    // 이펙트 풀은 Hero 인스턴스 소유(Archer/Mage의 projectilePools와 동일한 패턴) —
-    // 씬이 언로드돼 이 Hero가 파괴되면 풀도 함께 사라지므로, 파괴된 인스턴스를 다시 꺼내 쓰는 일이 없다.
+    // 이펙트 풀은 Hero 인스턴스 소유(Archer/Mage의 projectilePools와 동일 패턴) — 씬이 언로드돼 이 Hero가
+    // 파괴되면 풀도 함께 사라지므로, 파괴된 인스턴스를 다시 꺼내 쓰는 일이 없다.
     private readonly Dictionary<GameObject, IObjectPool<GameObject>> effectPools = new();
 
     private IObjectPool<GameObject> GetEffectPool(GameObject prefab)
@@ -148,7 +133,8 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
         return pool;
     }
 
-    protected GameObject SpawnEffect(GameObject prefab, Vector3 pos, Quaternion rot, float lifetime)
+    // HeroTrait/GroundZoneEffect(같은 GameObject의 다른 컴포넌트)도 써야 해서 public.
+    public GameObject SpawnEffect(GameObject prefab, Vector3 pos, Quaternion rot, float lifetime)
     {
         GameObject go = SpawnPersistentEffect(prefab, pos, rot);
         if (go != null && lifetime > 0f)
@@ -156,12 +142,12 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
         return go;
     }
 
-    protected GameObject SpawnPersistentEffect(GameObject prefab, Vector3 pos, Quaternion rot)
+    public GameObject SpawnPersistentEffect(GameObject prefab, Vector3 pos, Quaternion rot)
     {
         if (prefab == null) return null;
         IObjectPool<GameObject> pool = GetEffectPool(prefab);
         GameObject go = pool.Get();
-        while (go == null) // 다른 경로로 파괴된 채 풀에 있던 인스턴스는 버리고 새로 받는다
+        while (go == null)
             go = pool.Get();
         go.transform.SetPositionAndRotation(pos, rot);
         foreach (ParticleSystem ps in go.GetComponentsInChildren<ParticleSystem>(true))
@@ -172,7 +158,7 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
         return go;
     }
 
-    protected void DespawnEffect(GameObject prefab, GameObject instance)
+    public void DespawnEffect(GameObject prefab, GameObject instance)
     {
         if (prefab == null || instance == null) return;
         GetEffectPool(prefab).Release(instance);
@@ -181,8 +167,22 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
     private async UniTask ReturnEffectAfter(GameObject prefab, GameObject go, float delay)
     {
         await UniTask.Delay(TimeSpan.FromSeconds(delay));
-        if (go == null) return; // 대기 중 다른 경로로 이미 파괴됐으면 접근하지 않는다
+        if (go == null) return;
         DespawnEffect(prefab, go);
+    }
+
+    // GroundZoneEffect 프리팹을 풀에서 꺼내 위치를 잡고 Init만 넘긴다 — 이후 틱/소멸(풀 반납)은
+    // GroundZoneEffect 컴포넌트가 스스로 처리한다.
+    public void SpawnGroundZone(GameObject prefab, Vector3 pos)
+    {
+        if (prefab == null) return;
+        IObjectPool<GameObject> pool = GetEffectPool(prefab);
+        GameObject go = pool.Get();
+        while (go == null)
+            go = pool.Get();
+        go.transform.position = pos;
+        if (go.TryGetComponent(out GroundZoneEffect zone))
+            zone.Init(board, this, released => pool.Release(released));
     }
 
     private StatContainer sc = new();
@@ -192,18 +192,20 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
     public int BlockCount => IsDead ? 0 : (int)SC[StatType.BLK];
     private float currentHp;
     public float Hp => currentHp;
-    public int Defense => throw new System.NotImplementedException();
-    private bool isDead = false;
+    public int Defense => Mathf.RoundToInt(sc[StatType.DEF]); // 기존 NotImplementedException 버그 수정
+    private bool isDead;
     public bool IsDead => isDead;
 
     [SerializeField] private EnemyAttribute unattackableTarget = EnemyAttribute.Fly | EnemyAttribute.Cloaking;
-    //테스트용 코드
+
     private GameManager gameManager;
     private ResourcesManager resourcesManager;
     protected BuffManager buffManager;
+    public BuffManager Buffs => buffManager;
     private UpgradeState upgradeState;
 
     public int CitizenAmount => citizenAmount;
+
     [Inject]
     private void Construct(GameManager gameManager, BuffManager buffManager, ResourcesManager resourcesManager, UpgradeState upgradeState)
     {
@@ -219,26 +221,22 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
         anim.SetBool(HeroAnimHash.idle, false);
         stateMachine.ChangeState(deathState);
         OnBreak?.Invoke();
-        _skillCts?.Cancel();
-        _skillCts?.Dispose();
-        _skillCts = null;
-
-        // ResurrectionAfter10s().Forget();
+        skillCts?.Cancel();
+        skillCts?.Dispose();
+        skillCts = null;
     }
+
     public void TakeDamage(int damage)
     {
-        if (isDead)
-            return;
-
-        currentHp -= damage;
-        if (currentHp <= 0)
-            Die();
+        if (isDead) return;
+        int hitDamage = Mathf.Max(1, damage - Defense);
+        currentHp -= hitDamage;
+        if (currentHp <= 0) Die();
     }
 
     public void Heal(float amount)
     {
-        if (isDead || amount <= 0f)
-            return;
+        if (isDead || amount <= 0f) return;
         currentHp = Mathf.Min(currentHp + amount, sc[StatType.HP]);
     }
 
@@ -253,14 +251,17 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
         idleState = new HeroIdleState(this, stateMachine);
         deathState = new HeroDeathState(this, stateMachine);
         stateMachine.Initialize(idleState);
-        //attackRangedTiles = board.GetTiles(origin, range);
+
         sc.AddStat(StatType.HP, statData.maxHp);
         sc.AddStat(StatType.ATK, statData.attackPower);
         sc.AddStat(StatType.DEF, statData.defence);
         sc.AddStat(StatType.BLK, statData.blockCount);
         sc.AddStat(StatType.AS, statData.attackSpeed);
         currentHp = sc[StatType.HP];
-        OnResur += StartAuras;
+
+        traits = GetComponents<HeroTrait>();
+        activeSkill = GetComponent<HeroActiveSkill>();
+
         EnsureClickCollider();
     }
 
@@ -286,14 +287,20 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
     {
         SetCurrentTile();
         ApplyStatUpgradeBonus();
-        //테스트용 코드
         if (gameManager != null)
         {
             gameManager.ChangeToDay += Resurrection;
             gameManager.ChangeToDay += ResetSkillCooldown;
         }
-        //끝
-        StartAuras();
+        SpawnAuraZones();
+    }
+
+    // GroundZoneEffect(duration<=0)는 소유자가 죽으면 스스로 감지하고 풀에 반납되므로, 부활 시엔
+    // 그냥 다시 스폰하면 된다 — 예전의 _auraCts 취소/재시작 관리가 필요 없어졌다.
+    private void SpawnAuraZones()
+    {
+        foreach (GameObject prefab in auraZonePrefabs)
+            SpawnGroundZone(prefab, transform.position);
     }
 
     private void ApplyStatUpgradeBonus()
@@ -307,43 +314,73 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
         sc.AddModifier(StatType.DEF, new Modifier(ModifierType.Flat, bonus, 0f, StatLayer.Equip, this));
     }
 
-    //테스트용 코드
     protected virtual void OnDestroy()
     {
-
         if (gameManager != null)
         {
             gameManager.ChangeToDay -= Resurrection;
             gameManager.ChangeToDay -= ResetSkillCooldown;
         }
-        OnResur -= StartAuras;
-        _auraCts?.Cancel();
-        _auraCts?.Dispose();
-        _skillCts?.Cancel();
-        _skillCts?.Dispose();
-        _skillCts = null;
+        skillCts?.Cancel();
+        skillCts?.Dispose();
+        skillCts = null;
     }
-    //끝
 
-    // 영웅 주위에 항상 존재하는 오라형 장판을 (재)시작한다. 사망 시 각 장판 루프가 스스로 멈추고,
-    // 부활(OnResur)하면 여기가 다시 불려 새 토큰으로 재시작한다.
-    private void StartAuras()
+    // ---- 트레잇 훅 팬아웃 — HeroAttackRunner/GroundZoneEffect/AttackDamageUtil이 호출한다 ----
+    public void NotifyAttackPerformed(AttackDataSO data)
     {
-        _auraCts?.Cancel();
-        _auraCts?.Dispose();
-        _auraCts = new CancellationTokenSource();
-        foreach (GroundZoneDataSO zone in auraZones)
-        {
-            if (zone == null) continue;
-            // AttackDamageUtil.SpawnGroundZone은 항상 keepAlive=true를 넘겨 임시 장판용이므로,
-            // 사망 시 멈춰야 하는 오라는 GroundZoneRunner.Run을 직접 호출해 !IsDead를 넘긴다.
-            GroundZoneRunner.Run(transform.position, zone, GetEnemyObjectsInRange, GetAllyObjectsInRange, sc, buffManager,
-                SpawnEffect, SpawnPersistentEffect, DespawnEffect, () => !IsDead, _auraCts.Token).Forget();
-        }
+        for (int i = 0; i < traits.Length; i++) traits[i]?.OnAttackPerformed(data);
     }
 
-    // 밤 전투 중 HeroSkillCastController에서만 호출. targetTile은 호출자가 이미 board 소속까지
-    // 검증해 넘긴다(멀티 모듈에서 같은 좌표의 다른 보드 타일과 혼동 방지).
+    public void NotifyHit(GameObject hitTarget, int amount, bool isCrit)
+    {
+        for (int i = 0; i < traits.Length; i++) traits[i]?.OnHit(hitTarget, amount, isCrit);
+        if (hitTarget != null && hitTarget.GetComponentInParent<IDamageAble>() is IDamageAble d && d.Hp <= 0f)
+            NotifyKill(hitTarget);
+    }
+
+    public void NotifyKill(GameObject killedTarget)
+    {
+        for (int i = 0; i < traits.Length; i++) traits[i]?.OnKill(killedTarget);
+    }
+
+    // ---- 다음 공격 오버라이드 (트레잇의 N타 강공 / 확률 재발동) ----
+    private AttackDataSO queuedOverride;
+    private bool queuedOverrideIsProc;
+    public AttackDataSO LastUsedAttackData { get; private set; }
+    public bool LastAttackWasProc { get; private set; }
+
+    public void QueueNextAttackOverride(AttackDataSO data, bool isProc = false)
+    {
+        queuedOverride = data;
+        queuedOverrideIsProc = isProc;
+    }
+
+    public AttackDataSO ConsumeAttackOverride(out bool isProc)
+    {
+        isProc = queuedOverrideIsProc;
+        AttackDataSO data = queuedOverride;
+        queuedOverride = null;
+        queuedOverrideIsProc = false;
+        return data;
+    }
+
+    public void SetLastUsedAttack(AttackDataSO data, bool isProc)
+    {
+        LastUsedAttackData = data;
+        LastAttackWasProc = isProc;
+    }
+
+    // AttackStanceSkill처럼 지속시간 동안 basePattern[0]을 바꿔치기하는 스킬용.
+    public AttackDataSO SwapPrimaryAttackData(AttackDataSO next)
+    {
+        if (basePattern.Count == 0) return null;
+        AttackDataSO previous = basePattern[0];
+        basePattern[0] = next != null ? next : previous;
+        return previous;
+    }
+
+    // ---- 액티브 스킬 (HeroSkillCastController가 플레이어 클릭을 받아 호출) ----
     public bool TryUseActiveSkill(Tile targetTile)
     {
         if (activeSkill == null || isDead || targetTile == null || targetTile.Board != board)
@@ -358,38 +395,35 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
         }
         // AnywhereOnBoard: 위에서 이미 targetTile.Board == board를 확인했으므로 거리 제한 없이 통과.
 
-        if (activeSkill.buffList is { Count: > 0 })
-            AttackDamageUtil.ApplySelfBuffs(this, activeSkill.buffList, buffManager, activeSkill);
+        skillCooldownRemaining = activeSkill.cooldown;
 
-        if (activeSkill.groundZone != null)
-        {
-            _skillCts ??= new CancellationTokenSource();
-            AttackDamageUtil.SpawnGroundZone(activeSkill.groundZone, targetTile.WorldTop,
-                GetEnemyObjectsInRange, GetAllyObjectsInRange, sc, buffManager,
-                SpawnEffect, SpawnPersistentEffect, DespawnEffect, _skillCts.Token);
-        }
+        if (activeSkill.blocksBasicAttack)
+            stateMachine.ChangeState(new HeroSkillState(this, stateMachine, targetTile));
+        else
+            RunActiveSkillUnblocked(targetTile).Forget();
 
-        if (activeSkill.instantDamagePer > 0f)
-        {
-            int dmg = Mathf.RoundToInt(sc[StatType.ATK] * activeSkill.instantDamagePer);
-            foreach (GameObject enemy in GetEnemyObjectsInRange(targetTile.WorldTop, 0, RangeShape.Diamond))
-                if (enemy.GetComponentInParent<IDamageAble>() is IDamageAble d)
-                    d.TakeDamage(dmg);
-            if (activeSkill.instantHitEffect != null)
-                SpawnEffect(activeSkill.instantHitEffect, targetTile.WorldTop, Quaternion.identity, activeSkill.instantHitEffectLifetime);
-        }
-
-        _skillCooldownRemaining = activeSkill.cooldown;
         return true;
     }
 
-    private void ResetSkillCooldown() => _skillCooldownRemaining = 0f;
+    private async UniTask RunActiveSkillUnblocked(Tile targetTile)
+    {
+        skillCts?.Cancel();
+        skillCts?.Dispose();
+        skillCts = new CancellationTokenSource();
+        try { await activeSkill.Execute(targetTile, skillCts.Token); }
+        catch (OperationCanceledException) { }
+    }
+
+    private void ResetSkillCooldown() => skillCooldownRemaining = 0f;
 
     protected virtual void Update()
     {
         stateMachine.CurrentState.Update();
-        if (_skillCooldownRemaining > 0f)
-            _skillCooldownRemaining -= Time.deltaTime;
+        if (skillCooldownRemaining > 0f) skillCooldownRemaining -= Time.deltaTime;
+
+        for (int i = 0; i < traits.Length; i++)
+            traits[i]?.OnPassiveTick(Time.deltaTime);
+
         if (target != null)
             CheckTargetStillInRange();
         if (target == null)
@@ -429,100 +463,38 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
         return eb != null && (eb.Attribute & unattackableTarget) == 0;
     }
 
-    public List<IDamageAble> GetEnemiesInRange(Vector3 originWorld, int range, RangeShape shape = RangeShape.Diamond)
+    // Enemy = 필터 없음(AOE 스플래시용 — 의도적으로 unattackableTarget을 타지 않음).
+    // TargetableEnemy = unattackableTarget 필터 적용(체인/멀티샷처럼 "특정 적을 타겟으로 선정"할 때).
+    // Ally = 타일 점유자(OccupantObject) 기준 아군 조회. 영웅은 EnemyRegistry 같은 전역 리스트가
+    // 없고 이미 타일당 1개 점유자 모델을 쓰고 있으므로 그 점유자를 훑는다(힐/피흡/힐 장판/오라용).
+    // List + "이미 본 것" HashSet을 함께 써서 중복은 제거하되 타일 순회 순서는 유지한다 —
+    // AttackTargetSelector.SelectTargets가 결과 리스트의 순서(pool[i % poolSize])에 의존하므로
+    // HashSet 하나로만 중복 제거하면(순서 미보장) 멀티샷 대상 선정이 매 프레임 흔들릴 수 있다.
+    public List<GameObject> GetObjectsInRange(Vector3 originWorld, int range, RangeShape shape, RangeQueryAffinity affinity = RangeQueryAffinity.Enemy)
     {
-        var found = new HashSet<IDamageAble>();
-        foreach (GameObject enemy in GetEnemyObjectsInRange(originWorld, range, shape))
-        {
-            if (enemy.GetComponentInParent<IDamageAble>() is IDamageAble damageable)
-                found.Add(damageable);
-        }
-
-        return new List<IDamageAble>(found);
-    }
-
-    public List<Transform> GetEnemyTransformsInRange(Vector3 originWorld, int range, RangeShape shape = RangeShape.Diamond)
-    {
-        var found = new HashSet<Transform>();
-        foreach (GameObject enemy in GetEnemyObjectsInRange(originWorld, range, shape))
-            found.Add(enemy.transform);
-
-        return new List<Transform>(found);
-    }
-
-    public List<GameObject> GetEnemyObjectsInRange(Vector3 originWorld, int range, RangeShape shape = RangeShape.Diamond)
-    {
-        var found = new List<GameObject>();
         Vector2Int originCell = board.WorldToCell(originWorld);
+        var found = new List<GameObject>();
+        var seen = new HashSet<GameObject>();
 
-        foreach (Tile tile in TileShapeQuery.GetTiles(board, originCell, range, shape))
+        if (affinity == RangeQueryAffinity.Ally)
         {
-            foreach (GameObject enemy in tile.Enemies)
+            foreach (Tile tile in TileShapeQuery.GetTiles(board, originCell, range, shape))
             {
-                if (enemy == null) continue;
-                found.Add(enemy);
+                GameObject occupant = tile.OccupantObject;
+                if (occupant != null && occupant.GetComponent<Hero>() is Hero ally && !ally.IsDead && seen.Add(occupant))
+                    found.Add(occupant);
             }
+            return found;
         }
-
-        return found;
-    }
-
-    // GetEnemyObjectsInRange와 동일한 범위 조회지만, 적이 아니라 아군(영웅)을 찾는다.
-    // 영웅은 EnemyRegistry 같은 전역 리스트가 없고 이미 타일당 1개 점유자(OccupantObject) 모델을
-    // 쓰고 있으므로, 그 점유자를 훑는 방식으로 조회한다(힐/피흡/힐 장판에서 아군 조회용).
-    public List<GameObject> GetAllyObjectsInRange(Vector3 originWorld, int range, RangeShape shape = RangeShape.Diamond)
-    {
-        var found = new List<GameObject>();
-        Vector2Int originCell = board.WorldToCell(originWorld);
 
         foreach (Tile tile in TileShapeQuery.GetTiles(board, originCell, range, shape))
-        {
-            GameObject occupant = tile.OccupantObject;
-            if (occupant == null) continue;
-            if (occupant.GetComponent<Hero>() is Hero ally && !ally.IsDead)
-                found.Add(occupant);
-        }
+            foreach (GameObject enemy in tile.Enemies)
+                if (enemy != null && (affinity == RangeQueryAffinity.Enemy || IsTargetable(enemy)) && seen.Add(enemy))
+                    found.Add(enemy);
 
         return found;
     }
 
-    // 아래 3개는 GetEnemiesInRange/GetEnemyTransformsInRange/GetEnemyObjectsInRange와 동일하되,
-    // unattackableTarget 필터를 적용한다. 체인/다수 공격처럼 "특정 적을 타겟으로 선정"하는 로직에서 써서
-    // 공격 불가 대상(예: 원거리 전용 대상인 Fly, 저지 전엔 못 때리는 Cloaking)이 뽑히지 않게 한다.
-    // 범위(AOE) 스플래시는 의도적으로 이 필터를 타지 않는 기존 메서드를 그대로 쓴다.
-    public List<IDamageAble> GetTargetableEnemiesInRange(Vector3 originWorld, int range, RangeShape shape = RangeShape.Diamond)
-    {
-        var found = new HashSet<IDamageAble>();
-        foreach (GameObject enemy in GetTargetableEnemyObjectsInRange(originWorld, range, shape))
-        {
-            if (enemy.GetComponentInParent<IDamageAble>() is IDamageAble damageable)
-                found.Add(damageable);
-        }
-
-        return new List<IDamageAble>(found);
-    }
-
-    public List<Transform> GetTargetableEnemyTransformsInRange(Vector3 originWorld, int range, RangeShape shape = RangeShape.Diamond)
-    {
-        var found = new HashSet<Transform>();
-        foreach (GameObject enemy in GetTargetableEnemyObjectsInRange(originWorld, range, shape))
-            found.Add(enemy.transform);
-
-        return new List<Transform>(found);
-    }
-
-    public List<GameObject> GetTargetableEnemyObjectsInRange(Vector3 originWorld, int range, RangeShape shape = RangeShape.Diamond)
-    {
-        var found = new List<GameObject>();
-        foreach (GameObject enemy in GetEnemyObjectsInRange(originWorld, range, shape))
-        {
-            if (IsTargetable(enemy)) found.Add(enemy);
-        }
-
-        return found;
-    }
-
-    // originWorld에서 towardWorld 방향으로 4방향 스냅한 직선을 length칸 조회해 적을 모은다.
     public List<IDamageAble> GetEnemiesInLine(Vector3 originWorld, Vector3 towardWorld, int length)
     {
         Vector2Int originCell = board.WorldToCell(originWorld);
@@ -530,23 +502,16 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
 
         var found = new HashSet<IDamageAble>();
 
-        // 근접 저지 구조상 적이 공격자 자신의 칸으로 들어와 저지되므로, origin 칸의 적도 포함한다.
         if (board.TryGetCell(originCell, out Tile originTile))
-        {
             foreach (GameObject enemy in originTile.Enemies)
-            {
                 if (enemy != null && enemy.GetComponentInParent<IDamageAble>() is IDamageAble d)
                     found.Add(d);
-            }
-        }
+
         foreach (Tile tile in TileShapeQuery.GetLineTiles(board, originCell, dir, length))
-        {
             foreach (GameObject enemy in tile.Enemies)
-            {
                 if (enemy != null && enemy.GetComponentInParent<IDamageAble>() is IDamageAble d)
                     found.Add(d);
-            }
-        }
+
         return new List<IDamageAble>(found);
     }
 
@@ -564,34 +529,23 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
     protected virtual void CheckTargetStillInRange()
     {
         foreach (Tile tile in TileShapeQuery.GetTiles(board, origin, range, rangeShape))
-        {
             foreach (GameObject enemy in tile.Enemies)
-            {
                 if (enemy == target)
                     return;
-            }
-        }
+
         target = null;
         context.target = null;
     }
 
-    public void SetBoard(MapBoard board)
-    {
-        this.board = board;
-    }
+    public void SetBoard(MapBoard board) => this.board = board;
 
     public void Resurrection()
     {
         currentHp = sc[StatType.HP];
         isDead = false;
         OnResur?.Invoke();
+        SpawnAuraZones();
     }
-
-    //public async UniTask ResurrectionAfter10s()
-    //{
-    //    await UniTask.Delay(TimeSpan.FromSeconds(10));
-    //    Resurrection();
-    //}
 
     public void SetCurrentTile()
     {
@@ -600,25 +554,18 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
             currentTile = current;
     }
 
-    public void ExchangeAttackDatas(List<AttackDataSO> datas, List<AttackSelectorSO> selectors, List<AttackProcSO> procs)
-    {
-        this.basePattern = datas;
-        this.selectors = selectors;
-        this.procs = procs;
-    }
+    public void ExchangeAttackDatas(List<AttackDataSO> datas) => basePattern = datas;
 
     public void SkillUpgrade()
     {
-        if (skillLevel >= upgradeDatas.Count)
-        {
-            return;
-        }
+        if (skillLevel >= upgradeDatas.Count) return;
         if (resourcesManager.CheckResources(upgradeDatas[skillLevel].Cost))
         {
             resourcesManager.ProductChanged(upgradeDatas[skillLevel].Cost);
             upgradeDatas[skillLevel++].Upgrade(this);
         }
     }
+
     public void StatUpgrade()
     {
         if (resourcesManager.CheckResources(StatUpgradeCost))

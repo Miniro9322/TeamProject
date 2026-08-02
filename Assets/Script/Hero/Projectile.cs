@@ -11,17 +11,16 @@ public struct ProjectileAoEConfig
     public int chainRange;
     public int chainCount;
     public float chainFalloff;
-    public System.Func<Vector3, int, RangeShape, List<IDamageAble>> getEnemiesInRange;
-    public System.Func<Vector3, int, RangeShape, List<GameObject>> getEnemyObjectsInRange;
-    public System.Func<Vector3, int, RangeShape, List<GameObject>> getTargetableEnemyObjectsInRange;
-    public System.Func<Vector3, int, RangeShape, List<GameObject>> getAllyObjectsInRange;
+    public System.Func<Vector3, int, RangeShape, RangeQueryAffinity, List<GameObject>> getObjectsInRange;
     public System.Action<float> healSelf;
     public List<BuffEffect> buffList;
     public BuffManager buffManager;
     public object source; // 보통 발사한 AttackDataSO 인스턴스
-    public GroundZoneDataSO groundZone;
+    public GameObject groundZonePrefab;
+    public System.Action<GameObject, Vector3> spawnGroundZone;
+    public System.Action<GameObject, int, bool> onHit;
     public StatContainer attackerStats;
-    public Vector3 casterPos; // 피흡/아군 힐 대상 조회 중심 — 착탄 지점(transform.position)이 아니라 발사자 기준이어야 한다.
+    public Vector3 casterPos;
     public System.Func<GameObject, Vector3, Quaternion, float, GameObject> spawnEffect;
     public System.Func<GameObject, Vector3, Quaternion, GameObject> spawnPersistentEffect;
     public System.Action<GameObject, GameObject> despawnEffect;
@@ -55,7 +54,6 @@ public class Projectile : MonoBehaviour
             transform.rotation = look;
     }
 
-    // 관통(Line) 화살: 피해는 발사 시점에 이미 적용됐으므로, 명중 판정 없이 destination까지 날아가 사라진다.
     public void LaunchVisualOnly(Vector3 destination, IObjectPool<Projectile> pool)
     {
         this.destination = destination;
@@ -92,7 +90,6 @@ public class Projectile : MonoBehaviour
         transform.position += transform.forward * speed * Time.deltaTime;
     }
 
-    // 방향이 유효할 때만 회전 산출. 위쪽 축과 거의 평행하면 대체 up으로 LookRotation 특이점 회피.
     private static bool TryLook(Vector3 dir, out Quaternion rot)
     {
         rot = Quaternion.identity;
@@ -109,7 +106,8 @@ public class Projectile : MonoBehaviour
 
         if (cfg.attackType == AttackType.Area && cfg.areaShape == AreaShape.Chain)
         {
-            List<GameObject> hits = ChainResolver.Resolve(target.gameObject, damage, cfg.chainRange, cfg.chainCount, cfg.chainFalloff, cfg.getTargetableEnemyObjectsInRange);
+            List<GameObject> hits = ChainResolver.Resolve(target.gameObject, damage, cfg.chainRange, cfg.chainCount, cfg.chainFalloff,
+                (p, r, s) => cfg.getObjectsInRange(p, r, s, RangeQueryAffinity.TargetableEnemy), cfg.onHit);
             foreach (GameObject go in hits)
             {
                 AttackDamageUtil.ApplyTargetDebuffs(go.GetComponentInParent<IUnit>(), cfg.buffList, cfg.buffManager, cfg.source);
@@ -119,42 +117,42 @@ public class Projectile : MonoBehaviour
         }
         else if (cfg.attackType == AttackType.Area)
         {
-            foreach (IDamageAble enemy in cfg.getEnemiesInRange(transform.position, cfg.areaRange, aoeShape))
+            foreach (GameObject go in cfg.getObjectsInRange(transform.position, cfg.areaRange, aoeShape, RangeQueryAffinity.Enemy))
             {
+                if (go.GetComponentInParent<IDamageAble>() is not IDamageAble enemy) continue;
                 enemy.TakeDamage((int)damage);
+                cfg.onHit?.Invoke(go, (int)damage, false);
                 AttackDamageUtil.ApplyTargetDebuffs(enemy as IUnit, cfg.buffList, cfg.buffManager, cfg.source);
                 ApplyHealOptions(damage);
             }
             SpawnHitEffect();
-            //SplashHighlighter.Instance?.Flash(transform.position, cfg.areaRange, aoeShape);
         }
         else if (target != null && target.GetComponentInParent<IDamageAble>() is IDamageAble damageable)
         {
             damageable.TakeDamage((int)damage);
+            cfg.onHit?.Invoke(target.gameObject, (int)damage, false);
             AttackDamageUtil.ApplyTargetDebuffs(target.GetComponentInParent<IUnit>(), cfg.buffList, cfg.buffManager, cfg.source);
             ApplyHealOptions(damage);
             SpawnHitEffect();
         }
 
-        AttackDamageUtil.SpawnGroundZone(cfg.groundZone, transform.position,
-            cfg.getEnemyObjectsInRange, cfg.getAllyObjectsInRange, cfg.attackerStats, cfg.buffManager,
-            cfg.spawnEffect, cfg.spawnPersistentEffect, cfg.despawnEffect, CancellationToken.None);
+        if (cfg.groundZonePrefab != null)
+            cfg.spawnGroundZone?.Invoke(cfg.groundZonePrefab, transform.position);
 
         Return();
     }
 
-    // cfg.source는 발사한 AttackDataSO 인스턴스 — 그걸로 착탄 지점(transform.position)의 hitEffect를 스폰한다.
     private void SpawnHitEffect()
     {
         if (cfg.source is AttackDataSO data)
             cfg.spawnEffect(data.hitEffect, transform.position, Quaternion.identity, data.hitEffectLifetime);
     }
 
-    // cfg.source는 발사한 AttackDataSO 인스턴스 — 그걸로 피흡/아군 힐 옵션을 조회해 적용한다.
     private void ApplyHealOptions(float damageDealt)
     {
         if (cfg.source is AttackDataSO data)
-            AttackDamageUtil.ApplyHealOptions(data, cfg.casterPos, cfg.healSelf, cfg.getAllyObjectsInRange, damageDealt, cfg.attackerStats[StatType.ATK]);
+            AttackDamageUtil.ApplyHealOptions(data, cfg.casterPos, cfg.healSelf,
+                (p, r, s) => cfg.getObjectsInRange(p, r, s, RangeQueryAffinity.Ally), damageDealt, cfg.attackerStats[StatType.ATK]);
     }
 
     private void Return()

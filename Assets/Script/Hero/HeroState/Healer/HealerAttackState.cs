@@ -17,7 +17,7 @@ public class HealerAttackState : HeroAttackState
     public override void Enter()
     {
         base.Enter();
-        runner ??= new HeroAttackRunner(healer.BasePattern, healer.Selectors, healer.Procs, new HealAttackExecutor());
+        runner ??= new HeroAttackRunner(healer, new HealAttackExecutor());
 
         float interval = healer.SC[StatType.AS] > 0f ? 1f / healer.SC[StatType.AS] : 1f;
         float elapsed = Time.time - lastAttackTime;

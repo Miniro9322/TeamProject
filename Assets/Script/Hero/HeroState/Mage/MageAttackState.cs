@@ -17,7 +17,7 @@ public class MageAttackState : HeroAttackState
     public override void Enter()
     {
         base.Enter();
-        runner = new HeroAttackRunner(mage.BasePattern, mage.Selectors, mage.Procs, new RangedAttackExecutor());
+        runner ??= new HeroAttackRunner(mage, new RangedAttackExecutor());
 
         float interval = mage.SC[StatType.AS] > 0f ? 1f / mage.SC[StatType.AS] : 1f;
         float elapsed = Time.time - lastAttackTime;
