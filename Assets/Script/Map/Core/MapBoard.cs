@@ -83,28 +83,23 @@ public class MapBoard : MonoBehaviour
     // 장식이 아닌 타일들을 감싸는 직사각형. 장식 줄이 사방 한 줄이라 전체보다 한 칸씩 안쪽으로 들어온다.
     private RectInt InnerRect()
     {
-        int minCol = int.MaxValue;
-        int minRow = int.MaxValue;
-        int maxCol = int.MinValue;
-        int maxRow = int.MinValue;
+        Vector2Int min = new(int.MaxValue, int.MaxValue);
+        Vector2Int max = new(int.MinValue, int.MinValue);
 
         foreach (Tile tile in _cells.Values)
         {
             if (tile.IsSpecial) { continue; }
 
-            Vector2Int coord = tile.Coord;
-            if (coord.x < minCol) { minCol = coord.x; }
-            if (coord.x > maxCol) { maxCol = coord.x; }
-            if (coord.y < minRow) { minRow = coord.y; }
-            if (coord.y > maxRow) { maxRow = coord.y; }
+            min = Vector2Int.Min(min, tile.Coord);
+            max = Vector2Int.Max(max, tile.Coord);
         }
 
-        if (maxCol < minCol)
+        if (max.x < min.x)
         {
             return new RectInt();   // 장식뿐인 판 — 맞출 기준이 없으니 배치 판정에 맡긴다
         }
 
-        return new RectInt(minCol, minRow, maxCol - minCol + 1, maxRow - minRow + 1);
+        return new RectInt(min.x, min.y, max.x - min.x + 1, max.y - min.y + 1);
     }
 
     // ---- 경로 ----
