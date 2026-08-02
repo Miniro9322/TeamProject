@@ -2216,6 +2216,7 @@ MonoBehaviour:
   hidePanal: {fileID: 1302357297}
   infoOpenButton: {fileID: 584979853}
   infoCloseButton: {fileID: 1251147143}
+  archiveList: {fileID: 0}
 --- !u!4 &250356135
 Transform:
   m_ObjectHideFlags: 0
@@ -2604,6 +2605,7 @@ GameObject:
   - component: {fileID: 314587628}
   - component: {fileID: 314587631}
   - component: {fileID: 314587632}
+  - component: {fileID: 314587633}
   m_Layer: 0
   m_Name: TileSystem
   m_TagString: Untagged
@@ -2706,73 +2708,61 @@ MonoBehaviour:
     icon: {fileID: 21300000, guid: 46fd8fb44a47e52448bc7a4020fb1674, type: 3}
     placedIcon: {fileID: 21300000, guid: c20a970509f45d2408899087978f2753, type: 3}
     kind: 1
-    attackRange: 1
   - label: Archer
     prefab: {fileID: 9004755700449656008, guid: ca79c758b242b1f43b792e4c008ee16f, type: 3}
     icon: {fileID: 21300000, guid: 4d7007f4c3adf4b47bf765f6f552bd05, type: 3}
     placedIcon: {fileID: 21300000, guid: f40b145fd0e58e14b974983688fc9049, type: 3}
     kind: 2
-    attackRange: 3
   - label: DualSwordMan
     prefab: {fileID: 1125355577782864148, guid: fc90ec49c4098fc4e8de8d2bbfb448ec, type: 3}
     icon: {fileID: 21300000, guid: 3c9c24dffcda3694d9560d971406ef4a, type: 3}
     placedIcon: {fileID: 21300000, guid: e0b4a8d1d6f99354c934b0f543b674be, type: 3}
     kind: 1
-    attackRange: 1
   - label: Mage
     prefab: {fileID: 5127629013743316858, guid: bfa8d4dc241d67e40a7c739e98e17e95, type: 3}
     icon: {fileID: 21300000, guid: d828e720dc30d654486cd5796258c555, type: 3}
     placedIcon: {fileID: 21300000, guid: 7894a64ea4d5e43438d3d57b99f1a2a4, type: 3}
     kind: 2
-    attackRange: 0
   - label: THS
     prefab: {fileID: 2762850617625843917, guid: 8e9d3104d46556d4880d708398f8cc6e, type: 3}
     icon: {fileID: 21300000, guid: 51f8a87e87da2b748ae7a8d142cc9f99, type: 3}
     placedIcon: {fileID: 21300000, guid: 601dc7ee472926748b6f4b8c44cb4114, type: 3}
     kind: 1
-    attackRange: 0
   - label: SpearMan
     prefab: {fileID: 6360810507945036553, guid: 1c18d546630c46e4a84b6242d3953620, type: 3}
     icon: {fileID: 21300000, guid: 941635aa67582d8418528f6c488df213, type: 3}
     placedIcon: {fileID: 21300000, guid: e78d7ed780d73ab4daca353ee4e56577, type: 3}
     kind: 1
-    attackRange: 2
   - label: Food
     prefab: {fileID: 2836901075419073204, guid: 7aca0e29ff41f3e4eaff836ab1cee678, type: 3}
     icon: {fileID: 0}
     placedIcon: {fileID: 0}
     kind: 4
-    attackRange: 0
   - label: Gold
     prefab: {fileID: 2836901075419073204, guid: c4c845130f3f8fb439197ae189ce7f81, type: 3}
     icon: {fileID: 0}
     placedIcon: {fileID: 0}
     kind: 4
-    attackRange: 0
   - label: Wood
     prefab: {fileID: 2836901075419073204, guid: 88748e8576a48a54da60fc7012a7ab0d, type: 3}
     icon: {fileID: 0}
     placedIcon: {fileID: 0}
     kind: 4
-    attackRange: 0
   - label: Iron
     prefab: {fileID: 2836901075419073204, guid: e0218d434b7cf224990e3db1f167f002, type: 3}
     icon: {fileID: 0}
     placedIcon: {fileID: 0}
     kind: 4
-    attackRange: 0
   - label: Stone
     prefab: {fileID: 2836901075419073204, guid: 31f414d054b70134682c7c7d173ebfd8, type: 3}
     icon: {fileID: 0}
     placedIcon: {fileID: 0}
     kind: 4
-    attackRange: 0
   - label: House
     prefab: {fileID: 7406577774126851646, guid: 7961d12a84711644ca1c8feaea41650e, type: 3}
     icon: {fileID: 0}
     placedIcon: {fileID: 0}
     kind: 3
-    attackRange: 0
 --- !u!114 &314587630
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2800,7 +2790,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MapCommand
   input: {fileID: 314587630}
   palette: {fileID: 314587629}
-  placeYOffset: 0
 --- !u!114 &314587632
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2821,7 +2810,22 @@ MonoBehaviour:
   expand: {fileID: 937669907}
   dragPixels: 8
   placeYOffset: 0
+  ghostAlpha: 0.45
   tilePaintView: {fileID: 1235437630}
+  rangeInput: {fileID: 314587633}
+--- !u!114 &314587633
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 314587622}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 954aeb9f9b8829342bdcd0d5e3b9fb97, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RangeInput
+  input: {fileID: 314587630}
 --- !u!1 &321320276
 GameObject:
   m_ObjectHideFlags: 0
@@ -5724,6 +5728,7 @@ MonoBehaviour:
   maxDistance: 120
   fillH: 0.9
   fillV: 0.9
+  smoothTime: 0.12
 --- !u!114 &755029711
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -12290,6 +12295,7 @@ MonoBehaviour:
   spawnPoint: {fileID: 7456569907757309849, guid: bea80f4b41e53ed419d66ed07388c193, type: 3}
   infoTextPrefab: {fileID: 7556058626658315482, guid: 4e2497c728adeb14d84e5b1905c18242, type: 3}
   infoTextOffset: {x: 2, y: 4, z: 0}
+  stageInfoSortingOrder: -10
   cam: {fileID: 0}
 --- !u!4 &1403437580
 Transform:
@@ -17286,6 +17292,7 @@ MonoBehaviour:
   goldText: {fileID: 1957376806}
   foodText: {fileID: 1619644523}
   citizenText: {fileID: 86593441}
+  LifeText: {fileID: 0}
 --- !u!114 &2013057928
 MonoBehaviour:
   m_ObjectHideFlags: 0

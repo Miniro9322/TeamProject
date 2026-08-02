@@ -20,7 +20,7 @@ public class EnemySoundManager : MonoBehaviour
     [SerializeField] private string masterParam = "MasterVolume";
     [SerializeField] private string sfxParam = "SfxVolume";
     [SerializeField] private string bgmParam = "BgmVolume";
-    [SerializeField] private string systemParam = "SystemVolume";
+    [SerializeField] private string systemParam = "System";
 
 
     [Range(0f, 1f)] public float masterVolume = 1f;

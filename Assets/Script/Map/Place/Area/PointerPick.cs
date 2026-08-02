@@ -45,6 +45,13 @@ public class PointerPick
 
     private Tile Under(Ray ray)
     {
+        // 격자 평면 수학만으로는 캐릭터 모델 위(발밑 타일 바깥으로 튀어나온 부분)를 클릭해도
+        // 못 잡는다 — 영웅 콜라이더를 먼저 물리 레이캐스트로 검사해 몸통 직접 클릭을 우선 처리.
+        if (Physics.Raycast(ray, out RaycastHit hit) && hit.collider.GetComponentInParent<Hero>() is Hero hero && hero.CurrentTile != null)
+        {
+            return hero.CurrentTile;
+        }
+
         Tile best = null;
         float bestSqr = float.MaxValue;
         foreach (MapBoard board in _boards)

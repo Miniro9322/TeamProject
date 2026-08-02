@@ -48,6 +48,7 @@ public class StageInfoView : MonoBehaviour
     private bool pointerOverTooltip;
     private bool hidePending;
     private float hideTimer;
+    private float zoomScale = 1f;            // StageInfoFollow가 넣어주는 줌 배율(1 = 기준 거리)
 
     void Awake()
     {
@@ -116,6 +117,11 @@ public class StageInfoView : MonoBehaviour
         if (shownRow == null || tooltip == null) return;
         PlaceTooltip(shownRow, false);
     }
+
+    // 줌에 따라 패널이 커지면 툴팁도 같이 커진다. 그런데 tooltipOffset은 화면 픽셀 상수라
+    // 그대로 두면 확대할수록 행과의 간격이 상대적으로 좁아져 툴팁이 행 위로 올라탄다.
+    // StageInfoFollow가 패널 크기를 바꿀 때마다 같은 배율을 알려준다.
+    public void SetZoomScale(float scale) => zoomScale = scale;
 
     void OnEnable()
     {
@@ -283,7 +289,7 @@ public class StageInfoView : MonoBehaviour
         float maxX = Screen.width - screenMargin;
         float maxY = Screen.height - screenMargin;
 
-        t.position = row.transform.position + tooltipOffset;
+        t.position = row.transform.position + tooltipOffset * zoomScale;
         if (!MeasureTooltip()) return;   // 잴 게 없으면 그대로 둔다
 
         // 삐져나간 만큼만 이동. 가장자리에 닿을 때까지는 offset 위치 그대로 따라간다.
