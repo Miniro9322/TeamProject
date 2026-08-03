@@ -4,7 +4,7 @@ using UnityEngine;
 public class LaneBuilder : ILaneBuilder
 {
     // 모든 스폰을 좌표순으로 정렬하고 스폰마다 독립된 레인을 만듭니다.
-    public IReadOnlyList<LaneData> BuildLanes(LaneInput input)
+    public IReadOnlyList<LaneData> BuildLanes(LaneInputData input)
     {
         var lanes = new List<LaneData>();
         var spawns = new List<Tile>(input.Spawns);
@@ -21,7 +21,7 @@ public class LaneBuilder : ILaneBuilder
     }
 
     // 스폰 하나에서 도달 가능한 코어까지의 최단 레인을 계산합니다.
-    private static LaneData BuildLane(LaneInput input, Tile spawn, HashSet<Tile> cores)
+    private static LaneData BuildLane(LaneInputData input, Tile spawn, HashSet<Tile> cores)
     {
         if (cores.Count == 0)
         {

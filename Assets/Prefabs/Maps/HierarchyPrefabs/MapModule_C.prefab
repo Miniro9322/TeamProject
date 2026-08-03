@@ -47963,6 +47963,7 @@ MonoBehaviour:
   region: 3
   Enemycount: 12
   text: {fileID: 0}
+  infoView: {fileID: 0}
   bossSpawnDelay: 10
   enemyLanes: {fileID: 0}
   minActivePortals: 1
@@ -47997,7 +47998,7 @@ MonoBehaviour:
   moveSpeed: 100
   trailLift: 0.15
   loopGap: 1.2
-  autoPlay: 1
+  isAutoPlay: 1
 --- !u!114 &1193967962759058766
 MonoBehaviour:
   m_ObjectHideFlags: 0

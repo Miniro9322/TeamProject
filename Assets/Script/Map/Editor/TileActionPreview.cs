@@ -155,7 +155,7 @@ public static class TileActionPreview
         return $"{Word(top.State.Terrain)} 한 겹을 걷어냅니다 ({layers.Count}겹 → {layers.Count - 1}겹)";
     }
 
-    // 스왑이 실제로 할 일. TileSwap.Apply의 분기와 같은 순서로 판단한다.
+    // 스왑이 실제로 할 일. TileSwap.Apply의 분기와 같은 순서로 판단하고, 벽 판단은 그쪽 함수에 물어본다.
     private static string SwapWord(Grid module, Vector2Int coord, TerrainType want, GameObject prefab)
     {
         List<Tile> layers = TileSwap.Stack(module, coord);
@@ -175,30 +175,64 @@ public static class TileActionPreview
             }
 
             return $"{Word(top.State.Terrain)} → 고지 · 위에 판을 얹습니다 " +
-                   $"({layers.Count}겹 → {layers.Count + 1}겹, {prefab.name})";
+                   $"({layers.Count}겹 → {layers.Count + 1}겹, {prefab.name})" +
+                   $"{DefaultWord(TerrainType.High)}{SpawnWord(top)}";
         }
 
-        int strip = 0;
-        foreach (Tile layer in layers)
+        if (top.State.Terrain == want)
         {
-            if (layer != bottom && layer.State.Terrain == TerrainType.High)
-            {
-                strip++;
-            }
+            return SkinWord(layers.Count, want, prefab);
         }
 
-        string after = $"{layers.Count}겹 → {layers.Count - strip}겹";
-        if (strip > 0)
+        if (TileSwap.Walled(layers))
         {
-            return $"고지 → {Word(want)} · 판을 걷어내고 밑판을 교체합니다 ({after}, {prefab.name})";
+            return $"{Word(top.State.Terrain)} 겹이 얹혀 있습니다 — 지우기로 먼저 걷으세요 (교체하지 않습니다)";
         }
 
-        if (bottom.State.Terrain == want && layers.Count == 1)
+        if (layers.Count > 1)
         {
-            return $"이미 {Word(want)} — 같은 프리팹으로 다시 깝니다 ({prefab.name})";
+            // 벽이 없다는 것은 위에 얹힌 것이 고지뿐이라는 뜻이다 — 전부 걷으면 밑판 한 겹만 남는다.
+            // 밑판이 이미 그 지형이면 밑판 저작은 손대지 않는다(바뀌는 것은 겹 구조와 실물뿐).
+            string kept = bottom.State.Terrain == want
+                ? " · 밑판의 배치 저작은 그대로"
+                : DefaultWord(want);
+
+            return $"고지 → {Word(want)} · 판을 걷어내고 밑판을 교체합니다 " +
+                   $"({layers.Count}겹 → 1겹, {prefab.name}){kept}";
         }
 
-        return $"{Word(bottom.State.Terrain)} → {Word(want)} · 밑판을 교체합니다 ({prefab.name})";
+        return $"{Word(bottom.State.Terrain)} → {Word(want)} · 밑판을 교체합니다 " +
+               $"({prefab.name}){DefaultWord(want)}";
+    }
+
+    // 지형이 그대로인 교체 = 겉모습만 바꾸기. 데이터가 그대로라는 것을 같이 말한다.
+    private static string SkinWord(int layers, TerrainType want, GameObject prefab)
+    {
+        if (layers == 1)
+        {
+            return $"{Word(want)} 실물을 {prefab.name}으로 갈아끼웁니다 — 지형·배치 저작은 그대로";
+        }
+
+        return $"보이는 {Word(want)} 겹을 {prefab.name}으로 갈아끼웁니다 " +
+               $"({layers}겹 그대로, 지형·배치 저작은 그대로)";
+    }
+
+    // 지형이 바뀌는 칸은 배치 허용이 그 지형 기본으로 다시 깔린다 — 손으로 켜 둔 값이 덮이므로 미리 말한다.
+    private static string DefaultWord(TerrainType terrain)
+    {
+        MapBrush basic = TileTerrainDefault.Of(terrain);
+        if (basic == MapBrush.None)
+        {
+            return " · 배치 허용은 모두 꺼집니다";
+        }
+
+        return $" · {AllowWord(basic)} 배치를 켭니다";
+    }
+
+    // 스폰이 찍힌 칸을 고지로 올리면 표식이 새 판으로 따라 올라간다 — 말없이 옮기면 스폰이 사라진 줄 안다.
+    private static string SpawnWord(Tile top)
+    {
+        return top.isEnemySpawn ? " · 적 스폰 표식도 새 판으로 옮깁니다" : string.Empty;
     }
 
     // 배치 허용 붓. 켜도 지금 지형에선 효과가 없으면 그 자리에서 알린다.

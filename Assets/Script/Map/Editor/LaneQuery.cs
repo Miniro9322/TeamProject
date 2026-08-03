@@ -16,7 +16,7 @@ public static class LaneQuery
     {
         List<Tile> spawns = CollectSpawns(cells);
         List<Tile> cores = CollectCores(cells);
-        var input = new LaneInput(cells, spawns, cores);
+        var input = new LaneInputData(cells, spawns, cores);
         var builder = new LaneBuilder();
         IReadOnlyList<LaneData> built = builder.BuildLanes(input);
         var lanes = new List<LaneData>(built.Count);

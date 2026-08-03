@@ -24,11 +24,9 @@ public partial class Tile : MonoBehaviour
 
     //타일을 점유한 오브젝트
     public GameObject OccupantObject { get; private set; }
-    public int BlockCapacity { get; private set; }
 
     // 내 위에 올라온 적
     private readonly List<GameObject> _enemies = new();
-    private readonly HashSet<GameObject> _rangeCovers = new();
 
     //지금 이 타일 위에 있는 적들(읽기 전용). 없으면 빈 목록.
     public IReadOnlyList<GameObject> Enemies => _enemies;
@@ -36,10 +34,6 @@ public partial class Tile : MonoBehaviour
     /// <summary>이 타일 위에 적이 하나라도 있는가.</summary>
     public bool HasEnemy => _enemies.Count > 0;
     public int EnemyCount => _enemies.Count;
-    public int BlockedCount => Mathf.Min(_enemies.Count, BlockCapacity);
-    public bool IsRangeCovered => _rangeCovers.Count > 0;
-    public int RangeCoverCount => _rangeCovers.Count;
-    public IReadOnlyCollection<GameObject> RangeCovers => _rangeCovers;
 
     public Vector2Int Coord => new(State.Col, State.Row);
     public TerrainType Terrain => State.Terrain;
@@ -58,11 +52,6 @@ public partial class Tile : MonoBehaviour
     /// <summary>적 통행 가능 지형인가. 고지·빈 타일은 막힘, 지상·본진은 통행(설계: 고지=이동 차단).</summary>
     public bool Walkable => State.Terrain is TerrainType.Ground or TerrainType.Core;
 
-    /// <summary>
-    /// 타일 윗면 중앙의 월드 좌표(배치·경로 웨이포인트 기준).
-    /// 높이는 MapBoard.Build가 SetTop으로 채워주는 캐시라 Build 이전에는 0이다 —
-    /// 플레이를 거치지 않는 에디터 도구는 이 값을 읽지 말고 렌더러 바운즈에서 직접 구해야 한다.
-    /// </summary>
     public Vector3 WorldTop => new(transform.position.x, _topY, transform.position.z);
 
     /// <summary>MapBoard가 스캔 시 윗면 높이를 캐시해 준다(WorldTop·배치·경로 기준).</summary>
@@ -82,9 +71,6 @@ public partial class Tile : MonoBehaviour
     {
         OccupantObject = go;
         State.Occupant = kind;
-        BlockCapacity = GetCapacity(go, kind);
-        go.GetComponent<IPlaceAble>().OnBreak += SetBlockCapacity;
-        go.GetComponent<IPlaceAble>().OnResur += SetBlockCapacity;
     }
 
     //배치되어 있는 유닛을 해제 후 반환.
@@ -92,49 +78,25 @@ public partial class Tile : MonoBehaviour
     {
         GameObject go = OccupantObject;
 
-        go.GetComponent<IPlaceAble>().OnBreak -= SetBlockCapacity;
-        go.GetComponent<IPlaceAble>().OnResur -= SetBlockCapacity;
-
         OccupantObject = null;
         State.Occupant = OccupantKind.None;
-        BlockCapacity = 0; //언덕 타일은 점유 개념이 없으므로 근접만 우선 해당.
 
         return go;
     }
 
-    public bool IsBlocked(GameObject enemy)
+    //이 적이 몇 번째로 들어왔는지. 없으면 -1.
+    public int EnemyEnterIndex(GameObject enemy)
     {
-        if (BlockCapacity <= 0 || enemy == null) return false;
-
-        int index = _enemies.IndexOf(enemy);
-        return index >= 0 && index < BlockCapacity;
+        return _enemies.IndexOf(enemy);
     }
 
     //타일에 적 진입 등록
     public void AddEnemy(GameObject enemy)
     {
-        if (enemy != null && !_enemies.Contains(enemy)) _enemies.Add(enemy);
+        if (!_enemies.Contains(enemy)) _enemies.Add(enemy);
     }
 
     //타일에 적 이탈 등록
     public void RemoveEnemy(GameObject enemy) => _enemies.Remove(enemy);
-    public void AddRangeCover(GameObject unit) => _rangeCovers.Add(unit);
-    public void RemoveRangeCover(GameObject unit) => _rangeCovers.Remove(unit);
-    public void ClearRangeCovers() => _rangeCovers.Clear();
-    
-
-    private static int GetCapacity(GameObject go, OccupantKind kind)
-    {
-        if (go == null || kind != OccupantKind.MeleeHero)
-        {
-            return 0;
-        }
-
-        return go.GetComponent<Hero>().BlockCount;
-    }
-
-    private void SetBlockCapacity()
-    {
-        BlockCapacity = OccupantObject.GetComponent<Hero>().BlockCount;
-    }
 }
+    

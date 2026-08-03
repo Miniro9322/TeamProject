@@ -43,7 +43,7 @@ public class EnemyLanes : MonoBehaviour
             return;
         }
 
-        LaneInput input = CreateInput();
+        LaneInputData input = CreateInput();
         IReadOnlyList<LaneData> built = builder.BuildLanes(input);
         ApplyLanes(built);
     }
@@ -105,7 +105,7 @@ public class EnemyLanes : MonoBehaviour
     }
 
     // MapBoard의 셀에서 스폰과 코어를 수집해 LaneInput을 만듭니다.
-    private LaneInput CreateInput()
+    private LaneInputData CreateInput()
     {
         var spawns = new List<Tile>();
         var cores = new List<Tile>();
@@ -115,7 +115,7 @@ public class EnemyLanes : MonoBehaviour
             AddEndpoint(tile, spawns, cores);
         }
 
-        return new LaneInput(board.Cells, spawns, cores);
+        return new LaneInputData(board.Cells, spawns, cores);
     }
 
     // 타일의 역할에 따라 스폰 또는 코어 목록에 추가합니다.
