@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
-
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using VContainer;
@@ -23,6 +23,14 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble
     public Slider healthSlider;
     [Tooltip("체력바가 현재 체력을 따라가는 속도. 클수록 빠르게 붙는다.")]
     private float sliderSpeed = 10f;
+    [Tooltip("체력바 패널에 위에 보일 보스 이름")] //일반 엘리트는 일단 없음(추후 고민)
+    public TMP_Text bossName;
+    [Tooltip("디버프 아이콘이 소환될 부모. GridLayoutGroup이 달린 오브젝트를 꽂는다. 비우면 디버프 아이콘 로직 전체가 no-op.")]
+    public RectTransform debuffIconRoot;
+    [Tooltip("디버프 아이콘 1칸 프리팹. Image 컴포넌트가 있어야 하고, 스프라이트는 debuffIcons에서 종류별로 지정한다.")]
+    public GameObject debuffIconPrefab;
+    [Tooltip("종류별 아이콘 스프라이트. 여기 등록되고 스프라이트가 들어 있는 종류만 표시된다.")]
+    public EnemyDebuffIcon[] debuffIcons;
     private float[] skillTimers;
     private bool[] skillRunning;
     private CancellationTokenSource skillCts;
@@ -127,6 +135,7 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble
     {
         _baseScale = transform.localScale; // 프리팹 원래 스케일 스냅샷(분열 축소 후 복구 기준)
         _bar.Setup(healthSlider, sliderSpeed); // LoadStats(→ApplyData)가 바를 채우므로 그보다 먼저
+        _debuffs.Setup(debuffIconRoot, debuffIconPrefab, debuffIcons); // 아이콘은 디버프가 걸릴 때 풀에서 소환된다
         LoadStats();
         animator = GetComponent<Animator>();
         _move = new EnemyMovement(gameObject, animator, arriveSqr);
@@ -171,6 +180,7 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble
         _cloak.Reset();
         _burrow.Reset();   // 지면 마커를 풀에 반납(안 하면 적에 딸려가 재사용 시 되살아난다)
         _bar.Reset();
+        _debuffs.Reset();  // 소환된 아이콘을 풀에 반납(안 하면 다음 스폰이 이전 개체의 디버프 아이콘을 물고 나온다)
         _move.Pause();
         _move.LeaveBoard(); // 어떤 경로로 사라지든 현재 칸에서 빠진다
         _move.ArrivedAtCore -= HandleArrivedAtCore;
@@ -193,6 +203,11 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble
     private readonly EnemyHealthBar _bar = new();
     // 잠행 연출은 EnemyBurrow가 전담(Burrowed bool·렌더러 on/off·지면 마커). 잠행 몹이 아니면 통째로 no-op.
     private readonly EnemyBurrow _burrow = new();
+    // 체력바 아래 디버프 아이콘은 EnemyDebuffBar가 전담. 아이콘을 안 꽂은 프리팹이면 통째로 no-op.
+    private readonly EnemyDebuffBar _debuffs = new();
+    // 모디파이어가 붙기 전 원본 스탯값. ApplyData가 sc에 넣는 값을 그대로 여기에도 기록한다 —
+    // StatContainer가 base를 되읽는 API를 주지 않으므로(팀원 소유 파일), 디버프 판정 기준을 이쪽에서 들고 있어야 한다.
+    private readonly Dictionary<StatType, float> baseStats = new();
 
     protected virtual void Update()
     {
@@ -209,12 +224,12 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble
     // 빌보드가 한 프레임 밀리지 않는다.
     protected virtual void LateUpdate()
     {
-        // 은신이 걸려 있는 동안은 숨긴다. 안 그러면 체력바가 위치를 알려줘 은신 특성이 무력화된다.
         // Attribute는 UpdateExposedAttribute가 매 프레임 갱신하므로(저지 중이면 Cloaking 비트가 빠짐)
         // "체력바가 보이는 것 == 영웅이 때릴 수 있는 것"이 항상 일치한다.
         // 표시 여부(안 맞았으면 숨김 / 죽을 땐 0까지 깎이는 걸 보여줌)는 EnemyHealthBar가 판단한다.
         bool cloakedNow = (Attribute & EnemyAttribute.Cloaking) != 0;
-        _bar.Tick(Hp, MaxHp, IsDead, cloakedNow);
+        _bar.Tick(Hp, MaxHp, IsDead, cloakedNow,Class);
+        _debuffs.Tick(sc, baseStats, IsStunned);
     }
 
     // 외부(영웅 등)에서 이 적을 duration초간 스턴. 이동/공격/스킬 시전이 모두 멈춘다.
@@ -393,6 +408,7 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble
             sc.AddStat(StatType.AS,data.AttackSpeed);
             sc.AddStat(StatType.DEF,data.Defense);
             sc.AddStat(StatType.SPD,data.MoveSpeed);
+            RecordBaseStats(data.Health, data.Attack, data.AttackSpeed, data.Defense, data.MoveSpeed);
             Type = ParseEnum(data.Type, EnemyType.Melee);
             Class = ParseEnum(data.Class, EnemyClass.Normal); 
             Attribute = ParseAttribute(data.Attribute);
@@ -400,17 +416,34 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble
         }
         else
         {
-            sc.SetBaseValue(StatType.HP,data.Health+(gameManager.DayCount*data.UpHealthScale));
+            // 날짜 스케일이 붙는 HP/DEF는 지역변수로 한 번만 계산한다 — baseStats에 다른 값이 들어가면 디버프 판정이 어긋난다.
+            float scaledHp  = data.Health  + (gameManager.DayCount * data.UpHealthScale);
+            float scaledDef = data.Defense + (data.UpDefenseScale * (gameManager.DayCount / 5));
+            sc.SetBaseValue(StatType.HP,scaledHp);
             sc.SetBaseValue(StatType.ATK,data.Attack);
             sc.SetBaseValue(StatType.AS,data.AttackSpeed);
-            sc.SetBaseValue(StatType.DEF,data.Defense+(data.UpDefenseScale*(gameManager.DayCount/5)));
+            sc.SetBaseValue(StatType.DEF,scaledDef);
             sc.SetBaseValue(StatType.SPD,data.MoveSpeed);
+            RecordBaseStats(scaledHp, data.Attack, data.AttackSpeed, scaledDef, data.MoveSpeed);
         }
         Range = data.Range;
         Hp = sc[StatType.HP];
         _bar.ResetTo(Hp, MaxHp); // 스폰 시 보간 없이 즉시 풀피로(풀 재사용 시 이전 값 잔상 제거)
         IsDead = false;
+        if(bossName == null)return;
+        bossName.text = DataTableManager.StringTable.Get(data.Name); 
         //MoveSpeed = data.MoveSpeed;
+    }
+
+    // 방금 sc에 넣은 원본값을 그대로 장부에 남긴다. EnemyDebuffBar가 "지금 값이 이보다 낮은가"로 디버프를 판정한다.
+    // 인자를 받는 이유는 호출부에서 sc에 넣은 것과 같은 식(式)을 쓰도록 강제하기 위함 — 여기서 다시 계산하면 어긋날 수 있다.
+    private void RecordBaseStats(float hp, float atk, float attackSpeed, float def, float spd)
+    {
+        baseStats[StatType.HP]  = hp;
+        baseStats[StatType.ATK] = atk;
+        baseStats[StatType.AS]  = attackSpeed;
+        baseStats[StatType.DEF] = def;
+        baseStats[StatType.SPD] = spd;
     }
 
     // CSV 문자열 → enum. 비었거나 못 읽으면 fallback으로 대체(대소문자 무시).

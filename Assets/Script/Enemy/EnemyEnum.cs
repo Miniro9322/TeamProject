@@ -24,3 +24,17 @@ public enum EnemyAttribute
     HitsShield = 1 << 5, //타수 보호막: 데미지1고정으로 일정 타수로만 피해를받음
     Burrow = 1 << 6, //잠행 : 은신이랑 비슷 사막전용
 }
+// 체력바 아래 아이콘으로 소환할 디버프 종류. 스탯이 깎였는지로 판정하므로 스탯 하나에 하나씩 대응한다(Stun만 예외).
+// 새 종류를 늘릴 땐 EnemyDebuffBar.StatOf에 대응 StatType도 같이 추가해야 한다.
+public enum EnemyDebuffKind
+{
+    Slow,       // 둔화: 이속 감소 — 현재 게임에 존재하는 유일한 적 디버프(둔화 장판, 검사 관통공격)
+    AtkDown,    // 공격력 감소
+    DefDown,    // 방어력 감소
+    AsDown,     // 공속 감소
+    MaxHpDown,  // 최대 체력 감소
+    Stun,       // 스턴 — 스탯이 아니라 IsStunned로 판정. IStunAble.Stun 호출자가 아직 없어 지금은 뜨지 않는다
+    Poison, //독 - 지속판정을받음
+    Ignite, //점화 - 화염 데미지
+
+}
