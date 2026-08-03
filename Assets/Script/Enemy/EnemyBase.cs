@@ -52,7 +52,7 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble
     public int AttackPower => Mathf.RoundToInt(sc[StatType.ATK]);
     public float AttackSpeed => sc[StatType.AS];
     public int Range { get; protected set; }
-    public float MoveSpeed => sc[StatType.SPD];
+    public float MoveSpeed => Mathf.Max(0.1f,sc[StatType.SPD]);
     public EnemyType Type { get; protected set; }        // 근거리/원거리
     public EnemyClass Class { get; protected set; }      // 일반/엘리트/보스
     public EnemyAttribute Attribute { get; protected set; } // 외부에서 볼수있는 특성
