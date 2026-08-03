@@ -2875,12 +2875,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TilePainter
   board: {fileID: 2512691319082104341}
-  pathColor: {r: 0.22, g: 0.85, b: 0.54, a: 1}
   okColor: {r: 0.21, g: 0.77, b: 0.41, a: 1}
   denyColor: {r: 0.85, g: 0.29, b: 0.27, a: 1}
   rangeColor: {r: 0.3, g: 0.6, b: 1, a: 1}
-  enemyColor: {r: 0.9, g: 0.25, b: 0.2, a: 1}
-  blockColor: {r: 0.95, g: 0.55, b: 0.1, a: 1}
+  skillColor: {r: 1, g: 0.55, b: 0.15, a: 1}
   tintShader: {fileID: 0}
   tintAlpha: 0.45
   lift: 0.02
@@ -2918,37 +2916,31 @@ MonoBehaviour:
     icon: {fileID: 21300000, guid: 46fd8fb44a47e52448bc7a4020fb1674, type: 3}
     placedIcon: {fileID: 21300000, guid: c20a970509f45d2408899087978f2753, type: 3}
     kind: 1
-    attackRange: 1
   - label: Archer
     prefab: {fileID: 9004755700449656008, guid: ca79c758b242b1f43b792e4c008ee16f, type: 3}
     icon: {fileID: 21300000, guid: 4d7007f4c3adf4b47bf765f6f552bd05, type: 3}
     placedIcon: {fileID: 21300000, guid: f40b145fd0e58e14b974983688fc9049, type: 3}
     kind: 2
-    attackRange: 3
   - label: DualSwordMan
     prefab: {fileID: 1125355577782864148, guid: fc90ec49c4098fc4e8de8d2bbfb448ec, type: 3}
     icon: {fileID: 21300000, guid: 3c9c24dffcda3694d9560d971406ef4a, type: 3}
     placedIcon: {fileID: 21300000, guid: e0b4a8d1d6f99354c934b0f543b674be, type: 3}
     kind: 1
-    attackRange: 1
   - label: Mage
     prefab: {fileID: 5127629013743316858, guid: bfa8d4dc241d67e40a7c739e98e17e95, type: 3}
     icon: {fileID: 21300000, guid: d828e720dc30d654486cd5796258c555, type: 3}
     placedIcon: {fileID: 21300000, guid: 7894a64ea4d5e43438d3d57b99f1a2a4, type: 3}
     kind: 2
-    attackRange: 0
   - label: THS
     prefab: {fileID: 2762850617625843917, guid: 8e9d3104d46556d4880d708398f8cc6e, type: 3}
     icon: {fileID: 21300000, guid: 51f8a87e87da2b748ae7a8d142cc9f99, type: 3}
     placedIcon: {fileID: 21300000, guid: 601dc7ee472926748b6f4b8c44cb4114, type: 3}
     kind: 1
-    attackRange: 0
   - label: SpearMan
     prefab: {fileID: 6360810507945036553, guid: 1c18d546630c46e4a84b6242d3953620, type: 3}
     icon: {fileID: 21300000, guid: 941635aa67582d8418528f6c488df213, type: 3}
     placedIcon: {fileID: 21300000, guid: e78d7ed780d73ab4daca353ee4e56577, type: 3}
     kind: 1
-    attackRange: 2
 --- !u!114 &314587630
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2976,7 +2968,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MapCommand
   input: {fileID: 314587630}
   palette: {fileID: 314587629}
-  placeYOffset: 0
 --- !u!114 &314587632
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2999,6 +2990,7 @@ MonoBehaviour:
   placeYOffset: 0
   ghostAlpha: 0.45
   tilePaintView: {fileID: 1235437630}
+  rangeInput: {fileID: 1763151259}
 --- !u!1 &336340963
 GameObject:
   m_ObjectHideFlags: 0
@@ -9272,11 +9264,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 24f456927ea4b9c489f3922cd8be2a03, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TilePaintView
-  registry: {fileID: 1862994567}
   game: {fileID: 314587628}
   painter: {fileID: 314587627}
-  showEnemyTiles: 1
-  showBlocking: 0
 --- !u!4 &1235437631
 Transform:
   m_ObjectHideFlags: 0
@@ -18261,6 +18250,51 @@ MonoBehaviour:
   m_ChildScaleWidth: 0
   m_ChildScaleHeight: 0
   m_ReverseArrangement: 0
+--- !u!1 &1763151258
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1763151260}
+  - component: {fileID: 1763151259}
+  m_Layer: 0
+  m_Name: RangeInput
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1763151259
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1763151258}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 954aeb9f9b8829342bdcd0d5e3b9fb97, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RangeInput
+  input: {fileID: 314587630}
+--- !u!4 &1763151260
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1763151258}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 395.97522, y: 0.00001, z: 15560.353}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1766375554
 GameObject:
   m_ObjectHideFlags: 0
@@ -25386,3 +25420,4 @@ SceneRoots:
   - {fileID: 1344506130}
   - {fileID: 1662097483}
   - {fileID: 250356135}
+  - {fileID: 1763151260}

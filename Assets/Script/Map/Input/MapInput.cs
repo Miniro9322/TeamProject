@@ -18,6 +18,8 @@ public class MapInput : MonoBehaviour
         get { return _blocked; }
     }
 
+    public bool LeftHolding => Mouse.current.leftButton.isPressed;
+
     private void Update()
     {
         if (_blocked) return;
@@ -32,4 +34,7 @@ public class MapInput : MonoBehaviour
     {
         _blocked = value;
     }
+
+    
+  
 }

@@ -7,7 +7,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using VContainer;
 
-public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit
+public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble
 {
     [SerializeField] protected string enemyKey;
     [SerializeField] protected List<SkillDataSO> skills = new();
@@ -70,6 +70,21 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit
     public WaveSpawner Owner => waveSpawner;
     public void SetOwner(WaveSpawner spawner) => waveSpawner = spawner;
 
+    // 이번 생존 동안 웨이브 카운트를 이미 내렸는지. 사망/본진 도달 경로가 모두 SendDieEvent를 타므로
+    // 이 플래그가 이중 감소를 막는다(이중 감소하면 적이 남았는데 EnemyAllClear가 먼저 터져 웨이브가 앞서간다).
+    private bool _dieEventSent;
+
+    // 이 유닛이 판에서 빠졌음을 스포너에 딱 한 번 알린다.
+    // 카운트를 못 내리면 Enemycount가 0에 닿지 않아 EnemyAllClear가 영영 안 터지므로(웨이브 정지),
+    // 사망 처리가 어떤 경로로 끝나든(정상/애니 타임아웃/취소) 반드시 여기를 지나가야 한다.
+    // Owner가 없는 적(씬에 직접 배치, SpawnerTest 등)도 있으므로 null 조건 호출.
+    private void SendDieEvent()
+    {
+        if (_dieEventSent) return;
+        _dieEventSent = true;
+        waveSpawner?.EnemyDieEvent();
+    }
+
     private bool AnySkillRunning()
     {
         if (skillRunning == null) return false;
@@ -100,7 +115,7 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit
 
     private float _stunExpiry;      // Time.time 기준 스턴 만료 시각 — 코루틴 없이 지연 만료(풀링 안전, Shield와 동일 패턴)
     private bool _stunAnimActive;   // Animator에 보고한 마지막 스턴 상태 — 바뀐 프레임에만 SetBool("Stun") 호출
-    private bool _hasStunParam;     // 애니메이터에 Bool "Stun" 파라미터가 있는지(1회 검사 후 캐시)
+    private bool _hasStunParam;
     private bool _stunParamChecked;
     public bool IsStunned => Time.time < _stunExpiry; // 스턴 중엔 이동/공격/스킬 시전이 모두 멈춘다
     protected virtual void Awake()
@@ -120,8 +135,9 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit
         _shieldExpiry = 0f;
         _stunExpiry = 0f;               // 풀 재사용 시 이전 스턴 잔여 제거
         _stunAnimActive = false;        // animator.Rebind()로 bool도 초기화되므로 상태만 맞춰둔다
-        _berserkOn = false;             
-        SplitGeneration = 0;           
+        _berserkOn = false;
+        _dieEventSent = false;          // 풀 재사용 시 새 생존 시작 — 카운트를 다시 한 번 내릴 수 있게
+        SplitGeneration = 0;
         transform.localScale = _baseScale; 
         if (animator != null)
         {
@@ -140,6 +156,10 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit
     }
     protected virtual void OnDisable()
     {
+        // 죽은 채로 비활성화되면 여기서 카운트를 내린다. 비활성화는 동기 실행이라 풀 재사용과 겹칠 수 없고,
+        // DieRoutine의 취소가 끝내 관측되지 않는 경우(씬 언로드, 도메인 리로드)까지 덮는다.
+        // 본진 도달은 IsDead가 아니므로 여기 안 걸리고, 이미 보낸 경우는 SendDieEvent가 무시한다.
+        if (IsDead) SendDieEvent();
         _cloak.Reset();
         _bar.Reset();
         _move.Pause();
@@ -218,7 +238,7 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit
         else
             animator.speed = stunned ? 0f : 1f;  // fallback: 파라미터 없으면 현재 프레임에서 얼림 → 풀리면 원복
     }
-
+    
     // 애니메이터에 Bool "Stun" 파라미터가 있는지 1회 검사 후 캐시(파라미터 목록은 런타임에 안 바뀜).
     private bool HasStunParam()
     {
@@ -256,7 +276,7 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit
 
     protected virtual void OnArrivedAtCore()
     {
-        waveSpawner?.EnemyDieEvent();
+        SendDieEvent();
         var gm = gameManager;
         if (gm == null)
             Debug.LogWarning($"[{name}] GameManager를 찾을 수 없음 — HpDamage 스킵.", this);
@@ -533,11 +553,13 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit
     public virtual void Die()
     {
         if (IsDead) return;
-        animator.speed = 1f;
+        if (animator != null) animator.speed = 1f; // 애니메이터 없는 적에서 여기서 터지면 IsDead도 못 세우고 영영 안 죽는다
         IsDead = true;
         _move.Stop();
         if (Board != null) Board.RemoveEnemy(gameObject);
-        if (skillCts == null) { Despawn(); return; }
+        // 이미 비활성(OnDisable로 skillCts 해제)이면 사망 연출을 기다릴 수 없다 → 카운트만 내리고 즉시 반납.
+        // 온데스 스킬은 여기서 발동시키지 않는다(비활성 상태에서 분열체를 스폰하면 자리/경로가 없다).
+        if (skillCts == null) { SendDieEvent(); Despawn(); return; }
         DieRoutine(skillCts.Token).Forget();
     }
 
@@ -555,7 +577,15 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit
             if (animator != null) animator.SetTrigger("Die");
             await WaitForDeathAnim("Die", 5f, token);
         }
+        // 디스폰/파괴로 취소 — 이미 풀로 돌아가는 중이라 온데스 스킬도, Despawn도 필요 없다.
+        // 카운트는 여기서 내리지 않는다: 취소는 이 프레임이 아니라 나중 틱에 관측될 수 있어
+        // 그 사이 풀이 이 오브젝트를 재활용하면 살아있는 적의 카운트를 깎아버린다. OnDisable이 동기로 처리한다.
         catch (OperationCanceledException) { return; }
+        // 사망 연출이 정상 종료됐든 스테이트를 못 찾아 타임아웃됐든, 죽은 것은 죽은 것.
+        // 예전엔 이 두 줄이 WaitForDeathAnim 안쪽 끝에 있어 타임아웃 시 통째로 건너뛰었다
+        // (= 분열이 안 나가고 웨이브 카운트가 새는 원인).
+        TriggerDeathSkills();
+        SendDieEvent();
         Despawn();
     }
     private async UniTask WaitForDeathAnim(string stateName, float timeout, CancellationToken token)
@@ -576,8 +606,6 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit
 
         var info = animator.GetCurrentAnimatorStateInfo(layer);
         await UniTask.Delay(TimeSpan.FromSeconds(info.length / Mathf.Max(0.01f, animator.speed)), cancellationToken: token);
-        TriggerDeathSkills();
-        waveSpawner.EnemyDieEvent();   
     }
 
     
