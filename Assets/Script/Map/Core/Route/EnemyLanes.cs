@@ -93,6 +93,7 @@ public class EnemyLanes : MonoBehaviour
     private void Prepare()
     {
         board = GetComponent<MapBoard>();
+        routes = GetComponent<RouteConfig>();
 
         if (builder == null)
         {

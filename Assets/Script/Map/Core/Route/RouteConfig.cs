@@ -25,8 +25,8 @@ public sealed class RouteConfig : MonoBehaviour
         return routeMap.TryGetValue(spawn, out route);
     }
 
-    // 저작 목록을 스폰 좌표 사전으로 정리합니다.
-    private void Rebuild()
+    // 저작 목록을 스폰 좌표 사전으로 정리합니다. 저작 도구가 목록을 고친 뒤에도 부릅니다.
+    public void Rebuild()
     {
         routeMap.Clear();
 

@@ -56,6 +56,9 @@ public class MapMakerWindow : EditorWindow
     private int _strokeGroup;
     private Vector2Int _hover = new(-1, -1);
     private string _targetSeen = string.Empty;
+    private Vector2Int _routeSpawn;
+    private bool _hasRouteSpawn;
+    private int _routeModule = -1;
 
     [MenuItem("Tools/Map/Map Maker")]
     private static void Open()
@@ -134,6 +137,7 @@ public class MapMakerWindow : EditorWindow
         }
 
         EnsureThemes(module);
+        SyncRoute();
         DrawToolRow();
         SyncPick();
 
@@ -150,7 +154,11 @@ public class MapMakerWindow : EditorWindow
         }
 
         var view = new TileGridView(cells, _brush);
-        List<LaneData> lanes = LaneQuery.BuildLanes(cells);
+
+        // 저작 경로를 그대로 반영해 그린다. 그리기 전에 사전을 맞춰야 되돌리기 직후에도 선이 진짜를 말한다.
+        RouteConfig routes = RouteEdit.Find(module);
+        RouteEdit.Sync(routes);
+        List<LaneData> lanes = LaneQuery.BuildLanes(cells, routes);
 
         // 씬 오버라이드는 씬 모드에서만 뜻이 있다 — 프리팹 스테이지는 비교할 프리팹이 없다.
         HashSet<Vector2Int> overrides = null;
@@ -280,8 +288,37 @@ public class MapMakerWindow : EditorWindow
             ToolButton(MapTool.Swap);
             ToolButton(MapTool.Erase);
             ToolButton(MapTool.Pick);
+            ToolButton(MapTool.Route);
             GUILayout.FlexibleSpace();
+
+            if (_tool == MapTool.Route)
+            {
+                GUILayout.Label(RouteTarget(), EditorStyles.miniLabel);
+            }
         }
+    }
+
+    // 지금 어느 스폰의 경로를 고치는 중인가. 대상 없이 찍으면 아무 일도 안 일어나므로 늘 띄운다.
+    private string RouteTarget()
+    {
+        if (!_hasRouteSpawn)
+        {
+            return "스폰 칸을 먼저 클릭하세요";
+        }
+
+        return $"편집 중: 스폰 ({_routeSpawn.x}, {_routeSpawn.y})";
+    }
+
+    // 모듈을 갈아타면 편집 중이던 스폰을 놓는다 — 남의 모듈 좌표로 노드를 찍지 않는다.
+    private void SyncRoute()
+    {
+        if (_routeModule == _moduleIndex)
+        {
+            return;
+        }
+
+        _routeModule = _moduleIndex;
+        _hasRouteSpawn = false;
     }
 
     private void ToolButton(MapTool tool)
@@ -717,7 +754,14 @@ public class MapMakerWindow : EditorWindow
         if (input.type == EventType.MouseDrag)
         {
             input.Use();
-            StampAt(input.mousePosition, area, view, cells, input.alt);
+
+            // 경로는 누른 칸 하나만 받는다 — 끌고 지나간 칸이 노드로 우수수 들어가고,
+            // 같은 칸을 다시 지나면 토글이라 켜졌다 꺼졌다 한다.
+            if (_tool != MapTool.Route)
+            {
+                StampAt(input.mousePosition, area, view, cells, input.alt);
+            }
+
             return;
         }
 
@@ -757,6 +801,10 @@ public class MapMakerWindow : EditorWindow
 
             case MapTool.Swap:
                 TrySwap(coord, cells);
+                break;
+
+            case MapTool.Route:
+                StampRoute(coord, tile);
                 break;
 
             default:
@@ -801,6 +849,32 @@ public class MapMakerWindow : EditorWindow
         }
 
         SceneView.RepaintAll();
+    }
+
+    // 스폰 칸은 편집 대상으로 삼고, 그 밖의 칸은 그 스폰의 경유 노드로 넣거나 뺀다.
+    private void StampRoute(Vector2Int coord, Tile tile)
+    {
+        if (tile.IsEnemySpawn)
+        {
+            _routeSpawn = coord;
+            _hasRouteSpawn = true;
+            return;
+        }
+
+        if (!_hasRouteSpawn)
+        {
+            return; // 어느 스폰의 경로인지 정해지지 않았다 — 도구 줄이 스폰을 먼저 찍으라고 말한다
+        }
+
+        RouteConfig config = RouteEdit.Ensure(_modules[_moduleIndex]);
+        if (config == null)
+        {
+            Debug.LogWarning("[Map Maker] 이 모듈에 MapBoard가 없어 경로를 저장할 자리가 없습니다.",
+                _modules[_moduleIndex]);
+            return;
+        }
+
+        RouteEdit.ToggleNode(config, _routeSpawn, coord);
     }
 
     // 붓 이름. 왼쪽 판의 줄 이름과 같은 말을 쓴다.
