@@ -4,11 +4,8 @@ using System.Collections.Generic;
 /// <summary>타일 표시를 전담하며 매 프레임 지우고 다시 그린다.</summary>
 public class TilePaintView : MonoBehaviour
 {
-    [SerializeField] private MapRegistry registry;
     [SerializeField] private MapView game;            // 호버·배치 상태(읽기 전용)
     [SerializeField] private TilePainter painter;
-    [SerializeField] private bool showEnemyTiles = true;
-    [SerializeField] private bool showBlocking = true;
 
     // HeroSkillCastController는 일반 C# 클래스(비-MonoBehaviour)라 인스펙터로 연결할 수 없다 —
     // MapAssemble이 조립 시점에 코드로 넣어준다.
@@ -20,18 +17,7 @@ public class TilePaintView : MonoBehaviour
 
     private void Update()
     {
-        if (registry == null || painter == null)
-        {
-            return;
-        }
-
         RestoreCells();
-
-        foreach (ModuleLogic module in registry.AllModules.Values)
-        {
-            PaintPath(module.GetComponent<EnemyPathView>());
-        }
-
         PaintHover();
         PaintSkillRange();
     }
@@ -45,18 +31,6 @@ public class TilePaintView : MonoBehaviour
         cellPainted.Clear();
     }
 
-    private void PaintPath(EnemyPathView pathView)
-    {
-        if (pathView == null || !pathView.PathVisible)
-        {
-            return;
-        }
-
-        foreach (Tile tile in pathView.PathTiles)
-        {
-            Paint(tile, painter.pathColor);
-        }
-    }
     private void PaintHover()
     {
         if (game.InputBlocked)
@@ -211,7 +185,7 @@ public class TilePaintView : MonoBehaviour
             origin,
             hitRadius,
             hitShape,
-            painter.rangeColor);
+            painter.skillColor);
     }
 
     private Tile SkillOrigin(

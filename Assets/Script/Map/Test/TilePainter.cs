@@ -8,16 +8,12 @@ public class TilePainter : MonoBehaviour
     public MapBoard board; // 주입(자동탐색 금지)
 
     [Header("Colors")]
-    public Color pathColor = new(0.22f, 0.85f, 0.54f);
     public Color okColor = new(0.21f, 0.77f, 0.41f);
     public Color denyColor = new(0.85f, 0.29f, 0.27f);
     [Tooltip("배치 프리뷰/호버 시 유닛 사거리 타일 색.")]
     public Color rangeColor = new(0.30f, 0.60f, 1f);
-    [Tooltip("적이 올라온 타일 색.")]
-    public Color enemyColor = new(0.90f, 0.25f, 0.20f);
-    [Tooltip("아군+적이 겹친(저지 중) 타일 색.")]
-    public Color blockColor = new(0.95f, 0.55f, 0.10f);
-
+    [Tooltip("시전자로 선택된 영웅의 액티브 스킬 타격 범위 타일 색.")]
+    public Color skillColor = new(1f, 0.55f, 0.15f);
     [Header("칠하기")]
     [Tooltip("색 판에 쓸 셰이더. 비워두면 URP/Unlit을 알아서 잡는다.")]
     public Shader tintShader;
