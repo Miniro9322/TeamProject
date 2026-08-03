@@ -18,6 +18,28 @@ public struct ProjectileAoEConfig
     public StatContainer attackerStats;
     public Vector3 casterPos;
     public Hero hero;
+
+    // RangedAttackExecutor.FireArrow와 ContinuousBeamStrategy.FireOneProjectile 두 곳이 이 구성을
+    // 동일하게 만들고 있었다. 필드가 늘어날 때 한쪽만 고쳐 조용히 어긋나는 걸 막기 위해 유일한
+    // 구성 지점으로 모은다. AttackContext를 그대로 받지 않는 이유: ContinuousBeamStrategy는 ctx가
+    // 낡은 스냅샷일 수 있어 hero를 별도 인자로 받는다(ctx.hero를 쓰면 어느 쪽이 권위인지 흐려진다).
+    public static ProjectileAoEConfig From(AttackDataSO data, Hero hero,
+        StatContainer attackerStats, BuffManager buffManager, Vector3 casterPos) => new()
+    {
+        attackType = data.attackType,
+        areaShape = data.areaShape,
+        areaRange = data.areaRange,
+        chainRange = data.chainRange,
+        chainCount = data.chainCount,
+        chainFalloff = data.chainFalloff,
+        casterPos = casterPos,
+        buffList = data.buffList,
+        buffManager = buffManager,
+        source = data,
+        groundZonePrefab = data.groundZonePrefab,
+        attackerStats = attackerStats,
+        hero = hero,
+    };
 }
 
 public class Projectile : MonoBehaviour

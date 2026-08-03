@@ -6,7 +6,7 @@ using UnityEngine.Pool;
 
 public class RangedAttackExecutor : IAttackExecutor
 {
-    private readonly Dictionary<AttackDataSO, int> sequentialIndices = new();
+    private readonly AnimTriggerPicker triggers = new(nameof(RangedAttackExecutor));
 
     public async UniTask Execute(AttackDataSO data, AttackContext ctx, CancellationToken ct)
     {
@@ -19,8 +19,7 @@ public class RangedAttackExecutor : IAttackExecutor
             AttackAnimSpeedUtil.SetSpeed(ctx.arrowAnim, scale);
         }
 
-        string trigger = PickTrigger(data);
-        ctx.anim.SetTrigger(trigger);
+        ctx.anim.SetTrigger(triggers.Pick(data));
 
         if (ctx.bowAnim != null && ctx.arrowAnim != null)
         {
@@ -34,19 +33,11 @@ public class RangedAttackExecutor : IAttackExecutor
         try
         {
             float windowDuration = AttackAnimSpeedUtil.ComputeWindowDuration(data, interval);
-            using var window = new AttackEventWindow(ctx.animEvents, "Attack", "Recovery", windowDuration);
-            int hits = 0;
-            while (await window.MoveNextHit(ct))
+            await AttackEventWindow.RunHits(ctx.animEvents, windowDuration, async token =>
             {
                 AttackDamageUtil.ApplySelfBuffs(ctx.hero, data.buffList, ctx.buffManager, data);
-                await FireVolley(data, ctx, pool, damage, ct);
-                hits++;
-            }
-            if (hits == 0)
-            {
-                AttackDamageUtil.ApplySelfBuffs(ctx.hero, data.buffList, ctx.buffManager, data);
-                await FireVolley(data, ctx, pool, damage, ct);
-            }
+                await FireVolley(data, ctx, pool, damage, token);
+            }, ct);
         }
         finally
         {
@@ -108,40 +99,7 @@ public class RangedAttackExecutor : IAttackExecutor
             return;
         }
 
-        var cfg = new ProjectileAoEConfig
-        {
-            attackType = data.attackType,
-            areaShape = data.areaShape,
-            areaRange = data.areaRange,
-            chainRange = data.chainRange,
-            chainCount = data.chainCount,
-            chainFalloff = data.chainFalloff,
-            casterPos = ctx.self.position,
-            buffList = data.buffList,
-            buffManager = ctx.buffManager,
-            source = data,
-            groundZonePrefab = data.groundZonePrefab,
-            attackerStats = ctx.sc,
-            hero = ctx.hero,
-        };
-        arrow.Launch(target, damage, pool, cfg);
-    }
-
-    private string PickTrigger(AttackDataSO data)
-    {
-        var triggers = data.animTriggers;
-        if (triggers == null || triggers.Length == 0)
-        {
-            Debug.LogError($"[RangedAttackExecutor] '{data.name}' 의 animTriggers가 비어 있습니다.");
-            return string.Empty;
-        }
-        if (triggers.Length == 1) return triggers[0];
-
-        if (data.selectMode == AnimSelectMode.Random)
-            return triggers[Random.Range(0, triggers.Length)];
-
-        sequentialIndices.TryGetValue(data, out int idx);
-        sequentialIndices[data] = (idx + 1) % triggers.Length;
-        return triggers[idx];
+        arrow.Launch(target, damage, pool,
+            ProjectileAoEConfig.From(data, ctx.hero, ctx.sc, ctx.buffManager, ctx.self.position));
     }
 }

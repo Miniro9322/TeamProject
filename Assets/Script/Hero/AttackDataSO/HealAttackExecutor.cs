@@ -1,18 +1,17 @@
-using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 public class HealAttackExecutor : IAttackExecutor
 {
-    private readonly Dictionary<AttackDataSO, int> sequentialIndices = new();
+    private readonly AnimTriggerPicker triggers = new(nameof(HealAttackExecutor));
 
     public async UniTask Execute(AttackDataSO data, AttackContext ctx, CancellationToken ct)
     {
         float interval = ctx.sc[StatType.AS] > 0f ? 1f / ctx.sc[StatType.AS] : 1f;
         AttackAnimSpeedUtil.SetSpeed(ctx.anim, AttackAnimSpeedUtil.ComputeScale(data, interval));
 
-        ctx.anim.SetTrigger(PickTrigger(data));
+        ctx.anim.SetTrigger(triggers.Pick(data));
 
         if (data.groundZonePrefab != null)
             ctx.hero.SpawnGroundZone(data.groundZonePrefab, ctx.self.position);
@@ -20,41 +19,15 @@ public class HealAttackExecutor : IAttackExecutor
         try
         {
             float windowDuration = AttackAnimSpeedUtil.ComputeWindowDuration(data, interval);
-            using var window = new AttackEventWindow(ctx.animEvents, "Attack", "Recovery", windowDuration);
-            int hits = 0;
-            while (await window.MoveNextHit(ct))
+            await AttackEventWindow.RunHits(ctx.animEvents, windowDuration, async token =>
             {
                 ctx.hero.SpawnEffect(data.attackEffect, ctx.self.position, Quaternion.identity, data.attackEffectLifetime);
-                await AttackDamageUtil.ApplyInstantHeal(data, ctx, ct);
-                hits++;
-            }
-            if (hits == 0)
-            {
-                ctx.hero.SpawnEffect(data.attackEffect, ctx.self.position, Quaternion.identity, data.attackEffectLifetime);
-                await AttackDamageUtil.ApplyInstantHeal(data, ctx, ct);
-            }
+                await AttackDamageUtil.ApplyInstantHeal(data, ctx, token);
+            }, ct);
         }
         finally
         {
             AttackAnimSpeedUtil.SetSpeed(ctx.anim, 1f);
         }
-    }
-
-    private string PickTrigger(AttackDataSO data)
-    {
-        var triggers = data.animTriggers;
-        if (triggers == null || triggers.Length == 0)
-        {
-            Debug.LogError($"[HealAttackExecutor] '{data.name}' 의 animTriggers가 비어 있습니다.");
-            return string.Empty;
-        }
-        if (triggers.Length == 1) return triggers[0];
-
-        if (data.selectMode == AnimSelectMode.Random)
-            return triggers[Random.Range(0, triggers.Length)];
-
-        sequentialIndices.TryGetValue(data, out int idx);
-        sequentialIndices[data] = (idx + 1) % triggers.Length;
-        return triggers[idx];
     }
 }
