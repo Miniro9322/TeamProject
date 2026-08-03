@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3e63ecebd4cd6e044a8a127ea3df05bc, type: 3}
   m_Name: SwordManJumpAttack
   m_EditorClassIdentifier: Assembly-CSharp::AttackDataSO
-  range: 1
-  rangeShape: 1
+  range: 2
+  rangeShape: 0
   unattackableTarget: 3
   attackType: 1
   attackPer: 3.5
@@ -21,7 +21,7 @@ MonoBehaviour:
   targetMode: 0
   targetCount: 1
   shotInterval: 0.1
-  areaShape: 1
+  areaShape: 2
   areaRange: 1
   lineLength: 2
   chainRange: 2
@@ -37,7 +37,13 @@ MonoBehaviour:
   - JumpAttack
   projectilePrefab: {fileID: 0}
   clipLength: 0.5333333
-  buffList: []
+  buffList:
+  - statType: 5
+    modifierType: 1
+    value: -0.5
+    duration: 4
+    isTargetToOther: 1
+    maxStacks: 1
   groundZonePrefab: {fileID: 0}
   attackEffect: {fileID: 0}
   attackEffectLifetime: 1

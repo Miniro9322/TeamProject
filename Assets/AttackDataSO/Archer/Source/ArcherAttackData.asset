@@ -12,12 +12,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3e63ecebd4cd6e044a8a127ea3df05bc, type: 3}
   m_Name: ArcherAttackData
   m_EditorClassIdentifier: Assembly-CSharp::AttackDataSO
-  attackPer: 1
-  range: 10
+  range: 5
   rangeShape: 0
+  unattackableTarget: 3
   attackType: 0
-  targetMode: 0
+  attackPer: 1
   attackCount: 1
+  targetMode: 0
   targetCount: 1
   shotInterval: 0.1
   areaShape: 0
@@ -26,13 +27,18 @@ MonoBehaviour:
   chainRange: 2
   chainCount: 3
   chainFalloff: 0.8
+  chainEffectPrefab: {fileID: 0}
+  chainEffectLifetime: 0.3
+  timingMode: 0
+  continuousDuration: 2
+  continuousTickInterval: 0.2
   selectMode: 0
   animTriggers:
   - Attack
   projectilePrefab: {fileID: 607833191716554269, guid: 9a655c0bc584fd949b6d31f3804c9433, type: 3}
   clipLength: 0.6666667
   buffList: []
-  groundZone: {fileID: 0}
+  groundZonePrefab: {fileID: 0}
   attackEffect: {fileID: 1016717492136352, guid: d9a16b144bb6373498d4374fb5d0d3b2, type: 3}
   attackEffectLifetime: 1
   hitEffect: {fileID: 1029544359644514, guid: aab2daf1fd2b23f4a9bdbbb38fc95704, type: 3}

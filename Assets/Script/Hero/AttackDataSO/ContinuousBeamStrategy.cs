@@ -1,13 +1,18 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.Pool;
 
 // 채널링형 지속 공격 — executor(근접/원거리/힐)를 호출하지 않고, 애니메이션 이벤트 윈도우 대신 자체
-// tick 루프로 continuousDuration 동안 continuousTickInterval마다 즉시 데미지를 적용한다. 매 틱 시작
+// tick 루프로 continuousDuration 동안 continuousTickInterval마다 피해를 적용한다. 매 틱 시작
 // 전에 hero.Target으로 "지금도 유효한 타겟인가"를 다시 확인하고(넘겨받은 ctx는 struct 복사본이라
 // Hero.CheckTargetStillInRange가 타겟을 null로 바꿔도 갱신되지 않는다), hero.Context로 매번 새
 // 스냅샷을 떠서 데미지를 적용한다 — 그렇지 않으면 채널링 도중 타겟이 죽는 순간 NRE가 난다.
+// data.projectilePrefab이 비어있으면 빔형(잠긴 타겟에 즉시 데미지, BeamVisualEffect와 짝을 이룸),
+// 채워져 있으면 매 tick 실제 투사체를 발사하는 방식으로 갈린다(attackCount/targetCount로 매 tick
+// 몇 발을 어디에 쏠지 결정 — RangedAttackExecutor.FireVolley와 동일한 타겟팅 규칙).
 public class ContinuousBeamStrategy : IAttackDeliveryStrategy
 {
     public async UniTask Deliver(Hero hero, AttackDataSO data, AttackContext ctx, IAttackExecutor executor, CancellationToken ct)
@@ -27,7 +32,10 @@ public class ContinuousBeamStrategy : IAttackDeliveryStrategy
             while (data.continuousDuration <= 0f || elapsed < data.continuousDuration)
             {
                 if (hero.Target == null) break; // 채널링 도중 타겟이 죽거나 벗어남 — 여기서 끊는다
-                await AttackDamageUtil.ApplyInstantDamage(data, hero.Context, ct);
+                if (data.projectilePrefab != null)
+                    await FireProjectileVolley(hero, data, ctx, ct);
+                else
+                    await AttackDamageUtil.ApplyInstantDamage(data, hero.Context, ct);
                 await UniTask.Delay(TimeSpan.FromSeconds(interval), cancellationToken: ct);
                 elapsed += interval;
             }
@@ -38,5 +46,62 @@ public class ContinuousBeamStrategy : IAttackDeliveryStrategy
             // Bool이 켜진 채로 남지 않도록 반드시 꺼준다.
             if (!string.IsNullOrEmpty(animParam)) ctx.anim.SetBool(animParam, false);
         }
+    }
+
+    // RangedAttackExecutor.FireVolley와 동일한 타겟팅 규칙 — DifferentEnemies는 AttackTargetSelector로
+    // 최대 targetCount종의 적에게 attackCount발을 분배(라운드로빈), SameTarget은 잠긴 타겟에게
+    // attackCount발 전부. 데미지는 즉시 적용되지 않고 각 투사체가 도착했을 때 Projectile.Hit()이
+    // 적용한다.
+    private async UniTask FireProjectileVolley(Hero hero, AttackDataSO data, AttackContext ctx, CancellationToken ct)
+    {
+        List<GameObject> targets;
+        if (data.targetMode == TargetMode.DifferentEnemies)
+        {
+            List<GameObject> enemies = hero.GetObjectsInRange(ctx.self.position, data.range, data.rangeShape, RangeQueryAffinity.TargetableEnemy);
+            targets = AttackTargetSelector.SelectTargets(enemies, data.attackCount, data.targetCount);
+        }
+        else
+        {
+            if (hero.Target == null) return;
+            targets = new List<GameObject>(data.attackCount);
+            for (int i = 0; i < data.attackCount; i++)
+                targets.Add(hero.Target);
+        }
+        if (targets.Count == 0) return; // 사거리 내 유효 타겟 없음 — 이번 tick은 스킵
+
+        int damage = (int)(ctx.sc[StatType.ATK] * data.attackPer);
+        IObjectPool<Projectile> pool = hero.GetProjectilePool(data.projectilePrefab);
+
+        for (int i = 0; i < targets.Count; i++)
+        {
+            FireOneProjectile(hero, data, ctx, pool, targets[i], damage);
+            if (i < targets.Count - 1)
+                await UniTask.Delay(TimeSpan.FromSeconds(data.shotInterval), cancellationToken: ct);
+        }
+    }
+
+    private void FireOneProjectile(Hero hero, AttackDataSO data, AttackContext ctx, IObjectPool<Projectile> pool, GameObject target, int damage)
+    {
+        Projectile arrow = pool.Get();
+        arrow.transform.SetPositionAndRotation(ctx.muzzle.position, ctx.muzzle.rotation);
+        hero.SpawnEffect(data.attackEffect, ctx.muzzle.position, ctx.muzzle.rotation, data.attackEffectLifetime);
+
+        var cfg = new ProjectileAoEConfig
+        {
+            attackType = data.attackType,
+            areaShape = data.areaShape,
+            areaRange = data.areaRange,
+            chainRange = data.chainRange,
+            chainCount = data.chainCount,
+            chainFalloff = data.chainFalloff,
+            casterPos = ctx.self.position,
+            buffList = data.buffList,
+            buffManager = ctx.buffManager,
+            source = data,
+            groundZonePrefab = data.groundZonePrefab,
+            attackerStats = ctx.sc,
+            hero = hero,
+        };
+        arrow.Launch(target.transform, damage, pool, cfg);
     }
 }
