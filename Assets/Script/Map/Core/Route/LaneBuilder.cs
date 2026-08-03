@@ -83,13 +83,13 @@ public class LaneBuilder : ILaneBuilder
     // 저작 좌표를 지나갈 수 있는 타일로 바꿉니다. 하나라도 어긋나면 실패합니다.
     private static List<Tile> GetNodes(
         IReadOnlyDictionary<Vector2Int, Tile> cells,
-        IReadOnlyList<Vector2Int> coords)
+        IReadOnlyList<RouteNode> coords)
     {
         var nodes = new List<Tile>(coords.Count);
 
         for (int i = 0; i < coords.Count; i++)
         {
-            bool found = cells.TryGetValue(coords[i], out Tile tile);
+            bool found = cells.TryGetValue(coords[i].Coord, out Tile tile);
 
             if (!found || !tile.Walkable)
             {

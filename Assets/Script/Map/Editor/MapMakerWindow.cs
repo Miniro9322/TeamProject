@@ -661,7 +661,7 @@ public class MapMakerWindow : EditorWindow
     }
 
     // 고른 경로에 사람이 찍어 둔 경유 칸. 저작이 없으면 null(자동 최단 경로다).
-    private IReadOnlyList<Vector2Int> RouteNodes(RouteConfig routes)
+    private IReadOnlyList<RouteNode> RouteNodes(RouteConfig routes)
     {
         if (!_hasRouteSpawn || routes == null)
         {
@@ -748,7 +748,7 @@ public class MapMakerWindow : EditorWindow
     // 점 찍기의 세 갈래. 누르기 전에 무엇이 될지 보이지 않으면 눌러 보고서야 알게 된다.
     private string PointWord(Tile tile, bool back)
     {
-        IReadOnlyList<Vector2Int> nodes = RouteNodes(_routes);
+        IReadOnlyList<RouteNode> nodes = RouteNodes(_routes);
         int count = Count(nodes);
 
         if (back)
@@ -775,7 +775,7 @@ public class MapMakerWindow : EditorWindow
     }
 
     // 넣을 자리를 미리 말한다. 자리를 눌러 보고서야 알게 되면 순서를 고칠 때마다 지웠다 다시 찍게 된다.
-    private static string SlotWord(IReadOnlyList<Vector2Int> nodes, int slot)
+    private static string SlotWord(IReadOnlyList<RouteNode> nodes, int slot)
     {
         int count = Count(nodes);
 
@@ -797,7 +797,7 @@ public class MapMakerWindow : EditorWindow
         return $"{slot}번과 {slot + 1}번 칸 사이에 넣습니다 ({count} → {count + 1}개)";
     }
 
-    private static int Count(IReadOnlyList<Vector2Int> nodes)
+    private static int Count(IReadOnlyList<RouteNode> nodes)
     {
         if (nodes == null)
         {
@@ -808,7 +808,7 @@ public class MapMakerWindow : EditorWindow
     }
 
     // 이 칸이 들어갈 자리. 도착점을 모르는 막힌 경로는 끼울 구간이 없으므로 맨 뒤에 붙인다.
-    private int RouteSlotOf(IReadOnlyList<Vector2Int> nodes, Vector2Int coord)
+    private int RouteSlotOf(IReadOnlyList<RouteNode> nodes, Vector2Int coord)
     {
         Tile goal = RouteGoal();
         if (goal == null)
@@ -1218,7 +1218,7 @@ public class MapMakerWindow : EditorWindow
             return;
         }
 
-        IReadOnlyList<Vector2Int> nodes = RouteNodes(_routes);
+        IReadOnlyList<RouteNode> nodes = RouteNodes(_routes);
         RouteEdit.InsertNode(config, _routeSpawn, coord, RouteSlotOf(nodes, coord));
     }
 

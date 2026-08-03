@@ -16,6 +16,8 @@ public static class RouteEdit
     private const string RoutesField = "routes";
     private const string SpawnField = "spawn";
     private const string NodesField = "nodes";
+    private const string CoordField = "coord";
+    private const string WaitField = "waitTime";
 
     /// <summary>이 모듈의 RouteConfig. 아직 없으면 null.</summary>
     public static RouteConfig Find(Grid module)
@@ -71,7 +73,7 @@ public static class RouteEdit
         nodes.arraySize = stroke.Count;
         for (int i = 0; i < stroke.Count; i++)
         {
-            nodes.GetArrayElementAtIndex(i).vector2IntValue = stroke[i];
+            SetNode(nodes.GetArrayElementAtIndex(i), stroke[i]);
         }
 
         owner.ApplyModifiedProperties();
@@ -84,7 +86,7 @@ public static class RouteEdit
         SerializedProperty nodes = GetRoute(owner, spawn).FindPropertyRelative(NodesField);
 
         nodes.arraySize++;
-        nodes.GetArrayElementAtIndex(nodes.arraySize - 1).vector2IntValue = node;
+        SetNode(nodes.GetArrayElementAtIndex(nodes.arraySize - 1), node);
         owner.ApplyModifiedProperties();
     }
 
@@ -119,6 +121,16 @@ public static class RouteEdit
         var owner = new SerializedObject(config);
         SerializedProperty route = GetRoute(owner, spawn);
         route.FindPropertyRelative(NodesField).ClearArray();
+        owner.ApplyModifiedProperties();
+    }
+
+    /// <summary>이 순번 노드에서 멈출 초를 적는다.</summary>
+    public static void SetWait(RouteConfig config, Vector2Int spawn, int slot, float seconds)
+    {
+        var owner = new SerializedObject(config);
+        SerializedProperty nodes = GetRoute(owner, spawn).FindPropertyRelative(NodesField);
+
+        nodes.GetArrayElementAtIndex(slot).FindPropertyRelative(WaitField).floatValue = seconds;
         owner.ApplyModifiedProperties();
     }
 
@@ -161,17 +173,24 @@ public static class RouteEdit
         return added;
     }
 
+    // 새로 찍은 칸. 대기는 0초로 시작한다 — 멈추게 하려면 사람이 따로 적는다.
+    private static void SetNode(SerializedProperty node, Vector2Int coord)
+    {
+        node.FindPropertyRelative(CoordField).vector2IntValue = coord;
+        node.FindPropertyRelative(WaitField).floatValue = 0f;
+    }
+
     // 정해진 자리에 좌표를 끼운다. 맨 뒤는 끼울 자리가 없으므로 목록을 늘려 붙인다.
     private static void Insert(SerializedProperty nodes, Vector2Int node, int slot)
     {
         if (slot >= nodes.arraySize)
         {
             nodes.arraySize++;
-            nodes.GetArrayElementAtIndex(nodes.arraySize - 1).vector2IntValue = node;
+            SetNode(nodes.GetArrayElementAtIndex(nodes.arraySize - 1), node);
             return;
         }
 
         nodes.InsertArrayElementAtIndex(slot);
-        nodes.GetArrayElementAtIndex(slot).vector2IntValue = node;
+        SetNode(nodes.GetArrayElementAtIndex(slot), node);
     }
 }

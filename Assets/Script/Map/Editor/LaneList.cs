@@ -39,6 +39,11 @@ public static class LaneList
             {
                 picked = i;
             }
+
+            if (i == chosen)
+            {
+                DrawWaits(lanes[i], routes);
+            }
         }
 
         GUILayout.Label("줄을 누르면 그 경로만 남고 나머지는 회색으로 죽습니다. 경로 도구의 편집 대상도 같이 옮겨집니다.",
@@ -96,6 +101,42 @@ public static class LaneList
             }
 
             return hit;
+        }
+    }
+
+    // 고른 경로의 경유 칸을 한 줄씩 펼쳐 멈출 초를 받는다. 0초는 멈추지 않는 칸이다.
+    private static void DrawWaits(LaneData lane, RouteConfig routes)
+    {
+        if (NodeCount(lane, routes) == 0)
+        {
+            return;
+        }
+
+        routes.TryGetRoute(lane.Start.Coord, out RouteData route);
+
+        for (int i = 0; i < route.Nodes.Count; i++)
+        {
+            DrawWait(routes, lane.Start.Coord, route, i);
+        }
+    }
+
+    // 경유 칸 한 줄. 초를 고쳐 넣은 프레임에만 저작에 적어 되돌리기가 한 번에 하나씩 쌓이게 한다.
+    private static void DrawWait(RouteConfig routes, Vector2Int spawn, RouteData route, int slot)
+    {
+        using (new EditorGUILayout.HorizontalScope())
+        {
+            GUILayout.Space(14f);
+            GUILayout.Label($"{slot + 1}. {route.Nodes[slot].Coord}", EditorStyles.miniLabel);
+
+            EditorGUI.BeginChangeCheck();
+            float seconds = EditorGUILayout.FloatField(route.Nodes[slot].WaitTime, GUILayout.Width(40));
+
+            if (EditorGUI.EndChangeCheck())
+            {
+                RouteEdit.SetWait(routes, spawn, slot, seconds);
+            }
+
+            GUILayout.Label("초", EditorStyles.miniLabel, GUILayout.Width(16));
         }
     }
 

@@ -13,7 +13,7 @@ public static class RouteSlot
 {
     /// <summary>이 칸이 들어갈 자리. 0이면 맨 앞, 경유 칸 수와 같으면 맨 뒤다.</summary>
     public static int Best(
-        IReadOnlyList<Vector2Int> nodes,
+        IReadOnlyList<RouteNode> nodes,
         Vector2Int spawn,
         Vector2Int goal,
         Vector2Int coord)
@@ -48,24 +48,24 @@ public static class RouteSlot
     }
 
     // i번째 구간의 시작. 첫 구간은 스폰에서 나온다.
-    private static Vector2Int From(IReadOnlyList<Vector2Int> nodes, Vector2Int spawn, int i)
+    private static Vector2Int From(IReadOnlyList<RouteNode> nodes, Vector2Int spawn, int i)
     {
         if (i == 0)
         {
             return spawn;
         }
 
-        return nodes[i - 1];
+        return nodes[i - 1].Coord;
     }
 
     // i번째 구간의 끝. 마지막 구간은 본진으로 들어간다.
-    private static Vector2Int To(IReadOnlyList<Vector2Int> nodes, Vector2Int goal, int i)
+    private static Vector2Int To(IReadOnlyList<RouteNode> nodes, Vector2Int goal, int i)
     {
         if (i == nodes.Count)
         {
             return goal;
         }
 
-        return nodes[i];
+        return nodes[i].Coord;
     }
 }

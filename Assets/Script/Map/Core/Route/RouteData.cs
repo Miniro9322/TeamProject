@@ -7,8 +7,8 @@ using UnityEngine;
 public sealed class RouteData
 {
     [SerializeField] private Vector2Int spawn;
-    [SerializeField] private List<Vector2Int> nodes = new();
+    [SerializeField] private List<RouteNode> nodes = new();
 
     public Vector2Int Spawn => spawn;
-    public IReadOnlyList<Vector2Int> Nodes => nodes;
+    public IReadOnlyList<RouteNode> Nodes => nodes;
 }

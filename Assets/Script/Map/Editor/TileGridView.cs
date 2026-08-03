@@ -61,7 +61,7 @@ public class TileGridView
     /// overrides에 든 칸은 청록 구석 표식(프리팹과 다름), showInert면 무효 조합 칸에 주황 구석 표식.
     /// </summary>
     public void Draw(Rect area, int cellPixels, IReadOnlyList<LaneData> lanes, int chosen,
-        IReadOnlyList<Vector2Int> nodes, Vector2Int hover,
+        IReadOnlyList<RouteNode> nodes, Vector2Int hover,
         HashSet<Vector2Int> overrides, bool showInert)
     {
         Vector2Int focus = FocusSpawn(lanes, chosen);
@@ -323,7 +323,7 @@ public class TileGridView
     /// 고른 것을 나중에 그려, 죽인 선과 겹치는 구간에서도 위에 오게 한다.
     /// </summary>
     private void DrawLanes(Rect area, int cellPixels, IReadOnlyList<LaneData> lanes, int chosen,
-        IReadOnlyList<Vector2Int> nodes)
+        IReadOnlyList<RouteNode> nodes)
     {
         bool focused = chosen >= 0 && chosen < lanes.Count;
 
@@ -508,7 +508,7 @@ public class TileGridView
     /// 번호는 칸 가운데를 피해 구석에 적는다. 가운데는 선과 화살표 자리다.
     /// 같은 칸을 다시 지나가면 번호가 여러 개라 지날 때마다 조금씩 밀어 적는다.
     /// </summary>
-    private void DrawNodes(Rect area, int cellPixels, IReadOnlyList<Vector2Int> nodes)
+    private void DrawNodes(Rect area, int cellPixels, IReadOnlyList<RouteNode> nodes)
     {
         if (nodes == null)
         {
@@ -526,22 +526,24 @@ public class TileGridView
 
         for (int i = 0; i < nodes.Count; i++)
         {
-            seen.TryGetValue(nodes[i], out int again);
-            seen[nodes[i]] = again + 1;
+            Vector2Int coord = nodes[i].Coord;
+            seen.TryGetValue(coord, out int again);
+            seen[coord] = again + 1;
 
-            Rect cell = CellRect(area, cellPixels, nodes[i].x, nodes[i].y);
+            Rect cell = CellRect(area, cellPixels, coord.x, coord.y);
             DrawOrder(new Vector2(cell.x + shift * again, cell.y + shift * again), i + 1);
         }
     }
 
     // 칸이 좁으면 숫자가 칸보다 커진다 — 그때는 그린 자리라는 것만 보라 점으로 남긴다.
-    private void DrawDots(Rect area, int cellPixels, IReadOnlyList<Vector2Int> nodes)
+    private void DrawDots(Rect area, int cellPixels, IReadOnlyList<RouteNode> nodes)
     {
         float size = Mathf.Max(5f, cellPixels * 0.4f);
 
         for (int i = 0; i < nodes.Count; i++)
         {
-            Rect cell = CellRect(area, cellPixels, nodes[i].x, nodes[i].y);
+            Vector2Int coord = nodes[i].Coord;
+            Rect cell = CellRect(area, cellPixels, coord.x, coord.y);
             EditorGUI.DrawRect(new Rect(cell.x + 1f, cell.y + 1f, size, size), MapMakerPalette.Node);
         }
     }
