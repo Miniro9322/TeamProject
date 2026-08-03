@@ -73,11 +73,6 @@ public static class TileActionPreview
             return $"이 칸의 {Word(tile.Terrain)}을(를) 팔레트로 가져옵니다";
         }
 
-        if (tool == MapTool.Route)
-        {
-            return RouteWord(tile);
-        }
-
         if (tool == MapTool.Erase)
         {
             return EraseWord(module, coord, tile);
@@ -132,23 +127,6 @@ public static class TileActionPreview
         }
 
         return $"{Word(tile.Terrain)} → {Word(want)} · 데이터만 (큐브는 그대로라 겉모습이 어긋납니다)";
-    }
-
-    // 경로 도구는 스폰 칸으로 대상을 정하고 나머지 칸으로 경유 노드를 늘렸다 줄인다.
-    // 지나갈 수 없는 칸을 노드로 찍으면 그 스폰의 경로가 통째로 끊기므로 찍기 전에 알린다.
-    private static string RouteWord(Tile tile)
-    {
-        if (tile.IsEnemySpawn)
-        {
-            return "이 스폰의 경로를 편집 대상으로 삼습니다";
-        }
-
-        if (!tile.Walkable)
-        {
-            return $"{Word(tile.Terrain)}은(는) 지나갈 수 없습니다 — 노드로 찍으면 이 경로가 끊깁니다";
-        }
-
-        return "고른 스폰의 경유 노드로 넣거나 뺍니다";
     }
 
     // 지우기는 제일 위 한 겹만 없앤다. 마지막 겹이면 그 칸에 타일이 아예 없어진다.

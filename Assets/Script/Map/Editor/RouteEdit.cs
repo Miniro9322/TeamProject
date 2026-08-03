@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
@@ -61,23 +62,63 @@ public static class RouteEdit
         config.Rebuild();
     }
 
-    /// <summary>이 좌표를 경유 노드로 넣는다. 이미 들어 있으면 뺀다.</summary>
-    public static void ToggleNode(RouteConfig config, Vector2Int spawn, Vector2Int node)
+    /// <summary>이 스폰의 경로를 이 목록으로 통째로 바꾼다. 같은 좌표가 여러 번 들어와도 그대로 쓴다.</summary>
+    public static void SetNodes(RouteConfig config, Vector2Int spawn, IReadOnlyList<Vector2Int> stroke)
+    {
+        var owner = new SerializedObject(config);
+        SerializedProperty nodes = GetRoute(owner, spawn).FindPropertyRelative(NodesField);
+
+        nodes.arraySize = stroke.Count;
+        for (int i = 0; i < stroke.Count; i++)
+        {
+            nodes.GetArrayElementAtIndex(i).vector2IntValue = stroke[i];
+        }
+
+        owner.ApplyModifiedProperties();
+    }
+
+    /// <summary>이 좌표를 맨 뒤에 쌓는다. 이미 들어 있어도 또 쌓는다 — 같은 칸을 다시 지나가는 경로다.</summary>
+    public static void AddNode(RouteConfig config, Vector2Int spawn, Vector2Int node)
+    {
+        var owner = new SerializedObject(config);
+        SerializedProperty nodes = GetRoute(owner, spawn).FindPropertyRelative(NodesField);
+
+        nodes.arraySize++;
+        nodes.GetArrayElementAtIndex(nodes.arraySize - 1).vector2IntValue = node;
+        owner.ApplyModifiedProperties();
+    }
+
+    /// <summary>이 좌표를 slot 자리에 끼운다.</summary>
+    public static void InsertNode(RouteConfig config, Vector2Int spawn, Vector2Int node, int slot)
+    {
+        var owner = new SerializedObject(config);
+        SerializedProperty nodes = GetRoute(owner, spawn).FindPropertyRelative(NodesField);
+
+        Insert(nodes, node, slot);
+        owner.ApplyModifiedProperties();
+    }
+
+    /// <summary>맨 뒤 한 칸을 뺀다 — 뒤로가기다. 뺄 것이 없으면 아무 일도 하지 않는다.</summary>
+    public static void PopNode(RouteConfig config, Vector2Int spawn)
+    {
+        var owner = new SerializedObject(config);
+        SerializedProperty nodes = GetRoute(owner, spawn).FindPropertyRelative(NodesField);
+
+        if (nodes.arraySize == 0)
+        {
+            return;
+        }
+
+        nodes.arraySize--;
+        owner.ApplyModifiedProperties();
+    }
+
+    /// <summary>이 스폰의 경유 노드를 전부 지운다. 경로 항목은 빈 채로 남는다.</summary>
+    public static void ClearNodes(RouteConfig config, Vector2Int spawn)
     {
         var owner = new SerializedObject(config);
         SerializedProperty route = GetRoute(owner, spawn);
-        SerializedProperty nodes = route.FindPropertyRelative(NodesField);
-
-        int index = IndexOf(nodes, node);
-        if (index < 0)
-        {
-            Add(nodes, node);
-        }
-        else
-        {
-            nodes.DeleteArrayElementAtIndex(index);
-        }
-
+        route.FindPropertyRelative(NodesField).ClearArray();
         owner.ApplyModifiedProperties();
     }
 
@@ -120,24 +161,17 @@ public static class RouteEdit
         return added;
     }
 
-    // 목록에서 같은 좌표의 자리. 없으면 -1.
-    private static int IndexOf(SerializedProperty nodes, Vector2Int node)
+    // 정해진 자리에 좌표를 끼운다. 맨 뒤는 끼울 자리가 없으므로 목록을 늘려 붙인다.
+    private static void Insert(SerializedProperty nodes, Vector2Int node, int slot)
     {
-        for (int i = 0; i < nodes.arraySize; i++)
+        if (slot >= nodes.arraySize)
         {
-            if (nodes.GetArrayElementAtIndex(i).vector2IntValue == node)
-            {
-                return i;
-            }
+            nodes.arraySize++;
+            nodes.GetArrayElementAtIndex(nodes.arraySize - 1).vector2IntValue = node;
+            return;
         }
 
-        return -1;
-    }
-
-    // 목록 끝에 좌표를 붙인다 — 찍은 차례가 곧 지나갈 차례다.
-    private static void Add(SerializedProperty nodes, Vector2Int node)
-    {
-        nodes.arraySize++;
-        nodes.GetArrayElementAtIndex(nodes.arraySize - 1).vector2IntValue = node;
+        nodes.InsertArrayElementAtIndex(slot);
+        nodes.GetArrayElementAtIndex(slot).vector2IntValue = node;
     }
 }
