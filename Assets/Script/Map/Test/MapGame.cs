@@ -4,7 +4,7 @@ using VContainer;
 // VContainer 주입을 받아 배치 담당을 조립한다. 맵 로직은 하나도 갖지 않는다.
 public class MapGame : MonoBehaviour
 {
-    private readonly UnitList unitList = new();
+    private readonly PlacedUnitData unitList = new();
     private UnitPlacer unitPlacer;
     private UiManager uiManager;
     private GameManager gameManager;
@@ -13,7 +13,7 @@ public class MapGame : MonoBehaviour
     private EnviromentManager enviromentManager;
     private HeroRoster heroRoster;
 
-    public UnitList Units { get { return unitList; } }
+    public PlacedUnitData Units { get { return unitList; } }
     public UnitPlacer Placer { get { return unitPlacer; } }
     public UiManager Ui { get { return uiManager; } }
     public GameManager Rule { get { return gameManager; } }

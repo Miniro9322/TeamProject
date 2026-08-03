@@ -8,10 +8,6 @@ public class ExpandTester : MonoBehaviour
 
     private void Update()
     {
-        if (registry == null)
-        {
-            return;
-        }
         Keyboard keyboard = Keyboard.current;
         if (keyboard == null)
         {

@@ -7,7 +7,6 @@ public class MapBoard : MonoBehaviour
     private readonly List<Tile> _spawns = new();
     private readonly List<Tile> _cores = new();
     private readonly Dictionary<GameObject, Tile> _enemyCell = new(); // 적→현재 칸(직전 칸과 비교해 이동 감지)
-    private readonly Dictionary<GameObject, List<Tile>> _rangeCoverByUnit = new();
 
     [SerializeField] private Grid _grid; // 좌표계의 단일 소스. 셀 크기·원점·Swizzle을 모두 쥔다.
     private Bounds _worldBounds;
@@ -37,33 +36,14 @@ public class MapBoard : MonoBehaviour
     [ContextMenu("Build")]
     public void Build()
     {
-        if (_grid == null)
-        {
-            Debug.LogError("[MapBoard] Grid가 주입되지 않았습니다. 인스펙터에서 씬의 Grid를 넣으세요.", this);
-            return;
-        }
-
         _cells.Clear();
         _spawns.Clear();
         _cores.Clear();
         _enemyCell.Clear();
-        _rangeCoverByUnit.Clear();
 
         // 이 모듈 Grid 하위 타일만 모은다(씬 전체 스캔 금지 — 모듈 격리). Find 미사용.
         var tiles = new List<Tile>();
         tiles.AddRange(_grid.GetComponentsInChildren<Tile>(true));
-
-        if (tiles.Count == 0)
-        {
-            Debug.LogWarning("[MapBoard] Tile 컴포넌트를 가진 타일을 찾지 못했습니다. " +
-                "Tools/Map/Bake Tiles From Cubes로 큐브에 Tile을 부착하세요.", this);
-            return;
-        }
-
-        foreach (Tile tile in tiles)
-        {
-            tile.ClearRangeCovers();
-        }
 
         // 1) 타일마다 렌더 캐시 + 격자 등록. 논리 좌표는 각 타일의 State.Col/Row를 신뢰한다(베이크가 새김).
         bool hasBounds = false;
@@ -103,28 +83,23 @@ public class MapBoard : MonoBehaviour
     // 장식이 아닌 타일들을 감싸는 직사각형. 장식 줄이 사방 한 줄이라 전체보다 한 칸씩 안쪽으로 들어온다.
     private RectInt InnerRect()
     {
-        int minCol = int.MaxValue;
-        int minRow = int.MaxValue;
-        int maxCol = int.MinValue;
-        int maxRow = int.MinValue;
+        Vector2Int min = new(int.MaxValue, int.MaxValue);
+        Vector2Int max = new(int.MinValue, int.MinValue);
 
         foreach (Tile tile in _cells.Values)
         {
             if (tile.IsSpecial) { continue; }
 
-            Vector2Int coord = tile.Coord;
-            if (coord.x < minCol) { minCol = coord.x; }
-            if (coord.x > maxCol) { maxCol = coord.x; }
-            if (coord.y < minRow) { minRow = coord.y; }
-            if (coord.y > maxRow) { maxRow = coord.y; }
+            min = Vector2Int.Min(min, tile.Coord);
+            max = Vector2Int.Max(max, tile.Coord);
         }
 
-        if (maxCol < minCol)
+        if (max.x < min.x)
         {
             return new RectInt();   // 장식뿐인 판 — 맞출 기준이 없으니 배치 판정에 맡긴다
         }
 
-        return new RectInt(minCol, minRow, maxCol - minCol + 1, maxRow - minRow + 1);
+        return new RectInt(min.x, min.y, max.x - min.x + 1, max.y - min.y + 1);
     }
 
     // ---- 경로 ----
@@ -251,13 +226,6 @@ public class MapBoard : MonoBehaviour
         return _cells.TryGetValue(coord, out Tile tile) 
             && TilePlacementRule.CanPlace(tile.State, kind);
     }
-    public GameObject RemoveUnit(Vector2Int coord)
-    {
-        if (!_cells.TryGetValue(coord, out Tile tile) || !tile.HasUnit) return null;
-        GameObject unit = tile.ClearOccupant();
-        ClearRangeCover(unit);
-        return unit;
-    }
 
     // ---- 적 격자 점유 (움직이는 적의 현재 칸 추적 — 좌표 기반) ----
     // 적은 타일 점유(OccupantObject)와 별개다: 한 칸에 여러 마리가 드나들 수 있다.
@@ -293,48 +261,15 @@ public class MapBoard : MonoBehaviour
     // 적이 사라질 때 서 있던 칸에서 지운다.
     public void RemoveEnemy(GameObject enemy)
     {
-        if (enemy == null || !_enemyCell.TryGetValue(enemy, out Tile tile)) return;
+        if (!_enemyCell.TryGetValue(enemy, out Tile tile)) return;
         _enemyCell.Remove(enemy);
         if (tile != null) { tile.RemoveEnemy(enemy); }
     }
 
     public bool IsBlocked(GameObject enemy)
-        => enemy != null && _enemyCell.TryGetValue(enemy, out Tile tile) && tile.IsBlocked(enemy);
+        => _enemyCell.TryGetValue(enemy, out Tile tile) && BlockCalc.IsBlocked(tile, enemy);
 
-    // ---- 아군 공격범위 커버(RangeCover) ----
-    // RangeCover = 아군 유닛의 사거리(손전등 빛)가 이 칸을 비추는 것. 유닛이 칸에 올라선 것(Occupant)과 다르다.
-    // 범위 표시는 뷰가 할 수 있지만, 실제 판정용 "이 타일이 사거리에 덮였는가"는 Tile 상태에 기록한다.
-
-    public void SetRangeCover(GameObject unit, Vector2Int origin, int range, bool square = false, bool includeCenter = true)
-    {
-        ClearRangeCover(unit);
-
-        var covered = new List<Tile>();
-        int safeRange = Mathf.Max(0, range);
-        foreach (Tile tile in GetTiles(origin, safeRange, square))
-        {
-            if (!includeCenter && tile.Coord == origin) continue;
-            tile.AddRangeCover(unit);
-            covered.Add(tile);
-        }
-
-        if (covered.Count > 0)
-            _rangeCoverByUnit[unit] = covered;
-    }
-
-    private void ClearRangeCover(GameObject unit)
-    {
-        if (!_rangeCoverByUnit.TryGetValue(unit, out List<Tile> covered)) return;
-
-        foreach (Tile tile in covered)
-            if (tile != null)
-                tile.RemoveRangeCover(unit);
-
-        _rangeCoverByUnit.Remove(unit);
-    }
-
-    // ---- 공간 질의 (상호작용 틀) ----
-    // 맵은 "몇 칸 이내에 무엇이 있나"만 계산해 후보를 돌려준다. 타겟 선정·공격·데미지는 담당 몫.
+     
 
     // 월드 위치가 어느 칸인지. 변환은 Grid가 하므로 타일에 새겨진 좌표와 항상 같은 기준이다.
     public Vector2Int WorldToCell(Vector3 world)
