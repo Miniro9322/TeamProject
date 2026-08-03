@@ -58,9 +58,14 @@ public class EnemyDebuffBar
 
         for (int i = 0; i < _icons.Length; i++)
         {
-            bool on = _icons[i].kind == EnemyDebuffKind.Stun
-                ? isStunned
-                : IsLowered(sc, baseStats, StatOf(_icons[i].kind));
+            if (_icons[i].sprite == null) continue;   // 종류만 골라두고 스프라이트를 안 넣은 칸
+
+            bool on;
+            if (_icons[i].kind == EnemyDebuffKind.Stun) on = isStunned;
+            // 스탯으로 판정할 수 없는 종류(독·점화 등)는 절대 켜지 않는다.
+            // 기본값을 아무 StatType으로 두면 그 스탯이 깎일 때 엉뚱한 아이콘이 같이 떠버린다.
+            else if (TryStatOf(_icons[i].kind, out StatType stat)) on = IsLowered(sc, baseStats, stat);
+            else on = false;
 
             // 파괴된 오브젝트도 == null이 true라, 밖에서 사라졌으면 저절로 다시 소환된다.
             bool spawned = _spawned[i] != null;
@@ -85,9 +90,7 @@ public class EnemyDebuffBar
 
     private void Spawn(int index)
     {
-        Sprite sprite = _icons[index].sprite;
-        if (sprite == null) return;   // 종류만 골라두고 스프라이트를 안 넣은 칸은 건너뛴다
-
+        // 스프라이트 없는 칸은 Tick이 미리 걸러낸다 — 여기까지 오면 항상 유효하다.
         GameObject go = PoolManager.Instance.Spawn(_iconPrefab, Vector3.zero, Quaternion.identity);
         if (go == null) return;
 
@@ -100,7 +103,7 @@ public class EnemyDebuffBar
         Image img = go.GetComponent<Image>();
         if (img != null)
         {
-            img.sprite = sprite;
+            img.sprite = _icons[index].sprite;
             img.raycastTarget = false;   // 화면 위 UI가 포탈 클릭 등을 삼키지 않게
         }
 
@@ -125,15 +128,21 @@ public class EnemyDebuffBar
         return sc[type] < baseValue - epsilon;
     }
 
-    private static StatType StatOf(EnemyDebuffKind kind) => kind switch
+    // 이 종류가 어떤 스탯의 감소로 나타나는지. false면 스탯으로는 알 수 없는 종류다.
+    // Stun은 IsStunned로, 독·점화는 적에게 그 상태를 거는 시스템 자체가 아직 없어서 여기 안 들어온다
+    // (PoisonRegistry는 영웅 전용 장부다). 그 시스템이 생기면 판정 조건을 Tick에 추가하면 된다.
+    private static bool TryStatOf(EnemyDebuffKind kind, out StatType stat)
     {
-        EnemyDebuffKind.Slow      => StatType.SPD,
-        EnemyDebuffKind.AtkDown   => StatType.ATK,
-        EnemyDebuffKind.DefDown   => StatType.DEF,
-        EnemyDebuffKind.AsDown    => StatType.AS,
-        EnemyDebuffKind.MaxHpDown => StatType.HP,
-        _                         => StatType.SPD,   // Stun은 여기 오지 않는다(Tick에서 먼저 분기)
-    };
+        switch (kind)
+        {
+            case EnemyDebuffKind.Slow:      stat = StatType.SPD; return true;
+            case EnemyDebuffKind.AtkDown:   stat = StatType.ATK; return true;
+            case EnemyDebuffKind.DefDown:   stat = StatType.DEF; return true;
+            case EnemyDebuffKind.AsDown:    stat = StatType.AS;  return true;
+            case EnemyDebuffKind.MaxHpDown: stat = StatType.HP;  return true;
+            default:                        stat = default;      return false;
+        }
+    }
 }
 
 /// <summary>

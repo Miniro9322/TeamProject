@@ -68,13 +68,17 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble
     private GameManager gameManager;
     public GameManager GameManager => gameManager;
     private bool firstEnable =false;
-    [Inject] 
-    public void Construct(PoolManager pool,WaveSpawner waveSpawner,GameManager gameManager)
+    [Inject]
+    public void Construct(PoolManager pool,WaveSpawner waveSpawner,GameManager gameManager,BuffManager buffManager)
     {
         _pool = pool;
         this.waveSpawner = waveSpawner;
         this.gameManager = gameManager;
+        this.buffManager = buffManager;
     }
+    // 영웅이 건 디버프(둔화 등)를 풀 반납 시 벗기기 위해 필요하다 — 자세한 이유는 OnDisable 주석 참조.
+    // GameLifeTimeScope가 .AsSelf()로 등록하므로 위 Construct에서 해석된다.
+    private BuffManager buffManager;
     protected PoolManager Pool => _pool ??= PoolManager.Instance; // 파생 클래스(Bat 등)도 재사용
     
     private WaveSpawner waveSpawner;
@@ -184,7 +188,12 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble
         _move.Pause();
         _move.LeaveBoard(); // 어떤 경로로 사라지든 현재 칸에서 빠진다
         _move.ArrivedAtCore -= HandleArrivedAtCore;
-        sc.RemoveModifier(this);
+        sc.RemoveModifier(this);          // 자기 자신이 건 것(폭주 등)만 지운다 — Source가 this인 것만 걸린다
+        // 영웅이 건 디버프는 Source가 AttackDataSO라 위 한 줄로는 안 지워지고, Stat.ResetBase도 모디파이어를 남긴다.
+        // 즉 안 벗기면 둔화 걸린 채 죽은 적이 풀에서 재사용될 때 느린 상태로 되살아나고,
+        // 더 나쁘게는 BuffManager가 이 인스턴스를 Target으로 계속 물고 있다가 만료 시점에
+        // 그 오브젝트를 지금 쓰고 있는 다른 적의 스탯을 벗긴다. 장부와 모디파이어를 여기서 같이 끊는다.
+        buffManager?.RemoveAllBuffs(this);
         skillCts?.Cancel();
         skillCts?.Dispose();
         skillCts = null;

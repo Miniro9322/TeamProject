@@ -536,6 +536,10 @@ MonoBehaviour:
   burrowMarkerPrefab: {fileID: 0}
   burrowTimeout: 3
   healthSlider: {fileID: 7667260891841076935}
+  bossName: {fileID: 0}
+  debuffIconRoot: {fileID: 0}
+  debuffIconPrefab: {fileID: 0}
+  debuffIcons: []
   <Hp>k__BackingField: 0
   IsSpawnInvincible: 0
   animator: {fileID: 1046956510714940717}
@@ -1007,6 +1011,14 @@ PrefabInstance:
     - target: {fileID: 3602656429562749669, guid: c32557a7bdb1e1345a4299f444d9189e, type: 3}
       propertyPath: m_AnchoredPosition.y
       value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 6183585378015294507, guid: c32557a7bdb1e1345a4299f444d9189e, type: 3}
+      propertyPath: m_Color.b
+      value: 0.25098038
+      objectReference: {fileID: 0}
+    - target: {fileID: 6183585378015294507, guid: c32557a7bdb1e1345a4299f444d9189e, type: 3}
+      propertyPath: m_Color.g
+      value: 0.28189176
       objectReference: {fileID: 0}
     - target: {fileID: 7577436218710789735, guid: c32557a7bdb1e1345a4299f444d9189e, type: 3}
       propertyPath: m_Pivot.x
