@@ -3,13 +3,14 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-// 구조물 그리드의 칸 하나. 비어있으면 "건설" 상태, 지어져 있으면 아이콘+레벨을 보여준다.
+// 구조물 그리드의 칸 하나. 빈 칸/지어진 칸을 오브젝트로 나누지 않고 아이콘 스프라이트 + 이름 텍스트만
+// 바꿔서 표현한다(빈 칸은 emptyIcon + 빈 이름). 레벨 등 상세 정보는 클릭 시 여는 BuildingPanel에서
+// 보여주므로 여기선 안 그린다.
 public class FacilitySlotView : MonoBehaviour
 {
-    [SerializeField] private GameObject emptyState;
-    [SerializeField] private GameObject builtState;
+    [SerializeField] private Sprite emptyIcon;
     [SerializeField] private Image icon;
-    [SerializeField] private TextMeshProUGUI levelText;
+    [SerializeField] private TextMeshProUGUI nameText;
     [SerializeField] private Button button;
 
     private int index;
@@ -22,16 +23,18 @@ public class FacilitySlotView : MonoBehaviour
 
     public void ShowEmpty()
     {
-        emptyState.SetActive(true);
-        builtState.SetActive(false);
+        if (icon != null) icon.gameObject.SetActive(false);
+        if (nameText != null) nameText.text = "+";
     }
 
-    public void ShowBuilt(Sprite facilityIcon, string levelLabel)
+    public void ShowBuilt(Sprite facilityIcon, string label)
     {
-        emptyState.SetActive(false);
-        builtState.SetActive(true);
-        if (icon != null) icon.sprite = facilityIcon;
-        if (levelText != null) levelText.text = levelLabel;
+        if (icon != null)
+        {
+            icon.sprite = facilityIcon;
+            icon.gameObject.SetActive(true);
+        }
+        if (nameText != null) nameText.text = label;
     }
 
     public void BindClick(Action<int> onClick)

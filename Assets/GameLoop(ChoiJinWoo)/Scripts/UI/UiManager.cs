@@ -62,12 +62,6 @@ public class UiManager : MonoBehaviour
         GameSpeedUi.SetActive(value);
     }
 
-    public void OpenBuildingUi(ProductionFacility facility)
-    {
-        buildingUi.gameObject.SetActive(true);
-        buildingUi.InitFacilityInfo(facility);
-    }
-
     public void CloseBuildingUi()
     {
         buildingUi.gameObject.SetActive(false);

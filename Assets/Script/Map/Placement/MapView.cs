@@ -45,26 +45,9 @@ public class MapView : MonoBehaviour
     public bool IsReplacing { get { return palette.Mode == PlaceMode.Replace; } }
     public bool IsOff { get { return palette.Mode == PlaceMode.Off; } }
     public OccupantKind PlacingKind { get { return palette.CurrentSlot().kind; } }
-    // 지금 배치하려는 것이 차지하는 칸 수. 생산 건물만 자기 데이터(ProductionValue)에서 크기를 들고 오고,
-    // 나머지는 한 칸이다. 크기의 원본은 SO 하나뿐이라 슬롯·씬마다 갈리지 않는다.
-    public Vector2Int PlacingSize
-    {
-        get
-        {
-            Placeable slot = palette.CurrentSlot();
-            if (slot == null || slot.prefab == null)
-            {
-                return Vector2Int.one;
-            }
-
-            if (slot.prefab.TryGetComponent(out ProductionFacility facility) && facility.BasicValue != null)
-            {
-                return facility.BasicValue.TileSize;
-            }
-
-            return Vector2Int.one;
-        }
-    }
+    // 지금 배치하려는 것이 차지하는 칸 수. 생산 시설·집은 기반시설 UI로 옮겨가 팔레트엔 이제 Hero만
+    // 남아있고, Hero는 전부 한 칸이다.
+    public Vector2Int PlacingSize => Vector2Int.one;
 
     // 지금 배치하려는 것이 포인터 위치에서 덮게 될 자리(프리뷰가 읽는다).
     public PlacementArea HoverArea
@@ -165,15 +148,9 @@ public class MapView : MonoBehaviour
                 return citizenManager.CheckCanUseCitizen(hero.CitizenAmount) && cost != null && resourcesManager.CheckResources(cost);
             }
             case OccupantKind.Building:
-                if (resourcesManager.CheckResources(slot.prefab.GetComponent<House>().Resources))
-                    return true;
-                else
-                    return false;
             case OccupantKind.Resource:
-                if (resourcesManager.CheckResources(slot.prefab.GetComponent<ProductionFacility>().GetConstructCost()))
-                    return true;
-                else
-                    return false;
+                // 생산 시설·집은 기반시설 UI(BaseConstructor)로 옮겨가 더 이상 맵에서 배치하지 않는다.
+                return false;
             default:
                 return false;
         }

@@ -2,49 +2,60 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-// 지역(맵 모듈)이 보유한 건설 슬롯들. ModuleLogic과 같은 오브젝트에 붙여 모듈ID로 묶는다.
+// 지역 하나가 보유한 건설 슬롯들. 모듈 프리팹(ModuleLogic)에는 손대지 않고, moduleId 번호로만
+// 엮는다. GameObject가 필요 없는 순수 데이터라 Placeable/BuildableFacility처럼 일반 클래스로 두고
+// RegionOverviewPanel의 인스펙터 리스트에 인라인으로 값을 채운다.
 // 슬롯 좌표는 없다 - 기반시설 UI에서만 관리되는 추상 슬롯(§2단계: 지역 클릭 -> 슬롯 그리드).
-[RequireComponent(typeof(ModuleLogic))]
-public class RegionFacilitySlots : MonoBehaviour
+[Serializable]
+public class RegionFacilitySlots
 {
+    [Tooltip("이 지역이 대응하는 ModuleLogic의 moduleId. 모듈 프리팹은 안 건드리고 번호만 맞춰서 엮는다.")]
+    [SerializeField] private int moduleId;
+
     [Tooltip("이 지역의 건설 슬롯 개수. 밸런스 테스트하며 자유롭게 조정.")]
     [SerializeField, Min(1)] private int slotCount = 4;
 
     [Tooltip("지역 이름(패널 헤더에 표시).")]
     [SerializeField] private string regionName = "지역";
 
-    private readonly List<RegionFacilitySlot> slots = new();
-    private ModuleLogic module;
+    private List<RegionFacilitySlot> slots;
 
-    public ModuleLogic Module => module;
+    public int ModuleId => moduleId;
     public string RegionName => regionName;
-    public IReadOnlyList<RegionFacilitySlot> Slots => slots;
+    public IReadOnlyList<RegionFacilitySlot> Slots => EnsureInitialized();
 
     public event Action OnSlotsChanged;
 
-    private void Awake()
+    // 일반 클래스라 Awake가 없다 - 슬롯 리스트를 처음 쓰는 시점에 한 번만 만든다.
+    private List<RegionFacilitySlot> EnsureInitialized()
     {
-        module = GetComponent<ModuleLogic>();
-        for (int i = 0; i < slotCount; i++)
+        if (slots == null)
         {
-            slots.Add(new RegionFacilitySlot());
+            slots = new List<RegionFacilitySlot>(slotCount);
+            for (int i = 0; i < slotCount; i++)
+            {
+                slots.Add(new RegionFacilitySlot());
+            }
         }
+        return slots;
     }
 
-    public bool TryAssign(int index, GameObject occupant, Sprite icon, string label)
+    public bool TryAssign(int index, object occupant, Sprite icon, string label)
     {
-        if (index < 0 || index >= slots.Count || !slots[index].IsEmpty) return false;
+        var list = EnsureInitialized();
+        if (index < 0 || index >= list.Count || !list[index].IsEmpty) return false;
 
-        slots[index].Assign(occupant, icon, label);
+        list[index].Assign(occupant, icon, label);
         OnSlotsChanged?.Invoke();
         return true;
     }
 
     public bool TryClear(int index)
     {
-        if (index < 0 || index >= slots.Count || slots[index].IsEmpty) return false;
+        var list = EnsureInitialized();
+        if (index < 0 || index >= list.Count || list[index].IsEmpty) return false;
 
-        slots[index].Clear();
+        list[index].Clear();
         OnSlotsChanged?.Invoke();
         return true;
     }
@@ -53,12 +64,9 @@ public class RegionFacilitySlots : MonoBehaviour
     public int TotalWorkers()
     {
         int total = 0;
-        foreach (var slot in slots)
+        foreach (var slot in EnsureInitialized())
         {
-            if (slot.Occupant == null) continue;
-
-            var facility = slot.Occupant.GetComponent<ProductionFacility>();
-            if (facility != null) total += facility.WorkerAmount;
+            if (slot.Occupant is ProductionFacility facility) total += facility.WorkerAmount;
         }
         return total;
     }

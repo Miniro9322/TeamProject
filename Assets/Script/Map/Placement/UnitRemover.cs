@@ -54,29 +54,16 @@ public class UnitRemover
         _unitList.Clear();
     }
 
-    // 생산건물이면 풀에 반납, 집이면 제거 거부, 영웅(로스터 출신)이면 로스터로 되돌리고 파괴.
+    // 영웅(로스터 출신)이면 로스터로 되돌리고 파괴.
+    // 생산 시설·집은 기반시설 UI(BaseConstructor.Demolish)로 옮겨가 더 이상 맵 유닛으로 존재하지 않는다.
     private void DestroyOrReturnToPool(GameObject unit)
     {
-        ProductionFacility facility = unit.GetComponent<ProductionFacility>();
-        var house = unit.GetComponent<House>();
-        if (facility != null)
+        HeroRosterLink link = unit.GetComponent<HeroRosterLink>();
+        if (link != null && link.Entry != null)
         {
-            facility.Release();
+            link.Entry.MarkAvailable();
+            _heroRoster.NotifyStateChanged();
         }
-        else if(house != null)
-        {
-            Debug.Log("집은 재배치만 가능합니다.");
-            return;
-        }
-        else
-        {
-            HeroRosterLink link = unit.GetComponent<HeroRosterLink>();
-            if (link != null && link.Entry != null)
-            {
-                link.Entry.MarkAvailable();
-                _heroRoster.NotifyStateChanged();
-            }
-            Object.Destroy(unit);
-        }
+        Object.Destroy(unit);
     }
 }

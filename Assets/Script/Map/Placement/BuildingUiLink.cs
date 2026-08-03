@@ -12,13 +12,9 @@ public class BuildingUiLink
     }
 
     // 빌딩 UI 처리 후 계속 진행하면 true, UI 위 클릭이라 멈춰야 하면 false.
+    // 생산 시설은 기반시설 UI로 옮겨가 더 이상 타일에 존재하지 않으니 그 분기는 제거했다.
     public bool OpenIfBuilding(Tile tile, PlaceMode mode)
     {
-        if (ui != null && tile.State.Occupant == OccupantKind.Resource && mode != PlaceMode.Remove && CanBuild())
-        {
-            ui.OpenBuildingUi(tile.OccupantObject.GetComponent<ProductionFacility>());
-            return true;
-        }
         if (EventSystem.current.IsPointerOverGameObject()) return false;
         Close();
         return true;
