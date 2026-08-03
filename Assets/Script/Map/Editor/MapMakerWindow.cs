@@ -1168,6 +1168,7 @@ public class MapMakerWindow : EditorWindow
     }
 
     // 지나갈 수 없는 칸은 빼고 쌓는다 — 노드로 들어가면 그 경로가 통째로 끊긴다.
+    // 방금 지나온 칸으로 되짚어 가면 쌓지 않고 그 걸음을 무른다(연필로 그은 선을 되짚어 지우는 것과 같다).
     private void Push(Dictionary<Vector2Int, Tile> cells, Vector2Int coord)
     {
         if (!cells.TryGetValue(coord, out Tile tile) || !tile.Walkable)
@@ -1175,7 +1176,31 @@ public class MapMakerWindow : EditorWindow
             return;
         }
 
+        if (Retreat(coord))
+        {
+            _stroke.RemoveAt(_stroke.Count - 1);
+            return;
+        }
+
         _stroke.Add(coord);
+    }
+
+    // 이 칸이 바로 직전에 지나온 자리인가. 손이 밀려 한 칸 물러난 것과 일부러 돌아오는 것을 여기서 가른다 —
+    // 일부러 도는 길은 한 칸이 아니라 여러 칸을 지나 되돌아오므로 이 판단에 걸리지 않는다.
+    private bool Retreat(Vector2Int coord)
+    {
+        int last = _stroke.Count - 1;
+        if (last < 0)
+        {
+            return false;
+        }
+
+        if (last == 0)
+        {
+            return coord == _routeSpawn;
+        }
+
+        return _stroke[last - 1] == coord;
     }
 
     // 한 칸씩 쌓는다. Alt는 뒤로가기라 맨 뒤부터 빠지고, Ctrl은 들어갈 자리를 알아서 고른다.

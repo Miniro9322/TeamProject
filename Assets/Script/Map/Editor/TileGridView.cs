@@ -65,6 +65,7 @@ public class TileGridView
         HashSet<Vector2Int> overrides, bool showInert)
     {
         Vector2Int focus = FocusSpawn(lanes, chosen);
+        HashSet<Vector2Int> route = RouteCells(lanes, chosen);
 
         for (int row = 0; row < Rows; row++)
         {
@@ -78,7 +79,7 @@ public class TileGridView
                 }
 
                 Rect rect = CellRect(area, cellPixels, col, row);
-                DrawCell(rect, tile, cellPixels, SpawnLit(focus, coord));
+                DrawCell(rect, tile, cellPixels, SpawnLit(focus, coord), RouteLit(route, coord));
 
                 // 붓과 무관한 상시 표식이라 DrawCell(붓에 따라 죽는 층) 위에 얹는다.
                 if (overrides != null && overrides.Contains(coord))
@@ -107,6 +108,45 @@ public class TileGridView
         }
 
         return lanes[chosen].Start.Coord;
+    }
+
+    /// <summary>
+    /// 고른 경로가 지나가는 칸들. 고른 것이 없거나 그 경로가 막혔으면 null이다.
+    ///
+    /// 하나를 고른 사람은 그 길만 보려는 것이다 — 나머지 칸이 제 색으로 남아 있으면
+    /// 지형이 눈에 먼저 들어와 정작 봐야 할 길이 배경에 묻힌다. 붓을 고르면 무관한 칸이 죽는 것과 같다.
+    /// </summary>
+    private static HashSet<Vector2Int> RouteCells(IReadOnlyList<LaneData> lanes, int chosen)
+    {
+        if (chosen < 0 || chosen >= lanes.Count)
+        {
+            return null;
+        }
+
+        IReadOnlyList<Tile> path = lanes[chosen].Tiles;
+        if (path.Count == 0)
+        {
+            return null; // 막힌 경로 — 살릴 칸이 없어서 죽이면 판이 통째로 어두워진다
+        }
+
+        var cells = new HashSet<Vector2Int>();
+        for (int i = 0; i < path.Count; i++)
+        {
+            cells.Add(path[i].Coord);
+        }
+
+        return cells;
+    }
+
+    // 이 칸이 고른 경로 위에 있는가. 고른 경로가 없으면 전부 살린다.
+    private static bool RouteLit(HashSet<Vector2Int> route, Vector2Int coord)
+    {
+        if (route == null)
+        {
+            return true;
+        }
+
+        return route.Contains(coord);
     }
 
     // 이 스폰 표식을 살릴 것인가. 고른 경로가 없으면 전부 살린다(예전 그대로).
@@ -151,9 +191,9 @@ public class TileGridView
 
     // ---- 칸 ----
 
-    private void DrawCell(Rect rect, Tile tile, int cellPixels, bool spawnLit)
+    private void DrawCell(Rect rect, Tile tile, int cellPixels, bool spawnLit, bool routeLit)
     {
-        bool lit = Lit(tile);
+        bool lit = Lit(tile) && routeLit;
 
         Color fill = MapMakerPalette.Terrain(tile.Terrain);
         Color top = MapMakerPalette.HighTop;
@@ -506,7 +546,11 @@ public class TileGridView
         }
     }
 
-    // 보라 판에 흰 글자. 어떤 지형색·경로색 위에 얹혀도 같은 대비로 읽히게 판을 깐다.
+    /// <summary>
+    /// 보라 판에 검은 글자. 어떤 지형색·경로색 위에 얹혀도 같은 대비로 읽히게 판을 깐다.
+    /// 판은 칸 왼쪽 위에서 시작한다 — 가운데는 선과 화살표 자리다.
+    /// 같은 칸을 다시 지나가면 오른쪽 아래로 한 칸씩 밀어 쌓아, 앞 번호를 덮지 않고 순서대로 읽힌다.
+    /// </summary>
     private static void DrawOrder(Vector2 corner, int order)
     {
         string text = order.ToString();
