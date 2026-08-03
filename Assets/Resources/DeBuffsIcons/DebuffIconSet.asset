@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3305177845faa39479b2692b95df527e, type: 3}
+  m_Name: DebuffIconSet
+  m_EditorClassIdentifier: Assembly-CSharp::DebuffIconSetSO
+  iconPrefab: {fileID: 4224132103148220943, guid: 79c80a0902445da4799833fd64f1819b, type: 3}
+  icons:
+  - kind: 0
+    sprite: {fileID: 21300000, guid: 37f1b1d8f48f52042aa04f27ead40c0c, type: 3}
+  - kind: 5
+    sprite: {fileID: 21300000, guid: 04b5d3e5ab7cba6478d7e4983e9fcae1, type: 3}

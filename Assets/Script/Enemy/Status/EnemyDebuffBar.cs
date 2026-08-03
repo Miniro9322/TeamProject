@@ -33,15 +33,19 @@ public class EnemyDebuffBar
     // _spawned를 함께 보는 이유는 Setup 전에 Reset/Tick이 불려도 안전하게 no-op이 되게 하기 위함이다.
     public bool IsSetup => _icons != null && _spawned != null;
 
-    /// <summary>EnemyBase가 Awake에서 1회 호출. root/프리팹/목록 중 하나라도 비면 이후 모든 호출이 no-op가 된다.</summary>
-    public void Setup(RectTransform root, GameObject iconPrefab, EnemyDebuffIcon[] icons)
+    /// <summary>
+    /// EnemyBase가 Awake에서 1회 호출. root나 아이콘 설정이 비면 이후 모든 호출이 no-op가 된다.
+    /// root만 프리팹별이고, 프리팹·스프라이트는 set(공용 에셋)에서 온다.
+    /// </summary>
+    public void Setup(RectTransform root, DebuffIconSetSO set)
     {
-        if (root == null || iconPrefab == null || icons == null || icons.Length == 0) return;
+        if (root == null || set == null || set.iconPrefab == null) return;
+        if (set.icons == null || set.icons.Length == 0) return;
 
         _root = root;
-        _iconPrefab = iconPrefab;
-        _icons = icons;
-        _spawned = new GameObject[icons.Length];
+        _iconPrefab = set.iconPrefab;
+        _icons = set.icons;
+        _spawned = new GameObject[_icons.Length];
         _timer = float.MaxValue;   // 첫 Tick에서 간격을 기다리지 않고 즉시 판정
     }
 

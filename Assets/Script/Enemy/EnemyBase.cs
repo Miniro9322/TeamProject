@@ -4,6 +4,7 @@ using System.Threading;
 using Cysharp.Threading.Tasks;
 using TMPro;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
 using VContainer;
 
@@ -19,18 +20,24 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble
     [SerializeField] private GameObject burrowMarkerPrefab;
     [Tooltip("파고들기/솟아오르기 애니 이벤트가 안 왔을 때 강제로 다음 상태로 넘기는 시간(초). 클립 길이보다 넉넉하게.")]
     [SerializeField] private float burrowTimeout = 3f;
+    [Tooltip("솟아오르며 영웅에게 거는 스턴 시간(초). 0이면 스턴을 걸지 않는다. Hero가 IStunAble을 구현하기 전까진 효과 없음.")]
+    [SerializeField] private float burrowEmergeStun = 2f;
     [Tooltip("적 머리 위 체력바. 없는 프리팹이면 비워두면 된다(체력바 로직 전체가 no-op).")]
     public Slider healthSlider;
     [Tooltip("체력바가 현재 체력을 따라가는 속도. 클수록 빠르게 붙는다.")]
     private float sliderSpeed = 10f;
     [Tooltip("체력바 패널에 위에 보일 보스 이름")] //일반 엘리트는 일단 없음(추후 고민)
     public TMP_Text bossName;
+    [Tooltip("보스 체력바의 현재 체력/최대 체력 텍스트(예: 4800/5000). 비우면 표시하지 않음.")]
+    public TMP_Text hpText;
+    [Tooltip("보스 체력바의 공격력 텍스트. 버프·디버프가 반영된 현재 값이 표시된다. 비우면 표시하지 않음.")]
+    public TMP_Text attackText;
+    [Tooltip("보스 체력바의 방어력 텍스트. 버프·디버프가 반영된 현재 값이 표시된다. 비우면 표시하지 않음.")]
+    public TMP_Text defenseText;
     [Tooltip("디버프 아이콘이 소환될 부모. GridLayoutGroup이 달린 오브젝트를 꽂는다. 비우면 디버프 아이콘 로직 전체가 no-op.")]
     public RectTransform debuffIconRoot;
-    [Tooltip("디버프 아이콘 1칸 프리팹. Image 컴포넌트가 있어야 하고, 스프라이트는 debuffIcons에서 종류별로 지정한다.")]
-    public GameObject debuffIconPrefab;
-    [Tooltip("종류별 아이콘 스프라이트. 여기 등록되고 스프라이트가 들어 있는 종류만 표시된다.")]
-    public EnemyDebuffIcon[] debuffIcons;
+    [Tooltip("디버프 아이콘 공용 설정(아이콘 프리팹 + 종류별 스프라이트). 에셋 하나를 모든 보스가 돌려쓴다.")]
+    [SerializeField] private DebuffIconSetSO debuffIconSet;
     private float[] skillTimers;
     private bool[] skillRunning;
     private CancellationTokenSource skillCts;
@@ -135,17 +142,23 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble
     private bool _hasStunParam;
     private bool _stunParamChecked;
     public bool IsStunned => Time.time < _stunExpiry;
+    private GameObject stunEffectPrefab;
+    [Tooltip("스턴 이펙트가 뜰 위치. 머리 위에 빈 오브젝트를 만들어 꽂는다(유닛마다 키가 달라 원점으로는 안 맞는다). 비우면 이펙트가 뜨지 않음.")]
+    [SerializeField] private Transform stunEffectAnchor;
     protected virtual void Awake()
     {
         _baseScale = transform.localScale; // 프리팹 원래 스케일 스냅샷(분열 축소 후 복구 기준)
         _bar.Setup(healthSlider, sliderSpeed); // LoadStats(→ApplyData)가 바를 채우므로 그보다 먼저
-        _debuffs.Setup(debuffIconRoot, debuffIconPrefab, debuffIcons); // 아이콘은 디버프가 걸릴 때 풀에서 소환된다
+        _debuffs.Setup(debuffIconRoot, debuffIconSet); // 아이콘은 디버프가 걸릴 때 풀에서 소환된다
+        _statText.Setup(hpText, attackText, defenseText);
         LoadStats();
         animator = GetComponent<Animator>();
         _move = new EnemyMovement(gameObject, animator, arriveSqr);
         // 잠행 몹은 은신 셰이더 페이드를 쓰지 않는다(연출을 EnemyBurrow가 전담) — Cloaking 비트는 피격 판정용으로만 남긴다.
         if (IsCloaking && !IsBurrow) _cloak.Setup(gameObject, cloakSettings); // Attribute 결정(LoadStats) 뒤에 호출
         if (IsBurrow) _burrow.Setup(gameObject, animator, burrowMarkerPrefab, burrowTimeout);
+        stunEffectPrefab = Resources.Load<GameObject>("EnemyEffectPrefab/Stun");
+        _stunEffect.Setup(stunEffectPrefab, stunEffectAnchor);
     }
 
     protected virtual void OnEnable()
@@ -185,6 +198,8 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble
         _burrow.Reset();   // 지면 마커를 풀에 반납(안 하면 적에 딸려가 재사용 시 되살아난다)
         _bar.Reset();
         _debuffs.Reset();  // 소환된 아이콘을 풀에 반납(안 하면 다음 스폰이 이전 개체의 디버프 아이콘을 물고 나온다)
+        _stunEffect.Reset(); // 스턴 중에 죽어도 이펙트가 남지 않게 풀에 반납
+        _statText.Reset();   // 캐시를 비워, 재사용된 개체가 이전 개체의 숫자를 한 프레임 보여주지 않게
         _move.Pause();
         _move.LeaveBoard(); // 어떤 경로로 사라지든 현재 칸에서 빠진다
         _move.ArrivedAtCore -= HandleArrivedAtCore;
@@ -214,6 +229,10 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble
     private readonly EnemyBurrow _burrow = new();
     // 체력바 아래 디버프 아이콘은 EnemyDebuffBar가 전담. 아이콘을 안 꽂은 프리팹이면 통째로 no-op.
     private readonly EnemyDebuffBar _debuffs = new();
+    // 스턴 이펙트는 EnemyStunEffect가 전담(중복 스턴 시 갱신·머리 위 추종). 앵커를 안 꽂은 프리팹이면 통째로 no-op.
+    private readonly EnemyStunEffect _stunEffect = new();
+    // 보스 체력바의 스탯 숫자(체력/공격력/방어력)는 EnemyStatText가 전담. 텍스트를 안 꽂은 프리팹이면 통째로 no-op.
+    private readonly EnemyStatText _statText = new();
     // 모디파이어가 붙기 전 원본 스탯값. ApplyData가 sc에 넣는 값을 그대로 여기에도 기록한다 —
     // StatContainer가 base를 되읽는 API를 주지 않으므로(팀원 소유 파일), 디버프 판정 기준을 이쪽에서 들고 있어야 한다.
     private readonly Dictionary<StatType, float> baseStats = new();
@@ -227,6 +246,12 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble
         _cloak.Tick(CloakClear);
         _burrow.Tick(CloakClear, transform.position); // 은신과 같은 트리거(저지/사망) — 저지되면 솟아오른다
         StunTick();                     // 스턴 만료를 감지해 Animator bool을 끈다
+        // 임시 테스트 — 넘패드1로 3초 스턴. 적마다 Update가 돌므로 화면의 모든 적이 동시에 걸린다.
+        // Keyboard.current는 키보드가 없는 환경에서 null이라 반드시 확인해야 한다.
+        if (Keyboard.current != null && Keyboard.current.numpad1Key.wasPressedThisFrame)
+        {
+            Stun(3f);
+        }
     }
 
     // 체력바는 LateUpdate에서 굴린다 — 이동(Update)과 카메라 회전(CameraInput.Update)이 모두 끝난 뒤라야
@@ -238,7 +263,12 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble
         // 표시 여부(안 맞았으면 숨김 / 죽을 땐 0까지 깎이는 걸 보여줌)는 EnemyHealthBar가 판단한다.
         bool cloakedNow = (Attribute & EnemyAttribute.Cloaking) != 0;
         _bar.Tick(Hp, MaxHp, IsDead, cloakedNow,Class);
+        // 스탯 숫자는 값이 바뀐 것만 갱신한다 — 매 프레임 불러도 문자열/메시를 다시 만들지 않는다.
+        _statText.Tick(Hp, MaxHp, AttackPower, Defense);
         _debuffs.Tick(sc, baseStats, IsStunned);
+        // 이동(Update)이 끝난 뒤에 앵커를 따라가야 이펙트가 한 프레임 밀리지 않는다.
+        // 죽으면 스턴 연출을 끌고 가지 않는다 — 사망 애니 위에 별이 돌고 있으면 이상하다.
+        _stunEffect.Tick(IsStunned && !IsDead);
     }
 
     // 외부(영웅 등)에서 이 적을 duration초간 스턴. 이동/공격/스킬 시전이 모두 멈춘다.
@@ -248,6 +278,8 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble
         if (IsDead || duration <= 0f) return;
         bool wasStunned = IsStunned;
         float expiry = Time.time + duration;
+        // 이펙트는 여기서 소환하지 않는다 — _stunEffect가 IsStunned를 보고 굴리므로,
+        // 스턴이 겹쳐 들어와도 이펙트는 하나이고 갱신된 만료 시각까지 알아서 유지된다.
         if (expiry > _stunExpiry) _stunExpiry = expiry;
         if (!wasStunned) InterruptActiveSkills(); // 스턴 시작(상승 엣지)에만 끊기 — 재스턴 시 중복 취소 방지
     }
@@ -357,8 +389,20 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble
     // 각 클립 마지막 프레임에 Animation Event로 이 메서드 이름을 걸어준다.
     // 안 걸어도 EnemyBurrow의 타임아웃이 강제로 넘겨주지만(경고 로그), 연출 타이밍이 어긋난다.
     public void AnimEvent_Burrowed() => _burrow.NotifyBurrowed();   // 파고들기 끝 → 렌더러 off
-    public void AnimEvent_Surfaced() => _burrow.NotifySurfaced();   // 솟아오르기 끝 → 공격 허용
+    public void AnimEvent_Surfaced()
+    {
+        _burrow.NotifySurfaced();
+        if (IsDead) return;
+        if (Board == null || !Board.IsBlocked(gameObject)) return;
+        if (!Board.TryGetCell(Board.WorldToCell(transform.position), out Tile tile)) return;
+        if (tile.OccupantObject == null) return;
+        if (tile.OccupantObject.GetComponentInParent<Hero>() is not Hero hero || hero.IsDead) return;
 
+        hero.TakeDamage(AttackPower);
+
+        if (burrowEmergeStun > 0f) (hero as IStunAble)?.Stun(burrowEmergeStun);
+    }
+    
     private async UniTask RunSkill(int index, CancellationToken token)
     {
         skillRunning[index] = true;
@@ -425,7 +469,6 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble
         }
         else
         {
-            // 날짜 스케일이 붙는 HP/DEF는 지역변수로 한 번만 계산한다 — baseStats에 다른 값이 들어가면 디버프 판정이 어긋난다.
             float scaledHp  = data.Health  + (gameManager.DayCount * data.UpHealthScale);
             float scaledDef = data.Defense + (data.UpDefenseScale * (gameManager.DayCount / 5));
             sc.SetBaseValue(StatType.HP,scaledHp);
@@ -444,8 +487,6 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble
         //MoveSpeed = data.MoveSpeed;
     }
 
-    // 방금 sc에 넣은 원본값을 그대로 장부에 남긴다. EnemyDebuffBar가 "지금 값이 이보다 낮은가"로 디버프를 판정한다.
-    // 인자를 받는 이유는 호출부에서 sc에 넣은 것과 같은 식(式)을 쓰도록 강제하기 위함 — 여기서 다시 계산하면 어긋날 수 있다.
     private void RecordBaseStats(float hp, float atk, float attackSpeed, float def, float spd)
     {
         baseStats[StatType.HP]  = hp;
@@ -520,11 +561,8 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble
         }
     }
 
-    // 분열 등에서 스폰 직후 현재 체력을 물려줄 때 사용.
-    // 스폰 시 OnEnable이 LoadStats로 풀피 리셋하므로, 그 뒤에 이걸 호출해 현재 체력으로 덮어쓴다.
     public void SetCurrentHp(float hp) => Hp = Mathf.Clamp(hp, 1f, MaxHp);
 
-    // 분열 세대. 0=원본, 분열체는 부모+1. 무한 분열 방지용(SplitSkill이 maxGeneration으로 제한).
     public int SplitGeneration { get; private set; }
 
   
@@ -547,8 +585,6 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble
         _move.Pause();
         if (animator != null)
         {
-            // 공속이 빨라져 공격 간격(1/AS)이 클립 길이보다 짧아지면 그 비율로 애니를 압축(배속).
-            // 간격이 더 길 땐 1배속 유지 — 억지로 늘려 슬로우모션처럼 보이는 걸 방지.
             float interval = AttackSpeed > 0f ? 1f / AttackSpeed : 1f;
             animator.speed = (attackClipLength > interval && interval > 0f) ? attackClipLength / interval : 1f;
             animator.SetTrigger("Attack");
@@ -623,8 +659,6 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble
         IsDead = true;
         _move.Stop();
         if (Board != null) Board.RemoveEnemy(gameObject);
-        // 이미 비활성(OnDisable로 skillCts 해제)이면 사망 연출을 기다릴 수 없다 → 카운트만 내리고 즉시 반납.
-        // 온데스 스킬은 여기서 발동시키지 않는다(비활성 상태에서 분열체를 스폰하면 자리/경로가 없다).
         if (skillCts == null) { SendDieEvent(); Despawn(); return; }
         DieRoutine(skillCts.Token).Forget();
     }
