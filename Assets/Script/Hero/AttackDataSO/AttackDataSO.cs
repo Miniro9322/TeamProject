@@ -8,6 +8,17 @@ public enum AnimSelectMode { Sequential, Random }
 // 애니메이션 이벤트 없이 직접 tick 피해를 적용하는 채널링형 공격(예: 레이저).
 public enum AttackTimingMode { Discrete, Continuous }
 
+// timingMode == Continuous 전용. 채널링 한 tick이 "잠긴 타겟에 즉시 피해(Beam)"인지 "실제 투사체
+// 발사(ProjectileVolley)"인지를 명시한다. 예전엔 projectilePrefab != null 이라는 필드 이름과 무관한
+// null 체크로 갈렸다.
+//
+// 스코프 경고: 이 enum은 ContinuousBeamStrategy 단 한 곳에서만 읽는다. 근접/원거리/힐 구분을
+// 여기에 추가하지 말 것 — 그 축은 {SwordMan,Archer,Mage,Healer}AttackState가 주입하는
+// IAttackExecutor가 유일한 권위이고, 데이터 쪽에 같은 구분을 만들면 진실 소스가 둘이 된다.
+// groundZonePrefab도 넣지 말 것 — 장판은 배달 방식이 아니라 모든 배달 방식에 부가로 co-occur하는
+// 옵션이다(MeleeAttackExecutor/RangedAttackExecutor/Projectile.Hit에서 각각 독립적으로 체크됨).
+public enum ContinuousDelivery { Beam = 0, ProjectileVolley = 1 }
+
 [CreateAssetMenu(fileName = "AttackData", menuName = "HeroAttack/AttackData")]
 public class AttackDataSO : ScriptableObject
 {
@@ -39,6 +50,8 @@ public class AttackDataSO : ScriptableObject
 
     [Header("타이밍")]
     public AttackTimingMode timingMode = AttackTimingMode.Discrete;
+    [Tooltip("timingMode==Continuous 전용: 매 tick 즉시 피해(Beam)인지 투사체 발사(ProjectileVolley)인지")]
+    public ContinuousDelivery continuousDelivery = ContinuousDelivery.Beam;
     [Tooltip("timingMode==Continuous 전용: 채널링 총 지속시간(초). 0 이하로 두면 시간 제한 없이 타겟이 죽거나 사거리를 벗어날 때까지 계속 채널링한다.")]
     public float continuousDuration = 2f;
     [Tooltip("timingMode==Continuous 전용: 피해 틱 주기(초)")]
@@ -66,6 +79,17 @@ public class AttackDataSO : ScriptableObject
     public float allyHealAmount = 0f;
     public int allyHealRange = 2;
     public RangeShape allyHealRangeShape = RangeShape.Diamond;
+
+#if UNITY_EDITOR
+    private void OnValidate()
+    {
+        if (timingMode != AttackTimingMode.Continuous) return;
+        if (continuousDelivery == ContinuousDelivery.ProjectileVolley && projectilePrefab == null)
+            Debug.LogWarning($"[{name}] ProjectileVolley인데 projectilePrefab이 비어 있습니다.", this);
+        if (continuousDelivery == ContinuousDelivery.Beam && projectilePrefab != null)
+            Debug.LogWarning($"[{name}] Beam이므로 projectilePrefab({projectilePrefab.name})은 무시됩니다.", this);
+    }
+#endif
 }
 
 public enum AttackType { Single, Area }

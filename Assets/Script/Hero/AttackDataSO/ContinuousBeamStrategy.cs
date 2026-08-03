@@ -10,8 +10,8 @@ using UnityEngine.Pool;
 // 전에 hero.Target으로 "지금도 유효한 타겟인가"를 다시 확인하고(넘겨받은 ctx는 struct 복사본이라
 // Hero.CheckTargetStillInRange가 타겟을 null로 바꿔도 갱신되지 않는다), hero.Context로 매번 새
 // 스냅샷을 떠서 데미지를 적용한다 — 그렇지 않으면 채널링 도중 타겟이 죽는 순간 NRE가 난다.
-// data.projectilePrefab이 비어있으면 빔형(잠긴 타겟에 즉시 데미지, BeamVisualEffect와 짝을 이룸),
-// 채워져 있으면 매 tick 실제 투사체를 발사하는 방식으로 갈린다(attackCount/targetCount로 매 tick
+// data.continuousDelivery == Beam이면 잠긴 타겟에 즉시 데미지(BeamVisualEffect와 짝을 이룸),
+// ProjectileVolley면 매 tick 실제 투사체를 발사하는 방식으로 갈린다(attackCount/targetCount로 매 tick
 // 몇 발을 어디에 쏠지 결정 — RangedAttackExecutor.FireVolley와 동일한 타겟팅 규칙).
 public class ContinuousBeamStrategy : IAttackDeliveryStrategy
 {
@@ -32,7 +32,7 @@ public class ContinuousBeamStrategy : IAttackDeliveryStrategy
             while (data.continuousDuration <= 0f || elapsed < data.continuousDuration)
             {
                 if (hero.Target == null) break; // 채널링 도중 타겟이 죽거나 벗어남 — 여기서 끊는다
-                if (data.projectilePrefab != null)
+                if (data.continuousDelivery == ContinuousDelivery.ProjectileVolley)
                     await FireProjectileVolley(hero, data, ctx, ct);
                 else
                     await AttackDamageUtil.ApplyInstantDamage(data, hero.Context, ct);
@@ -86,22 +86,7 @@ public class ContinuousBeamStrategy : IAttackDeliveryStrategy
         arrow.transform.SetPositionAndRotation(ctx.muzzle.position, ctx.muzzle.rotation);
         hero.SpawnEffect(data.attackEffect, ctx.muzzle.position, ctx.muzzle.rotation, data.attackEffectLifetime);
 
-        var cfg = new ProjectileAoEConfig
-        {
-            attackType = data.attackType,
-            areaShape = data.areaShape,
-            areaRange = data.areaRange,
-            chainRange = data.chainRange,
-            chainCount = data.chainCount,
-            chainFalloff = data.chainFalloff,
-            casterPos = ctx.self.position,
-            buffList = data.buffList,
-            buffManager = ctx.buffManager,
-            source = data,
-            groundZonePrefab = data.groundZonePrefab,
-            attackerStats = ctx.sc,
-            hero = hero,
-        };
-        arrow.Launch(target.transform, damage, pool, cfg);
+        arrow.Launch(target.transform, damage, pool,
+            ProjectileAoEConfig.From(data, hero, ctx.sc, ctx.buffManager, ctx.self.position));
     }
 }
