@@ -12,7 +12,7 @@ public class MageAttackState : HeroAttackState
         this.mage = mage;
     }
 
-    protected override bool IsBusy => runner != null && runner.IsExecuting;
+    public override bool IsBusy => runner != null && runner.IsExecuting;
 
     public override void Enter()
     {

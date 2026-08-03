@@ -15,7 +15,7 @@ public class HealAttackExecutor : IAttackExecutor
         ctx.anim.SetTrigger(PickTrigger(data));
 
         if (data.groundZonePrefab != null)
-            ctx.spawnGroundZone?.Invoke(data.groundZonePrefab, ctx.self.position);
+            ctx.hero.SpawnGroundZone(data.groundZonePrefab, ctx.self.position);
 
         try
         {
@@ -24,13 +24,13 @@ public class HealAttackExecutor : IAttackExecutor
             int hits = 0;
             while (await window.MoveNextHit(ct))
             {
-                ctx.spawnEffect(data.attackEffect, ctx.self.position, Quaternion.identity, data.attackEffectLifetime);
+                ctx.hero.SpawnEffect(data.attackEffect, ctx.self.position, Quaternion.identity, data.attackEffectLifetime);
                 await AttackDamageUtil.ApplyInstantHeal(data, ctx, ct);
                 hits++;
             }
             if (hits == 0)
             {
-                ctx.spawnEffect(data.attackEffect, ctx.self.position, Quaternion.identity, data.attackEffectLifetime);
+                ctx.hero.SpawnEffect(data.attackEffect, ctx.self.position, Quaternion.identity, data.attackEffectLifetime);
                 await AttackDamageUtil.ApplyInstantHeal(data, ctx, ct);
             }
         }

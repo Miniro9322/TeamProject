@@ -10,17 +10,18 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3e63ecebd4cd6e044a8a127ea3df05bc, type: 3}
-  m_Name: ArcherMultipleAttackData
+  m_Name: SwordManJumpAttack
   m_EditorClassIdentifier: Assembly-CSharp::AttackDataSO
-  range: 10
-  rangeShape: 0
-  attackType: 0
-  attackPer: 0.8
-  attackCount: 3
-  targetMode: 1
-  targetCount: 3
+  range: 1
+  rangeShape: 1
+  unattackableTarget: 3
+  attackType: 1
+  attackPer: 3.5
+  attackCount: 1
+  targetMode: 0
+  targetCount: 1
   shotInterval: 0.1
-  areaShape: 0
+  areaShape: 1
   areaRange: 1
   lineLength: 2
   chainRange: 2
@@ -33,14 +34,14 @@ MonoBehaviour:
   continuousTickInterval: 0.2
   selectMode: 0
   animTriggers:
-  - TripleAttack
-  projectilePrefab: {fileID: 607833191716554269, guid: 9a655c0bc584fd949b6d31f3804c9433, type: 3}
-  clipLength: 1
+  - JumpAttack
+  projectilePrefab: {fileID: 0}
+  clipLength: 0.5333333
   buffList: []
   groundZonePrefab: {fileID: 0}
-  attackEffect: {fileID: 1016717492136352, guid: d9a16b144bb6373498d4374fb5d0d3b2, type: 3}
+  attackEffect: {fileID: 0}
   attackEffectLifetime: 1
-  hitEffect: {fileID: 1029544359644514, guid: aab2daf1fd2b23f4a9bdbbb38fc95704, type: 3}
+  hitEffect: {fileID: 0}
   hitEffectLifetime: 1
   lifestealPercent: 0
   allyHealAmount: 0

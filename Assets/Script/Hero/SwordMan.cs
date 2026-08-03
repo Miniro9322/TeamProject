@@ -12,19 +12,9 @@ public class SwordMan : Hero
             target = null,
             anim = Anim,
             animEvents = AnimEvents,
-            spawnEffect = SpawnEffect,
-            spawnPersistentEffect = SpawnPersistentEffect,
-            despawnEffect = DespawnEffect,
-            getObjectsInRange = GetObjectsInRange,
-            healSelf = amount => Heal(amount),
-            getEnemiesInLine = GetEnemiesInLine,
-            getCardinalDirection = GetCardinalDirection,
-            getLineEndPoint = GetLineEndPoint,
             buffManager = buffManager,
             sc = SC,
-            selfUnit = this,
-            onHit = NotifyHit,
-            spawnGroundZone = SpawnGroundZone
+            hero = this
         };
         occupantKind = OccupantKind.MeleeHero;
     }

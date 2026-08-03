@@ -11,26 +11,35 @@ public enum AttackTimingMode { Discrete, Continuous }
 [CreateAssetMenu(fileName = "AttackData", menuName = "HeroAttack/AttackData")]
 public class AttackDataSO : ScriptableObject
 {
-    public float attackPer = 1f;
+    [Header("탐지 (타겟 후보를 찾는 범위)")]
     public int range = 3;
     public RangeShape rangeShape = RangeShape.Diamond;
+    [Tooltip("이 공격으로 공격할 수 없는 적 속성(비트 플래그) — 예: 비행/은신")]
+    public EnemyAttribute unattackableTarget = EnemyAttribute.Fly | EnemyAttribute.Cloaking;
 
+    [Header("타격 형태")]
     public AttackType attackType = AttackType.Single;
-    public TargetMode targetMode = TargetMode.SameTarget;
+    public float attackPer = 1f;
     public int attackCount = 1;
+    public TargetMode targetMode = TargetMode.SameTarget;
     public int targetCount = 1;
     public float shotInterval = 0.1f;
 
+    [Header("범위 공격")]
     public AreaShape areaShape = AreaShape.Diamond;
     public int areaRange = 1;
     public int lineLength = 2;
+
+    [Header("체인 공격")]
     public int chainRange = 2;
     public int chainCount = 3;
     public float chainFalloff = 0.8f;
+    public GameObject chainEffectPrefab;
+    public float chainEffectLifetime = 0.3f;
 
     [Header("타이밍")]
     public AttackTimingMode timingMode = AttackTimingMode.Discrete;
-    [Tooltip("timingMode==Continuous 전용: 채널링 총 지속시간(초)")]
+    [Tooltip("timingMode==Continuous 전용: 채널링 총 지속시간(초). 0 이하로 두면 시간 제한 없이 타겟이 죽거나 사거리를 벗어날 때까지 계속 채널링한다.")]
     public float continuousDuration = 2f;
     [Tooltip("timingMode==Continuous 전용: 피해 틱 주기(초)")]
     public float continuousTickInterval = 0.2f;

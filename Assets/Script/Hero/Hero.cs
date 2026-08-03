@@ -56,6 +56,10 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
     [Header("유닛 정보")]
     [SerializeField] private List<AttackDataSO> basePattern;
     public List<AttackDataSO> BasePattern => basePattern;
+    // 히어로의 "현재 공격 데이터" — 항상 basePattern[0] 고정. 로테이션 중인 실제 공격과는 무관하게
+    // 배치 프리뷰(RangeInfo)나 사거리 판정처럼 전투 시작 전에도 값이 있어야 하고 전투 중에도 흔들리면
+    // 안 되는 곳에서 쓴다.
+    public AttackDataSO CurrentAttackData => basePattern != null && basePattern.Count > 0 ? basePattern[0] : null;
 
     // 트레잇/액티브 스킬은 이제 SO가 아니라 같은 프리팹에 붙은 Component다 — Awake에서 자동 수집한다.
     private HeroTrait[] traits;
@@ -104,10 +108,10 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
     protected Tile currentTile;
     public Tile CurrentTile => currentTile;
 
-    [SerializeField] protected int range = 1;
-    [SerializeField] protected RangeShape rangeShape = RangeShape.Diamond;
-    public int Range => range;
-    public RangeShape RangeShape => rangeShape;
+    // 사거리/사거리 형태는 AttackDataSO(CurrentAttackData = basePattern[0])로 이전됨 — 프로퍼티
+    // 이름/시그니처는 그대로 유지해 RangeInfo 등 기존 소비 코드는 변경 없이 그대로 쓴다.
+    public int Range => CurrentAttackData?.range ?? 0;
+    public RangeShape RangeShape => CurrentAttackData?.rangeShape ?? RangeShape.Diamond;
 
     [Tooltip("소유자가 죽을 때까지 유지되는 오라 장판(GroundZoneEffect, duration<=0) 프리팹들")]
     [SerializeField] private List<GameObject> auraZonePrefabs = new();
@@ -129,6 +133,26 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
                 defaultCapacity: 8,
                 maxSize: 256);
             effectPools[prefab] = pool;
+        }
+        return pool;
+    }
+
+    // 투사체 풀도 이펙트 풀과 동일한 패턴(Hero 인스턴스 소유) — 원거리 Hero(Archer/Mage)만 사용한다.
+    private readonly Dictionary<Projectile, IObjectPool<Projectile>> projectilePools = new();
+
+    public IObjectPool<Projectile> GetProjectilePool(Projectile prefab)
+    {
+        if (!projectilePools.TryGetValue(prefab, out var pool))
+        {
+            pool = new ObjectPool<Projectile>(
+                createFunc: () => Instantiate(prefab),
+                actionOnGet: p => p.gameObject.SetActive(true),
+                actionOnRelease: p => p.gameObject.SetActive(false),
+                actionOnDestroy: p => Destroy(p.gameObject),
+                collectionCheck: true,
+                defaultCapacity: 8,
+                maxSize: 32);
+            projectilePools[prefab] = pool;
         }
         return pool;
     }
@@ -164,6 +188,19 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
         GetEffectPool(prefab).Release(instance);
     }
 
+    // 체인 튕김 두 지점(from/to)을 잇는 LineRenderer 이펙트. SpawnEffect의 풀링/회수 타이머를 그대로
+    // 감싸고 LineRenderer 두 점만 추가로 세팅한다.
+    public GameObject SpawnChainArc(GameObject prefab, Vector3 from, Vector3 to, float lifetime)
+    {
+        GameObject go = SpawnEffect(prefab, from, Quaternion.identity, lifetime);
+        if (go != null && go.TryGetComponent(out LineRenderer lr))
+        {
+            lr.SetPosition(0, from);
+            lr.SetPosition(1, to);
+        }
+        return go;
+    }
+
     private async UniTask ReturnEffectAfter(GameObject prefab, GameObject go, float delay)
     {
         await UniTask.Delay(TimeSpan.FromSeconds(delay));
@@ -196,7 +233,6 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
     private bool isDead;
     public bool IsDead => isDead;
 
-    [SerializeField] private EnemyAttribute unattackableTarget = EnemyAttribute.Fly | EnemyAttribute.Cloaking;
 
     private GameManager gameManager;
     private ResourcesManager resourcesManager;
@@ -435,7 +471,7 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
         GameObject nearest = null;
         float nearestSqrDist = float.MaxValue;
 
-        foreach (Tile tile in TileShapeQuery.GetTiles(board, origin, range, rangeShape))
+        foreach (Tile tile in TileShapeQuery.GetTiles(board, origin, Range, RangeShape))
         {
             foreach (GameObject enemy in tile.Enemies)
             {
@@ -460,7 +496,7 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
     {
         if (enemy == null) return false;
         var eb = enemy.GetComponent<EnemyBase>();
-        return eb != null && (eb.Attribute & unattackableTarget) == 0;
+        return eb != null && (eb.Attribute & (CurrentAttackData?.unattackableTarget ?? EnemyAttribute.None)) == 0;
     }
 
     // Enemy = 필터 없음(AOE 스플래시용 — 의도적으로 unattackableTarget을 타지 않음).
@@ -495,7 +531,7 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
         return found;
     }
 
-    public List<IDamageAble> GetEnemiesInLine(Vector3 originWorld, Vector3 towardWorld, int length)
+    public List<IDamageAble> GetEnemiesInLine(Vector3 originWorld, Vector3 towardWorld, int length, int width = 0)
     {
         Vector2Int originCell = board.WorldToCell(originWorld);
         Vector2Int dir = GridCalculator.CardinalToward(originCell, board.WorldToCell(towardWorld));
@@ -507,7 +543,7 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
                 if (enemy != null && enemy.GetComponentInParent<IDamageAble>() is IDamageAble d)
                     found.Add(d);
 
-        foreach (Tile tile in TileShapeQuery.GetLineTiles(board, originCell, dir, length))
+        foreach (Tile tile in TileShapeQuery.GetLineTiles(board, originCell, dir, length, width))
             foreach (GameObject enemy in tile.Enemies)
                 if (enemy != null && enemy.GetComponentInParent<IDamageAble>() is IDamageAble d)
                     found.Add(d);
@@ -528,7 +564,7 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
 
     protected virtual void CheckTargetStillInRange()
     {
-        foreach (Tile tile in TileShapeQuery.GetTiles(board, origin, range, rangeShape))
+        foreach (Tile tile in TileShapeQuery.GetTiles(board, origin, Range, RangeShape))
             foreach (GameObject enemy in tile.Enemies)
                 if (enemy == target)
                     return;

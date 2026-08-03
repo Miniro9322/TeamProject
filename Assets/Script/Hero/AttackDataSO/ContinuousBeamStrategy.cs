@@ -12,14 +12,31 @@ public class ContinuousBeamStrategy : IAttackDeliveryStrategy
 {
     public async UniTask Deliver(Hero hero, AttackDataSO data, AttackContext ctx, IAttackExecutor executor, CancellationToken ct)
     {
-        float interval = Mathf.Max(0.05f, data.continuousTickInterval);
-        float elapsed = 0f;
-        while (elapsed < data.continuousDuration)
+        // 캐스팅 포즈는 Trigger가 아니라 Bool 파라미터로 유지된다 — animTriggers[0]을 그 파라미터
+        // 이름으로 재사용한다(채널링 한 번에 이름 하나만 필요하므로 Sequential/Random 선택은 불필요).
+        string animParam = (data.animTriggers != null && data.animTriggers.Length > 0) ? data.animTriggers[0] : null;
+        if (string.IsNullOrEmpty(animParam))
+            Debug.LogError($"[ContinuousBeamStrategy] '{data.name}' 의 animTriggers가 비어 있습니다.");
+        else
+            ctx.anim.SetBool(animParam, true);
+
+        try
         {
-            if (hero.Target == null) break; // 채널링 도중 타겟이 죽거나 벗어남 — 여기서 끊는다
-            await AttackDamageUtil.ApplyInstantDamage(data, hero.Context, ct);
-            await UniTask.Delay(TimeSpan.FromSeconds(interval), cancellationToken: ct);
-            elapsed += interval;
+            float interval = Mathf.Max(0.05f, data.continuousTickInterval);
+            float elapsed = 0f;
+            while (data.continuousDuration <= 0f || elapsed < data.continuousDuration)
+            {
+                if (hero.Target == null) break; // 채널링 도중 타겟이 죽거나 벗어남 — 여기서 끊는다
+                await AttackDamageUtil.ApplyInstantDamage(data, hero.Context, ct);
+                await UniTask.Delay(TimeSpan.FromSeconds(interval), cancellationToken: ct);
+                elapsed += interval;
+            }
+        }
+        finally
+        {
+            // 정상 종료/타겟 소실(break)/취소(OperationCanceledException) 어떤 경로로 빠져나가도
+            // Bool이 켜진 채로 남지 않도록 반드시 꺼준다.
+            if (!string.IsNullOrEmpty(animParam)) ctx.anim.SetBool(animParam, false);
         }
     }
 }

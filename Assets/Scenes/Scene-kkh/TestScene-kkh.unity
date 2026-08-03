@@ -20,7 +20,7 @@ RenderSettings:
   m_FogDensity: 0.01
   m_LinearFogStart: 0
   m_LinearFogEnd: 300
-  m_AmbientSkyColor: {r: 0.32694554, g: 0.32694554, b: 0.34617382, a: 1}
+  m_AmbientSkyColor: {r: 0.3987041, g: 0.3987041, b: 0.40995923, a: 1}
   m_AmbientEquatorColor: {r: 0.114, g: 0.125, b: 0.133, a: 1}
   m_AmbientGroundColor: {r: 0.047, g: 0.043, b: 0.035, a: 1}
   m_AmbientIntensity: 1
@@ -2665,12 +2665,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TilePainter
   board: {fileID: 2512691319082104341}
-  pathColor: {r: 0.22, g: 0.85, b: 0.54, a: 1}
   okColor: {r: 0.21, g: 0.77, b: 0.41, a: 1}
   denyColor: {r: 0.85, g: 0.29, b: 0.27, a: 1}
   rangeColor: {r: 0.3, g: 0.6, b: 1, a: 1}
-  enemyColor: {r: 0.9, g: 0.25, b: 0.2, a: 1}
-  blockColor: {r: 0.95, g: 0.55, b: 0.1, a: 1}
+  skillColor: {r: 1, g: 0.55, b: 0.15, a: 1}
   tintShader: {fileID: 0}
   tintAlpha: 0.45
   lift: 0.02
@@ -8172,11 +8170,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 24f456927ea4b9c489f3922cd8be2a03, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TilePaintView
-  registry: {fileID: 1862994567}
   game: {fileID: 314587628}
   painter: {fileID: 314587627}
-  showEnemyTiles: 1
-  showBlocking: 0
 --- !u!4 &1235437631
 Transform:
   m_ObjectHideFlags: 0
@@ -8730,8 +8725,8 @@ Light:
   m_Enabled: 1
   serializedVersion: 12
   m_Type: 1
-  m_Color: {r: 0.6538911, g: 0.6538911, b: 0.73080415, a: 1}
-  m_Intensity: 0.6346628
+  m_Color: {r: 0.7974082, g: 0.7974082, b: 0.8424286, a: 1}
+  m_Intensity: 0.78615314
   m_Range: 10
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208

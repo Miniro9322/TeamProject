@@ -15,7 +15,7 @@ public class MeleeAttackExecutor : IAttackExecutor
         ctx.anim.SetTrigger(PickTrigger(data));
 
         if (data.groundZonePrefab != null && ctx.target != null)
-            ctx.spawnGroundZone?.Invoke(data.groundZonePrefab, ctx.target.position);
+            ctx.hero.SpawnGroundZone(data.groundZonePrefab, ctx.target.position);
 
         try
         {
@@ -24,7 +24,7 @@ public class MeleeAttackExecutor : IAttackExecutor
             int hits = 0;
             while (await window.MoveNextHit(ct))
             {
-                ctx.spawnEffect(data.attackEffect, ctx.self.position, ctx.self.rotation, data.attackEffectLifetime);
+                ctx.hero.SpawnEffect(data.attackEffect, ctx.self.position, ctx.self.rotation, data.attackEffectLifetime);
                 await AttackDamageUtil.ApplyInstantDamage(data, ctx, ct);
                 hits++;
             }
@@ -32,7 +32,7 @@ public class MeleeAttackExecutor : IAttackExecutor
             // 0회가 되어 데미지가 통째로 사라진다. window가 취소 없이 정상 종료됐다면 최소 1회는 보장 적용한다.
             if (hits == 0)
             {
-                ctx.spawnEffect(data.attackEffect, ctx.self.position, ctx.self.rotation, data.attackEffectLifetime);
+                ctx.hero.SpawnEffect(data.attackEffect, ctx.self.position, ctx.self.rotation, data.attackEffectLifetime);
                 await AttackDamageUtil.ApplyInstantDamage(data, ctx, ct);
             }
         }

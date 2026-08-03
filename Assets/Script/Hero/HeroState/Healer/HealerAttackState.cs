@@ -12,7 +12,7 @@ public class HealerAttackState : HeroAttackState
         this.healer = healer;
     }
 
-    protected override bool IsBusy => runner != null && runner.IsExecuting;
+    public override bool IsBusy => runner != null && runner.IsExecuting;
 
     public override void Enter()
     {

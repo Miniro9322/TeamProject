@@ -12,7 +12,7 @@ public class ArcherAttackState : HeroAttackState
         this.archer = archer;
     }
 
-    protected override bool IsBusy => runner != null && runner.IsExecuting;
+    public override bool IsBusy => runner != null && runner.IsExecuting;
 
     public override void Enter()
     {

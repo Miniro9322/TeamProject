@@ -11,19 +11,13 @@ public struct ProjectileAoEConfig
     public int chainRange;
     public int chainCount;
     public float chainFalloff;
-    public System.Func<Vector3, int, RangeShape, RangeQueryAffinity, List<GameObject>> getObjectsInRange;
-    public System.Action<float> healSelf;
     public List<BuffEffect> buffList;
     public BuffManager buffManager;
     public object source; // 보통 발사한 AttackDataSO 인스턴스
     public GameObject groundZonePrefab;
-    public System.Action<GameObject, Vector3> spawnGroundZone;
-    public System.Action<GameObject, int, bool> onHit;
     public StatContainer attackerStats;
     public Vector3 casterPos;
-    public System.Func<GameObject, Vector3, Quaternion, float, GameObject> spawnEffect;
-    public System.Func<GameObject, Vector3, Quaternion, GameObject> spawnPersistentEffect;
-    public System.Action<GameObject, GameObject> despawnEffect;
+    public Hero hero;
 }
 
 public class Projectile : MonoBehaviour
@@ -107,7 +101,7 @@ public class Projectile : MonoBehaviour
         if (cfg.attackType == AttackType.Area && cfg.areaShape == AreaShape.Chain)
         {
             List<GameObject> hits = ChainResolver.Resolve(target.gameObject, damage, cfg.chainRange, cfg.chainCount, cfg.chainFalloff,
-                (p, r, s) => cfg.getObjectsInRange(p, r, s, RangeQueryAffinity.TargetableEnemy), cfg.onHit);
+                (p, r, s) => cfg.hero.GetObjectsInRange(p, r, s, RangeQueryAffinity.TargetableEnemy), cfg.hero.NotifyHit);
             foreach (GameObject go in hits)
             {
                 AttackDamageUtil.ApplyTargetDebuffs(go.GetComponentInParent<IUnit>(), cfg.buffList, cfg.buffManager, cfg.source);
@@ -117,11 +111,11 @@ public class Projectile : MonoBehaviour
         }
         else if (cfg.attackType == AttackType.Area)
         {
-            foreach (GameObject go in cfg.getObjectsInRange(transform.position, cfg.areaRange, aoeShape, RangeQueryAffinity.Enemy))
+            foreach (GameObject go in cfg.hero.GetObjectsInRange(transform.position, cfg.areaRange, aoeShape, RangeQueryAffinity.Enemy))
             {
                 if (go.GetComponentInParent<IDamageAble>() is not IDamageAble enemy) continue;
                 enemy.TakeDamage((int)damage);
-                cfg.onHit?.Invoke(go, (int)damage, false);
+                cfg.hero.NotifyHit(go, (int)damage, false);
                 AttackDamageUtil.ApplyTargetDebuffs(enemy as IUnit, cfg.buffList, cfg.buffManager, cfg.source);
                 ApplyHealOptions(damage);
             }
@@ -130,14 +124,14 @@ public class Projectile : MonoBehaviour
         else if (target != null && target.GetComponentInParent<IDamageAble>() is IDamageAble damageable)
         {
             damageable.TakeDamage((int)damage);
-            cfg.onHit?.Invoke(target.gameObject, (int)damage, false);
+            cfg.hero.NotifyHit(target.gameObject, (int)damage, false);
             AttackDamageUtil.ApplyTargetDebuffs(target.GetComponentInParent<IUnit>(), cfg.buffList, cfg.buffManager, cfg.source);
             ApplyHealOptions(damage);
             SpawnHitEffect();
         }
 
         if (cfg.groundZonePrefab != null)
-            cfg.spawnGroundZone?.Invoke(cfg.groundZonePrefab, transform.position);
+            cfg.hero.SpawnGroundZone(cfg.groundZonePrefab, transform.position);
 
         Return();
     }
@@ -145,14 +139,14 @@ public class Projectile : MonoBehaviour
     private void SpawnHitEffect()
     {
         if (cfg.source is AttackDataSO data)
-            cfg.spawnEffect(data.hitEffect, transform.position, Quaternion.identity, data.hitEffectLifetime);
+            cfg.hero.SpawnEffect(data.hitEffect, transform.position, Quaternion.identity, data.hitEffectLifetime);
     }
 
     private void ApplyHealOptions(float damageDealt)
     {
         if (cfg.source is AttackDataSO data)
-            AttackDamageUtil.ApplyHealOptions(data, cfg.casterPos, cfg.healSelf,
-                (p, r, s) => cfg.getObjectsInRange(p, r, s, RangeQueryAffinity.Ally), damageDealt, cfg.attackerStats[StatType.ATK]);
+            AttackDamageUtil.ApplyHealOptions(data, cfg.casterPos, cfg.hero.Heal,
+                (p, r, s) => cfg.hero.GetObjectsInRange(p, r, s, RangeQueryAffinity.Ally), damageDealt, cfg.attackerStats[StatType.ATK]);
     }
 
     private void Return()

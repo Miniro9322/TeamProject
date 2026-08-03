@@ -28,7 +28,7 @@ public class RangedAttackExecutor : IAttackExecutor
             ctx.arrowAnim.SetTrigger("Attack");
         }
 
-        IObjectPool<Projectile> pool = ctx.getProjectilePool(data.projectilePrefab);
+        IObjectPool<Projectile> pool = ctx.hero.GetProjectilePool(data.projectilePrefab);
         int damage = (int)(ctx.sc[StatType.ATK] * data.attackPer);
 
         try
@@ -38,13 +38,13 @@ public class RangedAttackExecutor : IAttackExecutor
             int hits = 0;
             while (await window.MoveNextHit(ct))
             {
-                AttackDamageUtil.ApplySelfBuffs(ctx.selfUnit, data.buffList, ctx.buffManager, data);
+                AttackDamageUtil.ApplySelfBuffs(ctx.hero, data.buffList, ctx.buffManager, data);
                 await FireVolley(data, ctx, pool, damage, ct);
                 hits++;
             }
             if (hits == 0)
             {
-                AttackDamageUtil.ApplySelfBuffs(ctx.selfUnit, data.buffList, ctx.buffManager, data);
+                AttackDamageUtil.ApplySelfBuffs(ctx.hero, data.buffList, ctx.buffManager, data);
                 await FireVolley(data, ctx, pool, damage, ct);
             }
         }
@@ -64,7 +64,7 @@ public class RangedAttackExecutor : IAttackExecutor
         List<GameObject> targets;
         if (data.targetMode == TargetMode.DifferentEnemies)
         {
-            List<GameObject> enemies = ctx.getObjectsInRange(ctx.self.position, data.range, data.rangeShape, RangeQueryAffinity.TargetableEnemy);
+            List<GameObject> enemies = ctx.hero.GetObjectsInRange(ctx.self.position, data.range, data.rangeShape, RangeQueryAffinity.TargetableEnemy);
             targets = AttackTargetSelector.SelectTargets(enemies, data.attackCount, data.targetCount);
         }
         else
@@ -87,23 +87,23 @@ public class RangedAttackExecutor : IAttackExecutor
     {
         Projectile arrow = pool.Get();
         arrow.transform.SetPositionAndRotation(ctx.muzzle.position, ctx.muzzle.rotation);
-        ctx.spawnEffect(data.attackEffect, ctx.muzzle.position, ctx.muzzle.rotation, data.attackEffectLifetime);
+        ctx.hero.SpawnEffect(data.attackEffect, ctx.muzzle.position, ctx.muzzle.rotation, data.attackEffectLifetime);
 
         if (data.attackType == AttackType.Area && data.areaShape == AreaShape.Line)
         {
-            Vector2Int dir = ctx.getCardinalDirection(ctx.self.position, target.position);
-            foreach (IDamageAble e in ctx.getEnemiesInLine(ctx.self.position, target.position, data.lineLength))
+            Vector2Int dir = ctx.hero.GetCardinalDirection(ctx.self.position, target.position);
+            foreach (IDamageAble e in ctx.hero.GetEnemiesInLine(ctx.self.position, target.position, data.lineLength, data.areaRange))
             {
                 e.TakeDamage(damage);
-                ctx.onHit?.Invoke((e as Component)?.gameObject, damage, false);
+                ctx.hero.NotifyHit((e as Component)?.gameObject, damage, false);
                 AttackDamageUtil.ApplyTargetDebuffs(e as IUnit, data.buffList, ctx.buffManager, data);
-                AttackDamageUtil.ApplyHealOptions(data, ctx.self.position, ctx.healSelf,
-                    (p, r, s) => ctx.getObjectsInRange(p, r, s, RangeQueryAffinity.Ally), damage, ctx.sc[StatType.ATK]);
+                AttackDamageUtil.ApplyHealOptions(data, ctx.self.position, ctx.hero.Heal,
+                    (p, r, s) => ctx.hero.GetObjectsInRange(p, r, s, RangeQueryAffinity.Ally), damage, ctx.sc[StatType.ATK]);
             }
-            ctx.spawnEffect(data.hitEffect, target.position, Quaternion.identity, data.hitEffectLifetime);
+            ctx.hero.SpawnEffect(data.hitEffect, target.position, Quaternion.identity, data.hitEffectLifetime);
             if (data.groundZonePrefab != null)
-                ctx.spawnGroundZone?.Invoke(data.groundZonePrefab, target.position);
-            Vector3 endPoint = ctx.getLineEndPoint(ctx.self.position, dir, data.lineLength);
+                ctx.hero.SpawnGroundZone(data.groundZonePrefab, target.position);
+            Vector3 endPoint = ctx.hero.GetLineEndPoint(ctx.self.position, dir, data.lineLength);
             arrow.LaunchVisualOnly(endPoint, pool);
             return;
         }
@@ -116,19 +116,13 @@ public class RangedAttackExecutor : IAttackExecutor
             chainRange = data.chainRange,
             chainCount = data.chainCount,
             chainFalloff = data.chainFalloff,
-            getObjectsInRange = ctx.getObjectsInRange,
-            healSelf = ctx.healSelf,
             casterPos = ctx.self.position,
             buffList = data.buffList,
             buffManager = ctx.buffManager,
             source = data,
             groundZonePrefab = data.groundZonePrefab,
-            spawnGroundZone = ctx.spawnGroundZone,
-            onHit = ctx.onHit,
             attackerStats = ctx.sc,
-            spawnEffect = ctx.spawnEffect,
-            spawnPersistentEffect = ctx.spawnPersistentEffect,
-            despawnEffect = ctx.despawnEffect,
+            hero = ctx.hero,
         };
         arrow.Launch(target, damage, pool, cfg);
     }
