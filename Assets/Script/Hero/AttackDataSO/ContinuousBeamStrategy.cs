@@ -10,9 +10,12 @@ using UnityEngine.Pool;
 // 전에 hero.Target으로 "지금도 유효한 타겟인가"를 다시 확인하고(넘겨받은 ctx는 struct 복사본이라
 // Hero.CheckTargetStillInRange가 타겟을 null로 바꿔도 갱신되지 않는다), hero.Context로 매번 새
 // 스냅샷을 떠서 데미지를 적용한다 — 그렇지 않으면 채널링 도중 타겟이 죽는 순간 NRE가 난다.
-// data.continuousDelivery == Beam이면 잠긴 타겟에 즉시 데미지(BeamVisualEffect와 짝을 이룸),
-// ProjectileVolley면 매 tick 실제 투사체를 발사하는 방식으로 갈린다(attackCount/targetCount로 매 tick
-// 몇 발을 어디에 쏠지 결정 — RangedAttackExecutor.FireVolley와 동일한 타겟팅 규칙).
+// data.continuousDelivery == Beam이면 attackCount개의 빔을 동시에 들고(TickBeams 참고 — SameTarget은
+// 전부 같은 타겟, DifferentEnemies는 targetCount종에게 분배하고 죽은 슬롯은 사거리 내 다른 적으로
+// 보충) 각자 즉시 데미지(data.beamEffectPrefab이 있으면 캐스터→타겟을 잇는 이펙트를 채널링 내내
+// 스폰/갱신 — 두 점 갱신은 Hero.UpdateLinkEndpoints에 위임), ProjectileVolley면 매 tick 실제 투사체를
+// 발사하는 방식으로 갈린다(attackCount/targetCount로 매 tick 몇 발을 어디에 쏠지 결정 —
+// RangedAttackExecutor.FireVolley와 동일한 타겟팅 규칙).
 public class ContinuousBeamStrategy : IAttackDeliveryStrategy
 {
     public async UniTask Deliver(Hero hero, AttackDataSO data, AttackContext ctx, IAttackExecutor executor, CancellationToken ct)
@@ -25,17 +28,33 @@ public class ContinuousBeamStrategy : IAttackDeliveryStrategy
         else
             ctx.anim.SetBool(animParam, true);
 
+        bool isBeam = data.continuousDelivery == ContinuousDelivery.Beam;
+        // attackCount개 빔을 동시에 든다 — SameTarget이면 전부 hero.Target(데미지 배수), DifferentEnemies면
+        // targetCount종에게 라운드로빈 분배(FireProjectileVolley와 동일 규칙). 슬롯 타겟은 DifferentEnemies
+        // 쪽만 저장해두고 매 틱 생존 확인 — SameTarget은 hero.Target을 매번 그대로 읽어서 재타겟팅에도
+        // 자연스럽게 따라간다(고정 저장하면 하나 죽지 않고 다른 적으로 바뀌는 경우 오작동함).
+        List<(GameObject target, GameObject beamGo)> beamSlots = new();
+        if (isBeam && data.beamEffectPrefab != null)
+        {
+            foreach (GameObject t in ResolveBeamTargets(hero, data, ctx))
+                beamSlots.Add((t, hero.SpawnPersistentEffect(data.beamEffectPrefab, ctx.muzzle.position, Quaternion.identity)));
+        }
+
         try
         {
             float interval = Mathf.Max(0.05f, data.continuousTickInterval);
             float elapsed = 0f;
             while (data.continuousDuration <= 0f || elapsed < data.continuousDuration)
             {
-                if (hero.Target == null) break; // 채널링 도중 타겟이 죽거나 벗어남 — 여기서 끊는다
-                if (data.continuousDelivery == ContinuousDelivery.ProjectileVolley)
-                    await FireProjectileVolley(hero, data, ctx, ct);
+                if (isBeam)
+                {
+                    if (!await TickBeams(hero, data, ctx, beamSlots, ct)) break; // 남은 빔 없음 — 채널링 종료
+                }
                 else
-                    await AttackDamageUtil.ApplyInstantDamage(data, hero.Context, ct);
+                {
+                    if (hero.Target == null) break; // 채널링 도중 타겟이 죽거나 벗어남 — 여기서 끊는다
+                    await FireProjectileVolley(hero, data, ctx, ct);
+                }
                 await UniTask.Delay(TimeSpan.FromSeconds(interval), cancellationToken: ct);
                 elapsed += interval;
             }
@@ -45,7 +64,88 @@ public class ContinuousBeamStrategy : IAttackDeliveryStrategy
             // 정상 종료/타겟 소실(break)/취소(OperationCanceledException) 어떤 경로로 빠져나가도
             // Bool이 켜진 채로 남지 않도록 반드시 꺼준다.
             if (!string.IsNullOrEmpty(animParam)) ctx.anim.SetBool(animParam, false);
+            foreach (var slot in beamSlots)
+                hero.DespawnEffect(data.beamEffectPrefab, slot.beamGo);
         }
+    }
+
+    // beamSlots를 갱신: 무효해진 슬롯(DifferentEnemies에서 타겟이 사거리를 벗어나거나 죽음)은 소멸시켜
+    // 리스트에서 제거하고, 빈 자리는 사거리 내 아직 안 붙잡힌 다른 적으로 다시 채운다(살아있는 슬롯은
+    // 그대로 둬서 매 틱 재셔플되어 빔이 튀지 않게 함). 반환값 false면 사거리 안에 유효 타겟이 하나도
+    // 없다는 뜻 — 호출자가 채널링 자체를 끝낸다.
+    private async UniTask<bool> TickBeams(Hero hero, AttackDataSO data, AttackContext ctx, List<(GameObject target, GameObject beamGo)> slots, CancellationToken ct)
+    {
+        if (slots.Count == 0) return false;
+
+        if (data.targetMode == TargetMode.SameTarget)
+        {
+            if (hero.Target == null) return false;
+            foreach (var (_, beamGo) in slots)
+                Hero.UpdateLinkEndpoints(beamGo, ctx.muzzle.position, hero.Target.transform.position);
+            for (int i = 0; i < slots.Count; i++)
+                await AttackDamageUtil.ApplyInstantDamage(data, hero.Context, ct);
+            return true;
+        }
+
+        List<GameObject> candidates = hero.GetObjectsInRange(ctx.self.position, data.range, data.rangeShape, RangeQueryAffinity.TargetableEnemy);
+        HashSet<GameObject> stillValid = new(candidates);
+        for (int i = slots.Count - 1; i >= 0; i--)
+        {
+            if (slots[i].target != null && stillValid.Contains(slots[i].target)) continue;
+            hero.DespawnEffect(data.beamEffectPrefab, slots[i].beamGo);
+            slots.RemoveAt(i);
+        }
+
+        int need = data.attackCount - slots.Count;
+        if (need > 0)
+        {
+            HashSet<GameObject> held = new();
+            foreach (var slot in slots) held.Add(slot.target);
+
+            List<GameObject> fresh = new();
+            foreach (GameObject c in candidates)
+                if (!held.Contains(c)) fresh.Add(c);
+
+            int distinctBudget = Mathf.Max(0, data.targetCount - held.Count);
+            List<GameObject> pool = new(held);
+            for (int i = 0; i < Mathf.Min(distinctBudget, fresh.Count); i++)
+                pool.Add(fresh[i]);
+
+            if (pool.Count > 0)
+                for (int i = 0; i < need; i++)
+                {
+                    GameObject t = pool[i % pool.Count];
+                    slots.Add((t, hero.SpawnPersistentEffect(data.beamEffectPrefab, ctx.muzzle.position, Quaternion.identity)));
+                }
+        }
+        if (slots.Count == 0) return false;
+
+        foreach (var (target, beamGo) in slots)
+            Hero.UpdateLinkEndpoints(beamGo, ctx.muzzle.position, target.transform.position);
+        foreach (var (target, _) in slots)
+        {
+            AttackContext slotCtx = hero.Context;
+            slotCtx.target = target.transform;
+            await AttackDamageUtil.ApplyInstantDamage(data, slotCtx, ct);
+        }
+        return true;
+    }
+
+    // FireProjectileVolley와 동일한 타겟팅 규칙 — DifferentEnemies는 targetCount종의 적에게 attackCount개
+    // 슬롯을 라운드로빈 분배(AttackTargetSelector), SameTarget은 잠긴 타겟에게 attackCount개 슬롯 전부.
+    // 채널링 시작 시 1회만 호출 — 이후 생존 확인은 TickBeams가 담당.
+    private static List<GameObject> ResolveBeamTargets(Hero hero, AttackDataSO data, AttackContext ctx)
+    {
+        if (data.targetMode == TargetMode.DifferentEnemies)
+        {
+            List<GameObject> enemies = hero.GetObjectsInRange(ctx.self.position, data.range, data.rangeShape, RangeQueryAffinity.TargetableEnemy);
+            return AttackTargetSelector.SelectTargets(enemies, data.attackCount, data.targetCount);
+        }
+        if (hero.Target == null) return new List<GameObject>();
+        List<GameObject> list = new(data.attackCount);
+        for (int i = 0; i < data.attackCount; i++)
+            list.Add(hero.Target);
+        return list;
     }
 
     // RangedAttackExecutor.FireVolley와 동일한 타겟팅 규칙 — DifferentEnemies는 AttackTargetSelector로
@@ -84,7 +184,6 @@ public class ContinuousBeamStrategy : IAttackDeliveryStrategy
     {
         Projectile arrow = pool.Get();
         arrow.transform.SetPositionAndRotation(ctx.muzzle.position, ctx.muzzle.rotation);
-        hero.SpawnEffect(data.attackEffect, ctx.muzzle.position, ctx.muzzle.rotation, data.attackEffectLifetime);
 
         arrow.Launch(target.transform, damage, pool,
             ProjectileAoEConfig.From(data, hero, ctx.sc, ctx.buffManager, ctx.self.position));
