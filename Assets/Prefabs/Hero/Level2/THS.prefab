@@ -7836,18 +7836,14 @@ MonoBehaviour:
   - {fileID: 11400000, guid: cd23309c7bc7abe4f8547932f57aeb98, type: 2}
   - {fileID: 11400000, guid: 347c7e2b09fb3a6418a0503d18e63e9a, type: 2}
   - {fileID: 11400000, guid: 78ba0dec3b7e68a499dae8c854d3b9c9, type: 2}
+  tier: 2
   basePattern:
   - {fileID: 11400000, guid: aeca238c8426f154f9319d101970f65f, type: 2}
-  selectors: []
-  procs: []
   anim: {fileID: 7638390345114475594}
   animEvents: {fileID: 962424670496171388}
   statData: {fileID: 11400000, guid: c1b26d8a18f965e46b5f7053d1531779, type: 2}
   board: {fileID: 0}
-  range: 1
-  rangeShape: 0
-  auraZones: []
-  unattackableTarget: 3
+  auraZonePrefabs: []
 --- !u!1 &2766463481628903502
 GameObject:
   m_ObjectHideFlags: 0
