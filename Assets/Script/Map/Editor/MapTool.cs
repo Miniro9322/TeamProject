@@ -10,7 +10,8 @@ public enum MapTool
     Paint,
     Swap,
     Erase,
-    Pick
+    Pick,
+    Route
 }
 
 /// <summary>도구 이름과 설명. 창과 예고줄이 같은 말을 쓰도록 여기 모아 둔다.</summary>
@@ -24,6 +25,7 @@ public static class MapToolWord
             case MapTool.Paint: return "칠하기";
             case MapTool.Swap: return "교체";
             case MapTool.Erase: return "지우기";
+            case MapTool.Route: return "경로";
             default: return "스포이드";
         }
     }
