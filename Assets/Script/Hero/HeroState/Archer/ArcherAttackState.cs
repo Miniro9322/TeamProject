@@ -12,12 +12,12 @@ public class ArcherAttackState : HeroAttackState
         this.archer = archer;
     }
 
-    protected override bool IsBusy => runner != null && runner.IsExecuting;
+    public override bool IsBusy => runner != null && runner.IsExecuting;
 
     public override void Enter()
     {
         base.Enter();
-        runner = new HeroAttackRunner(archer.BasePattern, archer.Selectors, archer.Procs, new RangedAttackExecutor());
+        runner ??= new HeroAttackRunner(archer, new RangedAttackExecutor());
 
         float interval = archer.SC[StatType.AS] > 0f ? 1f / archer.SC[StatType.AS] : 1f;
         float elapsed = Time.time - lastAttackTime;

@@ -22,15 +22,22 @@ public static class TileShapeQuery
     }
 
     // origin 다음 칸부터 direction(단위 벡터, 4방향)으로 length칸 조회. origin 자신은 포함하지 않는다.
-    public static List<Tile> GetLineTiles(MapBoard board, Vector2Int origin, Vector2Int direction, int length)
+    // width > 0이면 진행 방향의 수직 방향으로 좌우 width칸씩 넓혀(폭 2*width+1칸) 조회한다.
+    public static List<Tile> GetLineTiles(MapBoard board, Vector2Int origin, Vector2Int direction, int length, int width = 0)
     {
-        List<Tile> block = board.GetTiles(origin, length, true);
-        var result = new List<Tile>(length);
+        Vector2Int perp = new Vector2Int(-direction.y, direction.x);
+        int radius = Mathf.Max(length, width);
+        List<Tile> block = board.GetTiles(origin, radius, true);
+        var result = new List<Tile>(length * (2 * width + 1));
         for (int step = 1; step <= length; step++)
         {
-            Vector2Int target = origin + direction * step;
-            Tile tile = block.Find(t => t.Coord == target);
-            if (tile != null) result.Add(tile);
+            Vector2Int center = origin + direction * step;
+            for (int offset = -width; offset <= width; offset++)
+            {
+                Vector2Int target = center + perp * offset;
+                Tile tile = block.Find(t => t.Coord == target);
+                if (tile != null) result.Add(tile);
+            }
         }
         return result;
     }
