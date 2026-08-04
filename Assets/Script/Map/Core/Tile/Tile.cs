@@ -143,26 +143,26 @@ public partial class Tile : MonoBehaviour
         ExitFire(enemy);
     }
 
-    //불 칸일 때만 이 유닛을 불 장부에 올린다.
-    private void EnterFire(GameObject unit)
+    //불 칸일 때만 이 유닛을 불 줄 맨 뒤에 세운다.
+    private void EnterFire(GameObject unitObject)
     {
         if (!IsFire)
         {
             return;
         }
 
-        FireDamage.Enter(unit);
+        BurningList.AddLast(BurnTiming.NewBurning(unitObject));
     }
 
-    //불 칸일 때만 이 유닛을 불 장부에서 뺀다.
-    private void ExitFire(GameObject unit)
+    //불 칸일 때만 이 유닛을 불 줄에서 뺀다.
+    private void ExitFire(GameObject unitObject)
     {
         if (!IsFire)
         {
             return;
         }
 
-        FireDamage.Exit(unit);
+        BurningList.RemoveUnit(unitObject);
     }
 }
     
