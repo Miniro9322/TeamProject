@@ -1,47 +1,21 @@
-using System.Collections.Generic;
+using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 
 public class HeroAttackRunner
 {
-    private const int MaxProcDepth = 5;
-
-    private readonly List<AttackDataSO> basePattern;
-    private readonly List<AttackSelectorSO> selectors;
-    private readonly List<AttackProcSO> procs;
+    private readonly Hero hero;
     private readonly IAttackExecutor executor;
+    private readonly IAttackDeliveryStrategy discrete = new DiscreteAttackStrategy();
+    private readonly IAttackDeliveryStrategy continuous = new ContinuousBeamStrategy();
+    private int hitCount;
 
-    private AttackDataSO pendingOverride;
-
-    public int HitCount { get; private set; }
     public bool IsExecuting { get; private set; }
 
-    public HeroAttackRunner(
-        List<AttackDataSO> basePattern,
-        List<AttackSelectorSO> selectors,
-        List<AttackProcSO> procs,
-        IAttackExecutor executor)
+    public HeroAttackRunner(Hero hero, IAttackExecutor executor)
     {
-        this.basePattern = basePattern;
-        this.selectors = selectors;
-        this.procs = procs;
+        this.hero = hero;
         this.executor = executor;
-    }
-
-    public AttackDataSO ResolveNext(AttackContext ctx)
-    {
-        if (pendingOverride != null)
-        {
-            var forced = pendingOverride;
-            pendingOverride = null;
-            return forced;
-        }
-        foreach (var sel in selectors)
-        {
-            var result = sel.Select(HitCount, ctx);
-            if (result != null) return result;
-        }
-        return basePattern[HitCount % basePattern.Count];
     }
 
     public async UniTask ExecuteNext(AttackContext ctx, CancellationToken ct)
@@ -50,40 +24,31 @@ public class HeroAttackRunner
         IsExecuting = true;
         try
         {
-            var attack = ResolveNext(ctx);
-            HitCount++;
-            await ExecuteWithProcs(attack, ctx, ct, depth: 0);
+            AttackDataSO overrideData = hero.ConsumeAttackOverride(out bool isProc);
+            AttackDataSO data = overrideData ?? hero.BasePattern[hitCount % hero.BasePattern.Count];
+            if (overrideData == null) isProc = false;
+            hitCount++;
+
+            // 트레잇의 OnAttackPerformed가 QueueNextAttackOverride로 강공(N타)/재발동(proc)을 걸어둘 수
+            // 있으므로, 훅 실행 직후에도 한 번 더 확인해 이번 공격에 즉시 반영한다.
+            hero.NotifyAttackPerformed(data);
+            AttackDataSO postHookOverride = hero.ConsumeAttackOverride(out bool postIsProc);
+            if (postHookOverride != null) { data = postHookOverride; isProc = postIsProc; }
+
+            hero.SetLastUsedAttack(data, isProc);
+
+            IAttackDeliveryStrategy strategy = data.timingMode == AttackTimingMode.Continuous ? continuous : discrete;
+            await strategy.Deliver(hero, data, ctx, executor, ct);
+        }
+        catch (OperationCanceledException)
+        {
+            // HeroSkillState 진입 등으로 HeroAttackState.Exit()이 attackCts를 취소하면 위 await 중
+            // 하나가 여기로 던진다. ExecuteNext는 .Forget()으로 fire-and-forget되므로 안 잡으면
+            // UniTask가 처리되지 않은 예외로 로그를 남긴다 — 정상적인 중단이므로 조용히 삼킨다.
         }
         finally
         {
             IsExecuting = false;
-        }
-    }
-
-    private async UniTask ExecuteWithProcs(
-        AttackDataSO attack, AttackContext ctx, CancellationToken ct, int depth)
-    {
-        if (depth >= MaxProcDepth) return;
-
-        await executor.Execute(attack, ctx, ct);
-        
-        foreach (var proc in procs)
-        {
-            if (depth > 0 && !proc.allowRecursiveProc) continue;
-            if (!proc.ShouldProc(attack, ctx)) continue;
-
-            switch (proc.effectType)
-            {
-                case ProcEffectType.ExtraAttack:
-                    await ExecuteWithProcs(proc.GetProcAttack(attack), ctx, ct, depth + 1);
-                    break;
-                case ProcEffectType.UpgradeNextAttack:
-                    pendingOverride = proc.GetProcAttack(attack);
-                    break;
-                case ProcEffectType.BonusDamage:
-                    AttackDamageUtil.ApplyInstantDamage(proc.GetProcAttack(attack), ctx, ct).Forget();
-                    break;
-            }
         }
     }
 }

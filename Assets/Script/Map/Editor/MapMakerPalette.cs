@@ -32,12 +32,36 @@ public static class MapMakerPalette
     /// <summary>지금 고른 배치 허용이 켜져 있는 칸의 점.</summary>
     public static readonly Color Mark = new(0.918f, 0.918f, 0.918f);
 
-    public static readonly Color Path = new(1.000f, 1.000f, 1.000f);
     public static readonly Color PathEdge = new(0.000f, 0.000f, 0.000f, 0.55f);
     public static readonly Color Problem = new(0.910f, 0.259f, 0.369f);
 
+    /// <summary>
+    /// 경로마다 다른 선 색. 전부 흰 선이면 겹치는 구간에서 어느 스폰의 길인지 갈리지 않는다.
+    /// 지형(초록·주황·보라)과 표식(금·빨강·청록·연보라) 위에서 각각 읽히는 값으로 골랐다.
+    /// </summary>
+    private static readonly Color[] Lanes =
+    {
+        new(0.361f, 0.784f, 1.000f),   // 하늘
+        new(1.000f, 0.565f, 0.216f),   // 주황
+        new(0.988f, 0.451f, 0.769f),   // 분홍
+        new(0.561f, 0.945f, 0.435f),   // 연두
+        new(1.000f, 0.898f, 0.404f),   // 노랑
+        new(0.376f, 0.941f, 0.808f),   // 청록
+        new(0.769f, 0.639f, 1.000f),   // 라벤더
+        new(1.000f, 0.435f, 0.400f)    // 산호
+    };
+
+    /// <summary>이 번호 경로의 선 색. 경로가 색 수보다 많으면 앞에서부터 다시 쓴다.</summary>
+    public static Color Lane(int index)
+    {
+        return Lanes[Mathf.Abs(index) % Lanes.Length];
+    }
+
     /// <summary>프리팹과 다른(씬 오버라이드) 칸 표식 — 청록. 문제(빨강)·스폰(금)과 겹치지 않게 골랐다.</summary>
     public static readonly Color Override = new(0.216f, 0.804f, 0.831f);
+
+    /// <summary>고른 경로에 사람이 그린 칸 표식 — 보라. 스폰(금)·문제(빨강)와 갈린다.</summary>
+    public static readonly Color Node = new(0.706f, 0.510f, 0.933f);
 
     /// <summary>배치 허용이 켜졌지만 효과 없는(무효 조합) 칸 표식 — 주황.</summary>
     public static readonly Color Inert = new(0.960f, 0.510f, 0.129f);

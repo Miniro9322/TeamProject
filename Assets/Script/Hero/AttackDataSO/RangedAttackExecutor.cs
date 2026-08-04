@@ -6,11 +6,11 @@ using UnityEngine.Pool;
 
 public class RangedAttackExecutor : IAttackExecutor
 {
-    private readonly Dictionary<AttackDataSO, int> sequentialIndices = new();
+    private readonly AnimTriggerPicker triggers = new(nameof(RangedAttackExecutor));
 
     public async UniTask Execute(AttackDataSO data, AttackContext ctx, CancellationToken ct)
     {
-        float interval = ctx.sc[StatType.AS] > 0f ? 1f / ctx.sc[StatType.AS] : 1f; // AS = 초당 공격 횟수
+        float interval = ctx.sc[StatType.AS] > 0f ? 1f / ctx.sc[StatType.AS] : 1f;
         float scale = AttackAnimSpeedUtil.ComputeScale(data, interval);
         AttackAnimSpeedUtil.SetSpeed(ctx.anim, scale);
         if (ctx.bowAnim != null && ctx.arrowAnim != null)
@@ -18,38 +18,26 @@ public class RangedAttackExecutor : IAttackExecutor
             AttackAnimSpeedUtil.SetSpeed(ctx.bowAnim, scale);
             AttackAnimSpeedUtil.SetSpeed(ctx.arrowAnim, scale);
         }
-        
-        string trigger = PickTrigger(data);
-        ctx.anim.SetTrigger(trigger);
+
+        ctx.anim.SetTrigger(triggers.Pick(data));
 
         if (ctx.bowAnim != null && ctx.arrowAnim != null)
         {
             ctx.bowAnim.SetTrigger("Attack");
             ctx.arrowAnim.SetTrigger("Attack");
         }
-        
 
-        IObjectPool<Projectile> pool = ctx.getProjectilePool(data.projectilePrefab);
+        IObjectPool<Projectile> pool = ctx.hero.GetProjectilePool(data.projectilePrefab);
         int damage = (int)(ctx.sc[StatType.ATK] * data.attackPer);
 
         try
         {
             float windowDuration = AttackAnimSpeedUtil.ComputeWindowDuration(data, interval);
-            using var window = new AttackEventWindow(ctx.animEvents, "Attack", "Recovery", windowDuration);
-            int hits = 0;
-            while (await window.MoveNextHit(ct))
+            await AttackEventWindow.RunHits(ctx.animEvents, windowDuration, async token =>
             {
-                AttackDamageUtil.ApplySelfBuffs(ctx.selfUnit, data.buffList, ctx.buffManager, data);
-                await FireVolley(data, ctx, pool, damage, ct);
-                hits++;
-            }
-            // 고속 공격속도로 "Attack" 애니메이션 이벤트가 유실되면 발사가 0회가 될 수 있다.
-            // window가 취소 없이 정상 종료됐다면 최소 1회는 보장 발사한다.
-            if (hits == 0)
-            {
-                AttackDamageUtil.ApplySelfBuffs(ctx.selfUnit, data.buffList, ctx.buffManager, data);
-                await FireVolley(data, ctx, pool, damage, ct);
-            }
+                AttackDamageUtil.ApplySelfBuffs(ctx.hero, data.buffList, ctx.buffManager, data);
+                await FireVolley(data, ctx, pool, damage, token);
+            }, ct);
         }
         finally
         {
@@ -64,22 +52,23 @@ public class RangedAttackExecutor : IAttackExecutor
 
     private async UniTask FireVolley(AttackDataSO data, AttackContext ctx, IObjectPool<Projectile> pool, int damage, CancellationToken ct)
     {
-        List<Transform> targets;
+        List<GameObject> targets;
         if (data.targetMode == TargetMode.DifferentEnemies)
         {
-            List<Transform> enemies = ctx.getTargetableEnemyTargetsInRange(ctx.self.position, data.range, data.rangeShape);
+            List<GameObject> enemies = ctx.hero.GetObjectsInRange(ctx.self.position, data.range, data.rangeShape, RangeQueryAffinity.TargetableEnemy);
             targets = AttackTargetSelector.SelectTargets(enemies, data.attackCount, data.targetCount);
         }
         else
         {
-            targets = new List<Transform>(data.attackCount);
+            if (ctx.target == null) return; // 채널링/취소 경합 등으로 타겟이 비는 순간 방어
+            targets = new List<GameObject>(data.attackCount);
             for (int i = 0; i < data.attackCount; i++)
-                targets.Add(ctx.target);
+                targets.Add(ctx.target.gameObject);
         }
 
         for (int i = 0; i < targets.Count; i++)
         {
-            FireArrow(pool, ctx, targets[i], damage, data);
+            FireArrow(pool, ctx, targets[i].transform, damage, data);
             if (i < targets.Count - 1)
                 await UniTask.Delay(System.TimeSpan.FromSeconds(data.shotInterval), cancellationToken: ct);
         }
@@ -89,68 +78,28 @@ public class RangedAttackExecutor : IAttackExecutor
     {
         Projectile arrow = pool.Get();
         arrow.transform.SetPositionAndRotation(ctx.muzzle.position, ctx.muzzle.rotation);
-        ctx.spawnEffect(data.attackEffect, ctx.muzzle.position, ctx.muzzle.rotation, data.attackEffectLifetime);
+        ctx.hero.SpawnEffect(data.attackEffect, ctx.muzzle.position, ctx.muzzle.rotation, data.attackEffectLifetime);
 
         if (data.attackType == AttackType.Area && data.areaShape == AreaShape.Line)
         {
-            // 관통: 발사 즉시 라인상의 모든 적에게 피해를 적용하고, 화살은 시각 전용으로 라인 끝까지 날린다.
-            Vector2Int dir = ctx.getCardinalDirection(ctx.self.position, target.position);
-            foreach (IDamageAble e in ctx.getEnemiesInLine(ctx.self.position, target.position, data.lineLength))
+            Vector2Int dir = ctx.hero.GetCardinalDirection(ctx.self.position, target.position);
+            foreach (IDamageAble e in ctx.hero.GetEnemiesInLine(ctx.self.position, target.position, data.lineLength, data.areaRange))
             {
                 e.TakeDamage(damage);
+                ctx.hero.NotifyHit((e as Component)?.gameObject, damage, false);
                 AttackDamageUtil.ApplyTargetDebuffs(e as IUnit, data.buffList, ctx.buffManager, data);
-                AttackDamageUtil.ApplyHealOptions(data, ctx.self.position, ctx.healSelf, ctx.getAllyObjectsInRange, damage, ctx.sc[StatType.ATK]);
+                AttackDamageUtil.ApplyHealOptions(data, ctx.self.position, ctx.hero.Heal,
+                    (p, r, s) => ctx.hero.GetObjectsInRange(p, r, s, RangeQueryAffinity.Ally), damage, ctx.sc[StatType.ATK]);
             }
-            ctx.spawnEffect(data.hitEffect, target.position, Quaternion.identity, data.hitEffectLifetime);
-            AttackDamageUtil.SpawnGroundZone(data.groundZone, target.position,
-                ctx.getEnemyObjectsInRange, ctx.getAllyObjectsInRange, ctx.sc, ctx.buffManager,
-                ctx.spawnEffect, ctx.spawnPersistentEffect, ctx.despawnEffect, CancellationToken.None);
-            Vector3 endPoint = ctx.getLineEndPoint(ctx.self.position, dir, data.lineLength);
+            ctx.hero.SpawnEffect(data.hitEffect, target.position, Quaternion.identity, data.hitEffectLifetime);
+            if (data.groundZonePrefab != null)
+                ctx.hero.SpawnGroundZone(data.groundZonePrefab, target.position);
+            Vector3 endPoint = ctx.hero.GetLineEndPoint(ctx.self.position, dir, data.lineLength);
             arrow.LaunchVisualOnly(endPoint, pool);
             return;
         }
 
-        var cfg = new ProjectileAoEConfig
-        {
-            attackType = data.attackType,
-            areaShape = data.areaShape,
-            areaRange = data.areaRange,
-            chainRange = data.chainRange,
-            chainCount = data.chainCount,
-            chainFalloff = data.chainFalloff,
-            getEnemiesInRange = ctx.getEnemiesInRange,
-            getEnemyObjectsInRange = ctx.getEnemyObjectsInRange,
-            getTargetableEnemyObjectsInRange = ctx.getTargetableEnemyObjectsInRange,
-            getAllyObjectsInRange = ctx.getAllyObjectsInRange,
-            healSelf = ctx.healSelf,
-            casterPos = ctx.self.position,
-            buffList = data.buffList,
-            buffManager = ctx.buffManager,
-            source = data,
-            groundZone = data.groundZone,
-            attackerStats = ctx.sc,
-            spawnEffect = ctx.spawnEffect,
-            spawnPersistentEffect = ctx.spawnPersistentEffect,
-            despawnEffect = ctx.despawnEffect,
-        };
-        arrow.Launch(target, damage, pool, cfg);
-    }
-
-    private string PickTrigger(AttackDataSO data)
-    {
-        var triggers = data.animTriggers;
-        if (triggers == null || triggers.Length == 0)
-        {
-            Debug.LogError($"[RangedAttackExecutor] '{data.name}' 의 animTriggers가 비어 있습니다.");
-            return string.Empty;
-        }
-        if (triggers.Length == 1) return triggers[0];
-
-        if (data.selectMode == AnimSelectMode.Random)
-            return triggers[Random.Range(0, triggers.Length)];
-
-        sequentialIndices.TryGetValue(data, out int idx);
-        sequentialIndices[data] = (idx + 1) % triggers.Length;
-        return triggers[idx];
+        arrow.Launch(target, damage, pool,
+            ProjectileAoEConfig.From(data, ctx.hero, ctx.sc, ctx.buffManager, ctx.self.position));
     }
 }

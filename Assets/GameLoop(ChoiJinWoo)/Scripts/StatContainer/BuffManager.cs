@@ -71,4 +71,9 @@ public class BuffManager : ITickable
             return false;
         });
     }
+
+    // StackingMaxEffectTrait처럼 "지금 스택이 최대치에 도달했는가"를 확인해야 하는 트레잇을 위한 조회.
+    // 매칭되는 버프가 없으면 0.
+    public int GetStacks(IUnit target, object source)
+        => activeBuffs.Find(b => b.Target == target && b.Source == source)?.Stacks ?? 0;
 }

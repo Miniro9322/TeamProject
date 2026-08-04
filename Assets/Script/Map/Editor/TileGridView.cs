@@ -57,11 +57,16 @@ public class TileGridView
 
     /// <summary>
     /// 격자와 경로를 그린다. 각 경로는 스폰→본진 순서로 정렬돼 있어야 한다.
+    /// chosen은 지금 고른 경로의 번호(없으면 -1), nodes는 그 경로에 사람이 찍은 경유 칸이다.
     /// overrides에 든 칸은 청록 구석 표식(프리팹과 다름), showInert면 무효 조합 칸에 주황 구석 표식.
     /// </summary>
-    public void Draw(Rect area, int cellPixels, IReadOnlyList<LaneData> lanes, Vector2Int hover,
+    public void Draw(Rect area, int cellPixels, IReadOnlyList<LaneData> lanes, int chosen,
+        IReadOnlyList<RouteNode> nodes, Vector2Int hover,
         HashSet<Vector2Int> overrides, bool showInert)
     {
+        Vector2Int focus = FocusSpawn(lanes, chosen);
+        HashSet<Vector2Int> route = RouteCells(lanes, chosen);
+
         for (int row = 0; row < Rows; row++)
         {
             for (int col = 0; col < Cols; col++)
@@ -74,7 +79,7 @@ public class TileGridView
                 }
 
                 Rect rect = CellRect(area, cellPixels, col, row);
-                DrawCell(rect, tile, cellPixels);
+                DrawCell(rect, tile, cellPixels, SpawnLit(focus, coord), RouteLit(route, coord));
 
                 // 붓과 무관한 상시 표식이라 DrawCell(붓에 따라 죽는 층) 위에 얹는다.
                 if (overrides != null && overrides.Contains(coord))
@@ -89,9 +94,70 @@ public class TileGridView
             }
         }
 
-        DrawLanes(area, cellPixels, lanes);
+        DrawLanes(area, cellPixels, lanes, chosen, nodes);
         DrawHover(area, cellPixels, hover);
         DrawAxisLabels(area, cellPixels);
+    }
+
+    // 고른 경로의 출발 칸. 고른 것이 없으면 (-1,-1)이라 어느 칸과도 같지 않다.
+    private static Vector2Int FocusSpawn(IReadOnlyList<LaneData> lanes, int chosen)
+    {
+        if (chosen < 0 || chosen >= lanes.Count || lanes[chosen].Start == null)
+        {
+            return new Vector2Int(-1, -1);
+        }
+
+        return lanes[chosen].Start.Coord;
+    }
+
+    /// <summary>
+    /// 고른 경로가 지나가는 칸들. 고른 것이 없거나 그 경로가 막혔으면 null이다.
+    ///
+    /// 하나를 고른 사람은 그 길만 보려는 것이다 — 나머지 칸이 제 색으로 남아 있으면
+    /// 지형이 눈에 먼저 들어와 정작 봐야 할 길이 배경에 묻힌다. 붓을 고르면 무관한 칸이 죽는 것과 같다.
+    /// </summary>
+    private static HashSet<Vector2Int> RouteCells(IReadOnlyList<LaneData> lanes, int chosen)
+    {
+        if (chosen < 0 || chosen >= lanes.Count)
+        {
+            return null;
+        }
+
+        IReadOnlyList<Tile> path = lanes[chosen].Tiles;
+        if (path.Count == 0)
+        {
+            return null; // 막힌 경로 — 살릴 칸이 없어서 죽이면 판이 통째로 어두워진다
+        }
+
+        var cells = new HashSet<Vector2Int>();
+        for (int i = 0; i < path.Count; i++)
+        {
+            cells.Add(path[i].Coord);
+        }
+
+        return cells;
+    }
+
+    // 이 칸이 고른 경로 위에 있는가. 고른 경로가 없으면 전부 살린다.
+    private static bool RouteLit(HashSet<Vector2Int> route, Vector2Int coord)
+    {
+        if (route == null)
+        {
+            return true;
+        }
+
+        return route.Contains(coord);
+    }
+
+    // 이 스폰 표식을 살릴 것인가. 고른 경로가 없으면 전부 살린다(예전 그대로).
+    private static bool SpawnLit(Vector2Int focus, Vector2Int coord)
+    {
+        if (focus.x < 0)
+        {
+            return true;
+        }
+
+        return focus == coord;
     }
 
     // 오버라이드/무효 구석 표식. top이면 오른쪽 위, 아니면 오른쪽 아래에 작은 사각형을 둔다 —
@@ -125,9 +191,9 @@ public class TileGridView
 
     // ---- 칸 ----
 
-    private void DrawCell(Rect rect, Tile tile, int cellPixels)
+    private void DrawCell(Rect rect, Tile tile, int cellPixels, bool spawnLit, bool routeLit)
     {
-        bool lit = Lit(tile);
+        bool lit = Lit(tile) && routeLit;
 
         Color fill = MapMakerPalette.Terrain(tile.Terrain);
         Color top = MapMakerPalette.HighTop;
@@ -155,7 +221,7 @@ public class TileGridView
 
         if (tile.IsEnemySpawn)
         {
-            DrawBorder(rect, MapMakerPalette.Spawn, 2f);
+            DrawSpawn(rect, spawnLit);
         }
 
         // 지금 고른 배치 허용이 켜진 칸에만 점을 찍는다 — 모드마다 다른 층을 보는 셈이다.
@@ -173,6 +239,22 @@ public class TileGridView
         }
 
         DrawLetter(rect, tile, cellPixels, lit);
+    }
+
+    /// <summary>
+    /// 적 스폰 테두리. 스폰이 여럿이면 전부 같은 금색이라 어느 길의 출발점인지 갈리지 않는다 —
+    /// 경로를 하나 고르면 그 스폰만 남기고 나머지는 경로선과 같은 방식으로 죽인다.
+    /// 고른 것은 두께로도 갈라, 색이 비슷해 보이는 화면에서도 구분된다.
+    /// </summary>
+    private static void DrawSpawn(Rect rect, bool lit)
+    {
+        if (lit)
+        {
+            DrawBorder(rect, MapMakerPalette.Spawn, 3f);
+            return;
+        }
+
+        DrawBorder(rect, MapMakerPalette.Dim(MapMakerPalette.Spawn), 2f);
     }
 
     // 칸 글자(P·G·H·B·C). 색만으로는 생산 바닥과 전투 지상이 둘 다 초록이라 갈리지 않는다.
@@ -235,23 +317,65 @@ public class TileGridView
     /// "길이 어디로 나는가"와 "이 칸이 무엇인가"를 동시에 볼 수 없다.
     /// 4방향 경로라 모든 구간이 가로 또는 세로다 — 사각형 두 장으로 검은 테두리와 흰 선을 만든다.
     /// </summary>
-    private void DrawLanes(Rect area, int cellPixels, IReadOnlyList<LaneData> lanes)
+    /// <summary>
+    /// 경로가 여럿이면 전부 같은 흰 선이라 어느 스폰의 길인지 갈리지 않는다.
+    /// 하나를 고르면 나머지를 배경 쪽으로 죽인다 — 붓을 고르면 무관한 칸이 죽는 것과 같은 방식이다.
+    /// 고른 것을 나중에 그려, 죽인 선과 겹치는 구간에서도 위에 오게 한다.
+    /// </summary>
+    private void DrawLanes(Rect area, int cellPixels, IReadOnlyList<LaneData> lanes, int chosen,
+        IReadOnlyList<RouteNode> nodes)
     {
+        bool focused = chosen >= 0 && chosen < lanes.Count;
+
         for (int i = 0; i < lanes.Count; i++)
         {
-            LaneData lane = lanes[i];
-            if (lane.IsValid)
+            if (focused && i == chosen)
             {
-                DrawPath(area, cellPixels, lane.Tiles);
+                continue;
             }
-            else
-            {
-                DrawFailed(area, cellPixels, lane.Start);
-            }
+
+            DrawLane(area, cellPixels, lanes[i], LaneColor(i, !focused), false);
+        }
+
+        if (!focused)
+        {
+            return;
+        }
+
+        DrawLane(area, cellPixels, lanes[chosen], MapMakerPalette.Lane(chosen), true);
+        DrawNodes(area, cellPixels, nodes);
+    }
+
+    // 이 경로의 선 색. 다른 경로를 고른 동안에는 배경 쪽으로 죽여 고른 것만 앞으로 나오게 한다.
+    private static Color LaneColor(int index, bool lit)
+    {
+        Color color = MapMakerPalette.Lane(index);
+        if (lit)
+        {
+            return color;
+        }
+
+        return MapMakerPalette.Dim(color);
+    }
+
+    private void DrawLane(Rect area, int cellPixels, LaneData lane, Color color, bool lit)
+    {
+        if (!lane.IsValid)
+        {
+            DrawFailed(area, cellPixels, lane.Start, lit);
+            return;
+        }
+
+        DrawPath(area, cellPixels, lane.Tiles, color, lit);
+
+        if (lit)
+        {
+            DrawFlow(area, cellPixels, lane.Tiles, color);
         }
     }
 
-    private void DrawPath(Rect area, int cellPixels, IReadOnlyList<Tile> path)
+    // 죽인 선은 검은 테두리를 빼고 한 겹만 남긴다 — 테두리까지 그리면 죽여도 여전히 눈에 먼저 든다.
+    private void DrawPath(Rect area, int cellPixels, IReadOnlyList<Tile> path, Color color, bool lit)
     {
         for (int i = 0; i + 1 < path.Count; i++)
         {
@@ -263,22 +387,199 @@ public class TileGridView
             float width = Mathf.Abs(from.x - to.x);
             float height = Mathf.Abs(from.y - to.y);
 
-            EditorGUI.DrawRect(new Rect(x - 2.5f, y - 2.5f, width + 5f, height + 5f), MapMakerPalette.PathEdge);
-            EditorGUI.DrawRect(new Rect(x - 1f, y - 1f, width + 2f, height + 2f), MapMakerPalette.Path);
+            if (lit)
+            {
+                EditorGUI.DrawRect(new Rect(x - 2.5f, y - 2.5f, width + 5f, height + 5f),
+                    MapMakerPalette.PathEdge);
+            }
+
+            EditorGUI.DrawRect(new Rect(x - 1f, y - 1f, width + 2f, height + 2f), color);
         }
     }
 
-    private void DrawFailed(Rect area, int cellPixels, Tile spawn)
+    /// <summary>
+    /// 고른 경로에 진행 방향 화살표를 얹는다.
+    ///
+    /// 선만 있으면 스폰과 본진이 둘 다 화면 끝에 있어 어느 쪽에서 어느 쪽으로 가는지 읽히지 않는다.
+    /// 되돌아오는 구간에서는 같은 칸에 반대 방향 화살표가 겹쳐 그 자리가 왕복임을 드러낸다.
+    /// </summary>
+    private void DrawFlow(Rect area, int cellPixels, IReadOnlyList<Tile> path, Color color)
+    {
+        int gap = Mathf.Max(2, Mathf.CeilToInt(56f / Mathf.Max(cellPixels, 1)));
+        float size = Mathf.Clamp(cellPixels * 0.46f, 7f, 13f);
+
+        for (int i = 0; i + 1 < path.Count; i += gap)
+        {
+            Vector2 from = CellCenter(area, cellPixels, path[i].Coord);
+            Vector2 to = CellCenter(area, cellPixels, path[i + 1].Coord);
+
+            DrawArrow((from + to) * 0.5f, to - from, size + 3f, MapMakerPalette.PathEdge);
+            DrawArrow((from + to) * 0.5f, to - from, size, color);
+        }
+    }
+
+    // 삼각형 하나를 돌려 쓴다 — 4방향 격자라 각도가 네 가지뿐이다.
+    private static void DrawArrow(Vector2 center, Vector2 step, float size, Color color)
+    {
+        var rect = new Rect(center.x - size * 0.5f, center.y - size * 0.5f, size, size);
+        Matrix4x4 saved = GUI.matrix;
+
+        GUIUtility.RotateAroundPivot(Angle(step), center);
+        GUI.DrawTexture(rect, ArrowShape(), ScaleMode.StretchToFill, true, 0f, color, 0f, 0f);
+        GUI.matrix = saved;
+    }
+
+    // GUI는 y가 아래로 커진다 — 오른쪽이 0도이고 시계 방향으로 돈다.
+    private static float Angle(Vector2 step)
+    {
+        if (step.x > 0f)
+        {
+            return 0f;
+        }
+
+        if (step.x < 0f)
+        {
+            return 180f;
+        }
+
+        if (step.y > 0f)
+        {
+            return 90f;
+        }
+
+        return 270f;
+    }
+
+    // 오른쪽을 가리키는 흰 삼각형. 색은 그릴 때 입히므로 모양만 만든다.
+    private static Texture2D ArrowShape()
+    {
+        if (_arrow != null)
+        {
+            return _arrow;
+        }
+
+        const int Size = 16;
+        _arrow = new Texture2D(Size, Size, TextureFormat.RGBA32, false)
+        {
+            hideFlags = HideFlags.HideAndDontSave,
+            filterMode = FilterMode.Bilinear
+        };
+
+        var clear = new Color(1f, 1f, 1f, 0f);
+        var solid = new Color(1f, 1f, 1f, 1f);
+
+        for (int y = 0; y < Size; y++)
+        {
+            for (int x = 0; x < Size; x++)
+            {
+                float half = (Size - x) * 0.5f;
+                bool inside = Mathf.Abs(y - (Size - 1) * 0.5f) <= half - 1f;
+                _arrow.SetPixel(x, y, inside ? solid : clear);
+            }
+        }
+
+        _arrow.Apply();
+        return _arrow;
+    }
+
+    private static Texture2D _arrow;
+
+    private void DrawFailed(Rect area, int cellPixels, Tile spawn, bool lit)
     {
         if (spawn == null)
         {
             return;
         }
 
+        Color mark = lit
+            ? MapMakerPalette.Problem
+            : MapMakerPalette.Dim(MapMakerPalette.Problem);
+
         Rect rect = CellRect(area, cellPixels, spawn.Coord.x, spawn.Coord.y);
         Rect inner = Inset(rect, 3f);
-        DrawBorder(inner, MapMakerPalette.Problem, 2f);
+        DrawBorder(inner, mark, 2f);
     }
+
+    /// <summary>
+    /// 사람이 그린 칸의 순서.
+    ///
+    /// 화살표는 어느 쪽으로 가는지만 말하고 몇 번째인지는 말하지 못한다 —
+    /// 되돌아오는 구간에서는 두 방향이 같은 칸에 겹쳐 어느 쪽이 먼저인지 알 길이 없다.
+    /// 번호는 칸 가운데를 피해 구석에 적는다. 가운데는 선과 화살표 자리다.
+    /// 같은 칸을 다시 지나가면 번호가 여러 개라 지날 때마다 조금씩 밀어 적는다.
+    /// </summary>
+    private void DrawNodes(Rect area, int cellPixels, IReadOnlyList<RouteNode> nodes)
+    {
+        if (nodes == null)
+        {
+            return;
+        }
+
+        if (cellPixels < 16)
+        {
+            DrawDots(area, cellPixels, nodes);
+            return;
+        }
+
+        var seen = new Dictionary<Vector2Int, int>();
+        float shift = cellPixels * 0.3f;
+
+        for (int i = 0; i < nodes.Count; i++)
+        {
+            Vector2Int coord = nodes[i].Coord;
+            seen.TryGetValue(coord, out int again);
+            seen[coord] = again + 1;
+
+            Rect cell = CellRect(area, cellPixels, coord.x, coord.y);
+            DrawOrder(new Vector2(cell.x + shift * again, cell.y + shift * again), i + 1);
+        }
+    }
+
+    // 칸이 좁으면 숫자가 칸보다 커진다 — 그때는 그린 자리라는 것만 보라 점으로 남긴다.
+    private void DrawDots(Rect area, int cellPixels, IReadOnlyList<RouteNode> nodes)
+    {
+        float size = Mathf.Max(5f, cellPixels * 0.4f);
+
+        for (int i = 0; i < nodes.Count; i++)
+        {
+            Vector2Int coord = nodes[i].Coord;
+            Rect cell = CellRect(area, cellPixels, coord.x, coord.y);
+            EditorGUI.DrawRect(new Rect(cell.x + 1f, cell.y + 1f, size, size), MapMakerPalette.Node);
+        }
+    }
+
+    /// <summary>
+    /// 보라 판에 검은 글자. 어떤 지형색·경로색 위에 얹혀도 같은 대비로 읽히게 판을 깐다.
+    /// 판은 칸 왼쪽 위에서 시작한다 — 가운데는 선과 화살표 자리다.
+    /// 같은 칸을 다시 지나가면 오른쪽 아래로 한 칸씩 밀어 쌓아, 앞 번호를 덮지 않고 순서대로 읽힌다.
+    /// </summary>
+    private static void DrawOrder(Vector2 corner, int order)
+    {
+        string text = order.ToString();
+        var plate = new Rect(corner.x + 1f, corner.y + 1f, 7f + text.Length * 5f, 11f);
+
+        EditorGUI.DrawRect(plate, MapMakerPalette.Node);
+        GUI.Label(plate, text, OrderStyle());
+    }
+
+    private static GUIStyle OrderStyle()
+    {
+        if (_order != null)
+        {
+            return _order;
+        }
+
+        _order = new GUIStyle(EditorStyles.miniBoldLabel)
+        {
+            alignment = TextAnchor.MiddleCenter,
+            fontSize = 9,
+            padding = new RectOffset(0, 0, 0, 0)
+        };
+        _order.normal.textColor = Color.black;
+        return _order;
+    }
+
+    private static GUIStyle _order;
 
     private void DrawHover(Rect area, int cellPixels, Vector2Int hover)
     {

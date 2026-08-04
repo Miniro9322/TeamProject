@@ -6,36 +6,44 @@ using UnityEngine;
 
 public static class AttackDamageUtil
 {
-    //public static int count = 0;
     public static async UniTask ApplyInstantDamage(AttackDataSO data, AttackContext ctx, CancellationToken ct)
     {
         float baseDamage = ctx.sc[StatType.ATK] * data.attackPer;
-        
-        ApplySelfBuffs(ctx.selfUnit, data.buffList, ctx.buffManager, data); // 공격 1회당 1회, 맞은 대상 수와 무관하게 적용(스택형 자기 버프용)
-        //Debug.Log($"Damage: {++count}");
-        // Line/Chain은 targetMode와 무관하게 자체 타겟팅 모델로 처리한다.
+
+        // ctx.hero.GetObjectsInRange를 부분적용한 어댑터 — ApplyHealOptions/ChainResolver는 여전히
+        // Func<Vector3,int,RangeShape,List<GameObject>> 3-인자 시그니처를 기대한다.
+        List<GameObject> AllyQuery(Vector3 p, int r, RangeShape s) => ctx.hero.GetObjectsInRange(p, r, s, RangeQueryAffinity.Ally);
+        List<GameObject> TargetableEnemyQuery(Vector3 p, int r, RangeShape s) => ctx.hero.GetObjectsInRange(p, r, s, RangeQueryAffinity.TargetableEnemy);
+
+        ApplySelfBuffs(ctx.hero, data.buffList, ctx.buffManager, data);
+
         if (data.attackType == AttackType.Area && data.areaShape == AreaShape.Line)
         {
-            foreach (IDamageAble e in ctx.getEnemiesInLine(ctx.self.position, ctx.target.position, data.lineLength))
+            foreach (IDamageAble e in ctx.hero.GetEnemiesInLine(ctx.self.position, ctx.target.position, data.lineLength, data.areaRange))
             {
                 e.TakeDamage((int)baseDamage);
+                ctx.hero.NotifyHit((e as Component)?.gameObject, (int)baseDamage, false);
                 ApplyTargetDebuffs(e as IUnit, data.buffList, ctx.buffManager, data);
-                ApplyHealOptions(data, ctx.self.position, ctx.healSelf, ctx.getAllyObjectsInRange, baseDamage, ctx.sc[StatType.ATK]);
+                ApplyHealOptions(data, ctx.self.position, ctx.hero.Heal, AllyQuery, baseDamage, ctx.sc[StatType.ATK]);
             }
-            ctx.spawnEffect(data.hitEffect, ctx.target.position, Quaternion.identity, data.hitEffectLifetime);
+            ctx.hero.SpawnEffect(data.hitEffect, ctx.target.position, Quaternion.identity, data.hitEffectLifetime);
             return;
         }
 
         if (data.attackType == AttackType.Area && data.areaShape == AreaShape.Chain)
         {
             List<GameObject> hits = ChainResolver.Resolve(ctx.target.gameObject, baseDamage, data.chainRange, data.chainCount,
-                data.chainFalloff, ctx.getTargetableEnemyObjectsInRange);
+                data.chainFalloff, TargetableEnemyQuery, ctx.hero.NotifyHit);
             foreach (GameObject go in hits)
             {
                 ApplyTargetDebuffs(go.GetComponentInParent<IUnit>(), data.buffList, ctx.buffManager, data);
-                ApplyHealOptions(data, ctx.self.position, ctx.healSelf, ctx.getAllyObjectsInRange, baseDamage, ctx.sc[StatType.ATK]);
+                ApplyHealOptions(data, ctx.self.position, ctx.hero.Heal, AllyQuery, baseDamage, ctx.sc[StatType.ATK]);
             }
-            ctx.spawnEffect(data.hitEffect, ctx.target.position, Quaternion.identity, data.hitEffectLifetime);
+            // hits[0]은 체인 시작 타겟(캐스터→시작 타겟 구간은 빔 비주얼 등 별도 이펙트가 표현) —
+            // 튕긴 대상들 사이(hits[i]→hits[i+1])만 아크로 잇는다.
+            for (int i = 0; i < hits.Count - 1; i++)
+                ctx.hero.SpawnChainArc(data.chainEffectPrefab, hits[i].transform.position, hits[i + 1].transform.position, data.chainEffectLifetime);
+            ctx.hero.SpawnEffect(data.hitEffect, ctx.target.position, Quaternion.identity, data.hitEffectLifetime);
             return;
         }
 
@@ -44,23 +52,26 @@ public static class AttackDamageUtil
             if (ctx.target.GetComponent<IDamageAble>() is IDamageAble d)
             {
                 d.TakeDamage((int)baseDamage);
+                ctx.hero.NotifyHit(ctx.target.gameObject, (int)baseDamage, false);
                 ApplyTargetDebuffs(d as IUnit, data.buffList, ctx.buffManager, data);
-                ApplyHealOptions(data, ctx.self.position, ctx.healSelf, ctx.getAllyObjectsInRange, baseDamage, ctx.sc[StatType.ATK]);
-                ctx.spawnEffect(data.hitEffect, ctx.target.position, Quaternion.identity, data.hitEffectLifetime);
+                ApplyHealOptions(data, ctx.self.position, ctx.hero.Heal, AllyQuery, baseDamage, ctx.sc[StatType.ATK]);
+                ctx.hero.SpawnEffect(data.hitEffect, ctx.target.position, Quaternion.identity, data.hitEffectLifetime);
             }
             return;
         }
 
         if (data.attackType == AttackType.Single && data.targetMode == TargetMode.DifferentEnemies)
         {
-            List<IDamageAble> enemies = ctx.getTargetableEnemiesInRange(ctx.self.position, data.range, data.rangeShape);
-            List<IDamageAble> targets = AttackTargetSelector.SelectTargets(enemies, data.attackCount, data.targetCount);
+            List<GameObject> enemies = ctx.hero.GetObjectsInRange(ctx.self.position, data.range, data.rangeShape, RangeQueryAffinity.TargetableEnemy);
+            List<GameObject> targets = AttackTargetSelector.SelectTargets(enemies, data.attackCount, data.targetCount);
             await FireEach(targets, t =>
             {
-                t.TakeDamage((int)baseDamage);
-                ApplyTargetDebuffs(t as IUnit, data.buffList, ctx.buffManager, data);
-                ApplyHealOptions(data, ctx.self.position, ctx.healSelf, ctx.getAllyObjectsInRange, baseDamage, ctx.sc[StatType.ATK]);
-                ctx.spawnEffect(data.hitEffect, (t as Component)?.transform.position ?? ctx.self.position, Quaternion.identity, data.hitEffectLifetime);
+                if (t.GetComponentInParent<IDamageAble>() is not IDamageAble d) return;
+                d.TakeDamage((int)baseDamage);
+                ctx.hero.NotifyHit(t, (int)baseDamage, false);
+                ApplyTargetDebuffs(d as IUnit, data.buffList, ctx.buffManager, data);
+                ApplyHealOptions(data, ctx.self.position, ctx.hero.Heal, AllyQuery, baseDamage, ctx.sc[StatType.ATK]);
+                ctx.hero.SpawnEffect(data.hitEffect, t.transform.position, Quaternion.identity, data.hitEffectLifetime);
             }, data.shotInterval, ct);
             return;
         }
@@ -71,65 +82,62 @@ public static class AttackDamageUtil
         {
             for (int i = 0; i < data.attackCount; i++)
             {
-                foreach (IDamageAble e in ctx.getEnemiesInRange(ctx.self.position, data.areaRange, aoeShape))
+                foreach (GameObject go in ctx.hero.GetObjectsInRange(ctx.self.position, data.areaRange, aoeShape, RangeQueryAffinity.Enemy))
                 {
+                    if (go.GetComponentInParent<IDamageAble>() is not IDamageAble e) continue;
                     e.TakeDamage((int)baseDamage);
+                    ctx.hero.NotifyHit(go, (int)baseDamage, false);
                     ApplyTargetDebuffs(e as IUnit, data.buffList, ctx.buffManager, data);
-                    ApplyHealOptions(data, ctx.self.position, ctx.healSelf, ctx.getAllyObjectsInRange, baseDamage, ctx.sc[StatType.ATK]);
+                    ApplyHealOptions(data, ctx.self.position, ctx.hero.Heal, AllyQuery, baseDamage, ctx.sc[StatType.ATK]);
                 }
-                ctx.spawnEffect(data.hitEffect, ctx.self.position, Quaternion.identity, data.hitEffectLifetime);
-                //SplashHighlighter.Instance?.Flash(ctx.self.position, data.areaRange, aoeShape);
+                ctx.hero.SpawnEffect(data.hitEffect, ctx.self.position, Quaternion.identity, data.hitEffectLifetime);
                 if (i < data.attackCount - 1)
                     await UniTask.Delay(TimeSpan.FromSeconds(data.shotInterval), cancellationToken: ct);
             }
             return;
         }
 
-        // Area + DifferentEnemies: 서로 다른 적 최대 targetCount명, 각각을 중심으로 AOE 캐스트.
-        List<GameObject> enemyObjects = ctx.getTargetableEnemyObjectsInRange(ctx.self.position, data.range, data.rangeShape);
+        List<GameObject> enemyObjects = TargetableEnemyQuery(ctx.self.position, data.range, data.rangeShape);
         List<GameObject> centers = AttackTargetSelector.SelectTargets(enemyObjects, data.attackCount, data.targetCount);
         await FireEach(centers, go =>
         {
-            foreach (IDamageAble e in ctx.getEnemiesInRange(go.transform.position, data.areaRange, aoeShape))
+            foreach (GameObject hit in ctx.hero.GetObjectsInRange(go.transform.position, data.areaRange, aoeShape, RangeQueryAffinity.Enemy))
             {
+                if (hit.GetComponentInParent<IDamageAble>() is not IDamageAble e) continue;
                 e.TakeDamage((int)baseDamage);
+                ctx.hero.NotifyHit(hit, (int)baseDamage, false);
                 ApplyTargetDebuffs(e as IUnit, data.buffList, ctx.buffManager, data);
-                ApplyHealOptions(data, ctx.self.position, ctx.healSelf, ctx.getAllyObjectsInRange, baseDamage, ctx.sc[StatType.ATK]);
+                ApplyHealOptions(data, ctx.self.position, ctx.hero.Heal, AllyQuery, baseDamage, ctx.sc[StatType.ATK]);
             }
-            ctx.spawnEffect(data.hitEffect, go.transform.position, Quaternion.identity, data.hitEffectLifetime);
-            //SplashHighlighter.Instance?.Flash(go.transform.position, data.areaRange, aoeShape);
+            ctx.hero.SpawnEffect(data.hitEffect, go.transform.position, Quaternion.identity, data.hitEffectLifetime);
         }, data.shotInterval, ct);
     }
 
-    // 기본 공격 자체가 아군을 힐하는 영웅(Healer) 전용 — TakeDamage 대신 Heal을 적용한다.
-    // Single: Healer.AcquireTargetFromTiles가 미리 골라둔 ctx.target을 그대로 힐(재조회하지 않음).
-    // Area: 자기 중심 범위 내 아군 전원을 1회 힐(attackCount 반복 캐스트는 지원하지 않음).
+    // Healer 전용 — TakeDamage 대신 Heal을 적용한다. 힐은 "적중"이 아니므로 onHit 훅을 부르지 않는다.
     public static UniTask ApplyInstantHeal(AttackDataSO data, AttackContext ctx, CancellationToken ct)
     {
-        float healAmount = ctx.sc[StatType.ATK] * data.attackPer; // 데미지와 동일한 컨벤션 재사용(전용 힐량 스탯 없음)
-        ApplySelfBuffs(ctx.selfUnit, data.buffList, ctx.buffManager, data);
+        float healAmount = ctx.sc[StatType.ATK] * data.attackPer;
+        ApplySelfBuffs(ctx.hero, data.buffList, ctx.buffManager, data);
 
         if (data.attackType == AttackType.Single)
         {
             if (ctx.target != null && ctx.target.GetComponent<Hero>() is Hero singleAlly)
             {
                 singleAlly.Heal(healAmount);
-                ctx.spawnEffect(data.hitEffect, ctx.target.position, Quaternion.identity, data.hitEffectLifetime);
+                ctx.hero.SpawnEffect(data.hitEffect, ctx.target.position, Quaternion.identity, data.hitEffectLifetime);
             }
             return UniTask.CompletedTask;
         }
 
         RangeShape aoeShape = data.areaShape == AreaShape.Square ? RangeShape.Square : RangeShape.Diamond;
-        foreach (GameObject go in ctx.getAllyObjectsInRange(ctx.self.position, data.areaRange, aoeShape))
+        foreach (GameObject go in ctx.hero.GetObjectsInRange(ctx.self.position, data.areaRange, aoeShape, RangeQueryAffinity.Ally))
             if (go.GetComponent<Hero>() is Hero areaAlly)
                 areaAlly.Heal(healAmount);
-        ctx.spawnEffect(data.hitEffect, ctx.self.position, Quaternion.identity, data.hitEffectLifetime);
+        ctx.hero.SpawnEffect(data.hitEffect, ctx.self.position, Quaternion.identity, data.hitEffectLifetime);
 
         return UniTask.CompletedTask;
     }
 
-    // 공격 1회 적중당 호출: 피흡(공격자 자가 회복)과 아군 힐(범위 내 최저 체력 아군 1명 회복) 옵션 적용.
-    // 두 옵션 모두 기본값(0)이면 즉시 반환되므로 기존 공격 데이터에는 아무 영향이 없다.
     public static void ApplyHealOptions(AttackDataSO data, Vector3 selfPos,
         Action<float> healSelf,
         Func<Vector3, int, RangeShape, List<GameObject>> getAllyObjectsInRange,
@@ -146,11 +154,9 @@ public static class AttackDamageUtil
         }
     }
 
-    // 다친(풀피가 아닌) 후보 중 Hp가 가장 낮은 대상을 찾는다. 없으면 null.
-    // 풀피 아군을 애초에 후보에서 제외해야 한다 — 최대 체력이 서로 다른 영웅들이 섞이면
-    // "풀피지만 최대 체력 자체가 작은 영웅"이 "다쳤지만 최대 체력이 큰 영웅"보다 절대 Hp가
-    // 낮게 나와 잘못 선택되는 문제가 있었다(힐러가 실제로 다친 아군을 두고도 타겟을 못 잡던 원인).
-    // GroundZoneRunner의 힐 장판 틱에서도 재사용.
+    // 다친(풀피가 아닌) 후보 중 Hp가 가장 낮은 대상. 풀피 아군을 먼저 제외해야 "최대 체력이 작은 풀피
+    // 영웅"이 "다쳤지만 최대 체력이 큰 영웅"보다 절대 Hp가 낮게 나와 잘못 선택되는 문제를 피한다.
+    // Healer.AcquireTargetFromTiles / GroundZoneEffect 힐 틱에서도 재사용.
     public static Hero FindLowestHpAlly(List<GameObject> candidates)
     {
         Hero lowest = null;
@@ -188,19 +194,6 @@ public static class AttackDamageUtil
             buffManager.ApplyStackingModifier(target, effect.statType, effect.modifierType,
                 effect.value, effect.duration, effect.maxStacks, source);
         }
-    }
-
-    public static void SpawnGroundZone(GroundZoneDataSO zoneData, Vector3 center,
-        Func<Vector3, int, RangeShape, List<GameObject>> getEnemyObjectsInRange,
-        Func<Vector3, int, RangeShape, List<GameObject>> getAllyObjectsInRange,
-        StatContainer attackerStats, BuffManager buffManager,
-        Func<GameObject, Vector3, Quaternion, float, GameObject> spawnEffect,
-        Func<GameObject, Vector3, Quaternion, GameObject> spawnPersistentEffect,
-        Action<GameObject, GameObject> despawnEffect, CancellationToken ct)
-    {
-        if (zoneData == null) return;
-        GroundZoneRunner.Run(center, zoneData, getEnemyObjectsInRange, getAllyObjectsInRange, attackerStats, buffManager,
-            spawnEffect, spawnPersistentEffect, despawnEffect, () => true, ct).Forget();
     }
 
     private static async UniTask FireEach<T>(List<T> items, Action<T> apply, float interval, CancellationToken ct)

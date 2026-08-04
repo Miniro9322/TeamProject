@@ -12,12 +12,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3e63ecebd4cd6e044a8a127ea3df05bc, type: 3}
   m_Name: SpearAttackData
   m_EditorClassIdentifier: Assembly-CSharp::AttackDataSO
-  attackPer: 1
-  range: 1
+  range: 2
   rangeShape: 2
+  unattackableTarget: 3
   attackType: 1
-  targetMode: 0
+  attackPer: 1
   attackCount: 1
+  targetMode: 0
   targetCount: 1
   shotInterval: 0.1
   areaShape: 2
@@ -26,13 +27,22 @@ MonoBehaviour:
   chainRange: 2
   chainCount: 3
   chainFalloff: 0.8
+  chainEffectPrefab: {fileID: 0}
+  chainEffectLifetime: 0.3
+  timingMode: 0
+  continuousDuration: 2
+  continuousTickInterval: 0.2
   selectMode: 0
   animTriggers:
-  - Attack
+  - PierceAttack
   projectilePrefab: {fileID: 0}
   clipLength: 0.6666667
   buffList: []
-  groundZone: {fileID: 0}
+  groundZonePrefab: {fileID: 0}
+  attackEffect: {fileID: 0}
+  attackEffectLifetime: 1
+  hitEffect: {fileID: 0}
+  hitEffectLifetime: 1
   lifestealPercent: 0
   allyHealAmount: 0
   allyHealRange: 2

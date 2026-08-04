@@ -21,7 +21,10 @@ public class MapMakerWindow : EditorWindow
     private const int LeftWidth = 104;
     private const int RightWidth = 128;
     private const int MinCell = 14;
-    private const int MaxCell = 40;
+    private const int MaxCell = 72;
+
+    /// <summary>격자 위아래로 도구 줄·예고줄·상태줄이 늘 차지하는 높이 — 창에 맞출 때 이만큼 빼고 잰다.</summary>
+    private const float ChromeHeight = 150f;
 
     /// <summary>선반이 기본으로 차지하는 최대 높이 — 썸네일 두 줄. 넘치면 선반 안에서 스크롤한다.</summary>
     private const float ShelfHeight = 168f;
@@ -46,7 +49,6 @@ public class MapMakerWindow : EditorWindow
     private ShelfTab _shelf = ShelfTab.Prefab;
     private bool _shelfOpen = true;
     private Vector2 _shelfScroll;
-    private int _lanePick = -1;
     private MapTool _tool = MapTool.Select;
     private List<TileTheme> _themes;
     private TileTheme _theme;
@@ -56,6 +58,24 @@ public class MapMakerWindow : EditorWindow
     private int _strokeGroup;
     private Vector2Int _hover = new(-1, -1);
     private string _targetSeen = string.Empty;
+    private Vector2Int _routeSpawn;
+    private bool _hasRouteSpawn;
+    private int _routeModule = -1;
+    private RouteMode _routeMode = RouteMode.Draw;
+
+    // 그리는 중인 한 획. 스폰 칸에서 눌렀을 때만 열리고, 손을 뗄 때까지 지나간 칸이 쌓인다.
+    private bool _routeDrawing;
+    private Vector2Int _routeLast;
+    private readonly List<Vector2Int> _stroke = new();
+
+    // 이 프레임에 계산해 둔 경로와 저작 보관처. 클릭 처리와 예고줄이 둘 다 필요로 하는데
+    // 인자로 흘려보내면 손대지 않는 메서드까지 서명이 길어져 여기 둔다(OnGUI 안에서만 쓴다).
+    private IReadOnlyList<LaneData> _lanes = System.Array.Empty<LaneData>();
+    private RouteConfig _routes;
+
+    // 이번에 그린 격자의 칸 수. "맞춤"이 도구 줄에서 계산할 때 필요한데 그 줄은 격자보다 먼저 그려진다.
+    private int _cols = 1;
+    private int _rows = 1;
 
     [MenuItem("Tools/Map/Map Maker")]
     private static void Open()
@@ -134,6 +154,7 @@ public class MapMakerWindow : EditorWindow
         }
 
         EnsureThemes(module);
+        SyncRoute();
         DrawToolRow();
         SyncPick();
 
@@ -150,7 +171,15 @@ public class MapMakerWindow : EditorWindow
         }
 
         var view = new TileGridView(cells, _brush);
-        List<LaneData> lanes = LaneQuery.BuildLanes(cells);
+        _cols = view.Cols;
+        _rows = view.Rows;
+
+        // 저작 경로를 그대로 반영해 그린다. 그리기 전에 사전을 맞춰야 되돌리기 직후에도 선이 진짜를 말한다.
+        RouteConfig routes = RouteEdit.Find(module);
+        RouteEdit.Sync(routes);
+        List<LaneData> lanes = LaneQuery.BuildLanes(cells, routes);
+        _lanes = lanes;
+        _routes = routes;
 
         // 씬 오버라이드는 씬 모드에서만 뜻이 있다 — 프리팹 스테이지는 비교할 프리팹이 없다.
         HashSet<Vector2Int> overrides = null;
@@ -171,7 +200,7 @@ public class MapMakerWindow : EditorWindow
                 DrawTerrainPanel(module, cells);
             }
 
-            DrawGridArea(view, cells, lanes, overrides);
+            DrawGridArea(view, cells, lanes, routes, overrides);
 
             if (roomForBoth)
             {
@@ -199,7 +228,7 @@ public class MapMakerWindow : EditorWindow
         DrawStatusBar(cells, view, lanes, problems.Count, overrideCount);
         DrawMarkerLegend(overrideCount);
         DrawBrushNote();
-        DrawShelf(module, lanes, problems);
+        DrawShelf(module, lanes, routes, problems);
     }
 
     /// <summary>
@@ -250,8 +279,15 @@ public class MapMakerWindow : EditorWindow
             GUILayout.Label(target, EditorStyles.miniLabel);
             GUILayout.FlexibleSpace();
 
-            GUILayout.Label("칸 크기", EditorStyles.miniLabel);
-            int cell = (int)GUILayout.HorizontalSlider(_cellPixels, MinCell, MaxCell, GUILayout.Width(60));
+            GUILayout.Label($"칸 {_cellPixels}px", EditorStyles.miniLabel, GUILayout.Width(52));
+            int cell = (int)GUILayout.HorizontalSlider(_cellPixels, MinCell, MaxCell, GUILayout.Width(120));
+
+            // 슬라이더를 끝까지 밀어도 창이 좁으면 격자가 잘린다 — 창에 맞는 값을 직접 계산해 준다.
+            if (GUILayout.Button("맞춤", EditorStyles.toolbarButton, GUILayout.Width(38)))
+            {
+                cell = FitCell();
+            }
+
             if (cell != _cellPixels)
             {
                 _cellPixels = cell;
@@ -280,8 +316,87 @@ public class MapMakerWindow : EditorWindow
             ToolButton(MapTool.Swap);
             ToolButton(MapTool.Erase);
             ToolButton(MapTool.Pick);
+            ToolButton(MapTool.Route);
             GUILayout.FlexibleSpace();
+
+            if (_tool == MapTool.Route)
+            {
+                _routeMode = (RouteMode)GUILayout.Toolbar((int)_routeMode, RouteModes,
+                    EditorStyles.miniButton, GUILayout.Width(104));
+                GUILayout.Label(RouteTarget(), EditorStyles.miniLabel);
+            }
         }
+    }
+
+    private static readonly string[] RouteModes = { "그리기", "점 찍기" };
+
+    // 격자가 창에 통째로 들어오는 가장 큰 칸 크기. 곁판 두 장과 위아래 줄이 차지하는 자리를 빼고 잰다.
+    private int FitCell()
+    {
+        float wide = position.width - LeftWidth - RightWidth - TileGridView.Pad - 34f;
+        float tall = position.height - ChromeHeight - ShelfSpace() - TileGridView.Pad;
+
+        int byWidth = Mathf.FloorToInt(wide / _cols);
+        int byHeight = Mathf.FloorToInt(tall / _rows);
+
+        return Mathf.Clamp(Mathf.Min(byWidth, byHeight), MinCell, MaxCell);
+    }
+
+    // 아래 선반이 먹는 높이. 접어 두면 제목 줄만 남는다.
+    private float ShelfSpace()
+    {
+        if (_shelfOpen)
+        {
+            return ShelfHeight + 24f;
+        }
+
+        return 24f;
+    }
+
+    // 지금 어느 스폰의 경로를 고치는 중인가. 대상 없이 찍으면 아무 일도 안 일어나므로 늘 띄운다.
+    private string RouteTarget()
+    {
+        if (!_hasRouteSpawn)
+        {
+            return "스폰 칸을 먼저 클릭하세요";
+        }
+
+        return $"편집 중: 스폰 ({_routeSpawn.x}, {_routeSpawn.y})";
+    }
+
+    // 목록에서 고른 경로를 편집 대상으로 삼는다 — 보는 경로와 고치는 경로를 하나로 묶는다.
+    private void PickLane(IReadOnlyList<LaneData> lanes, int picked)
+    {
+        if (picked < 0 || picked >= lanes.Count)
+        {
+            // 고른 것이 없는 상태로 돌아간다 — 격자가 다시 모든 경로를 제 색으로 보여 준다.
+            _hasRouteSpawn = false;
+            _routeDrawing = false;
+            return;
+        }
+
+        Tile spawn = lanes[picked].Start;
+        if (spawn == null)
+        {
+            return;
+        }
+
+        _routeSpawn = spawn.Coord;
+        _hasRouteSpawn = true;
+    }
+
+    // 모듈을 갈아타면 편집 중이던 스폰을 놓는다 — 남의 모듈 좌표로 노드를 찍지 않는다.
+    private void SyncRoute()
+    {
+        if (_routeModule == _moduleIndex)
+        {
+            return;
+        }
+
+        _routeModule = _moduleIndex;
+        _hasRouteSpawn = false;
+        _routeDrawing = false;
+        _stroke.Clear();
     }
 
     private void ToolButton(MapTool tool)
@@ -433,6 +548,7 @@ public class MapMakerWindow : EditorWindow
 
             GUILayout.Space(6);
             GUILayout.Label("■ 켜짐   □ 켜졌지만\n     지금은 효과 없음", EditorStyles.miniLabel);
+            GUILayout.Label("켜진 붓을 다시 누르면 꺼집니다", EditorStyles.wordWrappedMiniLabel);
         }
     }
 
@@ -481,20 +597,34 @@ public class MapMakerWindow : EditorWindow
 
             bool active = _brush == brush;
             bool pressed = GUILayout.Toggle(active, label, EditorStyles.miniButton, GUILayout.MinWidth(36));
-            if (pressed && !active)
-            {
-                _brush = brush;
-                Relayout(); // 붓에 따라 설명 줄이 붙거나 떨어진다
-            }
-
             GUILayout.Label(count.ToString(), EditorStyles.miniLabel, GUILayout.Width(24));
+
+            if (pressed != active)
+            {
+                PickBrush(brush, pressed);
+            }
         }
+    }
+
+    // 켜진 붓을 다시 누르면 아무 붓도 안 든 상태로 돌아간다 —
+    // 끄는 길이 없으면 한번 고른 사람은 다른 붓으로 갈아타는 것 말고는 빠져나올 수 없다.
+    private void PickBrush(MapBrush brush, bool on)
+    {
+        _brush = MapBrush.None;
+
+        if (on)
+        {
+            _brush = brush;
+        }
+
+        Relayout(); // 붓에 따라 설명 줄이 붙거나 떨어진다
     }
 
     // ---- 가운데: 격자 ----
 
     private void DrawGridArea(TileGridView view, Dictionary<Vector2Int, Tile> cells,
         IReadOnlyList<LaneData> lanes,
+        RouteConfig routes,
         HashSet<Vector2Int> overrides)
     {
         // 프레임을 접을 때 짝이 맞게 풀리도록 스크롤 판을 scope로 연다 — 입력 처리가 이 안에서 프레임을 접는다.
@@ -506,8 +636,44 @@ public class MapMakerWindow : EditorWindow
             Rect area = GUILayoutUtility.GetRect(view.PixelWidth(_cellPixels), view.PixelHeight(_cellPixels));
             HandleHover(area, view);
             HandleStroke(area, view, cells);
-            view.Draw(area, _cellPixels, lanes, _hover, overrides, _showInert);
+            view.Draw(area, _cellPixels, lanes, RouteIndex(lanes), RouteNodes(routes),
+                _hover, overrides, _showInert);
         }
+    }
+
+    // 지금 고른 경로의 번호. 고른 것이 없거나 그 스폰이 사라졌으면 -1이다.
+    private int RouteIndex(IReadOnlyList<LaneData> lanes)
+    {
+        if (!_hasRouteSpawn)
+        {
+            return -1;
+        }
+
+        for (int i = 0; i < lanes.Count; i++)
+        {
+            if (lanes[i].Start != null && lanes[i].Start.Coord == _routeSpawn)
+            {
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
+    // 고른 경로에 사람이 찍어 둔 경유 칸. 저작이 없으면 null(자동 최단 경로다).
+    private IReadOnlyList<RouteNode> RouteNodes(RouteConfig routes)
+    {
+        if (!_hasRouteSpawn || routes == null)
+        {
+            return null;
+        }
+
+        if (!routes.TryGetRoute(_routeSpawn, out RouteData route))
+        {
+            return null;
+        }
+
+        return route.Nodes;
     }
 
     // ---- 아래: 이 클릭이 할 일 ----
@@ -525,8 +691,7 @@ public class MapMakerWindow : EditorWindow
 
         bool turnOff = Event.current.alt;
 
-        string action = TileActionPreview.Describe(
-            module, _hover, tile, _tool, _brush, _pick, turnOff);
+        string action = ActionWord(module, tile, turnOff);
         string stack = TileActionPreview.DescribeStack(module, _hover, tile);
 
         using (new EditorGUILayout.HorizontalScope(EditorStyles.helpBox))
@@ -536,6 +701,134 @@ public class MapMakerWindow : EditorWindow
             GUILayout.FlexibleSpace();
             GUILayout.Label($"지금 {stack}", EditorStyles.miniLabel);
         }
+    }
+
+    // 경로 도구는 타일을 바꾸지 않는다 — 이 칸이 무엇이 되는지가 아니라
+    // 경유 순서의 어디에 들어가는지를 말해야 하므로 TileActionPreview에 맡기지 않는다.
+    private string ActionWord(Grid module, Tile tile, bool turnOff)
+    {
+        if (_tool == MapTool.Route)
+        {
+            return RouteWord(tile, turnOff);
+        }
+
+        return TileActionPreview.Describe(module, _hover, tile, _tool, _brush, _pick, turnOff);
+    }
+
+    private string RouteWord(Tile tile, bool back)
+    {
+        if (tile.IsEnemySpawn)
+        {
+            return SpawnWord();
+        }
+
+        if (!_hasRouteSpawn)
+        {
+            return "스폰 칸을 먼저 눌러 어느 경로를 고칠지 정하세요";
+        }
+
+        if (_routeMode == RouteMode.Draw)
+        {
+            return "스폰에서 누른 채 끌면 지나간 칸이 그대로 경로가 됩니다 — 같은 칸을 다시 지나가도 됩니다";
+        }
+
+        return PointWord(tile, back);
+    }
+
+    private string SpawnWord()
+    {
+        if (_routeMode == RouteMode.Draw)
+        {
+            return "여기서 누른 채 끌면 이 경로를 처음부터 다시 그립니다 (누르기만 하면 그대로 둡니다)";
+        }
+
+        return "이 스폰의 경로를 편집 대상으로 삼습니다";
+    }
+
+    // 점 찍기의 세 갈래. 누르기 전에 무엇이 될지 보이지 않으면 눌러 보고서야 알게 된다.
+    private string PointWord(Tile tile, bool back)
+    {
+        IReadOnlyList<RouteNode> nodes = RouteNodes(_routes);
+        int count = Count(nodes);
+
+        if (back)
+        {
+            if (count == 0)
+            {
+                return "뺄 칸이 없습니다";
+            }
+
+            return $"맨 뒤 {count}번째 칸을 뺍니다 ({count} → {count - 1}개)";
+        }
+
+        if (!tile.Walkable)
+        {
+            return "지나갈 수 없는 칸입니다 — 찍으면 이 경로가 통째로 끊깁니다";
+        }
+
+        if (Event.current.control)
+        {
+            return SlotWord(nodes, RouteSlotOf(nodes, tile.Coord));
+        }
+
+        return $"맨 뒤에 쌓습니다 ({count} → {count + 1}개)  ·  Alt=뒤로  Ctrl=자리 자동";
+    }
+
+    // 넣을 자리를 미리 말한다. 자리를 눌러 보고서야 알게 되면 순서를 고칠 때마다 지웠다 다시 찍게 된다.
+    private static string SlotWord(IReadOnlyList<RouteNode> nodes, int slot)
+    {
+        int count = Count(nodes);
+
+        if (count == 0)
+        {
+            return "첫 칸으로 넣습니다 (0 → 1개)";
+        }
+
+        if (slot == 0)
+        {
+            return $"1번 칸 앞에 넣습니다 ({count} → {count + 1}개)";
+        }
+
+        if (slot >= count)
+        {
+            return $"맨 뒤에 넣습니다 ({count} → {count + 1}개)";
+        }
+
+        return $"{slot}번과 {slot + 1}번 칸 사이에 넣습니다 ({count} → {count + 1}개)";
+    }
+
+    private static int Count(IReadOnlyList<RouteNode> nodes)
+    {
+        if (nodes == null)
+        {
+            return 0;
+        }
+
+        return nodes.Count;
+    }
+
+    // 이 칸이 들어갈 자리. 도착점을 모르는 막힌 경로는 끼울 구간이 없으므로 맨 뒤에 붙인다.
+    private int RouteSlotOf(IReadOnlyList<RouteNode> nodes, Vector2Int coord)
+    {
+        Tile goal = RouteGoal();
+        if (goal == null)
+        {
+            return Count(nodes);
+        }
+
+        return RouteSlot.Best(nodes, _routeSpawn, goal.Coord, coord);
+    }
+
+    // 지금 고른 경로의 도착 칸. 경로가 막혔으면 null.
+    private Tile RouteGoal()
+    {
+        int index = RouteIndex(_lanes);
+        if (index < 0)
+        {
+            return null;
+        }
+
+        return _lanes[index].Goal;
     }
 
     // ---- 아래: 지금 가리키는 칸 ----
@@ -717,12 +1010,19 @@ public class MapMakerWindow : EditorWindow
         if (input.type == EventType.MouseDrag)
         {
             input.Use();
-            StampAt(input.mousePosition, area, view, cells, input.alt);
+
+            // 점 찍기는 누른 칸 하나만 받는다 — 끌고 지나간 칸까지 쌓이면 그리기와 다를 것이 없어진다.
+            if (_tool != MapTool.Route || _routeMode == RouteMode.Draw)
+            {
+                StampAt(input.mousePosition, area, view, cells, input.alt);
+            }
+
             return;
         }
 
         if (input.type == EventType.MouseUp)
         {
+            _routeDrawing = false; // 획이 끝났다 — 다음 획은 스폰부터 다시 시작해야 한다
             TileStamp.EndStroke(_strokeGroup);
             input.Use();
         }
@@ -757,6 +1057,10 @@ public class MapMakerWindow : EditorWindow
 
             case MapTool.Swap:
                 TrySwap(coord, cells);
+                break;
+
+            case MapTool.Route:
+                StampRoute(coord, tile, cells, turnOff);
                 break;
 
             default:
@@ -801,6 +1105,121 @@ public class MapMakerWindow : EditorWindow
         }
 
         SceneView.RepaintAll();
+    }
+
+    // 스폰 칸은 편집 대상으로 삼고, 그 밖의 칸은 고른 방식대로 그리거나 하나씩 쌓는다.
+    private void StampRoute(Vector2Int coord, Tile tile, Dictionary<Vector2Int, Tile> cells, bool back)
+    {
+        if (tile.IsEnemySpawn)
+        {
+            OpenStroke(coord);
+            return;
+        }
+
+        if (!_hasRouteSpawn)
+        {
+            return; // 어느 스폰의 경로인지 정해지지 않았다 — 도구 줄이 스폰을 먼저 찍으라고 말한다
+        }
+
+        RouteConfig config = RouteEdit.Ensure(_modules[_moduleIndex]);
+        if (config == null)
+        {
+            Debug.LogWarning("[Map Maker] 이 모듈에 MapBoard가 없어 경로를 저장할 자리가 없습니다.",
+                _modules[_moduleIndex]);
+            return;
+        }
+
+        if (_routeMode == RouteMode.Draw)
+        {
+            DrawStroke(config, cells, coord);
+            return;
+        }
+
+        PointNode(config, coord, back);
+    }
+
+    // 스폰 칸을 눌렀다. 획은 아직 비어 있어서, 끌지 않고 떼면 저작한 경로는 그대로 남는다.
+    private void OpenStroke(Vector2Int spawn)
+    {
+        _routeSpawn = spawn;
+        _hasRouteSpawn = true;
+        _routeLast = spawn;
+        _routeDrawing = true;
+        _stroke.Clear();
+    }
+
+    // 끌고 지나간 칸을 쌓아 이 스폰의 경로를 통째로 다시 쓴다. 같은 칸을 다시 지나가도 그대로 쌓인다.
+    private void DrawStroke(RouteConfig config, Dictionary<Vector2Int, Tile> cells, Vector2Int coord)
+    {
+        if (!_routeDrawing)
+        {
+            return; // 스폰에서 시작하지 않은 획 — 도구 줄이 스폰부터 누르라고 말한다
+        }
+
+        List<Vector2Int> steps = RouteStroke.Between(_routeLast, coord);
+        _routeLast = coord;
+
+        for (int i = 0; i < steps.Count; i++)
+        {
+            Push(cells, steps[i]);
+        }
+
+        RouteEdit.SetNodes(config, _routeSpawn, _stroke);
+    }
+
+    // 지나갈 수 없는 칸은 빼고 쌓는다 — 노드로 들어가면 그 경로가 통째로 끊긴다.
+    // 방금 지나온 칸으로 되짚어 가면 쌓지 않고 그 걸음을 무른다(연필로 그은 선을 되짚어 지우는 것과 같다).
+    private void Push(Dictionary<Vector2Int, Tile> cells, Vector2Int coord)
+    {
+        if (!cells.TryGetValue(coord, out Tile tile) || !tile.Walkable)
+        {
+            return;
+        }
+
+        if (Retreat(coord))
+        {
+            _stroke.RemoveAt(_stroke.Count - 1);
+            return;
+        }
+
+        _stroke.Add(coord);
+    }
+
+    // 이 칸이 바로 직전에 지나온 자리인가. 손이 밀려 한 칸 물러난 것과 일부러 돌아오는 것을 여기서 가른다 —
+    // 일부러 도는 길은 한 칸이 아니라 여러 칸을 지나 되돌아오므로 이 판단에 걸리지 않는다.
+    private bool Retreat(Vector2Int coord)
+    {
+        int last = _stroke.Count - 1;
+        if (last < 0)
+        {
+            return false;
+        }
+
+        if (last == 0)
+        {
+            return coord == _routeSpawn;
+        }
+
+        return _stroke[last - 1] == coord;
+    }
+
+    // 한 칸씩 쌓는다. Alt는 뒤로가기라 맨 뒤부터 빠지고, Ctrl은 들어갈 자리를 알아서 고른다.
+    private void PointNode(RouteConfig config, Vector2Int coord, bool back)
+    {
+        if (back)
+        {
+            RouteEdit.PopNode(config, _routeSpawn);
+            return;
+        }
+
+        if (!Event.current.control)
+        {
+            RouteEdit.AddNode(config, _routeSpawn, coord);
+            return;
+        }
+
+        IReadOnlyList<RouteNode> nodes = RouteNodes(_routes);
+        RouteEdit.InsertNode(config, _routeSpawn, coord, RouteSlotOf(nodes, coord));
     }
 
     // 붓 이름. 왼쪽 판의 줄 이름과 같은 말을 쓴다.
@@ -893,7 +1312,8 @@ public class MapMakerWindow : EditorWindow
     /// 격자는 어떤 경우에도 밀지 않는다 — 내용이 넘치면 선반 안에서만 스크롤한다.
     /// 탭 이름에 수를 붙인다: 탭을 열지 않아도 상태가 보이고, 문제가 0인 것과 아직 안 본 것이 구분된다.
     /// </summary>
-    private void DrawShelf(Grid module, IReadOnlyList<LaneData> lanes, List<string> problems)
+    private void DrawShelf(Grid module, IReadOnlyList<LaneData> lanes, RouteConfig routes,
+        List<string> problems)
     {
         int picks = _theme != null ? _theme.For(_brush).Length : 0;
 
@@ -926,7 +1346,7 @@ public class MapMakerWindow : EditorWindow
             switch (_shelf)
             {
                 case ShelfTab.Lane:
-                    _lanePick = LaneList.Draw(lanes, _lanePick);
+                    PickLane(lanes, LaneList.Draw(lanes, RouteIndex(lanes), routes));
                     break;
 
                 case ShelfTab.Problem:
