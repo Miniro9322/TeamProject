@@ -517,6 +517,10 @@ public class MapMakerWindow : EditorWindow
             BrushRow(MapBrush.Swim, "물", MapMakerPalette.Swim, TileTally.CountPass(cells, PassType.Swim));
 
             GUILayout.Space(6);
+            GUILayout.Label("기믹", EditorStyles.miniBoldLabel);
+            BrushRow(MapBrush.Fire, "불", MapMakerPalette.Fire, TileTally.CountGimmick(cells, GimmickType.Fire));
+
+            GUILayout.Space(6);
             GUILayout.Label("표식", EditorStyles.miniBoldLabel);
             BrushRow(MapBrush.Spawn, "스폰", MapMakerPalette.Spawn, TileTally.CountSpawn(cells));
 
@@ -733,7 +737,7 @@ public class MapMakerWindow : EditorWindow
 
         if (_routeMode == RouteMode.Draw)
         {
-            return "스폰에서 누른 채 끌면 지나간 칸이 그대로 경로가 됩니다 — 같은 칸을 다시 지나가도 됩니다";
+            return "스폰에서 누른 채 끌면 지나간 칸이 그대로 경로가 됩니다 — 벽에 닿으면 선이 거기서 멈춥니다";
         }
 
         return PointWord(tile, back);
@@ -767,7 +771,7 @@ public class MapMakerWindow : EditorWindow
 
         if (!tile.Walkable)
         {
-            return "지나갈 수 없는 칸입니다 — 찍으면 이 경로가 통째로 끊깁니다";
+            return "지나갈 수 없는 칸입니다 — 여기는 못 찍습니다";
         }
 
         if (Event.current.control)
@@ -1139,7 +1143,7 @@ public class MapMakerWindow : EditorWindow
             return;
         }
 
-        PointNode(config, coord, back);
+        PointNode(config, tile, back);
     }
 
     // 스폰 칸을 눌렀다. 획은 아직 비어 있어서, 끌지 않고 떼면 저작한 경로는 그대로 남는다.
@@ -1161,25 +1165,30 @@ public class MapMakerWindow : EditorWindow
         }
 
         List<Vector2Int> steps = RouteStroke.Between(_routeLast, coord);
-        _routeLast = coord;
 
         for (int i = 0; i < steps.Count; i++)
         {
-            Push(cells, steps[i]);
+            if (!Walkable(cells, steps[i]))
+            {
+                break; // 벽에 닿았다 — 선은 여기까지다
+            }
+
+            _routeLast = steps[i];
+            Push(steps[i]);
         }
 
         RouteEdit.SetNodes(config, _routeSpawn, _stroke);
     }
 
-    // 지나갈 수 없는 칸은 빼고 쌓는다 — 노드로 들어가면 그 경로가 통째로 끊긴다.
-    // 방금 지나온 칸으로 되짚어 가면 쌓지 않고 그 걸음을 무른다(연필로 그은 선을 되짚어 지우는 것과 같다).
-    private void Push(Dictionary<Vector2Int, Tile> cells, Vector2Int coord)
+    // 이 칸으로 선이 들어갈 수 있는가. 격자 밖도 못 지나가는 칸과 같이 본다.
+    private static bool Walkable(Dictionary<Vector2Int, Tile> cells, Vector2Int coord)
     {
-        if (!cells.TryGetValue(coord, out Tile tile) || !tile.Walkable)
-        {
-            return;
-        }
+        return cells.TryGetValue(coord, out Tile tile) && tile.Walkable;
+    }
 
+    // 방금 지나온 칸으로 되짚어 가면 쌓지 않고 그 걸음을 무른다(연필로 그은 선을 되짚어 지우는 것과 같다).
+    private void Push(Vector2Int coord)
+    {
         if (Retreat(coord))
         {
             _stroke.RemoveAt(_stroke.Count - 1);
@@ -1208,7 +1217,7 @@ public class MapMakerWindow : EditorWindow
     }
 
     // 한 칸씩 쌓는다. Alt는 뒤로가기라 맨 뒤부터 빠지고, Ctrl은 들어갈 자리를 알아서 고른다.
-    private void PointNode(RouteConfig config, Vector2Int coord, bool back)
+    private void PointNode(RouteConfig config, Tile tile, bool back)
     {
         if (back)
         {
@@ -1216,14 +1225,19 @@ public class MapMakerWindow : EditorWindow
             return;
         }
 
+        if (!tile.Walkable)
+        {
+            return; // 못 지나가는 칸 — 넣으면 그 경로가 통째로 끊긴다
+        }
+
         if (!Event.current.control)
         {
-            RouteEdit.AddNode(config, _routeSpawn, coord);
+            RouteEdit.AddNode(config, _routeSpawn, tile.Coord);
             return;
         }
 
         IReadOnlyList<RouteNode> nodes = RouteNodes(_routes);
-        RouteEdit.InsertNode(config, _routeSpawn, coord, RouteSlotOf(nodes, coord));
+        RouteEdit.InsertNode(config, _routeSpawn, tile.Coord, RouteSlotOf(nodes, tile.Coord));
     }
 
     // 붓 이름. 왼쪽 판의 줄 이름과 같은 말을 쓴다.
@@ -1242,6 +1256,7 @@ public class MapMakerWindow : EditorWindow
             case MapBrush.Ranged: return "원거리";
             case MapBrush.Build: return "생산";
             case MapBrush.Swim: return "헤엄";
+            case MapBrush.Fire: return "불";
             default: return "읽기만";
         }
     }

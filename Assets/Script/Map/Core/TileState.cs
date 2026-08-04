@@ -13,6 +13,9 @@ public class TileState
     // 이 칸을 지나는 방식. 기본이 걷기라 값을 저작하지 않은 기존 타일은 예전과 똑같이 동작한다.
     public PassType Pass = PassType.Walk;
 
+    // 이 칸에 걸린 기믹. 통행 자격과는 다른 축이라 따로 둔다 — 기믹은 길을 막지 않는다.
+    public GimmickType Gimmick = GimmickType.None;
+
     public bool EnemyLane;
     public bool CanMelee;
     public bool CanRanged;

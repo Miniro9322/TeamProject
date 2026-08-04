@@ -56,6 +56,12 @@ public partial class Tile : MonoBehaviour
     // 걸어서 오는 상대 기준. 지상이어도 헤엄 칸이면 막힌다.
     public bool CanWalk => CanPass(PassType.Walk);
 
+    // 이 칸에 걸린 기믹. 길찾기·배치와는 무관하고 올라선 유닛에게만 영향을 준다.
+    public GimmickType Gimmick => State.Gimmick;
+
+    // 불 칸인가. 지나갈 수도, 아군을 놓을 수도 있지만 올라서 있으면 계속 아프다.
+    public bool IsFire => Gimmick == GimmickType.Fire;
+
     // 이 칸을 지나갈 수 있는지.(현재는 물적도 일반 땅 밟을 수 있게 오픈된 형태)
     public bool CanPass(PassType way)
     {
@@ -93,6 +99,7 @@ public partial class Tile : MonoBehaviour
     {
         OccupantObject = go;
         State.Occupant = kind;
+        EnterFire(go);
     }
 
     //배치되어 있는 유닛을 해제 후 반환.
@@ -102,6 +109,7 @@ public partial class Tile : MonoBehaviour
 
         OccupantObject = null;
         State.Occupant = OccupantKind.None;
+        ExitFire(go);
 
         return go;
     }
@@ -115,10 +123,46 @@ public partial class Tile : MonoBehaviour
     //타일에 적 진입 등록
     public void AddEnemy(GameObject enemy)
     {
-        if (!_enemies.Contains(enemy)) _enemies.Add(enemy);
+        if (_enemies.Contains(enemy))
+        {
+            return;
+        }
+
+        _enemies.Add(enemy);
+        EnterFire(enemy);
     }
 
     //타일에 적 이탈 등록
-    public void RemoveEnemy(GameObject enemy) => _enemies.Remove(enemy);
+    public void RemoveEnemy(GameObject enemy)
+    {
+        if (!_enemies.Remove(enemy))
+        {
+            return;
+        }
+
+        ExitFire(enemy);
+    }
+
+    //불 칸일 때만 이 유닛을 불 장부에 올린다.
+    private void EnterFire(GameObject unit)
+    {
+        if (!IsFire)
+        {
+            return;
+        }
+
+        FireDamage.Enter(unit);
+    }
+
+    //불 칸일 때만 이 유닛을 불 장부에서 뺀다.
+    private void ExitFire(GameObject unit)
+    {
+        if (!IsFire)
+        {
+            return;
+        }
+
+        FireDamage.Exit(unit);
+    }
 }
     

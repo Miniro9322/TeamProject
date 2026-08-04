@@ -60,6 +60,7 @@ public static class TileAuthorRule
             CanRanged = source.CanRanged,
             CanBuild = source.CanBuild,
             Pass = source.Pass,
+            Gimmick = source.Gimmick,
             Flags = source.Flags,
             Occupant = source.Occupant
         };

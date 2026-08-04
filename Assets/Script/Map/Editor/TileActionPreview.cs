@@ -93,6 +93,11 @@ public static class TileActionPreview
             return SwimWord(tile, turnOff);
         }
 
+        if (brush == MapBrush.Fire)
+        {
+            return FireWord(turnOff);
+        }
+
         if (IsPlaceBrush(brush))
         {
             return PlaceWord(tile, brush, turnOff);
@@ -276,6 +281,17 @@ public static class TileActionPreview
         }
 
         return "헤엄 통행 켜기 — 걷는 적은 이 칸을 못 지납니다(길이 돌아갑니다)";
+    }
+
+    // 불 붓. 길을 막지도, 배치를 막지도 않으므로 지형과 상관없이 말이 하나다.
+    private static string FireWord(bool turnOff)
+    {
+        if (turnOff)
+        {
+            return "불 끄기";
+        }
+
+        return "불 켜기 — 올라선 아군·적이 모두 지속피해를 받습니다";
     }
 
     private static bool IsPlaceBrush(MapBrush brush)

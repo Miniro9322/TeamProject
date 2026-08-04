@@ -77,6 +77,14 @@ public static class TileStamp
                     tile.State.Pass = PassType.Swim;
                 }
                 break;
+            case MapBrush.Fire:
+                // 끄면 기믹 없음으로 돌아온다 — 기믹도 칸마다 하나만 걸린다.
+                tile.State.Gimmick = GimmickType.None;
+                if (on)
+                {
+                    tile.State.Gimmick = GimmickType.Fire;
+                }
+                break;
             default:
                 throw new System.ArgumentOutOfRangeException(
                     nameof(brush), brush, "찍을 수 없는 붓입니다. 창이 None 상태로 Stamp를 부른 것입니다.");
@@ -115,5 +123,6 @@ public enum MapBrush
     Ranged,
     Build,
     Decor,
-    Swim
+    Swim,
+    Fire
 }

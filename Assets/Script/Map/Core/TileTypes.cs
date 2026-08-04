@@ -13,6 +13,12 @@ public enum PassType
     Swim  // 헤엄쳐야 지난다
 }
 
+public enum GimmickType
+{
+    None, // 아무 일도 없는 평범한 칸(기본)
+    Fire  // 올라선 유닛이 지속피해를 받는다
+}
+
 /// <summary>기존 씬 데이터 호환용 값. 새 코드는 TileState의 명시 필드를 사용한다.</summary>
 public enum TileFlags
 {
