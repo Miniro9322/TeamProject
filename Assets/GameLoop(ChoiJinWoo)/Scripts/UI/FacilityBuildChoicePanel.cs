@@ -14,6 +14,7 @@ public class FacilityBuildChoicePanel : MonoBehaviour, IClosablePanel
     [SerializeField] private GameObject infoPanel;
     [SerializeField] private Image infoIcon;
     [SerializeField] private TextMeshProUGUI infoText;
+    [SerializeField] private RegionDetailPanel parentPanel; // 이 패널을 여는 쪽 - 그 안의 슬롯 버튼 클릭은 "바깥 클릭"이 아니다
 
     private BaseConstructor constructor;
     private ResourcesManager resourcesManager;
@@ -45,8 +46,16 @@ public class FacilityBuildChoicePanel : MonoBehaviour, IClosablePanel
             optionViews[i].BindClick(OnOption);
         }
 
-        outsideCloser = new ClickOutsideCloser((RectTransform)transform);
-        infoOutsideCloser = new ClickOutsideCloser((RectTransform)infoPanel.transform);
+        // parentPanel(RegionDetailPanel) 안의 다른 슬롯 버튼을 눌러도 "바깥 클릭"으로 안 잡히게 self로 취급한다.
+        // 이게 없으면 다른 빈 슬롯 클릭 -> 여기 Update()가 먼저 Close() -> 곧이어 parentPanel의 Open()이
+        // 다시 SetActive(true) 하는 순서가 되어 매번 깜빡였다.
+        outsideCloser = new ClickOutsideCloser((RectTransform)transform, parentPanel != null ? parentPanel.transform : null);
+
+        // 옵션 버튼들은 infoPanel의 자식이 아니라서, 다른 옵션을 고를 때도 같은 이유로 infoPanel이
+        // 먼저 꺼졌다가 OnOption이 다시 켜는 깜빡임이 생긴다 - 옵션 버튼들도 self로 취급한다.
+        var optionTransforms = new Transform[optionViews.Count];
+        for (int i = 0; i < optionViews.Count; i++) optionTransforms[i] = optionViews[i].transform;
+        infoOutsideCloser = new ClickOutsideCloser((RectTransform)infoPanel.transform, optionTransforms);
     }
 
     private void OnEnable()
@@ -80,8 +89,15 @@ public class FacilityBuildChoicePanel : MonoBehaviour, IClosablePanel
     {
         region = target;
         slotIndex = index;
+        currentOption = null;
+        infoPanel.SetActive(false);
+
+        bool wasActive = gameObject.activeSelf;
         gameObject.SetActive(true);
         outsideCloser.MarkOpened();
+
+        // 이미 열려있던 채로 다른 슬롯을 골랐을 때는 OnEnable이 다시 안 불리니 직접 갱신한다.
+        if (wasActive) RefreshButtons();
     }
 
     public void Close()

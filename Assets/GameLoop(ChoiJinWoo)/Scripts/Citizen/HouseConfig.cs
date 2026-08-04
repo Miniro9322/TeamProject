@@ -11,24 +11,12 @@ public class HouseConfig : ScriptableObject
     [Header("건물 이름")]
     [SerializeField] private string houseName;
     [Header("건물 설명")]
-    [SerializeField] private string houseInfo;
+    [SerializeField]
+    [TextArea] private string houseInfo;
 
     public int MaxCitizenAmount => maxCitizenAmount;
     public string HouseName => houseName;
     public string HouseInfo => houseInfo;
 
-    public (ProductionType Type, int Amount)[] Resources
-    {
-        get
-        {
-            var temp = new (ProductionType, int)[cost.Count];
-
-            for (int i = 0; i < cost.Count; i++)
-            {
-                temp[i] = (cost[i].Type, -cost[i].Amount);
-            }
-
-            return temp;
-        }
-    }
+    public (ProductionType Type, int Amount)[] Resources => cost.ToNegatedCostArray();
 }

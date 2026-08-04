@@ -40,14 +40,7 @@ public class ResourcesManager : MonoBehaviour
     {
         foreach (var product in products)
         {
-            switch (product.Type)
-            {
-                case ProductionType.Wood: wood += product.Amount; break;
-                case ProductionType.Food: food += product.Amount; break;
-                case ProductionType.Gold: gold += product.Amount; break;
-                case ProductionType.Iron: iron += product.Amount; break;
-                case ProductionType.Stone: stone += product.Amount; break;
-            }
+            Resource(product.Type) += product.Amount;
         }
 
         ProductUpdate?.Invoke();
@@ -57,26 +50,24 @@ public class ResourcesManager : MonoBehaviour
     {
         foreach (var resource in resources)
         {
-            switch (resource.Type)
-            {
-                case ProductionType.Wood:
-                    if (-resource.Amount > wood) return false;
-                    break;
-                case ProductionType.Stone:
-                    if (-resource.Amount > stone) return false;
-                    break;
-                case ProductionType.Gold:
-                    if (-resource.Amount > gold) return false;
-                    break;
-                case ProductionType.Iron:
-                    if (-resource.Amount > iron) return false;
-                    break;
-                case ProductionType.Food:
-                    if (-resource.Amount > food) return false;
-                    break;
-            }
+            if (-resource.Amount > Resource(resource.Type)) return false;
         }
 
         return true;
+    }
+
+    // 자원 종류 하나당 필드 하나씩 직렬화해야 해서(Dictionary는 인스펙터 지원이 없음) 필드는 그대로 두고,
+    // 타입 -> 필드 매핑만 한 곳에 모아 ProductChanged/CheckResources의 중복 switch를 없앤다.
+    private ref int Resource(ProductionType type)
+    {
+        switch (type)
+        {
+            case ProductionType.Wood: return ref wood;
+            case ProductionType.Food: return ref food;
+            case ProductionType.Gold: return ref gold;
+            case ProductionType.Iron: return ref iron;
+            case ProductionType.Stone: return ref stone;
+            default: throw new ArgumentOutOfRangeException(nameof(type), type, null);
+        }
     }
 }

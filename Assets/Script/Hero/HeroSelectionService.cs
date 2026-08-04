@@ -7,14 +7,16 @@ public static class HeroSelectionService
     {
         if (hero == null || current == hero) return;
 
-        current?.SetSelected(false);
+        // "?."는 파괴된 UnityEngine.Object를 감지하지 못하고(raw 참조 null 체크) 그대로 호출해버리므로,
+        // Unity의 오버로드된 == 을 타는 명시적 null 체크를 써야 한다.
+        if (current != null) current.SetSelected(false);
         current = hero;
         current.SetSelected(true);
     }
 
     public static void Clear()
     {
-        current?.SetSelected(false);
+        if (current != null) current.SetSelected(false);
         current = null;
     }
 

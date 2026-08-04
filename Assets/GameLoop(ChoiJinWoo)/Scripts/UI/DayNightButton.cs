@@ -3,7 +3,6 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using VContainer;
-using static System.Net.Mime.MediaTypeNames;
 
 public class DayNightButton : MonoBehaviour
 {

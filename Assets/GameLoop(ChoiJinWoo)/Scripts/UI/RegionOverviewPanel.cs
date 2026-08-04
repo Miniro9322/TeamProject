@@ -19,6 +19,10 @@ public class RegionOverviewPanel : MonoBehaviour, IClosablePanel
     [SerializeField] private List<RegionFacilitySlots> regions; // 인스펙터에서 지역 오브젝트들을 직접 연결
     [SerializeField] private Button openButton; // 거점 화면을 여는 버튼 - 밤에는 비활성화
 
+    // RegionDetailPanel이 자기 바깥-클릭 판정에서 지역 노드 버튼만 제외하는 데 쓴다
+    // (오버뷰 전체가 아니라 노드들만 - 오버뷰는 화면 전체를 덮고 있어서 전체를 제외하면 바깥 클릭이 아예 안 잡힌다).
+    public IReadOnlyList<RegionNodeView> Nodes => nodes;
+
     private UiPanelStack panelStack;
     private GameManager gameManager;
     private EnviromentManager enviromentManager;
@@ -132,6 +136,13 @@ public class RegionOverviewPanel : MonoBehaviour, IClosablePanel
 
         var region = FindRegion(node.ModuleId);
         if (region == null) return;
+
+        // 이미 이 지역이 열려있는 채로 같은 노드를 또 누르면 닫는다(토글).
+        if (detailPanel.CurrentRegion == region)
+        {
+            detailPanel.Close();
+            return;
+        }
 
         detailPanel.Open(region);
     }

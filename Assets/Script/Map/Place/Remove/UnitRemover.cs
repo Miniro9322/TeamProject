@@ -56,6 +56,11 @@ public class UnitRemover
         HeroRosterLink link = unit.GetComponent<HeroRosterLink>();
         if (link != null && link.Entry != null)
         {
+            if (unit.TryGetComponent(out Hero hero))
+            {
+                link.Entry.SaveUpgradeState(hero.SkillLevel, hero.StatLevel);
+                HeroSelectionService.ClearIfSelected(hero);
+            }
             link.Entry.MarkAvailable();
             _heroRoster.NotifyStateChanged();
         }

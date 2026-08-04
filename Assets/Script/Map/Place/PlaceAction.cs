@@ -61,6 +61,11 @@ public class PlaceAction
         if (entry == null) return;
         entry.MarkPlaced(placedUnit);
         placedUnit.AddComponent<HeroRosterLink>().Entry = entry;
+
+        // 이전에 제거되며 저장해둔 강화 진행도가 있으면 새로 생성된 인스턴스에 되돌린다.
+        if ((entry.SkillLevel > 0 || entry.StatLevel > 0) && placedUnit.TryGetComponent(out Hero hero))
+            hero.RestoreUpgradeState(entry.SkillLevel, entry.StatLevel);
+
         heroRoster.NotifyStateChanged();
     }
 

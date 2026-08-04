@@ -32,8 +32,7 @@ public class FacilitySlotView : MonoBehaviour
             icon.sprite = facilityIcon;
             icon.gameObject.SetActive(true);
         }
-        if (nameText != null) nameText.text = $"{level} {label}\n{workers}";
-        nameText.text.Trim();
+        if (nameText != null) nameText.text = $"{level} {label}\n{workers}".Trim();
     }
 
     public void BindClick(Action<int> onClick)

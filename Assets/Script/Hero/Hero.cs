@@ -608,12 +608,30 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
         {
             resourcesManager.ProductChanged(StatUpgradeCost);
             statLevel++;
-            Modifier mod = new Modifier(ModifierType.Additive, 0.1f, 0f, StatLayer.Equip, this);
-            sc.AddModifier(StatType.HP, mod);
-            mod = new Modifier(ModifierType.Additive, 0.05f, 0f, StatLayer.Equip, this);
-            sc.AddModifier(StatType.ATK, mod);
-            mod = new Modifier(ModifierType.Flat, 1f, 0f, StatLayer.Equip, this);
-            sc.AddModifier(StatType.DEF, mod);
+            ApplyStatUpgradeModifiers();
         }
+    }
+
+    private void ApplyStatUpgradeModifiers()
+    {
+        Modifier mod = new Modifier(ModifierType.Additive, 0.1f, 0f, StatLayer.Equip, this);
+        sc.AddModifier(StatType.HP, mod);
+        mod = new Modifier(ModifierType.Additive, 0.05f, 0f, StatLayer.Equip, this);
+        sc.AddModifier(StatType.ATK, mod);
+        mod = new Modifier(ModifierType.Flat, 1f, 0f, StatLayer.Equip, this);
+        sc.AddModifier(StatType.DEF, mod);
+    }
+
+    // 로스터 제거 전에 저장해둔 강화 진행도를, 재배치로 새로 생성된 인스턴스에 되돌려 적용한다.
+    // 비용 검사 없이 이미 치른 강화를 그대로 재현하는 것이므로 SkillUpgrade/StatUpgrade를 거치지 않는다.
+    public void RestoreUpgradeState(int savedSkillLevel, int savedStatLevel)
+    {
+        for (int i = 0; i < savedSkillLevel && i < upgradeDatas.Count; i++)
+            upgradeDatas[i].Upgrade(this);
+        skillLevel = savedSkillLevel;
+
+        for (int i = 0; i < savedStatLevel; i++)
+            ApplyStatUpgradeModifiers();
+        statLevel = savedStatLevel;
     }
 }
