@@ -25,13 +25,19 @@ public sealed class RouteConfig : MonoBehaviour
         return routeMap.TryGetValue(spawn, out found);
     }
 
-    // 이 경로가 목록 몇 번째인지. 저작 도구가 참조로 고른 경로를 고칠 때 쓰는 유일한 통로다.
+    // 이 경로가 목록 몇 번째인지. 맵 메이커가 고른 경로를 고칠 때 쓰는 통로다.
     public int IndexOf(RouteData route)
     {
         return routes.IndexOf(route);
     }
 
-    // 지정 목록을 스폰 좌표 사전으로 정리합니다. 저작 도구가 목록을 고친 뒤에도 부릅니다.
+    // 이 번호의 경로. 방금 만든 항목을 되받을 때 쓴다.
+    public RouteData RouteAt(int index)
+    {
+        return routes[index];
+    }
+
+    // 지정 목록을 스폰 좌표 사전으로 정리합니다. 맵 메이커가 목록을 고친 뒤에도 부릅니다.
     public void Rebuild()
     {
         routeMap.Clear();

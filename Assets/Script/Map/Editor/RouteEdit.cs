@@ -138,19 +138,21 @@ public static class RouteEdit
         owner.ApplyModifiedProperties();
     }
 
-    /// <summary>이 스폰에 빈 경로 항목을 하나 더 만든다. 만든 항목의 번호를 돌려준다.</summary>
-    public static int AddRoute(RouteConfig config, Vector2Int spawn)
+    /// <summary>이 스폰에 빈 경로 항목을 하나 더 만들고 그 항목을 돌려준다.</summary>
+    public static RouteData AddRoute(RouteConfig config, Vector2Int spawn)
     {
         var owner = new SerializedObject(config);
         SerializedProperty routes = owner.FindProperty(RoutesField);
 
         routes.arraySize++;
-        SerializedProperty added = routes.GetArrayElementAtIndex(routes.arraySize - 1);
+        int made = routes.arraySize - 1;
+        SerializedProperty added = routes.GetArrayElementAtIndex(made);
         added.FindPropertyRelative(SpawnField).vector2IntValue = spawn;
         added.FindPropertyRelative(NodesField).ClearArray();
         owner.ApplyModifiedProperties();
 
-        return routes.arraySize - 1;
+        config.Rebuild();
+        return config.RouteAt(made);
     }
 
     // 경로가 붙어 사는 오브젝트. 비활성 모듈에서도 찾아야 한다(잠긴 모듈도 저작 대상이다).

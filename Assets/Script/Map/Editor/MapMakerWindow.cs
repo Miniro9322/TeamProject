@@ -374,32 +374,6 @@ public class MapMakerWindow : EditorWindow
         return _routeData.Spawn;
     }
 
-    // 목록에서 고른 경로를 편집 대상으로 삼는다 — 보는 경로와 고치는 경로를 하나로 묶는다.
-    private void PickLane(IReadOnlyList<LaneData> lanes, int picked)
-    {
-        if (picked < 0 || picked >= lanes.Count)
-        {
-            // 고른 것이 없는 상태로 돌아간다 — 격자가 다시 모든 경로를 제 색으로 보여 준다.
-            _routeData = null;
-            _routeDrawing = false;
-            return;
-        }
-
-        // 계산 단계가 넘겨준 신원을 그대로 받는다. 아직 지정 항목이 없는 스폰이면 여기서 만든다.
-        _routeData = EnsureRoute(lanes[picked]);
-    }
-
-    // 이 레인의 지정 항목. 계산 단계가 이미 찾아 넘겼으면 그것을 쓴다.
-    private RouteData EnsureRoute(LaneData lane)
-    {
-        if (lane.Route != null)
-        {
-            return lane.Route;
-        }
-
-        return EnsureRouteOfSpawn(lane.Start);
-    }
-
     // 이 스폰의 지정 항목. 아직 없으면 빈 항목을 만들어 신원을 확보한다.
     private RouteData EnsureRouteOfSpawn(Tile spawn)
     {
@@ -410,10 +384,7 @@ public class MapMakerWindow : EditorWindow
             return found[0];
         }
 
-        RouteEdit.AddRoute(config, spawn.Coord);   // 항목이 없을 때만 새로 만든다
-        RouteEdit.Sync(config);
-        config.TryGetRoutes(spawn.Coord, out List<RouteData> made);
-        return made[0];
+        return RouteEdit.AddRoute(config, spawn.Coord);
     }
 
     // 편집 중인 경로의 목록 번호. 저작 API가 번호로 집는다.
@@ -1189,13 +1160,35 @@ public class MapMakerWindow : EditorWindow
         PointNode(config, tile, back);
     }
 
-    // 스폰 칸을 눌렀다. 획은 아직 비어 있어서, 끌지 않고 떼면 저작한 경로는 그대로 남는다.
+    // 스폰 칸을 눌렀다. 획은 아직 비어 있어서, 끌지 않고 떼면 만들어 둔 경로는 그대로 남는다.
     private void OpenStroke(Tile spawn)
     {
-        _routeData = EnsureRouteOfSpawn(spawn);
+        _routeData = SpawnRoute(spawn);
         _routeLast = spawn.Coord;
         _routeDrawing = true;
         _stroke.Clear();
+    }
+
+    // 이 스폰에 그릴 갈래. 고른 갈래가 이 스폰 것이면 그것, 아니면 첫 갈래.
+    private RouteData SpawnRoute(Tile spawn)
+    {
+        if (IsChosenSpawn(spawn))
+        {
+            return _routeData;
+        }
+
+        return EnsureRouteOfSpawn(spawn);
+    }
+
+    // 지금 고른 갈래가 이 스폰에서 나가는가.
+    private bool IsChosenSpawn(Tile spawn)
+    {
+        if (IsRouteUnselected())
+        {
+            return false;
+        }
+
+        return _routeData.Spawn == spawn.Coord;
     }
 
     // 끌고 지나간 칸을 쌓아 이 스폰의 경로를 통째로 다시 쓴다. 같은 칸을 다시 지나가도 그대로 쌓인다.
@@ -1408,7 +1401,7 @@ public class MapMakerWindow : EditorWindow
             switch (_shelf)
             {
                 case ShelfTab.Lane:
-                    PickLane(lanes, LaneList.Draw(lanes, RouteIndex(lanes), routes));
+                    _routeData = LaneList.Draw(lanes, _routeData, routes);
                     break;
 
                 case ShelfTab.Problem:
