@@ -11,6 +11,7 @@ public class MapBoard : MonoBehaviour
     [SerializeField] private Grid _grid; // 좌표계의 단일 소스. 셀 크기·원점·Swizzle을 모두 쥔다.
     private Bounds _worldBounds;
     private RectInt _playRect;
+    private float _floorY; // 클릭 판정에서 타일 기둥이 내려가는 바닥(보드 기준 높이).
     private ModuleLogic _module; // 소속 모듈. Awake에서 한 번만 잡는다(매 호출 GetComponent 금지).
 
     public IReadOnlyDictionary<Vector2Int, Tile> Cells => _cells;
@@ -72,12 +73,29 @@ public class MapBoard : MonoBehaviour
 
         // 2) 안쪽 칸 범위: 장식(Special)을 뺀 타일들의 바운딩 박스. 외곽 한 줄이 장식이라 그만큼 좁다.
         _playRect = InnerRect();
+        _floorY = LowestFloor();
 
         Debug.Log($"[MapBoard] 타일 {_cells.Count}개 (안쪽 {_playRect.width}×{_playRect.height} @{_playRect.min}, " +
             $"셀크기 {CellSize:0.###}), 스폰 {_spawns.Count}, 본진 {_cores.Count}", this);
 
         if (!HasEndpoints)
             Debug.LogWarning("[MapBoard] 스폰(isEnemySpawn) 또는 본진(Terrain=Core) 타일을 찾지 못했습니다.", this);
+    }
+
+    // 클릭 판정용 기둥의 바닥. 가장 낮은 타일 윗면보다 한 칸 더 내려간 높이라 어떤 타일도 두께를 가진다.
+    // 월드 바운즈 대신 보드 기준으로 재는 이유는 맵을 돌려 놓으면 월드 높이가 실제 아래쪽과 달라지기 때문이다.
+    private float LowestFloor()
+    {
+        Transform space = _grid.transform;
+        float lowest = float.MaxValue;
+
+        foreach (Tile tile in _cells.Values)
+        {
+            float top = space.InverseTransformPoint(tile.WorldTop).y;
+            if (top < lowest) { lowest = top; }
+        }
+
+        return lowest == float.MaxValue ? 0f : lowest - CellSize;
     }
 
     // 장식이 아닌 타일들을 감싸는 직사각형. 장식 줄이 사방 한 줄이라 전체보다 한 칸씩 안쪽으로 들어온다.
@@ -172,28 +190,61 @@ public class MapBoard : MonoBehaviour
 
     public bool TryGetCell(Vector2Int coord, out Tile tile) => _cells.TryGetValue(coord, out tile);
 
-    // 화면 광선이 가리키는 타일. 타일마다 제 윗면 높이에서 맞혀 보므로 높이가 다른 타일도 그대로 클릭된다.
+    // 화면 광선이 가리키는 타일. 타일을 윗면 한 장이 아니라 바닥까지 이어진 기둥으로 보고 맞힌다
+    // — 그래서 옆면을 눌러도 그 타일이 잡히고, 앞에 선 높은 타일이 뒤 타일을 가린다.
     public Tile CellFromRay(Ray ray)
     {
-        if (Mathf.Abs(ray.direction.y) < 1e-6f) return null; // 수평 시선이면 top면과 안 만남
-        float half = CellSize * 0.5f;
+        Transform space = _grid.transform; // 맵을 돌려 놔도 축이 어긋나지 않게 보드 기준으로 옮겨서 잰다
+        var local = new Ray(
+            space.InverseTransformPoint(ray.origin),
+            space.InverseTransformDirection(ray.direction));
 
+        float half = CellSize * 0.5f;
         Tile best = null;
         float bestT = float.MaxValue;
+
         foreach (Tile tile in _cells.Values)
         {
-            Vector3 top = tile.WorldTop;
-            float t = (top.y - ray.origin.y) / ray.direction.y;
-            if (t < 0f || t >= bestT) continue; // 뒤쪽이거나 이미 더 가까운 타일이 있으면 skip
+            Vector3 top = space.InverseTransformPoint(tile.WorldTop);
+            if (!TryEnterColumn(local, top, half, _floorY, out float t)) continue;
+            if (t >= bestT) continue; // 이미 더 앞에서 맞은 타일이 있으면 그쪽이 이 타일을 가린다
 
-            Vector3 hit = ray.origin + ray.direction * t;
-            if (Mathf.Abs(hit.x - top.x) <= half && Mathf.Abs(hit.z - top.z) <= half)
-            {
-                bestT = t;
-                best = tile;
-            }
+            bestT = t;
+            best = tile;
         }
         return best;
+    }
+
+    // 광선이 기둥(칸 사각형 × 바닥~윗면)으로 들어오는 지점. 스치지도 않으면 false.
+    private static bool TryEnterColumn(Ray ray, Vector3 top, float half, float floorY, out float t)
+    {
+        t = 0f;
+        float enter = 0f;
+        float exit = float.MaxValue;
+
+        if (!Narrow(ray.origin.x, ray.direction.x, top.x - half, top.x + half, ref enter, ref exit)) return false;
+        if (!Narrow(ray.origin.z, ray.direction.z, top.z - half, top.z + half, ref enter, ref exit)) return false;
+        if (!Narrow(ray.origin.y, ray.direction.y, floorY, top.y, ref enter, ref exit)) return false;
+
+        t = enter;
+        return true;
+    }
+
+    // 한 축에서 광선이 [min,max] 안에 머무는 구간만 남긴다. 세 축이 모두 남으면 기둥을 통과한 것.
+    private static bool Narrow(float origin, float direction, float min, float max, ref float enter, ref float exit)
+    {
+        if (Mathf.Abs(direction) < 1e-6f)
+        {
+            return origin >= min && origin <= max; // 그 축으로 안 움직이면 처음부터 안에 있어야 한다
+        }
+
+        float near = (min - origin) / direction;
+        float far = (max - origin) / direction;
+        if (near > far) { (near, far) = (far, near); }
+
+        enter = Mathf.Max(enter, near);
+        exit = Mathf.Min(exit, far);
+        return enter <= exit;
     }
 
     // 광선 아래 타일, 없으면 맵 밖이라도 가장 가까운 타일. 집은 유닛이 가장자리에 붙어 따라오게 한다.
