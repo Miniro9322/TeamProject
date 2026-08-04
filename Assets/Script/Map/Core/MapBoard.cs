@@ -110,7 +110,7 @@ public class MapBoard : MonoBehaviour
         }
 
         List<Tile> path = Pathfinder.FindPath(
-            _spawns, IsCore, Walkable, HeuristicToNearestCore);
+            _spawns, IsCore, CanWalk, HeuristicToNearestCore);
         SetLanes(path);
 
         return path;
@@ -137,7 +137,8 @@ public class MapBoard : MonoBehaviour
 
     private static bool IsCore(Tile tile) => tile.Terrain == TerrainType.Core;
 
-    private static bool Walkable(Tile tile) => tile.Walkable;
+    // 걸어서 오는 적 기준으로 길을 찾는다 — 헤엄 칸은 통로에서 빠진다.
+    private static bool CanWalk(Tile tile) => tile.CanWalk;
 
     // 가장 가까운 본진까지의 칸 거리. 경로 찾기가 어느 쪽을 먼저 뒤질지 정하는 데 쓴다.
     private int HeuristicToNearestCore(Tile tile)

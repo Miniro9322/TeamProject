@@ -18,6 +18,11 @@ public static class TileCellReadout
             GroupWord(tile)
         };
 
+        if (tile.State.Pass == PassType.Swim)
+        {
+            parts.Add("헤엄");
+        }
+
         parts.Add(AllowWord(tile));
         return $"({tile.Coord.x}, {tile.Coord.y})  {string.Join(" · ", parts)}";
     }

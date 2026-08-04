@@ -37,6 +37,21 @@ public static class TileTally
         return found;
     }
 
+    // 이 통행 방식으로 지나야 하는 칸 수.
+    public static int CountPass(Dictionary<Vector2Int, Tile> cells, PassType way)
+    {
+        int found = 0;
+        foreach (Tile tile in cells.Values)
+        {
+            if (tile.State.Pass == way)
+            {
+                found++;
+            }
+        }
+
+        return found;
+    }
+
     /// <summary>이 배치 허용이 켜져 있는 칸 수.</summary>
     public static int CountFlag(Dictionary<Vector2Int, Tile> cells, MapBrush brush)
     {

@@ -53,6 +53,15 @@ public partial class Tile : MonoBehaviour
     /// <summary>적 통행 가능 지형인가. 고지·빈 타일은 막힘, 지상·본진은 통행(설계: 고지=이동 차단).</summary>
     public bool Walkable => State.Terrain is TerrainType.Ground or TerrainType.Core;
 
+    // 걸어서 오는 상대 기준. 지상이어도 헤엄 칸이면 막힌다.
+    public bool CanWalk => CanPass(PassType.Walk);
+
+    // 이 칸을 지나갈 수 있는지.(현재는 물적도 일반 땅 밟을 수 있게 오픈된 형태)
+    public bool CanPass(PassType way)
+    {
+        return Walkable && (State.Pass == PassType.Walk || way == PassType.Swim);
+    }
+
     // 이웃 타일(런타임 캐시, 직렬화하지 않음)
     private Tile[] neighborTiles = Array.Empty<Tile>();
 

@@ -221,7 +221,7 @@ public class MapMakerWindow : EditorWindow
             }
         }
 
-        List<string> problems = TileAuthorRule.FindProblems(cells, lanes, tiles.Count);
+        List<string> problems = TileAuthorRule.FindProblems(cells, lanes, routes, tiles.Count);
 
         int overrideCount = overrides?.Count ?? 0;
         DrawActionPreview(module, cells);
@@ -511,6 +511,10 @@ public class MapMakerWindow : EditorWindow
 
             // 장식은 칸 수가 아니라 얹힌 개수를 센다 — 한 칸에 여러 개가 올라갈 수 있다.
             BrushRow(MapBrush.Decor, "장식", MapMakerPalette.Decor, DecorPlace.Total(module));
+
+            GUILayout.Space(6);
+            GUILayout.Label("통행", EditorStyles.miniBoldLabel);
+            BrushRow(MapBrush.Swim, "물", MapMakerPalette.Swim, TileTally.CountPass(cells, PassType.Swim));
 
             GUILayout.Space(6);
             GUILayout.Label("표식", EditorStyles.miniBoldLabel);
@@ -1237,6 +1241,7 @@ public class MapMakerWindow : EditorWindow
             case MapBrush.Melee: return "근접";
             case MapBrush.Ranged: return "원거리";
             case MapBrush.Build: return "생산";
+            case MapBrush.Swim: return "헤엄";
             default: return "읽기만";
         }
     }
