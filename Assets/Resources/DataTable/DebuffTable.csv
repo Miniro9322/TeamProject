@@ -1,0 +1,11 @@
+DebuffId,Category,Type,Duration,StatType,ModifierType,Value,MaxStacks,DamagePerTick,Interval
+Slow_Basic,Stat,Slow,3,SPD,Additive,-0.3,1,,
+Slow_Zone,Stat,Slow,5,SPD,Additive,-0.2,3,,
+ArmorBreak_Basic,Stat,ArmorBreak,4,DEF,Flat,-5,2,,
+Exhaust_Basic,Stat,Exhaust,5,AS,Additive,-0.25,1,,
+Exhaust_Basic,,,,SPD,Additive,-0.25,1,,
+Exhaust_Basic,,,,ATK,Additive,-0.2,1,,
+Poison_Spider,Dot,Poison,4,,,,,4,0.5
+Ignite_Basic,Dot,Ignite,3,,,,,5,1
+Bleed_Basic,Dot,Bleed,6,,,,,2,1
+Stun_Basic,Stun,Stun,3,,,,,,

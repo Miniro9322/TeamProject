@@ -8,7 +8,7 @@ using UnityEngine.InputSystem;
 using UnityEngine.UI;
 using VContainer;
 
-public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble
+public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDebuffCarrier
 {
     [SerializeField] protected string enemyKey;
     [SerializeField] protected List<SkillDataSO> skills = new();
@@ -137,11 +137,11 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble
     private Vector3 _baseScale;     // 원래 스케일 — 풀 재사용 시 여기로 복구(분열체가 줄여놓은 걸 리셋)
     public bool IsShielded => Time.time < _shieldExpiry;
 
-    private float _stunExpiry; 
     private bool _stunAnimActive;
     private bool _hasStunParam;
     private bool _stunParamChecked;
-    public bool IsStunned => Time.time < _stunExpiry;
+    // 스턴 만료 시각은 _debuffTracker가 들고 있다 — 따로 필드를 두면 시계가 둘이 되어 어긋난다.
+    public bool IsStunned => _debuffTracker.Has(DebuffType.Stun);
     private GameObject stunEffectPrefab;
     [Tooltip("스턴 이펙트가 뜰 위치. 머리 위에 빈 오브젝트를 만들어 꽂는다(유닛마다 키가 달라 원점으로는 안 맞는다). 비우면 이펙트가 뜨지 않음.")]
     [SerializeField] private Transform stunEffectAnchor;
@@ -166,7 +166,7 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble
         LoadStats();
         _attacking = false;
         _shieldExpiry = 0f;
-        _stunExpiry = 0f;               // 풀 재사용 시 이전 스턴 잔여 제거
+        _debuffTracker.Clear();         // 풀 재사용 시 이전 개체의 디버프 잔여 제거(스턴 포함)
         _stunAnimActive = false;        // animator.Rebind()로 bool도 초기화되므로 상태만 맞춰둔다
         _berserkOn = false;
         _dieEventSent = false;          // 풀 재사용 시 새 생존 시작 — 카운트를 다시 한 번 내릴 수 있게
@@ -209,6 +209,8 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble
         // 더 나쁘게는 BuffManager가 이 인스턴스를 Target으로 계속 물고 있다가 만료 시점에
         // 그 오브젝트를 지금 쓰고 있는 다른 적의 스탯을 벗긴다. 장부와 모디파이어를 여기서 같이 끊는다.
         buffManager?.RemoveAllBuffs(this);
+        _debuffTracker.Clear();           // 조회 장부도 같이 끊는다 — 안 하면 재사용된 개체가 이전 디버프를 물고 나온다
+        DotRegistry.Clear(this);          // 지속 피해 장부에서도 빠진다(만료 전에 죽거나 반납된 경우)
         skillCts?.Cancel();
         skillCts?.Dispose();
         skillCts = null;
@@ -233,8 +235,10 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble
     private readonly EnemyStunEffect _stunEffect = new();
     // 보스 체력바의 스탯 숫자(체력/공격력/방어력)는 EnemyStatText가 전담. 텍스트를 안 꽂은 프리팹이면 통째로 no-op.
     private readonly EnemyStatText _statText = new();
-    // 모디파이어가 붙기 전 원본 스탯값. ApplyData가 sc에 넣는 값을 그대로 여기에도 기록한다 —
-    // StatContainer가 base를 되읽는 API를 주지 않으므로(팀원 소유 파일), 디버프 판정 기준을 이쪽에서 들고 있어야 한다.
+    // 걸린 디버프와 남은 시간 장부. 인스턴스 필드라 적마다 따로 굴러간다(static이나 SO에 두면 전원이 공유해버린다).
+    private readonly DebuffTracker _debuffTracker = new();
+    public DebuffTracker Debuffs => _debuffTracker;
+        
     private readonly Dictionary<StatType, float> baseStats = new();
 
     protected virtual void Update()
@@ -265,7 +269,7 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble
         _bar.Tick(Hp, MaxHp, IsDead, cloakedNow,Class);
         // 스탯 숫자는 값이 바뀐 것만 갱신한다 — 매 프레임 불러도 문자열/메시를 다시 만들지 않는다.
         _statText.Tick(Hp, MaxHp, AttackPower, Defense);
-        _debuffs.Tick(sc, baseStats, IsStunned);
+        _debuffs.Tick(sc, baseStats, _debuffTracker);
         // 이동(Update)이 끝난 뒤에 앵커를 따라가야 이펙트가 한 프레임 밀리지 않는다.
         // 죽으면 스턴 연출을 끌고 가지 않는다 — 사망 애니 위에 별이 돌고 있으면 이상하다.
         _stunEffect.Tick(IsStunned && !IsDead);
@@ -277,11 +281,48 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble
     {
         if (IsDead || duration <= 0f) return;
         bool wasStunned = IsStunned;
-        float expiry = Time.time + duration;
-        // 이펙트는 여기서 소환하지 않는다 — _stunEffect가 IsStunned를 보고 굴리므로,
-        // 스턴이 겹쳐 들어와도 이펙트는 하나이고 갱신된 만료 시각까지 알아서 유지된다.
-        if (expiry > _stunExpiry) _stunExpiry = expiry;
-        if (!wasStunned) InterruptActiveSkills(); // 스턴 시작(상승 엣지)에만 끊기 — 재스턴 시 중복 취소 방지
+        _debuffTracker.Apply(DebuffType.Stun, duration);
+        if (!wasStunned) InterruptActiveSkills();
+    }
+
+    // 외부(영웅 공격·장판 등)에서 이 적에게 디버프를 건다. 종류별 통로(BuffManager/DotRegistry/Stun)는 SO가 고른다.
+    // source는 BuffManager의 스택 판정 키 — 비우면 SO 자신이 되어 같은 디버프끼리만 겹친다.
+    // durationOverride/scale은 에셋 값을 호출부에서 조정하는 용도 — 자세한 규칙은 DebuffSO.Apply 주석 참조.
+    // source를 맨 뒤에 두는 이유: 거의 안 쓰는데 앞에 있으면 ApplyDebuff(so, 3f, 1.5f)처럼 불렀을 때
+    // 3f가 object source로 박싱돼 들어가 버린다(컴파일은 통과하고 동작만 틀린다).
+    public void ApplyDebuff(DebuffSO debuff, float durationOverride = 0f, float scale = 1f, object source = null)
+    {
+        if (debuff == null || IsDead) return;
+
+        debuff.Apply(DebuffContext.For(this, buffManager, gameManager, source ?? debuff), durationOverride, scale);
+    }
+
+    // 이 적이 다른 대상(영웅 등)에게 디버프를 건다. buffManager를 public으로 열지 않으려고 컨텍스트를 여기서 만든다.
+    // target은 유닛 본체든 자식 콜라이더든 상관없다 — DebuffContext.For가 부모까지 올라가 통로를 찾는다.
+    // 자신의 IsDead를 막지 않는 이유: 사망 시 발동 스킬(TriggerOnDeath)이 디버프를 거는 것도 정상이다.
+    public void ApplyDebuffTo(Component target, DebuffSO debuff,
+        float durationOverride = 0f, float scale = 1f, object source = null)
+    {
+        if (debuff == null || target == null) return;
+
+        debuff.Apply(DebuffContext.For(target, buffManager, gameManager, source ?? debuff), durationOverride, scale);
+    }
+
+    public bool HasDebuff(DebuffType mask) => _debuffTracker.HasAny(mask);
+    public float DebuffRemaining(DebuffType type) => _debuffTracker.GetRemaining(type);
+
+    /// <summary>
+    /// 모디파이어가 붙기 전 원본 스탯값. 표에 적힌 디버프 수치가 "이 적의 기본 스탯 기준"일 때,
+    /// 현재 스탯과의 비율을 scale로 넘겨 강화 상태를 반영하는 데 쓴다(SpiderToxin의 독 참조).
+    /// 기록되지 않은 스탯은 0 — 나누기 전에 반드시 확인할 것.
+    /// </summary>
+    protected float BaseStat(StatType type) => baseStats.TryGetValue(type, out float v) ? v : 0f;
+
+    /// <summary>현재 스탯 / 원본 스탯. 원본이 0이면 1을 돌려준다(비율을 낼 수 없으므로 조정 없음).</summary>
+    protected float StatRatio(StatType type)
+    {
+        float baseValue = BaseStat(type);
+        return baseValue > 0f ? sc[type] / baseValue : 1f;
     }
 
     // 스턴 시작 시 호출 — 애니를 재생하는 액티브 스킬(BlocksBasicAttack=true)만 즉시 취소한다.

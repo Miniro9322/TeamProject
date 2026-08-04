@@ -8,16 +8,18 @@ using UnityEngine.UI;
 /// 배치는 root에 달린 GridLayoutGroup이 전담 — 소환 순서대로 옆에 쌓인다.
 /// root나 프리팹을 안 꽂은 프리팹이면 Setup/Tick/Reset이 전부 조용히 no-op(일반 적 전부 해당).
 ///
-/// "지속시간이 끝나면 사라지는" 동작은 BuffManager가 만료 시 모디파이어를 벗기는 것을
-/// 이쪽 폴링이 감지해서 이뤄진다 — 실제 만료 시각과 일치하되 최대 RefreshInterval만큼 늦다.
+/// "지속시간이 끝나면 사라지는" 동작은 폴링으로 감지한다 — 실제 만료 시각과 일치하되 최대 RefreshInterval만큼 늦다.
 ///
-/// 임시 구현이다 — 걸린 디버프를 "현재 스탯이 원본보다 낮은가"로 추론한다.
-/// 적에게 걸리는 디버프는 전부 BuffManager를 지나 StatContainer에 Modifier로 꽂히는데,
-/// BuffManager에 조회 API가 없어서(팀원 소유 파일) 결과값을 역으로 보는 방식을 택했다.
-/// 한계 둘: (1) 같은 스탯에 버프와 디버프가 동시에 걸리면 구분하지 못한다
-/// (폭주가 SPD에 Flat +3을 넣으므로, 폭주한 보스가 둔화되면 순 이속이 원본보다 높아 아이콘이 안 뜬다).
-/// (2) 남은 시간을 알 수 없어 쿨다운 표시(원형 게이지 등)를 할 수 없다.
-/// 둘 중 하나가 필요해지면 BuffManager에서 목록을 받아 판정부만 갈아끼우면 된다.
+/// 판정은 두 단계다.
+/// (1) DebuffTracker에 그 종류가 있으면 켠다. 종류를 직접 알고 있으므로 정확하다 —
+///     탈진처럼 스탯 셋을 한꺼번에 깎는 디버프도 아이콘 하나로 뜬다.
+/// (2) 장부에 없는 종류는 "현재 스탯이 원본보다 낮은가"로 추론한다(예전 방식).
+///     영웅이 거는 둔화는 아직 BuffManager로 직행해 장부를 지나지 않으므로 이 보완이 필요하다.
+///     그쪽이 DebuffSO/ApplyDebuff를 타게 되면 (2)는 통째로 지워도 된다.
+///
+/// (2)의 한계는 그대로다: 같은 스탯에 버프와 디버프가 겹치면 구분하지 못하고
+/// (폭주가 SPD에 Flat +3을 넣으므로, 폭주한 보스가 둔화되면 순 이속이 원본보다 높아 아이콘이 안 뜬다),
+/// 남은 시간을 알 수 없다. (1)로 들어온 디버프는 tracker.GetRemainingNormalized로 게이지까지 붙일 수 있다.
 /// </summary>
 public class EnemyDebuffBar
 {
@@ -51,8 +53,9 @@ public class EnemyDebuffBar
 
     /// <summary>
     /// 걸린 디버프에 맞춰 아이콘을 소환/반납한다. baseStats는 모디파이어가 붙기 전 원본값 — EnemyBase가 ApplyData에서 기록한다.
+    /// tracker는 EnemyBase가 들고 있는 장부(스턴 포함). null이면 스탯 역추적만으로 판정한다.
     /// </summary>
-    public void Tick(StatContainer sc, IReadOnlyDictionary<StatType, float> baseStats, bool isStunned)
+    public void Tick(StatContainer sc, IReadOnlyDictionary<StatType, float> baseStats, DebuffTracker tracker)
     {
         if (!IsSetup || sc == null || baseStats == null) return;
 
@@ -60,15 +63,24 @@ public class EnemyDebuffBar
         if (_timer < RefreshInterval) return;
         _timer = 0f;
 
+        DebuffType tracked = tracker != null ? tracker.ActiveMask : DebuffType.None;
+        int explained = ExplainedStats(tracked);
+
         for (int i = 0; i < _icons.Length; i++)
         {
             if (_icons[i].sprite == null) continue;   // 종류만 골라두고 스프라이트를 안 넣은 칸
 
+            DebuffType kind = _icons[i].kind;
             bool on;
-            if (_icons[i].kind == EnemyDebuffKind.Stun) on = isStunned;
+            if ((tracked & kind) != 0) on = true;
             // 스탯으로 판정할 수 없는 종류(독·점화 등)는 절대 켜지 않는다.
             // 기본값을 아무 StatType으로 두면 그 스탯이 깎일 때 엉뚱한 아이콘이 같이 떠버린다.
-            else if (TryStatOf(_icons[i].kind, out StatType stat)) on = IsLowered(sc, baseStats, stat);
+            else if (TryStatOf(kind, out StatType stat))
+            {
+                // 그 스탯 감소를 이미 장부의 다른 디버프가 설명하고 있으면 켜지 않는다 —
+                // 탈진(AS·SPD·ATK)이 걸렸을 때 둔화·공속감소 아이콘까지 같이 뜨는 중복을 막는다.
+                on = (explained & (1 << (int)stat)) == 0 && IsLowered(sc, baseStats, stat);
+            }
             else on = false;
 
             // 파괴된 오브젝트도 == null이 true라, 밖에서 사라졌으면 저절로 다시 소환된다.
@@ -132,20 +144,31 @@ public class EnemyDebuffBar
         return sc[type] < baseValue - epsilon;
     }
 
-    // 이 종류가 어떤 스탯의 감소로 나타나는지. false면 스탯으로는 알 수 없는 종류다.
-    // Stun은 IsStunned로, 독·점화는 적에게 그 상태를 거는 시스템 자체가 아직 없어서 여기 안 들어온다
-    // (PoisonRegistry는 영웅 전용 장부다). 그 시스템이 생기면 판정 조건을 Tick에 추가하면 된다.
-    private static bool TryStatOf(EnemyDebuffKind kind, out StatType stat)
+    // 이 종류가 "단일 스탯 감소"로 나타나는지. false면 스탯 역추적으로는 알 수 없는 종류다
+    // (스턴·독·점화·출혈은 스탯을 건드리지 않고, 탈진은 여러 스탯을 깎아 하나로 특정할 수 없다 — 장부로만 뜬다).
+    private static bool TryStatOf(DebuffType kind, out StatType stat)
     {
         switch (kind)
         {
-            case EnemyDebuffKind.Slow:      stat = StatType.SPD; return true;
-            case EnemyDebuffKind.AtkDown:   stat = StatType.ATK; return true;
-            case EnemyDebuffKind.DefDown:   stat = StatType.DEF; return true;
-            case EnemyDebuffKind.AsDown:    stat = StatType.AS;  return true;
-            case EnemyDebuffKind.MaxHpDown: stat = StatType.HP;  return true;
-            default:                        stat = default;      return false;
+            case DebuffType.Slow:       stat = StatType.SPD; return true;
+            case DebuffType.ASDown:     stat = StatType.AS;  return true;
+            case DebuffType.ArmorBreak: stat = StatType.DEF; return true;
+            default:                    stat = default;      return false;
         }
+    }
+
+    // 장부에 걸려 있는 디버프들이 설명하는 스탯 집합(StatType을 비트로). 역추적 중복 점등을 막는 데만 쓴다.
+    // DebuffTracker는 종류가 어떤 스탯을 건드리는지 저장하지 않으므로 여기서 손으로 대응시킨다 —
+    // StatDebuffSO 에셋의 실제 구성과 어긋나지 않게, 종류를 늘리면 이 표도 같이 늘려야 한다.
+    private static int ExplainedStats(DebuffType tracked)
+    {
+        int mask = 0;
+        if ((tracked & DebuffType.Slow) != 0)       mask |= 1 << (int)StatType.SPD;
+        if ((tracked & DebuffType.ASDown) != 0)     mask |= 1 << (int)StatType.AS;
+        if ((tracked & DebuffType.ArmorBreak) != 0) mask |= 1 << (int)StatType.DEF;
+        if ((tracked & DebuffType.Exhaust) != 0)
+            mask |= (1 << (int)StatType.AS) | (1 << (int)StatType.SPD) | (1 << (int)StatType.ATK);
+        return mask;
     }
 }
 
@@ -157,7 +180,7 @@ public class EnemyDebuffBar
 public struct EnemyDebuffIcon
 {
     [Tooltip("이 아이콘이 나타낼 디버프 종류")]
-    public EnemyDebuffKind kind;
+    public DebuffType kind;
     [Tooltip("해당 디버프가 걸린 동안 소환될 아이콘 이미지")]
     public Sprite sprite;
 }
