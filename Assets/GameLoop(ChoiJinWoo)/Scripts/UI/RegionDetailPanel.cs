@@ -9,7 +9,6 @@ using VContainer;
 public class RegionDetailPanel : MonoBehaviour, IClosablePanel
 {
     [SerializeField] private TextMeshProUGUI regionNameText;
-    [SerializeField] private TextMeshProUGUI populationText;
     [SerializeField] private List<FacilitySlotView> slotViews; // 인스펙터에서 최대 슬롯 개수만큼 미리 배치
     [SerializeField] private FacilityBuildChoicePanel buildChoicePanel;
     [SerializeField] private BuildingPanel buildingPanel;
@@ -99,7 +98,6 @@ public class RegionDetailPanel : MonoBehaviour, IClosablePanel
         if (region == null) return;
 
         regionNameText.text = region.RegionName;
-        populationText.text = $"{region.TotalWorkers()}";
 
         for (int i = 0; i < slotViews.Count; i++)
         {
@@ -117,7 +115,14 @@ public class RegionDetailPanel : MonoBehaviour, IClosablePanel
                 continue;
             }
 
-            slotViews[i].ShowBuilt(slot.Icon, slot.Label);
+            string level = "";
+            string workers = "";
+            if (slot.Occupant is ProductionFacility facility)
+            {
+                level = $"Lv. {facility.UpgradeCount}";
+                workers = $"{facility.WorkerAmount}/{facility.MaxWorker}";
+            }
+            slotViews[i].ShowBuilt(slot.Icon, slot.Label, level, workers);
         }
     }
 

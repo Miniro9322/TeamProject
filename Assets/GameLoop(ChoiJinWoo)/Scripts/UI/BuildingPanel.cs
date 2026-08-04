@@ -1,4 +1,4 @@
-using System.Text;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -7,8 +7,9 @@ using VContainer;
 public class BuildingPanel : MonoBehaviour, IClosablePanel
 {
     [SerializeField] private TextMeshProUGUI workerText;
+    [SerializeField] private Image productIcon;
     [SerializeField] private TextMeshProUGUI perProductText;
-    [SerializeField] private TextMeshProUGUI upgradeCostText;
+    [SerializeField] private List<CostAmountView> upgradeCostRows; // 최대 개수만큼 미리 배치, 남는 칸은 자동으로 숨김
     [SerializeField] private TextMeshProUGUI FacilityLevelText;
     [SerializeField] private Button upgradeButton;
     private ProductionFacility facility;
@@ -16,13 +17,15 @@ public class BuildingPanel : MonoBehaviour, IClosablePanel
     private int slotIndex;
     private UiPanelStack panelStack;
     private BaseConstructor constructor;
+    private ResourceIconSet resourceIconSet;
     private ClickOutsideCloser outsideCloser;
 
     [Inject]
-    private void Construct(UiPanelStack panelStack, BaseConstructor constructor)
+    private void Construct(UiPanelStack panelStack, BaseConstructor constructor, ResourceIconSet resourceIconSet)
     {
         this.panelStack = panelStack;
         this.constructor = constructor;
+        this.resourceIconSet = resourceIconSet;
     }
 
     private void Awake()
@@ -64,17 +67,26 @@ public class BuildingPanel : MonoBehaviour, IClosablePanel
 
     private void UpdatePanel()
     {
-        if (workerText == null || perProductText == null || upgradeCostText == null || FacilityLevelText == null) return;
+        if (workerText == null || perProductText == null || FacilityLevelText == null) return;
         workerText.text = $"{facility.WorkerAmount}/{facility.MaxWorker}";
         upgradeButton.interactable = facility.CheckCanUpgrade();
-        perProductText.text = $"{facility.ProductionType} {facility.ProductAmount * facility.WorkerAmount}/day";
-        var sb = new StringBuilder();
-        foreach(var cost in facility.UpgradeCostCopy)
+
+        if (productIcon != null) productIcon.sprite = resourceIconSet.GetIcon(facility.ProductionType);
+        perProductText.text = $"{facility.ProductAmount * facility.WorkerAmount}/day";
+
+        var costs = facility.UpgradeCostCopy;
+        for (int i = 0; i < upgradeCostRows.Count; i++)
         {
-            sb.Append($"{cost.Type} : {-cost.Amount}\n");
+            if (i < costs.Length)
+            {
+                upgradeCostRows[i].Show(resourceIconSet.GetIcon(costs[i].Type), $"{-costs[i].Amount}");
+            }
+            else
+            {
+                upgradeCostRows[i].Hide();
+            }
         }
-        sb.Length--;
-        upgradeCostText.text = sb.ToString();
+
         FacilityLevelText.text = $"Lv. {facility.UpgradeCount}";
     }
 

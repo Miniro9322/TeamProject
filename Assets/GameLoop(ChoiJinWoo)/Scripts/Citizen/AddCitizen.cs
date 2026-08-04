@@ -9,7 +9,9 @@ public class AddCitizen : MonoBehaviour
 {
     private CitizenManager citizenManager;
     private ResourcesManager resourcesManager;
+    private ResourceIconSet resourceIconSet;
     [SerializeField] private TMP_InputField amountInput;
+    [SerializeField] private Image costIcon;
     [SerializeField] private TextMeshProUGUI costText;
     [SerializeField] private int costAmount;
     [SerializeField] private Key closeKey = Key.Escape;
@@ -21,10 +23,11 @@ public class AddCitizen : MonoBehaviour
     private int openedFrame;
 
     [Inject]
-    private void Construct(CitizenManager citizenManager, ResourcesManager resourcesManager)
+    private void Construct(CitizenManager citizenManager, ResourcesManager resourcesManager, ResourceIconSet resourceIconSet)
     {
         this.citizenManager = citizenManager;
         this.resourcesManager = resourcesManager;
+        this.resourceIconSet = resourceIconSet;
     }
 
     private void Awake()
@@ -75,7 +78,8 @@ public class AddCitizen : MonoBehaviour
     {
         var cost = new (ProductionType Type, int Amount)[] { (ProductionType.Food, amount * -costAmount) };
         amountInput.text = $"{amount}";
-        costText.text = $"자원 소모: {ProductionType.Food} {amount * costAmount}";
+        if (costIcon != null) costIcon.sprite = resourceIconSet.GetIcon(ProductionType.Food);
+        costText.text = $"{amount * costAmount}";
         costText.color = resourcesManager.CheckResources(cost) ? Color.white : Color.red;
     }
 

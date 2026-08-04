@@ -11,6 +11,7 @@ public class GameLifeTimeScope : LifetimeScope
     [SerializeField] private GameManager GameManagerPrefab;
     [SerializeField] private FacilityManager FacilityManager;
     [SerializeField] private ProductionEconomyConfig economyConfig;
+    [SerializeField] private ResourceIconSet resourceIconSet;
     [SerializeField] private Light sunLight;
 
     protected override void Configure(IContainerBuilder builder)
@@ -30,6 +31,7 @@ public class GameLifeTimeScope : LifetimeScope
         builder.RegisterComponentInNewPrefab(EnviromentManagerPrefab, Lifetime.Singleton).AsSelf();
         builder.RegisterComponentInNewPrefab(GameManagerPrefab, Lifetime.Singleton).AsSelf();
         builder.RegisterInstance(economyConfig);
+        builder.RegisterInstance(resourceIconSet);
         builder.RegisterComponentOnNewGameObject<PoolManager>(Lifetime.Singleton).AsSelf();
         builder.Register<FacilityManager>(Lifetime.Singleton).AsSelf();
         builder.Register<BaseConstructor>(Lifetime.Singleton).AsSelf();

@@ -36,6 +36,7 @@ public class ProductionFacility
     public int MaxWorker => maxWorker;
     public int ProductAmount => productAmount;
     private (ProductionType Type, int Amount)[] upgradeCostCopy = Array.Empty<(ProductionType, int)>();
+    private (ProductionType Type, int Amount)[] totalUpgradeSpent = Array.Empty<(ProductionType, int)>();
     public (ProductionType Type, int Amount)[] UpgradeCostCopy => upgradeCostCopy;
     public int UpgradeCount => upgradeCount;
 
@@ -77,6 +78,11 @@ public class ProductionFacility
         maxWorker = basicValue.DefaultMaxWorker + citizenUpgrade;
         workerAmount = 0;
         upgradeCostCopy = ApplyDiscount(BasicValue.UpgradeCost, UpgradeCostDiscount);
+        totalUpgradeSpent = new (ProductionType, int)[upgradeCostCopy.Length];
+        for (int i = 0; i < totalUpgradeSpent.Length; i++)
+        {
+            totalUpgradeSpent[i] = (upgradeCostCopy[i].Type, 0);
+        }
 
         resourcesManager.ProductChanged(GetConstructCost());
         facilityManager.AddFacility(this);
@@ -92,17 +98,22 @@ public class ProductionFacility
         UpdateInfo();
     }
 
-    // 철거: 인력 반납 + 매니저 등록 해제 + 건설 비용 환불. GameObject가 없으므로 이걸로 생명주기가 끝난다.
+    // 철거: 인력 반납 + 매니저 등록 해제 + 건설 비용/그동안 쓴 업그레이드 비용 환불.
+    // GameObject가 없으므로 이걸로 생명주기가 끝난다.
     public void Release()
     {
         ReleaseAllWorkers();
         facilityManager.RemoveFacility(this);
 
         var construct = basicValue.ConstructProduct;
-        var refund = new (ProductionType Type, int Amount)[construct.Length];
+        var refund = new (ProductionType Type, int Amount)[construct.Length + totalUpgradeSpent.Length];
         for (int i = 0; i < construct.Length; i++)
         {
             refund[i] = (construct[i].Type, -construct[i].Amount);
+        }
+        for (int i = 0; i < totalUpgradeSpent.Length; i++)
+        {
+            refund[construct.Length + i] = (totalUpgradeSpent[i].Type, -totalUpgradeSpent[i].Amount);
         }
         resourcesManager.ProductChanged(refund);
     }
@@ -161,10 +172,16 @@ public class ProductionFacility
 
         resourcesManager.ProductChanged(upgradeCostCopy);
 
+        // 철거 시 환불할 수 있게 지금까지 업그레이드에 쓴 비용을 누적해둔다.
+        for (int i = 0; i < totalUpgradeSpent.Length; i++)
+        {
+            totalUpgradeSpent[i] = (totalUpgradeSpent[i].Type, totalUpgradeSpent[i].Amount + upgradeCostCopy[i].Amount);
+        }
+
         var baseCost = ApplyDiscount(basicValue.UpgradeCost, UpgradeCostDiscount);
         for (int i = 0; i < upgradeCostCopy.Length; i++)
         {
-            upgradeCostCopy[i] = (baseCost[i].Type, baseCost[i].Amount * upgradeCount);
+            upgradeCostCopy[i] = (baseCost[i].Type, baseCost[i].Amount * (upgradeCount + 1));
         }
 
         UpdateInfo();
