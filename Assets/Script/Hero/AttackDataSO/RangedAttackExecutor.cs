@@ -78,7 +78,6 @@ public class RangedAttackExecutor : IAttackExecutor
     {
         Projectile arrow = pool.Get();
         arrow.transform.SetPositionAndRotation(ctx.muzzle.position, ctx.muzzle.rotation);
-        ctx.hero.SpawnEffect(data.attackEffect, ctx.muzzle.position, ctx.muzzle.rotation, data.attackEffectLifetime);
 
         if (data.attackType == AttackType.Area && data.areaShape == AreaShape.Line)
         {
@@ -95,7 +94,7 @@ public class RangedAttackExecutor : IAttackExecutor
             if (data.groundZonePrefab != null)
                 ctx.hero.SpawnGroundZone(data.groundZonePrefab, target.position);
             Vector3 endPoint = ctx.hero.GetLineEndPoint(ctx.self.position, dir, data.lineLength);
-            arrow.LaunchVisualOnly(endPoint, pool);
+            arrow.LaunchVisualOnly(endPoint, pool, ctx.hero);
             return;
         }
 

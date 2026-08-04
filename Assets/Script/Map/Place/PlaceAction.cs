@@ -18,6 +18,31 @@ public class PlaceAction
     {
         view.Select(tile);
         skillCast?.HandleClick(tile);
+        ShowOutline(tile);
+    }
+
+    // 고른 칸에 영웅이 서 있으면 테두리를 켜고, 아니면 끈다.
+    private void ShowOutline(Tile tile)
+    {
+        if (TryGetHero(tile, out Hero hero))
+        {
+            HeroSelectionService.Select(hero);
+            return;
+        }
+
+        HeroSelectionService.Clear();
+    }
+
+    // 그 칸에 올라간 것이 영웅인지 본다.
+    private static bool TryGetHero(Tile tile, out Hero hero)
+    {
+        if (!tile.HasUnit)
+        {
+            hero = null;
+            return false;
+        }
+
+        return tile.OccupantObject.TryGetComponent(out hero);
     }
 
     public void PlaceUnit(Tile tile)
@@ -71,14 +96,26 @@ public class PlaceAction
 
     public void RemoveUnit(Tile tile)
     {
+        bool wasHero = TryGetHero(tile, out Hero hero);   // 지운 뒤엔 칸이 비어 물어볼 수 없다
         if (!remover.TryRemoveUnit(tile)) return;
         if (view.IsSelected(tile)) view.ClearSelection();
+
+        if (wasHero)
+        {
+            HeroSelectionService.ClearIfSelected(hero);
+        }
     }
 
     public void PickUpUnit(Tile tile)
     {
+        bool hasHero = TryGetHero(tile, out Hero hero);   // 집으면 칸이 비므로 미리 본다
         if (!replace.PickUp(tile)) return;
         view.Select(tile);
+
+        if (hasHero)
+        {
+            HeroSelectionService.Select(hero);
+        }
     }
 
     public void Drop(PlaceData data)

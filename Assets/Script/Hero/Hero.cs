@@ -188,17 +188,28 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
         GetEffectPool(prefab).Release(instance);
     }
 
-    // 체인 튕김 두 지점(from/to)을 잇는 LineRenderer 이펙트. SpawnEffect의 풀링/회수 타이머를 그대로
-    // 감싸고 LineRenderer 두 점만 추가로 세팅한다.
+    // 체인 튕김 두 지점(from/to)을 잇는 이펙트. SpawnEffect의 풀링/회수 타이머를 그대로 감싸고
+    // 두 점만 추가로 세팅한다.
     public GameObject SpawnChainArc(GameObject prefab, Vector3 from, Vector3 to, float lifetime)
     {
         GameObject go = SpawnEffect(prefab, from, Quaternion.identity, lifetime);
-        if (go != null && go.TryGetComponent(out LineRenderer lr))
+        UpdateLinkEndpoints(go, from, to);
+        return go;
+    }
+
+    // 빔/체인 두 점 이펙트의 끝점을 갱신하는 공용 헬퍼. BeamLinkEffect가 붙어 있으면 텍스처 스크롤/히트
+    // 이펙트 배치까지 맡기고, 없으면(단순 LineRenderer만 있는 프리팹) 두 점만 직접 세팅하는 폴백을
+    // 유지한다 — ContinuousBeamStrategy의 매 tick 갱신에서도 재사용.
+    public static void UpdateLinkEndpoints(GameObject go, Vector3 from, Vector3 to)
+    {
+        if (go == null) return;
+        if (go.TryGetComponent(out BeamLinkEffect link))
+            link.SetEndpoints(from, to);
+        else if (go.TryGetComponent(out LineRenderer lr))
         {
             lr.SetPosition(0, from);
             lr.SetPosition(1, to);
         }
-        return go;
     }
 
     private async UniTask ReturnEffectAfter(GameObject prefab, GameObject go, float delay)
