@@ -75,12 +75,6 @@ public class MapBoard : MonoBehaviour
 
         // 3) 이웃 잇기. 길찾기가 좌표를 더해 격자를 뒤지지 않고 타일이 들고 있는 이웃을 바로 읽게 한다.
         TileLink.LinkNeighbors(_cells);
-
-        Debug.Log($"[MapBoard] 타일 {_cells.Count}개 (안쪽 {_playRect.width}×{_playRect.height} @{_playRect.min}, " +
-            $"셀크기 {CellSize:0.###}), 스폰 {_spawns.Count}, 본진 {_cores.Count}", this);
-
-        if (!HasEndpoints)
-            Debug.LogWarning("[MapBoard] 스폰(isEnemySpawn) 또는 본진(Terrain=Core) 타일을 찾지 못했습니다.", this);
     }
 
     // 장식이 아닌 타일들을 감싸는 직사각형. 장식 줄이 사방 한 줄이라 전체보다 한 칸씩 안쪽으로 들어온다.

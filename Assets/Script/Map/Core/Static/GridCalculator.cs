@@ -25,16 +25,6 @@ public static class GridCalculator
     {
         return row * width + col;
     }
-    public static int GetIndexFromCell(Vector2Int cell, int width)
-    {
-        return GetIndexFromCell(cell.x, cell.y, width);
-    }
-    //1차원 배열 번호 -> 2차원 칸 좌표: Index의 역방향
-    public static Vector2Int GetCellFromIndex(int index, int width)
-    {
-        return new Vector2Int(index % width, index / width);
-    }
-
     //좌표가 격자 범위 안에 있는지 여부 정적 bool 함수
     public static bool IsInGrid(Vector2Int cell, int width, int height)
     {
