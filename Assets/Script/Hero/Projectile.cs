@@ -49,6 +49,14 @@ public class Projectile : MonoBehaviour
     [SerializeField] private float maxLifetime = 5f;
     [SerializeField] private float turnSpeed = 720f;
 
+    [Header("이펙트 (프리팹 자체 소유 — AttackDataSO.attackEffect/hitEffect는 참조하지 않음)")]
+    [SerializeField] private GameObject flashEffectPrefab;
+    [SerializeField] private float flashEffectLifetime = 1f;
+    [SerializeField] private GameObject hitEffectPrefab;
+    [SerializeField] private float hitEffectLifetime = 1f;
+    [Tooltip("비행 내내 따라다니는 자식 파티클 — 부모 Transform을 자동으로 따라가므로 재배치 코드 불필요")]
+    [SerializeField] private ParticleSystem projectileEffect;
+
     private Transform target;
     private Vector3 destination;
     private bool visualOnly;
@@ -68,9 +76,11 @@ public class Projectile : MonoBehaviour
 
         if (target != null && TryLook(target.position - transform.position, out Quaternion look))
             transform.rotation = look;
+
+        SpawnFlashEffect(cfg.hero);
     }
 
-    public void LaunchVisualOnly(Vector3 destination, IObjectPool<Projectile> pool)
+    public void LaunchVisualOnly(Vector3 destination, IObjectPool<Projectile> pool, Hero hero)
     {
         this.destination = destination;
         this.pool = pool;
@@ -80,6 +90,19 @@ public class Projectile : MonoBehaviour
 
         if (TryLook(destination - transform.position, out Quaternion look))
             transform.rotation = look;
+
+        SpawnFlashEffect(hero);
+    }
+
+    private void SpawnFlashEffect(Hero hero)
+    {
+        if (flashEffectPrefab != null && hero != null)
+            hero.SpawnEffect(flashEffectPrefab, transform.position, transform.rotation, flashEffectLifetime);
+        if (projectileEffect != null)
+        {
+            projectileEffect.Clear(true);
+            projectileEffect.Play(true);
+        }
     }
 
     private void Update()
@@ -160,8 +183,8 @@ public class Projectile : MonoBehaviour
 
     private void SpawnHitEffect()
     {
-        if (cfg.source is AttackDataSO data)
-            cfg.hero.SpawnEffect(data.hitEffect, transform.position, Quaternion.identity, data.hitEffectLifetime);
+        if (hitEffectPrefab != null)
+            cfg.hero.SpawnEffect(hitEffectPrefab, transform.position, Quaternion.identity, hitEffectLifetime);
     }
 
     private void ApplyHealOptions(float damageDealt)
