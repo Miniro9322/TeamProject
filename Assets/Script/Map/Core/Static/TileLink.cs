@@ -23,11 +23,12 @@ public static class TileLink
         List<Tile> neighbors)
     {
         neighbors.Clear();
-
-        AddNeighbor(cells, neighbors, tile.Coord + GridCalculator.Right);
-        AddNeighbor(cells, neighbors, tile.Coord + GridCalculator.Left);
-        AddNeighbor(cells, neighbors, tile.Coord + GridCalculator.Up);
-        AddNeighbor(cells, neighbors, tile.Coord + GridCalculator.Down);
+        for(int i = 0; i < GridCalculator.Directions.Length; i++)
+        {
+            Vector2Int direction = GridCalculator.Directions[i];
+            AddNeighbor(cells, neighbors, tile.Coord + direction);
+        }
+        
     }
 
     // 그 좌표에 타일이 있으면 담는다. 격자 가장자리는 없는 방향이 생긴다.
