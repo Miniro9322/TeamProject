@@ -10,35 +10,35 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3e63ecebd4cd6e044a8a127ea3df05bc, type: 3}
-  m_Name: ArcherPierceAttackData
+  m_Name: MageChannelingBeamChainAttackData
   m_EditorClassIdentifier: Assembly-CSharp::AttackDataSO
-  range: 5
-  rangeShape: 2
+  range: 3
+  rangeShape: 0
   unattackableTarget: 1
   attackType: 1
-  attackPer: 5
+  attackPer: 1
   attackCount: 1
-  targetMode: 0
+  targetMode: 1
   targetCount: 1
-  shotInterval: 0.1
-  areaShape: 2
+  shotInterval: 0
+  areaShape: 3
   areaRange: 0
-  lineLength: 8
-  chainRange: 2
-  chainCount: 3
-  chainFalloff: 0.8
-  chainEffectPrefab: {fileID: 0}
+  lineLength: 2
+  chainRange: 3
+  chainCount: 5
+  chainFalloff: 0.5
+  chainEffectPrefab: {fileID: 2165654375957946359, guid: 11ba2dc2376427342b927eea2f251ea8, type: 3}
   chainEffectLifetime: 0.3
-  timingMode: 0
+  timingMode: 1
   continuousDelivery: 0
-  continuousDuration: 2
+  continuousDuration: 0
   continuousTickInterval: 0.2
-  beamEffectPrefab: {fileID: 0}
-  selectMode: 0
+  beamEffectPrefab: {fileID: 2165654375957946359, guid: 11ba2dc2376427342b927eea2f251ea8, type: 3}
+  selectMode: 1
   animTriggers:
-  - ChargeAttack
-  projectilePrefab: {fileID: 607833191716554269, guid: 096e519a71d84cd492def126191b3ea9, type: 3}
-  clipLength: 1.1666666
+  - Channeling
+  projectilePrefab: {fileID: 0}
+  clipLength: 0.33333334
   buffList: []
   groundZonePrefab: {fileID: 0}
   attackEffect: {fileID: 0}

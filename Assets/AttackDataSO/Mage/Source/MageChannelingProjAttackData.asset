@@ -12,11 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3e63ecebd4cd6e044a8a127ea3df05bc, type: 3}
   m_Name: MageChannelingProjAttackData
   m_EditorClassIdentifier: Assembly-CSharp::AttackDataSO
-  range: 3
+  range: 5
   rangeShape: 0
   unattackableTarget: 1
   attackType: 0
-  attackPer: 0.4
+  attackPer: 0.5
   attackCount: 5
   targetMode: 1
   targetCount: 5
@@ -33,6 +33,7 @@ MonoBehaviour:
   continuousDelivery: 1
   continuousDuration: 0
   continuousTickInterval: 0.2
+  beamEffectPrefab: {fileID: 0}
   selectMode: 1
   animTriggers:
   - Channeling
@@ -42,7 +43,7 @@ MonoBehaviour:
   groundZonePrefab: {fileID: 0}
   attackEffect: {fileID: 0}
   attackEffectLifetime: 1
-  hitEffect: {fileID: 1296333435415890, guid: a1c8123c6777d6f45948a5e4b821a569, type: 3}
+  hitEffect: {fileID: 0}
   hitEffectLifetime: 1
   lifestealPercent: 0
   allyHealAmount: 0

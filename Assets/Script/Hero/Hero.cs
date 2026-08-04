@@ -19,6 +19,8 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
     [SerializeField] private List<BaseUpgradeData> statUpgradeCostUpgrades;
     [SerializeField] private List<BaseUpgradeData> statUpgrades;
     [SerializeField] private List<HeroUpgradeData> upgradeDatas;
+    [SerializeField] private int tier = 1;
+    public int Tier => tier;
     private int skillLevel = 0;
     private int statLevel = 0;
     public int SkillLevel => skillLevel;

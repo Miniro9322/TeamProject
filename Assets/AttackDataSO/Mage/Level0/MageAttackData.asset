@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3e63ecebd4cd6e044a8a127ea3df05bc, type: 3}
   m_Name: MageAttackData
   m_EditorClassIdentifier: Assembly-CSharp::AttackDataSO
-  range: 5
+  range: 3
   rangeShape: 0
   unattackableTarget: 1
   attackType: 0
@@ -36,7 +36,7 @@ MonoBehaviour:
   beamEffectPrefab: {fileID: 0}
   selectMode: 0
   animTriggers:
-  - Attack
+  - Attack1
   projectilePrefab: {fileID: 6807546537330266764, guid: 5c945ca2d40906c4fba022d3696c31d9, type: 3}
   clipLength: 0.53333336
   buffList: []
