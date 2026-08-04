@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -51,6 +52,18 @@ public partial class Tile : MonoBehaviour
 
     /// <summary>적 통행 가능 지형인가. 고지·빈 타일은 막힘, 지상·본진은 통행(설계: 고지=이동 차단).</summary>
     public bool Walkable => State.Terrain is TerrainType.Ground or TerrainType.Core;
+
+    // 이웃 타일(런타임 캐시, 직렬화하지 않음)
+    private Tile[] neighborTiles = Array.Empty<Tile>();
+
+    // 상하좌우에 실제로 있는 타일들. 읽기 전용이라 밖에서 못 바꾼다.
+    public ReadOnlySpan<Tile> NeighborTiles => neighborTiles;
+
+    // TileLink가 이어 준 이웃을 새긴다. 저작 도구가 못 건드리게 같은 어셈블리 안에서만 연다.
+    internal void SetNeighbors(Tile[] tiles)
+    {
+        neighborTiles = tiles;
+    }
 
     public Vector3 WorldTop => new(transform.position.x, _topY, transform.position.z);
 

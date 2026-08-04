@@ -142,7 +142,7 @@ public class LaneBuilder : ILaneBuilder
         return Pathfinder.FindPath(
             new[] { from },
             tile => tile == node,
-            tile => GetNeighbors(input.Cells, tile),
+            Walkable,
             tile => GridCalculator.GetDistance(tile.Coord, node.Coord));
     }
 
@@ -152,7 +152,7 @@ public class LaneBuilder : ILaneBuilder
         return Pathfinder.FindPath(
             new[] { from },
             tile => cores.Contains(tile),
-            tile => GetNeighbors(input.Cells, tile),
+            Walkable,
             tile => GetDistance(tile, cores));
     }
 
@@ -165,20 +165,8 @@ public class LaneBuilder : ILaneBuilder
         }
     }
 
-    // 현재 타일의 상하좌우에서 이동 가능한 이웃 타일만 반환합니다.
-    private static IEnumerable<Tile> GetNeighbors(
-        IReadOnlyDictionary<Vector2Int, Tile> cells,
-        Tile tile)
-    {
-        foreach (Vector2Int step in GridCalculator.Directions)
-        {
-            bool found = cells.TryGetValue(tile.Coord + step, out Tile side);
-            if (found && side.Walkable)
-            {
-                yield return side;
-            }
-        }
-    }
+    // 적이 지나갈 수 있는 칸인지 판단합니다. 이웃 목록은 타일이 이미 들고 있습니다.
+    private static bool Walkable(Tile tile) => tile.Walkable;
 
     // 현재 타일에서 가장 가까운 코어까지의 맨해튼 거리를 구합니다.
     private static int GetDistance(Tile tile, HashSet<Tile> cores)
