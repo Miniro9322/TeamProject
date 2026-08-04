@@ -300,16 +300,22 @@ MonoBehaviour:
   attackClipLength: 0
   burrowMarkerPrefab: {fileID: 6732283687295008365, guid: f7d400ebccab4444291f5aa17270524b, type: 3}
   burrowTimeout: 3
+  burrowEmergeStun: 2
   healthSlider: {fileID: 5831524882725235700}
   bossName: {fileID: 0}
+  hpText: {fileID: 0}
+  attackText: {fileID: 0}
+  defenseText: {fileID: 0}
   debuffIconRoot: {fileID: 0}
-  debuffIconPrefab: {fileID: 0}
-  debuffIcons: []
+  debuffIconSet: {fileID: 0}
   <Hp>k__BackingField: 0
   IsSpawnInvincible: 0
   animator: {fileID: 0}
   arriveSqr: 0.0004
   stunEffectAnchor: {fileID: 5973295880441141896}
+  bodyEffectAnchor: {fileID: 7191801255593738841}
+  debuffEffectSet: {fileID: 11400000, guid: 12a3a83e3450b1e49aa05cd8066ecbdb, type: 2}
+  immuneDebuffs: 0
 --- !u!1 &3783209406119586593
 GameObject:
   m_ObjectHideFlags: 0
@@ -722,6 +728,10 @@ PrefabInstance:
     - target: {fileID: 3602656429562749669, guid: c32557a7bdb1e1345a4299f444d9189e, type: 3}
       propertyPath: m_AnchoredPosition.y
       value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 5527890429632882306, guid: c32557a7bdb1e1345a4299f444d9189e, type: 3}
+      propertyPath: m_PresetInfoIsWorld
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7577436218710789735, guid: c32557a7bdb1e1345a4299f444d9189e, type: 3}
       propertyPath: m_Pivot.x

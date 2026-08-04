@@ -149,8 +149,15 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
     public bool CannotAttack => _debuffTracker.Has(DebuffType.Stun);                          // 기절만 — 속박은 평타 허용
     public bool CannotCast => _debuffTracker.HasAny(DebuffType.Stun | DebuffType.Silence);    // 기절·침묵
     private GameObject stunEffectPrefab;
-    [Tooltip("스턴 이펙트가 뜰 위치. 머리 위에 빈 오브젝트를 만들어 꽂는다(유닛마다 키가 달라 원점으로는 안 맞는다). 비우면 이펙트가 뜨지 않음.")]
+    [Tooltip("머리 위 이펙트가 뜰 위치(기절 별 등). 머리 위에 빈 오브젝트를 만들어 꽂는다(유닛마다 키가 달라 원점으로는 안 맞는다). 비우면 머리 이펙트가 뜨지 않음.")]
     [SerializeField] private Transform stunEffectAnchor;
+    [Tooltip("몸통 이펙트가 뜰 위치(독·화상 등). 머리 앵커와 같은 방식으로 빈 오브젝트를 꽂는다. 비우면 몸통 이펙트가 뜨지 않음. " +
+             "발밑에 깔리는 이펙트(둔화 등)는 앵커가 필요 없다 — 이펙트 쪽 anchor를 Foot으로 두면 유닛 원점을 쓴다.")]
+    [SerializeField] private Transform bodyEffectAnchor;
+    // 디버프별 이펙트 설정은 모든 적이 같은 것을 쓰므로 프리팹마다 꽂지 않고 Resources에서 읽는다
+    // (EnemyCloak의 CloakSettings, 위의 EnemyEffectPrefab/Stun과 같은 방식).
+    // 종류를 추가할 때 프리팹 8개를 다시 손대지 않아도 된다 — 에셋 하나만 고치면 전부 반영된다.
+    private const string DebuffEffectSetPath = "EnemyEffectPrefab/DebuffEffectSet";
     protected virtual void Awake()
     {
         _baseScale = transform.localScale; // 프리팹 원래 스케일 스냅샷(분열 축소 후 복구 기준)
@@ -164,7 +171,9 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
         if (IsCloaking && !IsBurrow) _cloak.Setup(gameObject, cloakSettings); // Attribute 결정(LoadStats) 뒤에 호출
         if (IsBurrow) _burrow.Setup(gameObject, animator, burrowMarkerPrefab, burrowTimeout);
         stunEffectPrefab = Resources.Load<GameObject>("EnemyEffectPrefab/Stun");
-        _stunEffect.Setup(stunEffectPrefab, stunEffectAnchor);
+        // Resources.Load는 내부 캐시가 있어 적마다 불러도 에셋을 다시 읽지 않는다.
+        var debuffEffectSet = Resources.Load<DebuffEffectSetSO>(DebuffEffectSetPath);
+        _debuffEffects.Setup(debuffEffectSet, stunEffectAnchor, bodyEffectAnchor, transform, stunEffectPrefab);
     }
 
     protected virtual void OnEnable()
@@ -204,7 +213,7 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
         _burrow.Reset();   // 지면 마커를 풀에 반납(안 하면 적에 딸려가 재사용 시 되살아난다)
         _bar.Reset();
         _debuffs.Reset();  // 소환된 아이콘을 풀에 반납(안 하면 다음 스폰이 이전 개체의 디버프 아이콘을 물고 나온다)
-        _stunEffect.Reset(); // 스턴 중에 죽어도 이펙트가 남지 않게 풀에 반납
+        _debuffEffects.Reset(); // 디버프 중에 죽어도 이펙트가 남지 않게 풀에 반납
         _statText.Reset();   // 캐시를 비워, 재사용된 개체가 이전 개체의 숫자를 한 프레임 보여주지 않게
         _move.Pause();
         _move.LeaveBoard(); // 어떤 경로로 사라지든 현재 칸에서 빠진다
@@ -237,8 +246,9 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
     private readonly EnemyBurrow _burrow = new();
     // 체력바 아래 디버프 아이콘은 EnemyDebuffBar가 전담. 아이콘을 안 꽂은 프리팹이면 통째로 no-op.
     private readonly EnemyDebuffBar _debuffs = new();
-    // 스턴 이펙트는 EnemyStunEffect가 전담(중복 스턴 시 갱신·머리 위 추종). 앵커를 안 꽂은 프리팹이면 통째로 no-op.
-    private readonly EnemyStunEffect _stunEffect = new();
+    // 디버프 이펙트는 EnemyDebuffEffects가 전담(종류별 프리팹·앵커, 중복 시 갱신, 앵커 추종).
+    // 등록된 이펙트가 없으면 통째로 no-op.
+    private readonly EnemyDebuffEffects _debuffEffects = new();
     // 보스 체력바의 스탯 숫자(체력/공격력/방어력)는 EnemyStatText가 전담. 텍스트를 안 꽂은 프리팹이면 통째로 no-op.
     private readonly EnemyStatText _statText = new();
     // 걸린 디버프와 남은 시간 장부. 인스턴스 필드라 적마다 따로 굴러간다(static이나 SO에 두면 전원이 공유해버린다).
@@ -287,9 +297,6 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
     // 빌보드가 한 프레임 밀리지 않는다.
     protected virtual void LateUpdate()
     {
-        // Attribute는 UpdateExposedAttribute가 매 프레임 갱신하므로(저지 중이면 Cloaking 비트가 빠짐)
-        // "체력바가 보이는 것 == 영웅이 때릴 수 있는 것"이 항상 일치한다.
-        // 표시 여부(안 맞았으면 숨김 / 죽을 땐 0까지 깎이는 걸 보여줌)는 EnemyHealthBar가 판단한다.
         bool cloakedNow = (Attribute & EnemyAttribute.Cloaking) != 0;
         _bar.Tick(Hp, MaxHp, IsDead, cloakedNow,Class);
         // 스탯 숫자는 값이 바뀐 것만 갱신한다 — 매 프레임 불러도 문자열/메시를 다시 만들지 않는다.
@@ -297,7 +304,7 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
         _debuffs.Tick(sc, baseStats, _debuffTracker);
         // 이동(Update)이 끝난 뒤에 앵커를 따라가야 이펙트가 한 프레임 밀리지 않는다.
         // 죽으면 스턴 연출을 끌고 가지 않는다 — 사망 애니 위에 별이 돌고 있으면 이상하다.
-        _stunEffect.Tick(IsStunned && !IsDead);
+        _debuffEffects.Tick(_debuffTracker, IsDead);
     }
 
     // 외부(영웅 등)에서 이 적을 duration초간 스턴. 이동/공격/스킬 시전이 모두 멈춘다.
@@ -305,6 +312,7 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
     public void Stun(float duration)
     {
         if (IsDead || duration <= 0f) return;
+        if (IsSpawnInvincible) return;
         // IStunAble.Stun은 DebuffSO를 지나지 않는 직접 경로라(영웅 공격·넘패드1 테스트) 면역을 여기서 막아야 한다.
         if (IsImmuneTo(DebuffType.Stun))
         {
@@ -317,21 +325,13 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
         if (!wasStunned) InterruptActiveSkills();
     }
 
-    // 외부(영웅 공격·장판 등)에서 이 적에게 디버프를 건다. 종류별 통로(BuffManager/DotRegistry/Stun)는 SO가 고른다.
-    // source는 BuffManager의 스택 판정 키 — 비우면 SO 자신이 되어 같은 디버프끼리만 겹친다.
-    // durationOverride/scale은 에셋 값을 호출부에서 조정하는 용도 — 자세한 규칙은 DebuffSO.Apply 주석 참조.
-    // source를 맨 뒤에 두는 이유: 거의 안 쓰는데 앞에 있으면 ApplyDebuff(so, 3f, 1.5f)처럼 불렀을 때
-    // 3f가 object source로 박싱돼 들어가 버린다(컴파일은 통과하고 동작만 틀린다).
     public void ApplyDebuff(DebuffSO debuff, float durationOverride = 0f, float scale = 1f, object source = null)
     {
         if (debuff == null || IsDead) return;
 
         debuff.Apply(DebuffContext.For(this, buffManager, gameManager, source ?? debuff), durationOverride, scale);
     }
-
-    // 이 적이 다른 대상(영웅 등)에게 디버프를 건다. buffManager를 public으로 열지 않으려고 컨텍스트를 여기서 만든다.
-    // target은 유닛 본체든 자식 콜라이더든 상관없다 — DebuffContext.For가 부모까지 올라가 통로를 찾는다.
-    // 자신의 IsDead를 막지 않는 이유: 사망 시 발동 스킬(TriggerOnDeath)이 디버프를 거는 것도 정상이다.
+    
     public void ApplyDebuffTo(Component target, DebuffSO debuff,
         float durationOverride = 0f, float scale = 1f, object source = null)
     {
