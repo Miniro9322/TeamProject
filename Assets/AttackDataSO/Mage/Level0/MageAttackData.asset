@@ -30,8 +30,10 @@ MonoBehaviour:
   chainEffectPrefab: {fileID: 0}
   chainEffectLifetime: 0.3
   timingMode: 0
+  continuousDelivery: 0
   continuousDuration: 2
   continuousTickInterval: 0.2
+  beamEffectPrefab: {fileID: 0}
   selectMode: 0
   animTriggers:
   - Attack
@@ -41,7 +43,7 @@ MonoBehaviour:
   groundZonePrefab: {fileID: 0}
   attackEffect: {fileID: 0}
   attackEffectLifetime: 1
-  hitEffect: {fileID: 0}
+  hitEffect: {fileID: 1373873258365392, guid: cd5def2bb4f6b4e4ab15ba0b6f35b29d, type: 3}
   hitEffectLifetime: 1
   lifestealPercent: 0
   allyHealAmount: 0

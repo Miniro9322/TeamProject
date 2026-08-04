@@ -55,6 +55,8 @@ public class AttackDataSO : ScriptableObject
     public float continuousDuration = 2f;
     [Tooltip("timingMode==Continuous 전용: 피해 틱 주기(초)")]
     public float continuousTickInterval = 0.2f;
+    [Tooltip("continuousDelivery==Beam 전용: 캐스터→타겟을 잇는 LineRenderer 이펙트 프리팹")]
+    public GameObject beamEffectPrefab;
 
     public AnimSelectMode selectMode = AnimSelectMode.Sequential;
     public string[] animTriggers = { "Attack" };
@@ -87,6 +89,8 @@ public class AttackDataSO : ScriptableObject
             Debug.LogWarning($"[{name}] ProjectileVolley인데 projectilePrefab이 비어 있습니다.", this);
         if (continuousDelivery == ContinuousDelivery.Beam && projectilePrefab != null)
             Debug.LogWarning($"[{name}] Beam이므로 projectilePrefab({projectilePrefab.name})은 무시됩니다.", this);
+        if (continuousDelivery == ContinuousDelivery.Beam && beamEffectPrefab == null)
+            Debug.LogWarning($"[{name}] Beam인데 beamEffectPrefab이 비어 있습니다.", this);
     }
 #endif
 }

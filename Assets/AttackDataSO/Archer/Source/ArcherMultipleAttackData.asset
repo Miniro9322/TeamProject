@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::AttackDataSO
   range: 5
   rangeShape: 0
-  unattackableTarget: 3
+  unattackableTarget: 1
   attackType: 0
   attackPer: 0.8
   attackCount: 3
@@ -30,8 +30,10 @@ MonoBehaviour:
   chainEffectPrefab: {fileID: 0}
   chainEffectLifetime: 0.3
   timingMode: 0
+  continuousDelivery: 0
   continuousDuration: 2
   continuousTickInterval: 0.2
+  beamEffectPrefab: {fileID: 0}
   selectMode: 0
   animTriggers:
   - TripleAttack

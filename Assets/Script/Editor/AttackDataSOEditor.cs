@@ -37,7 +37,11 @@ public class AttackDataSOEditor : Editor
 
         EditorGUILayout.PropertyField(Prop("timingMode"));
         if (isContinuous)
-            Group("채널링", ref sContinuous, "continuousDelivery", "continuousDuration", "continuousTickInterval");
+        {
+            bool isBeam = Prop("continuousDelivery").enumValueIndex == (int)ContinuousDelivery.Beam;
+            Group("채널링", ref sContinuous, "continuousDelivery", "continuousDuration", "continuousTickInterval",
+                isBeam ? "beamEffectPrefab" : null);
+        }
 
         Group("애니메이션", ref sAnim, "selectMode", "animTriggers", "clipLength");
         Group("이펙트", ref sFx, "attackEffect", "attackEffectLifetime", "hitEffect", "hitEffectLifetime");
