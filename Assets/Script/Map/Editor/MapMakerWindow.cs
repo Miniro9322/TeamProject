@@ -58,8 +58,8 @@ public class MapMakerWindow : EditorWindow
     private int _strokeGroup;
     private Vector2Int _hover = new(-1, -1);
     private string _targetSeen = string.Empty;
-    private Vector2Int _routeSpawn;
-    private bool _hasRouteSpawn;
+    // 편집 중인 레인의 신원. 좌표가 아니라 지정 항목 참조라 같은 스폰에 레인이 여러 개여도 갈린다.
+    private RouteData _routeData;
     private int _routeModule = -1;
     private RouteMode _routeMode = RouteMode.Draw;
 
@@ -68,10 +68,9 @@ public class MapMakerWindow : EditorWindow
     private Vector2Int _routeLast;
     private readonly List<Vector2Int> _stroke = new();
 
-    // 이 프레임에 계산해 둔 경로와 저작 보관처. 클릭 처리와 예고줄이 둘 다 필요로 하는데
+    // 이 프레임에 계산해 둔 레인. 클릭 처리와 예고줄이 둘 다 필요로 하는데
     // 인자로 흘려보내면 손대지 않는 메서드까지 서명이 길어져 여기 둔다(OnGUI 안에서만 쓴다).
     private IReadOnlyList<LaneData> _lanes = System.Array.Empty<LaneData>();
-    private RouteConfig _routes;
 
     // 이번에 그린 격자의 칸 수. "맞춤"이 도구 줄에서 계산할 때 필요한데 그 줄은 격자보다 먼저 그려진다.
     private int _cols = 1;
@@ -179,7 +178,6 @@ public class MapMakerWindow : EditorWindow
         RouteEdit.Sync(routes);
         List<LaneData> lanes = LaneQuery.BuildLanes(cells, routes);
         _lanes = lanes;
-        _routes = routes;
 
         // 씬 오버라이드는 씬 모드에서만 뜻이 있다 — 프리팹 스테이지는 비교할 프리팹이 없다.
         HashSet<Vector2Int> overrides = null;
@@ -200,7 +198,7 @@ public class MapMakerWindow : EditorWindow
                 DrawTerrainPanel(module, cells);
             }
 
-            DrawGridArea(view, cells, lanes, routes, overrides);
+            DrawGridArea(view, cells, lanes, overrides);
 
             if (roomForBoth)
             {
@@ -221,7 +219,7 @@ public class MapMakerWindow : EditorWindow
             }
         }
 
-        List<string> problems = TileAuthorRule.FindProblems(cells, lanes, routes, tiles.Count);
+        List<string> problems = TileAuthorRule.FindProblems(cells, lanes, tiles.Count);
 
         int overrideCount = overrides?.Count ?? 0;
         DrawActionPreview(module, cells);
@@ -356,12 +354,24 @@ public class MapMakerWindow : EditorWindow
     // 지금 어느 스폰의 경로를 고치는 중인가. 대상 없이 찍으면 아무 일도 안 일어나므로 늘 띄운다.
     private string RouteTarget()
     {
-        if (!_hasRouteSpawn)
+        if (HasSelectedRoute())
         {
-            return "스폰 칸을 먼저 클릭하세요";
+            return $"편집 중: 스폰 ({SelectedSpawn().x}, {SelectedSpawn().y})";
         }
 
-        return $"편집 중: 스폰 ({_routeSpawn.x}, {_routeSpawn.y})";
+        return "스폰 칸을 먼저 클릭하세요";
+    }
+
+    // 편집 대상 레인이 정해져 있는가.
+    private bool HasSelectedRoute()
+    {
+        return _routeData != null;
+    }
+
+    // 편집 대상 레인이 출발하는 스폰 좌표.
+    private Vector2Int SelectedSpawn()
+    {
+        return _routeData.Spawn;
     }
 
     // 목록에서 고른 경로를 편집 대상으로 삼는다 — 보는 경로와 고치는 경로를 하나로 묶는다.
@@ -370,19 +380,52 @@ public class MapMakerWindow : EditorWindow
         if (picked < 0 || picked >= lanes.Count)
         {
             // 고른 것이 없는 상태로 돌아간다 — 격자가 다시 모든 경로를 제 색으로 보여 준다.
-            _hasRouteSpawn = false;
+            _routeData = null;
             _routeDrawing = false;
             return;
         }
 
-        Tile spawn = lanes[picked].Start;
-        if (spawn == null)
+        // 계산 단계가 넘겨준 신원을 그대로 받는다. 아직 지정 항목이 없는 스폰이면 여기서 만든다.
+        _routeData = EnsureRoute(lanes[picked]);
+    }
+
+    // 이 레인의 지정 항목. 계산 단계가 이미 찾아 넘겼으면 그것을 쓴다.
+    private RouteData EnsureRoute(LaneData lane)
+    {
+        if (lane.Route != null)
         {
-            return;
+            return lane.Route;
         }
 
-        _routeSpawn = spawn.Coord;
-        _hasRouteSpawn = true;
+        return EnsureRouteOfSpawn(lane.Start);
+    }
+
+    // 이 스폰의 지정 항목. 아직 없으면 빈 항목을 만들어 신원을 확보한다.
+    private RouteData EnsureRouteOfSpawn(Tile spawn)
+    {
+        RouteConfig config = RouteEdit.Ensure(_modules[_moduleIndex]);
+
+        if (config.TryGetRoutes(spawn.Coord, out List<RouteData> found))
+        {
+            return found[0];
+        }
+
+        RouteEdit.AddRoute(config, spawn.Coord);   // 항목이 없을 때만 새로 만든다
+        RouteEdit.Sync(config);
+        config.TryGetRoutes(spawn.Coord, out List<RouteData> made);
+        return made[0];
+    }
+
+    // 편집 중인 경로의 목록 번호. 저작 API가 번호로 집는다.
+    private int SelectedRouteIndex(RouteConfig config)
+    {
+        return config.IndexOf(_routeData);
+    }
+
+    // 편집 대상 레인이 아직 정해지지 않았는가.
+    private bool IsRouteUnselected()
+    {
+        return _routeData == null;
     }
 
     // 모듈을 갈아타면 편집 중이던 스폰을 놓는다 — 남의 모듈 좌표로 노드를 찍지 않는다.
@@ -394,7 +437,7 @@ public class MapMakerWindow : EditorWindow
         }
 
         _routeModule = _moduleIndex;
-        _hasRouteSpawn = false;
+        _routeData = null;
         _routeDrawing = false;
         _stroke.Clear();
     }
@@ -632,7 +675,6 @@ public class MapMakerWindow : EditorWindow
 
     private void DrawGridArea(TileGridView view, Dictionary<Vector2Int, Tile> cells,
         IReadOnlyList<LaneData> lanes,
-        RouteConfig routes,
         HashSet<Vector2Int> overrides)
     {
         // 프레임을 접을 때 짝이 맞게 풀리도록 스크롤 판을 scope로 연다 — 입력 처리가 이 안에서 프레임을 접는다.
@@ -644,24 +686,30 @@ public class MapMakerWindow : EditorWindow
             Rect area = GUILayoutUtility.GetRect(view.PixelWidth(_cellPixels), view.PixelHeight(_cellPixels));
             HandleHover(area, view);
             HandleStroke(area, view, cells);
-            view.Draw(area, _cellPixels, lanes, RouteIndex(lanes), RouteNodes(routes),
+            view.Draw(area, _cellPixels, lanes, RouteIndex(lanes), RouteNodes(),
                 _hover, overrides, _showInert);
         }
     }
 
-    // 지금 고른 경로의 번호. 고른 것이 없거나 그 스폰이 사라졌으면 -1이다.
+    // 지금 고른 경로의 번호. 고른 것이 없거나 그 레인이 사라졌으면 -1이다.
     private int RouteIndex(IReadOnlyList<LaneData> lanes)
     {
-        if (!_hasRouteSpawn)
+        if (HasSelectedRoute())
         {
-            return -1;
+            return IndexOfRoute(lanes);
         }
 
-        for (int i = 0; i < lanes.Count; i++)
+        return -1;
+    }
+
+    // 편집 중인 지정 항목을 들고 있는 레인의 번호. 좌표가 아니라 참조로 맞춘다.
+    private int IndexOfRoute(IReadOnlyList<LaneData> lanes)
+    {
+        for (int index = 0; index < lanes.Count; index++)
         {
-            if (lanes[i].Start != null && lanes[i].Start.Coord == _routeSpawn)
+            if (lanes[index].Route == _routeData)
             {
-                return i;
+                return index;
             }
         }
 
@@ -669,19 +717,14 @@ public class MapMakerWindow : EditorWindow
     }
 
     // 고른 경로에 사람이 찍어 둔 경유 칸. 저작이 없으면 null(자동 최단 경로다).
-    private IReadOnlyList<RouteNode> RouteNodes(RouteConfig routes)
+    private IReadOnlyList<RouteNode> RouteNodes()
     {
-        if (!_hasRouteSpawn || routes == null)
+        if (HasSelectedRoute())
         {
-            return null;
+            return _routeData.Nodes;   // 신원을 들고 있으므로 좌표로 다시 조회하지 않는다
         }
 
-        if (!routes.TryGetRoute(_routeSpawn, out RouteData route))
-        {
-            return null;
-        }
-
-        return route.Nodes;
+        return null;
     }
 
     // ---- 아래: 이 클릭이 할 일 ----
@@ -730,7 +773,7 @@ public class MapMakerWindow : EditorWindow
             return SpawnWord();
         }
 
-        if (!_hasRouteSpawn)
+        if (IsRouteUnselected())
         {
             return "스폰 칸을 먼저 눌러 어느 경로를 고칠지 정하세요";
         }
@@ -756,7 +799,7 @@ public class MapMakerWindow : EditorWindow
     // 점 찍기의 세 갈래. 누르기 전에 무엇이 될지 보이지 않으면 눌러 보고서야 알게 된다.
     private string PointWord(Tile tile, bool back)
     {
-        IReadOnlyList<RouteNode> nodes = RouteNodes(_routes);
+        IReadOnlyList<RouteNode> nodes = RouteNodes();
         int count = Count(nodes);
 
         if (back)
@@ -824,7 +867,7 @@ public class MapMakerWindow : EditorWindow
             return Count(nodes);
         }
 
-        return RouteSlot.Best(nodes, _routeSpawn, goal.Coord, coord);
+        return RouteSlot.Best(nodes, SelectedSpawn(), goal.Coord, coord);
     }
 
     // 지금 고른 경로의 도착 칸. 경로가 막혔으면 null.
@@ -1120,11 +1163,11 @@ public class MapMakerWindow : EditorWindow
     {
         if (tile.IsEnemySpawn)
         {
-            OpenStroke(coord);
+            OpenStroke(tile);
             return;
         }
 
-        if (!_hasRouteSpawn)
+        if (IsRouteUnselected())
         {
             return; // 어느 스폰의 경로인지 정해지지 않았다 — 도구 줄이 스폰을 먼저 찍으라고 말한다
         }
@@ -1147,11 +1190,10 @@ public class MapMakerWindow : EditorWindow
     }
 
     // 스폰 칸을 눌렀다. 획은 아직 비어 있어서, 끌지 않고 떼면 저작한 경로는 그대로 남는다.
-    private void OpenStroke(Vector2Int spawn)
+    private void OpenStroke(Tile spawn)
     {
-        _routeSpawn = spawn;
-        _hasRouteSpawn = true;
-        _routeLast = spawn;
+        _routeData = EnsureRouteOfSpawn(spawn);
+        _routeLast = spawn.Coord;
         _routeDrawing = true;
         _stroke.Clear();
     }
@@ -1177,7 +1219,7 @@ public class MapMakerWindow : EditorWindow
             Push(steps[i]);
         }
 
-        RouteEdit.SetNodes(config, _routeSpawn, _stroke);
+        RouteEdit.SetNodes(config, SelectedRouteIndex(config), _stroke);
     }
 
     // 이 칸으로 선이 들어갈 수 있는가. 격자 밖도 못 지나가는 칸과 같이 본다.
@@ -1210,7 +1252,7 @@ public class MapMakerWindow : EditorWindow
 
         if (last == 0)
         {
-            return coord == _routeSpawn;
+            return coord == SelectedSpawn();
         }
 
         return _stroke[last - 1] == coord;
@@ -1221,7 +1263,7 @@ public class MapMakerWindow : EditorWindow
     {
         if (back)
         {
-            RouteEdit.PopNode(config, _routeSpawn);
+            RouteEdit.PopNode(config, SelectedRouteIndex(config));
             return;
         }
 
@@ -1232,12 +1274,12 @@ public class MapMakerWindow : EditorWindow
 
         if (!Event.current.control)
         {
-            RouteEdit.AddNode(config, _routeSpawn, tile.Coord);
+            RouteEdit.AddNode(config, SelectedRouteIndex(config), tile.Coord);
             return;
         }
 
-        IReadOnlyList<RouteNode> nodes = RouteNodes(_routes);
-        RouteEdit.InsertNode(config, _routeSpawn, tile.Coord, RouteSlotOf(nodes, tile.Coord));
+        IReadOnlyList<RouteNode> nodes = RouteNodes();
+        RouteEdit.InsertNode(config, SelectedRouteIndex(config), tile.Coord, RouteSlotOf(nodes, tile.Coord));
     }
 
     // 붓 이름. 왼쪽 판의 줄 이름과 같은 말을 쓴다.

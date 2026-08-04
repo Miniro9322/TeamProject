@@ -16,8 +16,12 @@ public static class RouteEdit
     private const string RoutesField = "routes";
     private const string SpawnField = "spawn";
     private const string NodesField = "nodes";
-    private const string CoordField = "coord";
+    private const string ColField = "col";
+    private const string RowField = "row";
     private const string WaitField = "waitTime";
+
+    // 새로 찍은 칸이 멈추지 않는다는 뜻. 멈추게 하려면 사람이 목록에서 따로 적는다.
+    private const float UnauthoredWaitTime = 0f;
 
     /// <summary>이 모듈의 RouteConfig. 아직 없으면 null.</summary>
     public static RouteConfig Find(Grid module)
@@ -64,11 +68,11 @@ public static class RouteEdit
         config.Rebuild();
     }
 
-    /// <summary>이 스폰의 경로를 이 목록으로 통째로 바꾼다. 같은 좌표가 여러 번 들어와도 그대로 쓴다.</summary>
-    public static void SetNodes(RouteConfig config, Vector2Int spawn, IReadOnlyList<Vector2Int> stroke)
+    /// <summary>이 경로를 이 목록으로 통째로 바꾼다. 같은 좌표가 여러 번 들어와도 그대로 쓴다.</summary>
+    public static void SetNodes(RouteConfig config, int routeIndex, IReadOnlyList<Vector2Int> stroke)
     {
         var owner = new SerializedObject(config);
-        SerializedProperty nodes = GetRoute(owner, spawn).FindPropertyRelative(NodesField);
+        SerializedProperty nodes = GetRouteAt(owner, routeIndex).FindPropertyRelative(NodesField);
 
         nodes.arraySize = stroke.Count;
         for (int i = 0; i < stroke.Count; i++)
@@ -80,10 +84,10 @@ public static class RouteEdit
     }
 
     /// <summary>이 좌표를 맨 뒤에 쌓는다. 이미 들어 있어도 또 쌓는다 — 같은 칸을 다시 지나가는 경로다.</summary>
-    public static void AddNode(RouteConfig config, Vector2Int spawn, Vector2Int node)
+    public static void AddNode(RouteConfig config, int routeIndex, Vector2Int node)
     {
         var owner = new SerializedObject(config);
-        SerializedProperty nodes = GetRoute(owner, spawn).FindPropertyRelative(NodesField);
+        SerializedProperty nodes = GetRouteAt(owner, routeIndex).FindPropertyRelative(NodesField);
 
         nodes.arraySize++;
         SetNode(nodes.GetArrayElementAtIndex(nodes.arraySize - 1), node);
@@ -91,20 +95,20 @@ public static class RouteEdit
     }
 
     /// <summary>이 좌표를 slot 자리에 끼운다.</summary>
-    public static void InsertNode(RouteConfig config, Vector2Int spawn, Vector2Int node, int slot)
+    public static void InsertNode(RouteConfig config, int routeIndex, Vector2Int node, int slot)
     {
         var owner = new SerializedObject(config);
-        SerializedProperty nodes = GetRoute(owner, spawn).FindPropertyRelative(NodesField);
+        SerializedProperty nodes = GetRouteAt(owner, routeIndex).FindPropertyRelative(NodesField);
 
         Insert(nodes, node, slot);
         owner.ApplyModifiedProperties();
     }
 
     /// <summary>맨 뒤 한 칸을 뺀다 — 뒤로가기다. 뺄 것이 없으면 아무 일도 하지 않는다.</summary>
-    public static void PopNode(RouteConfig config, Vector2Int spawn)
+    public static void PopNode(RouteConfig config, int routeIndex)
     {
         var owner = new SerializedObject(config);
-        SerializedProperty nodes = GetRoute(owner, spawn).FindPropertyRelative(NodesField);
+        SerializedProperty nodes = GetRouteAt(owner, routeIndex).FindPropertyRelative(NodesField);
 
         if (nodes.arraySize == 0)
         {
@@ -115,23 +119,38 @@ public static class RouteEdit
         owner.ApplyModifiedProperties();
     }
 
-    /// <summary>이 스폰의 경유 노드를 전부 지운다. 경로 항목은 빈 채로 남는다.</summary>
-    public static void ClearNodes(RouteConfig config, Vector2Int spawn)
+    /// <summary>이 경로의 경유 노드를 전부 지운다. 경로 항목은 빈 채로 남는다.</summary>
+    public static void ClearNodes(RouteConfig config, int routeIndex)
     {
         var owner = new SerializedObject(config);
-        SerializedProperty route = GetRoute(owner, spawn);
+        SerializedProperty route = GetRouteAt(owner, routeIndex);
         route.FindPropertyRelative(NodesField).ClearArray();
         owner.ApplyModifiedProperties();
     }
 
     /// <summary>이 순번 노드에서 멈출 초를 적는다.</summary>
-    public static void SetWait(RouteConfig config, Vector2Int spawn, int slot, float seconds)
+    public static void SetWait(RouteConfig config, int routeIndex, int slot, float seconds)
     {
         var owner = new SerializedObject(config);
-        SerializedProperty nodes = GetRoute(owner, spawn).FindPropertyRelative(NodesField);
+        SerializedProperty nodes = GetRouteAt(owner, routeIndex).FindPropertyRelative(NodesField);
 
         nodes.GetArrayElementAtIndex(slot).FindPropertyRelative(WaitField).floatValue = seconds;
         owner.ApplyModifiedProperties();
+    }
+
+    /// <summary>이 스폰에 빈 경로 항목을 하나 더 만든다. 만든 항목의 번호를 돌려준다.</summary>
+    public static int AddRoute(RouteConfig config, Vector2Int spawn)
+    {
+        var owner = new SerializedObject(config);
+        SerializedProperty routes = owner.FindProperty(RoutesField);
+
+        routes.arraySize++;
+        SerializedProperty added = routes.GetArrayElementAtIndex(routes.arraySize - 1);
+        added.FindPropertyRelative(SpawnField).vector2IntValue = spawn;
+        added.FindPropertyRelative(NodesField).ClearArray();
+        owner.ApplyModifiedProperties();
+
+        return routes.arraySize - 1;
     }
 
     // 경로가 붙어 사는 오브젝트. 비활성 모듈에서도 찾아야 한다(잠긴 모듈도 저작 대상이다).
@@ -152,32 +171,17 @@ public static class RouteEdit
             "저작한 경로는 이 씬에만 남습니다. 모듈 프리팹을 열고 찍으면 모든 씬에 반영됩니다.", board);
     }
 
-    // 이 스폰의 경로 항목. 없으면 목록 끝에 새로 만든다.
-    private static SerializedProperty GetRoute(SerializedObject owner, Vector2Int spawn)
+    // 번호로 경로 항목을 집는다. 번호는 RouteConfig.IndexOf가 준다 — 좌표로 찾지 않는다.
+    private static SerializedProperty GetRouteAt(SerializedObject owner, int routeIndex)
     {
-        SerializedProperty routes = owner.FindProperty(RoutesField);
-
-        for (int i = 0; i < routes.arraySize; i++)
-        {
-            SerializedProperty route = routes.GetArrayElementAtIndex(i);
-            if (route.FindPropertyRelative(SpawnField).vector2IntValue == spawn)
-            {
-                return route;
-            }
-        }
-
-        routes.arraySize++;
-        SerializedProperty added = routes.GetArrayElementAtIndex(routes.arraySize - 1);
-        added.FindPropertyRelative(SpawnField).vector2IntValue = spawn;
-        added.FindPropertyRelative(NodesField).ClearArray();
-        return added;
+        return owner.FindProperty(RoutesField).GetArrayElementAtIndex(routeIndex);
     }
 
-    // 새로 찍은 칸. 대기는 0초로 시작한다 — 멈추게 하려면 사람이 따로 적는다.
     private static void SetNode(SerializedProperty node, Vector2Int coord)
     {
-        node.FindPropertyRelative(CoordField).vector2IntValue = coord;
-        node.FindPropertyRelative(WaitField).floatValue = 0f;
+        node.FindPropertyRelative(ColField).intValue = coord.x;
+        node.FindPropertyRelative(RowField).intValue = coord.y;
+        node.FindPropertyRelative(WaitField).floatValue = UnauthoredWaitTime;
     }
 
     // 정해진 자리에 좌표를 끼운다. 맨 뒤는 끼울 자리가 없으므로 목록을 늘려 붙인다.

@@ -7,14 +7,19 @@ public class LaneData
 
     public Tile Start { get; }
     public Tile Goal { get; }
+
+    // 이 레인의 신원. 계산 단계가 찾아낸 지정 항목을 그대로 넘겨받는다 — 좌표로 다시 조회하지 않는다.
+    public RouteData Route { get; }
+
     public IReadOnlyList<Tile> Tiles => tiles;
     public bool IsValid => Goal != null && tiles.Count > 0;
 
     // 스폰과 코어 및 순서가 정해진 경로 타일을 레인 결과로 보관합니다.
-    public LaneData(Tile start, Tile goal, IReadOnlyList<Tile> source)
+    public LaneData(Tile start, Tile goal, RouteData route, IReadOnlyList<Tile> source)
     {
         Start = start;
         Goal = goal;
+        Route = route;
         tiles = new List<Tile>();
         
         for (int i = 0; i < source.Count; i++)

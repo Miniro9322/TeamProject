@@ -89,13 +89,13 @@ public static class LaneList
                 // 뒤로가기는 맨 뒤 한 칸씩. 마지막에 그린 것부터 빠지므로 손이 기억하는 순서와 같다.
                 if (GUILayout.Button("뒤로", EditorStyles.miniButton, GUILayout.Width(34)))
                 {
-                    RouteEdit.PopNode(routes, lane.Start.Coord);
+                    RouteEdit.PopNode(routes, routes.IndexOf(lane.Route));
                     return true; // 줄어든 경로를 바로 보게 고른 상태로 넘긴다
                 }
 
                 if (GUILayout.Button("비우기", EditorStyles.miniButton, GUILayout.Width(44)))
                 {
-                    RouteEdit.ClearNodes(routes, lane.Start.Coord);
+                    RouteEdit.ClearNodes(routes, routes.IndexOf(lane.Route));
                     return true;
                 }
             }
@@ -112,16 +112,16 @@ public static class LaneList
             return;
         }
 
-        routes.TryGetRoute(lane.Start.Coord, out RouteData route);
+        RouteData route = lane.Route;
 
         for (int i = 0; i < route.Nodes.Count; i++)
         {
-            DrawWait(routes, lane.Start.Coord, route, i);
+            DrawWait(routes, route, i);
         }
     }
 
     // 경유 칸 한 줄. 초를 고쳐 넣은 프레임에만 저작에 적어 되돌리기가 한 번에 하나씩 쌓이게 한다.
-    private static void DrawWait(RouteConfig routes, Vector2Int spawn, RouteData route, int slot)
+    private static void DrawWait(RouteConfig routes, RouteData route, int slot)
     {
         using (new EditorGUILayout.HorizontalScope())
         {
@@ -133,7 +133,7 @@ public static class LaneList
 
             if (EditorGUI.EndChangeCheck())
             {
-                RouteEdit.SetWait(routes, spawn, slot, seconds);
+                RouteEdit.SetWait(routes, routes.IndexOf(route), slot, seconds);
             }
 
             GUILayout.Label("초", EditorStyles.miniLabel, GUILayout.Width(16));
@@ -148,12 +148,12 @@ public static class LaneList
             return 0;
         }
 
-        if (!routes.TryGetRoute(lane.Start.Coord, out RouteData route))
+        if (lane.Route == null)
         {
             return 0;
         }
 
-        return route.Nodes.Count;
+        return lane.Route.Nodes.Count;
     }
 
     private static string Word(LaneData lane, int nodes)

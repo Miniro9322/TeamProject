@@ -73,7 +73,6 @@ public static class TileAuthorRule
     public static List<string> FindProblems(
         Dictionary<Vector2Int, Tile> cells,
         IReadOnlyList<LaneData> lanes,
-        RouteConfig routes,
         int tileCount)
     {
         var problems = new List<string>();
@@ -99,7 +98,7 @@ public static class TileAuthorRule
 
         if (spawnCount > 0 && coreCount > 0)
         {
-            AddLaneProblems(lanes, cells, routes, problems);
+            AddLaneProblems(lanes, cells, problems);
         }
 
         AddDeadCells(cells, problems);
@@ -143,7 +142,6 @@ public static class TileAuthorRule
     private static void AddLaneProblems(
         IReadOnlyList<LaneData> lanes,
         Dictionary<Vector2Int, Tile> cells,
-        RouteConfig routes,
         List<string> problems)
     {
         for (int i = 0; i < lanes.Count; i++)
@@ -154,17 +152,16 @@ public static class TileAuthorRule
                 continue;
             }
 
-            problems.Add(LaneWord(lane, cells, routes));
+            problems.Add(LaneWord(lane, cells));
         }
     }
 
     // 이 레인이 왜 죽었는지 한 줄로. 저작 노드가 막혔으면 몇 번인지 짚는다.
     private static string LaneWord(
         LaneData lane,
-        Dictionary<Vector2Int, Tile> cells,
-        RouteConfig routes)
+        Dictionary<Vector2Int, Tile> cells)
     {
-        string blocked = BlockedNodes(lane.Start.Coord, cells, routes);
+        string blocked = BlockedNodes(lane.Route, cells);
 
         if (blocked.Length > 0)
         {
@@ -176,13 +173,12 @@ public static class TileAuthorRule
             "High·Empty 또는 헤엄 칸이 통로를 완전히 막았습니다.";
     }
 
-    // 이 스폰에 저작된 노드 중 걸어서 못 지나는 것들의 번호. 없으면 빈 글자.
+    // 이 레인에 지정된 노드 중 걸어서 못 지나는 것들의 번호. 없으면 빈 글자.
     private static string BlockedNodes(
-        Vector2Int spawn,
-        Dictionary<Vector2Int, Tile> cells,
-        RouteConfig routes)
+        RouteData route,
+        Dictionary<Vector2Int, Tile> cells)
     {
-        if (routes == null || !routes.TryGetRoute(spawn, out RouteData route))
+        if (route == null)
         {
             return string.Empty;
         }
