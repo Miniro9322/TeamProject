@@ -8,6 +8,7 @@ using UnityEngine;
 public class EnemyLanes : MonoBehaviour
 {
     [SerializeField] private MapBoard board;
+    [SerializeField] private RouteConfig routes;
 
     private readonly List<LaneData> lanes = new();
     private ILaneBuilder builder;
@@ -17,10 +18,11 @@ public class EnemyLanes : MonoBehaviour
 
     public event Action Changed;
 
-    // 같은 GameObject의 MapBoard를 인스펙터 참조에 자동 할당합니다.
+    // 같은 GameObject의 MapBoard와 RouteConfig를 인스펙터 참조에 자동 할당합니다.
     private void Reset()
     {
         board = GetComponent<MapBoard>();
+        routes = GetComponent<RouteConfig>();
     }
 
     // 필수 참조를 준비하고 현재 맵의 모든 적 이동 레인을 계산합니다.
@@ -91,10 +93,11 @@ public class EnemyLanes : MonoBehaviour
     private void Prepare()
     {
         board = GetComponent<MapBoard>();
+        routes = GetComponent<RouteConfig>();
 
         if (builder == null)
         {
-            builder = new LaneBuilder();
+            builder = new LaneBuilder(routes);
         }
     }
 

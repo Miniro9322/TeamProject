@@ -38,6 +38,7 @@ public class EnemyInfo : MonoBehaviour
     public Color berserkColor      = new Color(0.91f, 0.30f, 0.24f); // 폭주 - 빨강
     public Color regenerationColor = new Color(0.18f, 0.80f, 0.44f); // 재생 - 초록
     public Color hitsShieldColor   = new Color(0.95f, 0.77f, 0.06f); // 타수 보호막 - 노랑
+    public Color burrowColor       = new Color(0.65f, 0.32f, 0.20f); // 잠행 - 적갈색
 
     private string enemyName;
     private string enemyDesc;
@@ -247,6 +248,7 @@ public class EnemyInfo : MonoBehaviour
             case EnemyAttribute.Berserk:      return berserkColor;
             case EnemyAttribute.Regeneration: return regenerationColor;
             case EnemyAttribute.HitsShield:   return hitsShieldColor;
+            case EnemyAttribute.Burrow: return burrowColor;
             default:                          return Color.white;
         }
     }

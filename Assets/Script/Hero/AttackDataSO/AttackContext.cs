@@ -1,7 +1,5 @@
 using Cysharp.Threading.Tasks;
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Pool;
 using System.Threading;
 
 public struct AttackContext
@@ -13,24 +11,9 @@ public struct AttackContext
     public Animator arrowAnim;
     public HeroAnimEvents animEvents;
     public Transform muzzle;
-    public System.Func<Projectile, IObjectPool<Projectile>> getProjectilePool;
-    public System.Func<GameObject, Vector3, Quaternion, float, GameObject> spawnEffect;
-    public System.Func<GameObject, Vector3, Quaternion, GameObject> spawnPersistentEffect;
-    public System.Action<GameObject, GameObject> despawnEffect;
-    public System.Func<Vector3, int, RangeShape, List<IDamageAble>> getEnemiesInRange;
-    public System.Func<Vector3, int, RangeShape, List<Transform>> getEnemyTargetsInRange;
-    public System.Func<Vector3, int, RangeShape, List<GameObject>> getEnemyObjectsInRange;
-    public System.Func<Vector3, int, RangeShape, List<GameObject>> getAllyObjectsInRange;
-    public System.Action<float> healSelf;
-    public System.Func<Vector3, int, RangeShape, List<IDamageAble>> getTargetableEnemiesInRange;
-    public System.Func<Vector3, int, RangeShape, List<GameObject>> getTargetableEnemyObjectsInRange;
-    public System.Func<Vector3, int, RangeShape, List<Transform>> getTargetableEnemyTargetsInRange;
-    public System.Func<Vector3, Vector3, int, List<IDamageAble>> getEnemiesInLine;
-    public System.Func<Vector3, Vector3, Vector2Int> getCardinalDirection;
-    public System.Func<Vector3, Vector2Int, int, Vector3> getLineEndPoint;
     public BuffManager buffManager;
     public StatContainer sc;
-    public IUnit selfUnit;
+    public Hero hero;
 
     public async UniTask WaitForAnimEvent(string eventName, CancellationToken ct)
     {

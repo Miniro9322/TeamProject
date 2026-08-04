@@ -12,12 +12,13 @@ using UnityEngine;
 public static class LaneQuery
 {
     // 셀에서 스폰과 코어를 수집하고 스폰별 레인 결과를 계산합니다.
-    public static List<LaneData> BuildLanes(Dictionary<Vector2Int, Tile> cells)
+    // 저작된 경로가 있으면 그대로 따라가 창의 선이 게임에서 걷는 길과 같아집니다.
+    public static List<LaneData> BuildLanes(Dictionary<Vector2Int, Tile> cells, RouteConfig routes)
     {
         List<Tile> spawns = CollectSpawns(cells);
         List<Tile> cores = CollectCores(cells);
         var input = new LaneInputData(cells, spawns, cores);
-        var builder = new LaneBuilder();
+        var builder = new LaneBuilder(routes);
         IReadOnlyList<LaneData> built = builder.BuildLanes(input);
         var lanes = new List<LaneData>(built.Count);
 

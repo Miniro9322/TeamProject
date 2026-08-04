@@ -1,3 +1,4 @@
+using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
@@ -47,5 +48,18 @@ public sealed class AttackEventWindow : System.IDisposable
     {
         animEvents.Unsubscribe(hitEvent, hitHandler);
         animEvents.Unsubscribe(endEvent, endHandler);
+    }
+
+    // Melee/Ranged/HealAttackExecutor 3곳이 동일하게 복제하던 루프. "Attack"/"Recovery" 이벤트
+    // 이름과 hits==0 최소 1회 보장 폴백(고AS에서 애니메이터가 Attack 이벤트를 유실하면 데미지가
+    // 통째로 사라지는 문제)의 지식을 여기 한 곳에만 둔다. ct 취소 시 MoveNextHit이 던지므로
+    // 폴백은 실행되지 않는다 — 기존과 동일한 취소 의미.
+    public static async UniTask RunHits(HeroAnimEvents animEvents, float windowDuration,
+        Func<CancellationToken, UniTask> onHit, CancellationToken ct)
+    {
+        using var window = new AttackEventWindow(animEvents, "Attack", "Recovery", windowDuration);
+        int hits = 0;
+        while (await window.MoveNextHit(ct)) { await onHit(ct); hits++; }
+        if (hits == 0) await onHit(ct);
     }
 }

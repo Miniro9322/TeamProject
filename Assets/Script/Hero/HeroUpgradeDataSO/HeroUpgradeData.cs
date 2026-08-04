@@ -5,8 +5,6 @@ using System.Collections.Generic;
 public class HeroUpgradeData : ScriptableObject
 {
     public List<AttackDataSO> attackDatas;
-    public List<AttackSelectorSO> selectors;
-    public List<AttackProcSO> procs;
 
     [SerializeField] private List<ResourceCost> cost;
 
@@ -15,19 +13,11 @@ public class HeroUpgradeData : ScriptableObject
         get
         {
             var temp = new (ProductionType, int)[cost.Count];
-
             for (int i = 0; i < cost.Count; i++)
-            {
                 temp[i] = (cost[i].Type, -cost[i].Amount);
-            }
-
             return temp;
         }
     }
 
-    public void Upgrade(Hero hero)
-    {
-
-        hero.ExchangeAttackDatas(attackDatas, selectors, procs);
-    }
+    public void Upgrade(Hero hero) => hero.ExchangeAttackDatas(attackDatas);
 }

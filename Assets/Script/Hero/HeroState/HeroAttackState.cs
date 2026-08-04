@@ -28,7 +28,7 @@ public class HeroAttackState : HeroState
     // 공격 애니메이션(윈도우) 진행 중인지. 진행 중이면 간격이 지나도 타이머만 계속 쌓이고
     // 새 공격은 시작하지 않는다 — 실제로 다음 공격을 시작한 순간에만 timer를 리셋해서
     // "실행 도중 만료된 타이머가 버려지고 0부터 다시 쌓이는" 낭비 사이클을 없앤다.
-    protected virtual bool IsBusy => false;
+    public virtual bool IsBusy => false;
 
     public override void Update()
     {

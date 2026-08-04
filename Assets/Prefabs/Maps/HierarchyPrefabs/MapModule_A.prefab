@@ -571,6 +571,7 @@ GameObject:
   - component: {fileID: 8846460860055391114}
   - component: {fileID: 7909103713585408565}
   - component: {fileID: 3883215913338336503}
+  - component: {fileID: 7002895597732910243}
   m_Layer: 0
   m_Name: MapModule_A
   m_TagString: Untagged
@@ -650,7 +651,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5581972147424868009}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 31478ffa6d3e4dd4a8b4e366106fa1a8, type: 3}
   m_Name: 
@@ -687,6 +688,77 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyLanes
   board: {fileID: 4423032346248122036}
+  routes: {fileID: 7002895597732910243}
+--- !u!114 &7002895597732910243
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5581972147424868009}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 943c902c563f2ce4883cf1719d6a053e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RouteConfig
+  routes:
+  - spawn: {x: 19, y: 6}
+    nodes: []
+  - spawn: {x: 21, y: 2}
+    nodes:
+    - {x: 21, y: 5}
+    - {x: 18, y: 3}
+  - spawn: {x: 21, y: 1}
+    nodes:
+    - {x: 15, y: 6}
+    - {x: 17, y: 6}
+    - {x: 17, y: 3}
+    - {x: 15, y: 3}
+    - {x: 15, y: 5}
+    - {x: 17, y: 5}
+    - {x: 17, y: 3}
+    - {x: 15, y: 3}
+    - {x: 15, y: 5}
+    - {x: 17, y: 5}
+    - {x: 17, y: 3}
+    - {x: 13, y: 3}
+    - {x: 13, y: 1}
+    - {x: 9, y: 5}
+    - {x: 8, y: 5}
+    - {x: 8, y: 4}
+    - {x: 9, y: 4}
+    - {x: 9, y: 3}
+    - {x: 8, y: 3}
+  - spawn: {x: 17, y: 1}
+    nodes:
+    - {x: 16, y: 1}
+    - {x: 15, y: 1}
+    - {x: 15, y: 2}
+    - {x: 15, y: 3}
+    - {x: 15, y: 4}
+    - {x: 14, y: 4}
+    - {x: 14, y: 3}
+    - {x: 13, y: 3}
+    - {x: 13, y: 2}
+    - {x: 13, y: 1}
+    - {x: 14, y: 1}
+    - {x: 15, y: 1}
+    - {x: 15, y: 2}
+    - {x: 15, y: 3}
+    - {x: 14, y: 3}
+    - {x: 13, y: 3}
+    - {x: 13, y: 2}
+    - {x: 13, y: 1}
+    - {x: 14, y: 1}
+    - {x: 15, y: 1}
+    - {x: 15, y: 2}
+    - {x: 15, y: 3}
+    - {x: 14, y: 3}
+    - {x: 13, y: 3}
+    - {x: 13, y: 2}
+    - {x: 13, y: 1}
+    - {x: 12, y: 1}
+    - {x: 11, y: 1}
 --- !u!1 &5625728969312054158
 GameObject:
   m_ObjectHideFlags: 0

@@ -12,12 +12,12 @@ public class SwordManAttackState : HeroAttackState
         this.swordMan = swordMan;
     }
 
-    protected override bool IsBusy => runner != null && runner.IsExecuting;
+    public override bool IsBusy => runner != null && runner.IsExecuting;
 
     public override void Enter()
     {
         base.Enter();
-        runner ??= new HeroAttackRunner(swordMan.BasePattern, swordMan.Selectors, swordMan.Procs, new MeleeAttackExecutor());
+        runner ??= new HeroAttackRunner(swordMan, new MeleeAttackExecutor());
 
         float interval = swordMan.SC[StatType.AS] > 0f ? 1f / swordMan.SC[StatType.AS] : 1f;
         float elapsed = Time.time - lastAttackTime;
