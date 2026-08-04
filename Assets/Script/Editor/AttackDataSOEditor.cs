@@ -1,9 +1,7 @@
 using UnityEditor;
 using UnityEngine;
 
-// 프로젝트 최초의 CustomEditor다(기존 AttackDataSO 인스펙터는 [Header]만 있고 조건부 표시가 없어
-// 근접 전용 히어로 에셋에서도 체인/투사체/힐 필드를 전부 봐야 했다). 필드 자체는 flat 그대로 두고
-// 표시만 그룹핑 + 조건부 숨김한다 — 에셋 마이그레이션 위험이 없다.
+
 [CustomEditor(typeof(AttackDataSO))]
 public class AttackDataSOEditor : Editor
 {

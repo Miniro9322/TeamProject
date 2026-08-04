@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public enum AnimSelectMode { Sequential, Random }
-
 // Discrete = 지금까지의 유일한 방식(애니메이션 이벤트 윈도우 기반 1회 집행).
 // Continuous = 신규. ContinuousBeamStrategy가 continuousTickInterval마다 continuousDuration 동안
 // 애니메이션 이벤트 없이 직접 tick 피해를 적용하는 채널링형 공격(예: 레이저).
