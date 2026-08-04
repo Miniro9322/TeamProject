@@ -1,34 +1,37 @@
-using UnityEngine;
-
-// 불이 언제 누구를 때릴지 계산하는 곳. 아무것도 바꾸지 않고 답만 준다.
+// 불 피해와 만료 시각을 계산한다. 상태는 바꾸지 않는다.
 public static class BurnTiming
 {
-    // 줄 맨 앞이 지금 맞을 차례인가. 줄이 비어 있으면 아니다.
-    public static bool HasDueUnit()
+    public static float CalculateFirstDamageTime(float currentTime)
     {
-        return !BurningList.IsEmpty && BurningList.FirstBurning.NextHitTime <= Time.time;
+        return currentTime;
     }
 
-    // 방금 맞은 유닛이 다음에 맞을 시각.
-    public static float NextHitTime(float hitInterval)
+    public static float CalculateNextDamageTime(
+        float currentTime,
+        float damageInterval)
     {
-        return Time.time + hitInterval;
+        return currentTime + damageInterval;
     }
 
-    // 줄에 처음 설 때 적을 시각. 지금으로 두어 올라서자마자 한 대 맞는다.
-    public static float FirstHitTime()
+    public static float CalculateBurnExpirationTime(
+        float currentTime,
+        float burnDuration)
     {
-        return Time.time;
+        return currentTime + burnDuration;
     }
 
-    // 이 유닛을 줄에 세울 정보 한 줄. 때릴 문은 여기서 한 번만 찾아 둔다.
-    public static BurningUnit NewBurning(GameObject unitObject)
+    public static bool IsDamageTimeReached(
+        float currentTime,
+        float nextDamageTime)
     {
-        return new BurningUnit
-        {
-            UnitObject = unitObject,
-            DamageTarget = unitObject.GetComponentInParent<IDamageAble>(),
-            NextHitTime = FirstHitTime()
-        };
+        return currentTime >= nextDamageTime;
+    }
+
+    public static bool IsBurnExpirationTimeReached(
+        float currentTime,
+        float burnExpirationTime,
+        bool hasActiveFireTile)
+    {
+        return !hasActiveFireTile && currentTime >= burnExpirationTime;
     }
 }

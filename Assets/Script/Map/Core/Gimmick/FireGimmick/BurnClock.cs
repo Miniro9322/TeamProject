@@ -1,6 +1,6 @@
 using UnityEngine;
 
-// 불 줄을 매 프레임 굴리는 부품. FireConfig가 만들어 두므로 씬에 미리 놓지 않는다.
+// 계산 결과를 받아 불 피해 진행 순서를 조립한다. Scene에는 배선하지 않는다.
 public class BurnClock : MonoBehaviour
 {
     private const string ClockName = "[BurnClock]";
@@ -16,7 +16,6 @@ public class BurnClock : MonoBehaviour
         instance = null;
     }
 
-    // 굴리는 부품을 하나만 세워 둔다. FireConfig가 여럿이어도 시계는 하나다.
     internal static void Ensure(FireConfig config)
     {
         if (instance != null)
@@ -28,12 +27,95 @@ public class BurnClock : MonoBehaviour
         instance.fireConfig = config;
     }
 
-    // 맞을 차례인 유닛이 있는 동안만 돈다. 차례가 아니면 한 바퀴도 돌지 않는다.
+    internal static void EnterFire(
+        Tile fireTile,
+        GameObject unitObject)
+    {
+        if (BurningList.TryGetBurning(unitObject, out BurningUnit burningUnit))
+        {
+            burningUnit.RegisterFireTile(fireTile);
+            return;
+        }
+
+        IDamageAble damageTarget = unitObject.GetComponentInParent<IDamageAble>();
+        float firstDamageTime = BurnTiming.CalculateFirstDamageTime(Time.time);
+        BurningUnit newBurningUnit = new(
+            unitObject,
+            damageTarget,
+            fireTile,
+            firstDamageTime);
+
+        BurningList.AddLast(newBurningUnit);
+    }
+
+    internal static void ExitFire(
+        Tile fireTile,
+        GameObject unitObject)
+    {
+        if (!BurningList.TryGetBurning(unitObject, out BurningUnit burningUnit))
+        {
+            return;
+        }
+
+        burningUnit.RemoveFireTile(fireTile);
+
+        if (burningUnit.HasActiveFireTile)
+        {
+            return;
+        }
+
+        float burnExpirationTime = BurnTiming.CalculateBurnExpirationTime(
+            Time.time,
+            instance.fireConfig.BurnDuration);
+
+        burningUnit.ApplyBurnExpirationTime(burnExpirationTime);
+    }
+
     private void Update()
     {
-        while (BurnTiming.HasDueUnit())
+        if (BurningList.IsEmpty)
         {
-            FireDamage.StrikeFirst(fireConfig.DamagePerHit, fireConfig.HitInterval);
+            return;
         }
+
+        BurningUnit burningUnit = BurningList.FirstBurning;
+
+        if (burningUnit.IsUnavailable)
+        {
+            BurningList.RemoveFirst();
+            return;
+        }
+
+        float currentTime = Time.time;
+        bool isBurnExpired = BurnTiming.IsBurnExpirationTimeReached(
+            currentTime,
+            burningUnit.BurnExpirationTime,
+            burningUnit.HasActiveFireTile);
+
+        if (isBurnExpired)
+        {
+            BurningList.RemoveFirst();
+            return;
+        }
+
+        bool isDamageTimeReached = BurnTiming.IsDamageTimeReached(
+            currentTime,
+            burningUnit.NextDamageTime);
+
+        if (!isDamageTimeReached)
+        {
+            BurningList.SendFirstToBack();
+            return;
+        }
+
+        float nextDamageTime = BurnTiming.CalculateNextDamageTime(
+            currentTime,
+            fireConfig.HitInterval);
+
+        burningUnit.ApplyNextDamageTime(nextDamageTime);
+        FireDamage.ApplyDamage(
+            burningUnit.DamageTarget,
+            fireConfig.DamagePerHit);
+        BurningList.SendFirstToBack();
     }
 }

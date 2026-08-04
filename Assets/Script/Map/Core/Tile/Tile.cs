@@ -151,7 +151,7 @@ public partial class Tile : MonoBehaviour
             return;
         }
 
-        BurningList.AddLast(BurnTiming.NewBurning(unitObject));
+        BurnClock.EnterFire(this, unitObject);
     }
 
     //불 칸일 때만 이 유닛을 불 줄에서 뺀다.
@@ -162,7 +162,7 @@ public partial class Tile : MonoBehaviour
             return;
         }
 
-        BurningList.RemoveUnit(unitObject);
+        BurnClock.ExitFire(this, unitObject);
     }
 }
     

@@ -1,6 +1,6 @@
 using UnityEngine;
 
-// 불이 얼마나 아픈지 저작하는 씬 부품. 숫자만 들고 있고 굴리는 일은 BurnClock에 맡긴다.
+// 불 피해 수치를 한 곳에서 저작한다. 실제 진행은 BurnClock에 맡긴다.
 [DisallowMultipleComponent]
 public class FireConfig : MonoBehaviour
 {
@@ -10,8 +10,12 @@ public class FireConfig : MonoBehaviour
     [Tooltip("피해를 주는 간격(초).")]
     [SerializeField] private float hitInterval = 1f;
 
+    [Tooltip("불 칸을 벗어난 뒤 피해가 유지되는 시간(초).")]
+    [SerializeField] private float burnDuration = 3f;
+
     public int DamagePerHit => damagePerHit;
     public float HitInterval => hitInterval;
+    public float BurnDuration => burnDuration;
 
     private void Awake()
     {
