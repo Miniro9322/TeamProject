@@ -13,7 +13,7 @@ public class StatDebuffSO : DebuffSO
     public DebuffStatEffect[] effects;
 
     public override DebuffType AllowedTypes =>
-        DebuffType.Slow | DebuffType.ASDown | DebuffType.ArmorBreak | DebuffType.Exhaust;
+        DebuffType.Slow | DebuffType.ATKDown | DebuffType.ASDown | DebuffType.ArmorBreak | DebuffType.Exhaust;
 
     protected override bool OnApply(in DebuffContext ctx, float duration, float scale)
     {

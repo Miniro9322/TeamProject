@@ -89,7 +89,9 @@ public static class DebuffTableImporter
         {
             case "Stat": return typeof(StatDebuffSO);
             case "Dot":  return typeof(DotDebuffSO);
-            case "Stun": return typeof(StunDebuffSO);
+            // 기절·속박·침묵이 한 클래스로 합쳐졌다. 기존 표의 "Stun"도 계속 받는다.
+            case "State":
+            case "Stun": return typeof(StateDebuffSO);
             default:     return null;
         }
     }
@@ -142,7 +144,7 @@ public static class DebuffTableImporter
                 }
                 return true;
 
-            case StunDebuffSO:
+            case StateDebuffSO:
                 return true;   // 지속시간 외에 채울 게 없다
 
             default:

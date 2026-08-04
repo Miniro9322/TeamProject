@@ -141,7 +141,13 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
     private bool _hasStunParam;
     private bool _stunParamChecked;
     // 스턴 만료 시각은 _debuffTracker가 들고 있다 — 따로 필드를 두면 시계가 둘이 되어 어긋난다.
+    // IsStunned는 "기절 연출"용으로만 남긴다(애니 bool·별 이펙트). 행동 차단은 아래 셋으로 갈라 본다.
     public bool IsStunned => _debuffTracker.Has(DebuffType.Stun);
+
+    // 행동별 차단 게이트. 매 프레임 폴링이라 이미 시전된 스킬은 스스로 CannotMove를 봐야 한다(대시 참조).
+    public bool CannotMove => _debuffTracker.HasAny(DebuffType.Stun | DebuffType.Root);       // 기절·속박
+    public bool CannotAttack => _debuffTracker.Has(DebuffType.Stun);                          // 기절만 — 속박은 평타 허용
+    public bool CannotCast => _debuffTracker.HasAny(DebuffType.Stun | DebuffType.Silence);    // 기절·침묵
     private GameObject stunEffectPrefab;
     [Tooltip("스턴 이펙트가 뜰 위치. 머리 위에 빈 오브젝트를 만들어 꽂는다(유닛마다 키가 달라 원점으로는 안 맞는다). 비우면 이펙트가 뜨지 않음.")]
     [SerializeField] private Transform stunEffectAnchor;
@@ -238,23 +244,42 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
     // 걸린 디버프와 남은 시간 장부. 인스턴스 필드라 적마다 따로 굴러간다(static이나 SO에 두면 전원이 공유해버린다).
     private readonly DebuffTracker _debuffTracker = new();
     public DebuffTracker Debuffs => _debuffTracker;
+
+    [Tooltip("이 적에게 걸리지 않는 디버프. 보스는 여기 설정과 별개로 기절 면역이 기본으로 붙는다.")]
+    [SerializeField] private DebuffType immuneDebuffs = DebuffType.None;
+
+    // 보스 기절 면역 on/off. false로 내리면 보스도 기절에 걸려 디버프 아이콘을 눈으로 확인할 수 있다(테스트용).
+    private static readonly bool BossStunImmunity = true;
+
+    // 보스는 기절 면역이 기본이다 — 스턴 한 번으로 무력화되면 보스 구실을 못 한다.
+    // Class는 CSV(EnemyTable)에서 오므로 새 보스를 추가해도 데이터 작업 없이 적용된다.
+    // 프리팹의 immuneDebuffs는 여기에 더해진다(빼지는 못한다 — 보스인데 기절이 걸려야 하는 예외가 생기면 그때 방식을 바꾼다).
+    public DebuffType ImmuneDebuffs =>
+        immuneDebuffs | (BossStunImmunity && Class == EnemyClass.Boss ? DebuffType.Stun : DebuffType.None);
+
+    public bool IsImmuneTo(DebuffType mask) => (ImmuneDebuffs & mask) != 0;
         
     private readonly Dictionary<StatType, float> baseStats = new();
 
     protected virtual void Update()
     {
-        // active=사망/스턴 아님 → 스턴 중엔 이동 정지(Idle).
+        // active=사망/기절·속박 아님 → 그 동안 이동 정지(Idle).
         // 잠행 몹은 파고들기/솟아오르기 모션 중에도 멈춘다 — 안 그러면 걸어가면서 땅을 파고 솟는 게 보인다.
-        _move.Tick(!IsDead && !IsStunned && !_burrow.IsTransitioning, MoveSpeed);
+        _move.Tick(!IsDead && !CannotMove && !_burrow.IsTransitioning, MoveSpeed);
         UpdateExposedAttribute();       // 저지 상태에 따라 Hero가 보는 Attribute를 갱신
         _cloak.Tick(CloakClear);
         _burrow.Tick(CloakClear, transform.position); // 은신과 같은 트리거(저지/사망) — 저지되면 솟아오른다
         StunTick();                     // 스턴 만료를 감지해 Animator bool을 끈다
-        // 임시 테스트 — 넘패드1로 3초 스턴. 적마다 Update가 돌므로 화면의 모든 적이 동시에 걸린다.
+        // 임시 테스트 — 넘패드1 기절 / 2 속박 / 3 침묵. 적마다 Update가 돌므로 화면의 모든 적이 동시에 걸린다.
         // Keyboard.current는 키보드가 없는 환경에서 null이라 반드시 확인해야 한다.
-        if (Keyboard.current != null && Keyboard.current.numpad1Key.wasPressedThisFrame)
+        // 확인이 끝나면 이 블록을 통째로 지운다.
+        if (Keyboard.current != null)
         {
-            Stun(3f);
+            if (Keyboard.current.numpad1Key.wasPressedThisFrame) Stun(3f);
+            // 속박: 제자리에 멈추되 평타와 일반 스킬은 계속 나가야 정상. 대시만 막힌다.
+            if (Keyboard.current.numpad2Key.wasPressedThisFrame) ApplyDebuff(DebuffLoader.Get("Root_Basic"));
+            // 침묵: 걸어오면서 평타는 하지만 스킬을 하나도 안 써야 정상.
+            if (Keyboard.current.numpad3Key.wasPressedThisFrame) ApplyDebuff(DebuffLoader.Get("Silence_Basic"));
         }
     }
 
@@ -280,6 +305,13 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
     public void Stun(float duration)
     {
         if (IsDead || duration <= 0f) return;
+        // IStunAble.Stun은 DebuffSO를 지나지 않는 직접 경로라(영웅 공격·넘패드1 테스트) 면역을 여기서 막아야 한다.
+        if (IsImmuneTo(DebuffType.Stun))
+        {
+            DebuffDebug.Log($"{name} 기절 면역 — Class={Class}", this);
+            return;
+        }
+
         bool wasStunned = IsStunned;
         _debuffTracker.Apply(DebuffType.Stun, duration);
         if (!wasStunned) InterruptActiveSkills();
@@ -412,7 +444,9 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
                 if (skills[i] == null || skillRunning[i] || skills[i].TriggerOnDeath) continue; // 온데스 스킬은 Die()에서만 발동
                 skillTimers[i] += Time.deltaTime;
                 // 공격 모션 중이면 시전 보류(타이머는 계속 쌓여서 공격 끝나면 바로 발동).
-                if (skillTimers[i] >= skills[i].cooldown && !_attacking && !IsStunned)
+                // 침묵이면 전부 막고, 속박이면 이동류 스킬(대시)만 막는다.
+                if (skillTimers[i] >= skills[i].cooldown && !_attacking && !CannotCast
+                    && !(CannotMove && skills[i].MovesSelf))
                 {
                     RunSkill(i, token).Forget();
                 }
@@ -469,7 +503,7 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
             float interval = AttackSpeed > 0f ? 1f / AttackSpeed : 1f; //attackspped = 초당 공격횟수
             // 공격 모션/스킬 시전 중엔 딜레이를 세지 않는다 — 공격이 끝난 뒤부터 interval을 새로 채워
             // 매 공격 사이에 온전한 간격을 보장(안 그러면 모션 중 타이머가 넘쳐 애니 끝나자마자 연사됨).
-            if (!_attacking && !AnySkillRunning() && !IsStunned)
+            if (!_attacking && !AnySkillRunning() && !CannotAttack)
             {
                 attackTimer += Time.deltaTime;
                 if (attackTimer >= interval)

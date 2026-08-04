@@ -8,4 +8,7 @@
 public interface IDebuffCarrier
 {
     DebuffTracker Debuffs { get; }
+
+    /// <summary>걸리지 않는 디버프 종류들(OR 조합). 없으면 DebuffType.None.</summary>
+    DebuffType ImmuneDebuffs { get; }
 }

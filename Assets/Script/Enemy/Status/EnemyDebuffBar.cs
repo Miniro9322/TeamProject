@@ -151,6 +151,7 @@ public class EnemyDebuffBar
         switch (kind)
         {
             case DebuffType.Slow:       stat = StatType.SPD; return true;
+            case DebuffType.ATKDown:    stat = StatType.ATK; return true;
             case DebuffType.ASDown:     stat = StatType.AS;  return true;
             case DebuffType.ArmorBreak: stat = StatType.DEF; return true;
             default:                    stat = default;      return false;
@@ -164,6 +165,7 @@ public class EnemyDebuffBar
     {
         int mask = 0;
         if ((tracked & DebuffType.Slow) != 0)       mask |= 1 << (int)StatType.SPD;
+        if ((tracked & DebuffType.ATKDown) != 0)    mask |= 1 << (int)StatType.ATK;
         if ((tracked & DebuffType.ASDown) != 0)     mask |= 1 << (int)StatType.AS;
         if ((tracked & DebuffType.ArmorBreak) != 0) mask |= 1 << (int)StatType.DEF;
         if ((tracked & DebuffType.Exhaust) != 0)

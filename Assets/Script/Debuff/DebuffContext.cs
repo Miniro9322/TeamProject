@@ -12,6 +12,7 @@ public struct DebuffContext
     public IDamageAble damageable;
     public IStunAble stunnable;
     public DebuffTracker ledger;      // 대상이 IDebuffCarrier가 아니면 null
+    public DebuffType immuneMask;     // 대상이 안 걸리는 종류. DebuffSO.Apply가 여기서 걸러낸다
     public BuffManager buffManager;
     public GameManager gameManager;
     public object source;             // BuffManager의 스택 판정 키. 보통 디버프를 건 SO 자신
@@ -39,6 +40,7 @@ public struct DebuffContext
 
         IDebuffCarrier carrier = host as IDebuffCarrier ?? host.GetComponentInParent<IDebuffCarrier>();
         ctx.ledger = carrier?.Debuffs;
+        ctx.immuneMask = carrier?.ImmuneDebuffs ?? DebuffType.None;
 
         return ctx;
     }

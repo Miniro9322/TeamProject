@@ -37,6 +37,13 @@ public abstract class DebuffSO : ScriptableObject
             DebuffDebug.Log($"{name} 무시 — scale={scale} (0 이하)", this);
             return;
         }
+        // 면역이면 효과도 장부도 건너뛴다 — 여기서 막으면 세 입구(ApplyDebuff/ApplyDebuffTo/DebuffApply.To)가 다 덮인다.
+        // 단 IStunAble.Stun을 직접 부르는 경로는 이 SO를 지나지 않으므로 구현체(EnemyBase.Stun)에서 따로 막는다.
+        if ((type & ctx.immuneMask) != 0)
+        {
+            DebuffDebug.Log($"{name}({type}) 면역 — 대상={(ctx.targetObject != null ? ctx.targetObject.name : "?")}", ctx.targetObject);
+            return;
+        }
 
         // 효과가 실제로 들어간 뒤에만 장부에 남긴다 — 통로가 없는 대상(영웅 스턴 등)에
         // 안 걸린 디버프가 아이콘으로 뜨는 것을 막는다.
