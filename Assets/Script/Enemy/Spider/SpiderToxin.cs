@@ -8,9 +8,12 @@ public class SpiderToxin : EnemyBase
     public int attack;
     public int def; //테스트용 인스펙터 확인용 스탯들
 
-    [SerializeField] private float poisonRatio = 0.3f;
-    [SerializeField] private float poisonInterval = 0.5f;
-    [SerializeField] private float poisonDuration = 4f;
+    // 독 수치(틱 피해·간격·지속시간)는 DebuffTable.csv의 Poison_Spider가 들고 있다.
+    // 표의 틱 피해는 이 적의 기본 공격력 기준이고, 강화되면 StatRatio(ATK)만큼 같이 세진다
+    // (이관 전 AttackPower * poisonRatio와 같은 거동 — 표 값 4 = 기본 공격력 15 x 0.3).
+    [SerializeField] private string poisonDebuffId = "Poison_Spider";
+    private DebuffSO poisonDebuff;
+    private bool poisonResolved;   // 결과가 아니라 "시도했는지"를 기억한다 — 에셋이 없을 때 매 타격마다 경고가 쏟아지지 않게
 
     protected override void OnEnable()
     {
@@ -29,23 +32,35 @@ public class SpiderToxin : EnemyBase
         base.EnemySoundAttack();
         EnemySoundManager.Play("SpiderAttack");
     }
-    // 평타가 적중한 영웅에게 독을 건다. 독 상태는 PoisonRegistry가 들고 굴리므로
+    // 평타가 적중한 영웅에게 독을 건다. 독 상태는 DotRegistry가 들고 굴리므로
     // 이 거미가 죽거나 풀에 반납돼도 남은 독은 계속 들어간다.
     public override void AnimEvent_AttackHit()
     {
         base.AnimEvent_AttackHit();
         if (IsDead) return;
-
-        // base가 이미 한 번 찾았지만 대상을 돌려주지 않아 다시 찾는다.
-        // Range=1이라 격자 조회 비용은 무시할 수준(온히트 효과를 쓰는 적이 늘면 EnemyBase에 훅을 파는 게 낫다).
         GameObject target = FindAttackTarget();
-        if (target == null) return;
-        if (target.GetComponentInParent<Hero>() is not Hero hero) return; // 영웅이 아닌 점유물(건물 등)은 제외
+        if (target == null)
+        {
+            DebuffDebug.Log("SpiderToxin 독 못 걸었다 — 공격 대상을 못 찾음", this);
+            return;
+        }
+        if (target.GetComponentInParent<Hero>() is not Hero hero) // 영웅이 아닌 점유물(건물 등)은 제외
+        {
+            DebuffDebug.Log($"SpiderToxin 독 못 걸었다 — {target.name}은 영웅이 아니다", this);
+            return;
+        }
 
-        PoisonRegistry.Apply(hero,
-            Mathf.Max(1, Mathf.RoundToInt(AttackPower * poisonRatio)),
-            poisonInterval,
-            poisonDuration,
-            GameManager);
+        // 첫 적중에 1회만 해석한다. SO는 Resources 에셋이라 모든 거미가 같은 것을 공유하지만
+        // 상태를 담지 않으므로(수치는 걸 때마다 읽는다) 공유해도 안전하다.
+        if (!poisonResolved)
+        {
+            poisonResolved = true;
+            poisonDebuff = DebuffLoader.Get(poisonDebuffId);
+            DebuffDebug.Log($"SpiderToxin 독 에셋 해석 — '{poisonDebuffId}' → {(poisonDebuff != null ? poisonDebuff.name : "실패(null)")}", this);
+        }
+
+        float scale = StatRatio(StatType.ATK);
+        DebuffDebug.Log($"SpiderToxin {hero.name}에게 독 시도 — 공격력 {AttackPower}(기본 {BaseStat(StatType.ATK):F0}), scale={scale:F2}", this);
+        ApplyDebuffTo(hero, poisonDebuff, scale: scale);
     }
 }

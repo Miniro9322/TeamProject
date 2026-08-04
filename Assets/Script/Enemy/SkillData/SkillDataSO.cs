@@ -30,5 +30,9 @@ public abstract class SkillDataSO : ScriptableObject
     // true면 쿨다운 자동 시전 대상에서 제외되고, 유닛이 죽을 때(Die) 발동된다. 분열(Split) 등에 사용.
     public virtual bool TriggerOnDeath => false;
 
+    // 소유자를 직접 이동시키는 스킬인지. 속박(Root) 중에는 시전할 수 없고, 시전 중 속박되면 그 자리에서 멈춘다.
+    // 대시만 해당한다 — 돌진(RushAttack)은 공격 스킬이므로 false다.
+    public virtual bool MovesSelf => false;
+
     public abstract UniTask Execute(EnemyBase owner, CancellationToken token);
 }

@@ -476,11 +476,22 @@ MonoBehaviour:
   attackClipLength: 0
   burrowMarkerPrefab: {fileID: 0}
   burrowTimeout: 3
+  burrowEmergeStun: 2
   healthSlider: {fileID: 9097003894631933657}
+  bossName: {fileID: 0}
+  hpText: {fileID: 0}
+  attackText: {fileID: 0}
+  defenseText: {fileID: 0}
+  debuffIconRoot: {fileID: 0}
+  debuffIconSet: {fileID: 0}
   <Hp>k__BackingField: 0
   IsSpawnInvincible: 0
   animator: {fileID: 6135062648440617723}
   arriveSqr: 0.0004
+  stunEffectAnchor: {fileID: 6030810692610414788}
+  bodyEffectAnchor: {fileID: 8416778456329485516}
+  debuffEffectSet: {fileID: 11400000, guid: 12a3a83e3450b1e49aa05cd8066ecbdb, type: 2}
+  immuneDebuffs: 0
   hp: 0
   speed: 0
   attack: 0

@@ -8,6 +8,8 @@ public class DashSkillDataSO : UtilitySkillDataSO
 {
     public GameObject dashEffect;
     public float distance = 20f;   // 경로를 따라 앞으로 이동할 거리(월드). 칸 단위로 쓰려면 board.CellSize를 곱해 넘길 것.
+
+    public override bool MovesSelf => true;   // 속박 중 시전 불가, 대시 중 속박되면 그 자리에서 중단
     public override async UniTask Execute(EnemyBase owner, CancellationToken token)
     {
         if (owner == null || !owner.HasPath || owner.Board == null) return;
@@ -36,7 +38,7 @@ public class DashSkillDataSO : UtilitySkillDataSO
         try
         {
             if (owner.animator != null) owner.animator.speed = 4f;
-            bool blocked = false;
+            bool stopped = false;   // 저지 또는 속박/기절로 중도 정지 — 착지 스냅을 건너뛰는 표시
             Vector3 cur = start;
             int seg = 0;
             // total<=0(이미 경로 끝 등)이면 이동할 것이 없어 루프를 건너뛴다(무한루프 방지).
@@ -44,8 +46,12 @@ public class DashSkillDataSO : UtilitySkillDataSO
             EnemySoundManager.Play("DashSkill");
             while (moveSpeed > 0f && seg < points.Count && owner != null && !owner.IsDead)
             {
-                if (owner.Board.IsBlocked(owner.gameObject)) { blocked = true; break; }
+                if (owner.Board.IsBlocked(owner.gameObject)) { stopped = true; break; }
                 // 저지당하면(대시 시작 시 이미 저지 or 대시 중 적을 만남) 그 자리에서 대시 중단.
+
+                // 대시 도중 속박/기절이 걸리면 같은 처리로 그 자리에 멈춘다.
+                // 착지 지점으로 스냅하지 않고 ResumeFromNearest로 현재 위치에서 경로를 이어받는다.
+                if (owner.CannotMove) { stopped = true; break; }
 
                 // 이번 프레임 이동량을 코너를 넘어가며 소진 — 코너에서 속도가 꺾이지 않게.
                 float budget = moveSpeed * Time.deltaTime;
@@ -64,14 +70,14 @@ public class DashSkillDataSO : UtilitySkillDataSO
             
             if (owner != null && !owner.IsDead)
             {
-                if (!blocked)
+                if (!stopped)
                 {
                     owner.transform.position = end;                 // 완주했을 때만 착지 지점으로 스냅
                     if (landIndex >= 0) owner.ResumeFrom(landIndex); // 정상 이동을 착지 지점부터 이어받기
                 }
                 else
                 {
-                    owner.ResumeFromNearest(); // 저지로 멈춤 — 현재 위치에서 경로 이어가기(멈춘 자리 유지)
+                    owner.ResumeFromNearest(); // 저지·속박으로 멈춤 — 현재 위치에서 경로 이어가기(멈춘 자리 유지)
                 }
             }
         }
