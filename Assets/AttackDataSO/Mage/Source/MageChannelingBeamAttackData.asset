@@ -12,20 +12,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3e63ecebd4cd6e044a8a127ea3df05bc, type: 3}
   m_Name: MageChannelingBeamAttackData
   m_EditorClassIdentifier: Assembly-CSharp::AttackDataSO
-  range: 3
+  range: 7
   rangeShape: 0
   unattackableTarget: 1
   attackType: 0
-  attackPer: 1
+  attackPer: 0.1
   attackCount: 3
   targetMode: 1
   targetCount: 3
   shotInterval: 0
   areaShape: 3
-  areaRange: 1
+  areaRange: 0
   lineLength: 2
   chainRange: 3
-  chainCount: 5
+  chainCount: 0
   chainFalloff: 0.5
   chainEffectPrefab: {fileID: 2165654375957946359, guid: cc1583fbd4918b6488ed6980f451fe61, type: 3}
   chainEffectLifetime: 0.3
@@ -38,7 +38,7 @@ MonoBehaviour:
   animTriggers:
   - Channeling
   projectilePrefab: {fileID: 0}
-  clipLength: 0
+  clipLength: 0.33333334
   buffList:
   - statType: 5
     modifierType: 1
