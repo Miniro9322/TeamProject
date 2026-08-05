@@ -1,5 +1,5 @@
+using System;
 using Cysharp.Threading.Tasks;
-using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using VContainer;
@@ -8,9 +8,12 @@ public class DayNightButton : MonoBehaviour
 {
     [SerializeField] private Button button;
     [SerializeField] private RectTransform icon;
-    [SerializeField] private TextMeshProUGUI text;
     private GameManager gameManager;
     private EnviromentManager enviromentManager;
+
+    // Quaternion.Slerp은 180도 회전에서 어느 쪽으로 돌지가 애매해서(부동소수점에 따라 달라짐),
+    // 방향을 확실히 통제하려고 각도를 직접 실수로 누적한다(래핑 없이 계속 더함).
+    private float currentZ = 0f;
 
     [Inject]
     private void Construct(GameManager gameManager, EnviromentManager enviromentManager)
@@ -22,52 +25,66 @@ public class DayNightButton : MonoBehaviour
     private void Start()
     {
         button.onClick.AddListener(OnButton);
-        enviromentManager.OnDay += EnableButton;
+        // EnviromentManager.OnDay는 낮 전환이 "끝난 뒤" 불리는 이벤트라(빛이 이미 다 바뀐 다음),
+        // 그걸 쓰면 아이콘 회전이 실제 빛 전환보다 한 박자 늦게 시작된다. GameManager.ChangeToDay는
+        // 전환이 "시작되는" 시점에 불리고 EnviromentManager도 이걸로 빛 전환을 시작하므로,
+        // 여기 구독하면 실제 빛 변화와 아이콘 회전이 동시에 시작된다.
+        gameManager.ChangeToDay += OnDayStart;
     }
 
+    // 낮 -> 밤: 버튼만 바로 비활성화한다. 아이콘은 계속 떠있는 채로 -180도만큼 돈다(안 숨김).
     private void OnButton()
     {
         gameManager.OnNight();
-        if(text != null) text.gameObject.SetActive(false);
-        RotateThenHide().Forget();
+        button.gameObject.SetActive(false);
+        RotateIconBy(180f, null).Forget();
     }
 
-    // EnviromentManager.TransitionRoutine과 같은 시간(TransitionDuration) 동안 아이콘을 180도 돌리고,
-    // 끝나면 숨긴다 - 지금까지는 클릭하자마자 바로 숨겨서 회전이 보일 틈이 없었다.
-    private async UniTaskVoid RotateThenHide()
+    // 밤 -> 낮: 아이콘이 계속 같은 방향으로 -180도 더 돌고 나면 버튼을 다시 켠다(왕복 아니라 계속 한 방향).
+    private void OnDayStart()
     {
-        button.interactable = false; // 회전 끝나기 전 중복 클릭 방지
-
-        if (icon != null)
+        RotateIconBy(180f, () =>
         {
-            float duration = enviromentManager.TransitionDuration;
-            Quaternion start = icon.localRotation;
-            Quaternion target = start * Quaternion.Euler(0f, 0f, 180f);
+            button.gameObject.SetActive(true);
+            button.interactable = true;
+        }).Forget();
+    }
 
-            float elapsed = 0f;
-            while (elapsed < duration)
-            {
-                elapsed += Time.unscaledDeltaTime;
-                icon.localRotation = Quaternion.Slerp(start, target, elapsed / duration);
-                await UniTask.Yield();
-            }
-            icon.localRotation = target;
+    // EnviromentManager.TransitionRoutine과 같은 시간(TransitionDuration) 동안 아이콘을 deltaZ만큼 돌린다.
+    private async UniTaskVoid RotateIconBy(float deltaZ, Action onComplete)
+    {
+        if (icon == null)
+        {
+            onComplete?.Invoke();
+            return;
         }
 
-        gameObject.SetActive(false);
-    }
+        float duration = enviromentManager.TransitionDuration;
+        float startZ = currentZ;
+        float targetZ = currentZ + deltaZ;
 
-    private void EnableButton()
-    {
-        gameObject.SetActive(true);
-        button.interactable = true;
-        if (icon != null) icon.localRotation = Quaternion.identity; // 다음 낮에 다시 누를 수 있게 원위치
-        if (text != null) text.gameObject.SetActive(true);
+        float elapsed = 0f;
+        while (elapsed < duration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            currentZ = Mathf.Lerp(startZ, targetZ, elapsed / duration);
+            icon.localRotation = Quaternion.Euler(0f, 0f, currentZ);
+            await UniTask.Yield();
+        }
+        currentZ = targetZ;
+        // 한 바퀴(360도) 돌면 값을 0~-360 범위로 접어서 계속 불어나지 않게 한다 - 같은 방향으로 계속
+        // 돌되, 시각적으로는 완전히 한 바퀴 돈 자리라 티가 안 난다.
+        if (currentZ <= -360f || currentZ >= 360f)
+        {
+            currentZ %= 360f;
+        }
+        icon.localRotation = Quaternion.Euler(0f, 0f, currentZ);
+        onComplete?.Invoke();
     }
 
     private void OnDestroy()
     {
         button.onClick.RemoveAllListeners();
-        enviromentManager.OnDay -= EnableButton;
+        gameManager.ChangeToDay -= OnDayStart;
     }
 }
