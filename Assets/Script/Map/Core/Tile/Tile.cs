@@ -99,7 +99,7 @@ public partial class Tile : MonoBehaviour
     {
         OccupantObject = go;
         State.Occupant = kind;
-        EnterFire(go);
+
     }
 
     //배치되어 있는 유닛을 해제 후 반환.
@@ -109,7 +109,7 @@ public partial class Tile : MonoBehaviour
 
         OccupantObject = null;
         State.Occupant = OccupantKind.None;
-        ExitFire(go);
+
 
         return go;
     }
@@ -129,7 +129,7 @@ public partial class Tile : MonoBehaviour
         }
 
         _enemies.Add(enemy);
-        EnterFire(enemy);
+        FireReceiver.ReceiveEntry(this, enemy.transform);
     }
 
     //타일에 적 이탈 등록
@@ -140,29 +140,9 @@ public partial class Tile : MonoBehaviour
             return;
         }
 
-        ExitFire(enemy);
+        FireReceiver.ReceiveExit(this, enemy.transform);
     }
 
-    //불 칸일 때만 이 유닛을 불 줄 맨 뒤에 세운다.
-    private void EnterFire(GameObject unitObject)
-    {
-        if (!IsFire)
-        {
-            return;
-        }
 
-        BurnClock.EnterFire(this, unitObject);
-    }
-
-    //불 칸일 때만 이 유닛을 불 줄에서 뺀다.
-    private void ExitFire(GameObject unitObject)
-    {
-        if (!IsFire)
-        {
-            return;
-        }
-
-        BurnClock.ExitFire(this, unitObject);
-    }
 }
     
