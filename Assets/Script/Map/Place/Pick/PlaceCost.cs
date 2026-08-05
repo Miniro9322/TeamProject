@@ -19,8 +19,8 @@ public readonly struct PlaceCost
             Citizens = citizens;
         }
 
-    // 슬롯 하나의 비용을 읽는다. 종류를 모르거나 비용을 못 찾으면 false.
-    // 종류마다 비용을 든 컴포넌트가 다르다 — 그 짝을 여기 한 곳에만 적는다(부르는 쪽마다 적으면 갈린다).
+    // 슬롯 하나의 비용을 읽는다. 비용을 못 찾으면 false.
+    // 생산 시설·집은 기반시설 UI로 옮겨가 여기선 더 이상 다루지 않는다 - 남은 건 Hero뿐이다.
     public static bool TryGet(Placeable slot, out PlaceCost cost)
     {
         cost = default;
@@ -30,29 +30,9 @@ public readonly struct PlaceCost
             return false;   // 프리팹 없는 슬롯은 저작 실수 — UnitPlacer.CheckPrefab이 배치 시점에 알린다
         }
 
-        switch (slot.kind)
+        if (slot.prefab.TryGetComponent(out Hero hero))
         {
-            case OccupantKind.MeleeHero:
-            case OccupantKind.RangedHero:
-                if (slot.prefab.TryGetComponent(out Hero hero))
-                {
-                    cost = new PlaceCost(hero.Cost, hero.CitizenAmount);
-                }
-                break;
-
-            case OccupantKind.Building:
-                if (slot.prefab.TryGetComponent(out House house))
-                {
-                    cost = new PlaceCost(house.Resources, 0);
-                }
-                break;
-
-            case OccupantKind.Resource:
-                if (slot.prefab.TryGetComponent(out ProductionFacility facility))
-                {
-                    cost = new PlaceCost(facility.GetConstructCost(), 0);
-                }
-                break;
+            cost = new PlaceCost(hero.Cost, hero.CitizenAmount);
         }
 
         return cost.Resources != null;

@@ -43,7 +43,7 @@ public class StageInfoFollow : MonoBehaviour
 
         // panel은 위치만 옮기는 껍데기다. 여기에 Image가 붙어 있으면(UI>Panel 기본값이 전체 화면 스트레치)
         // 화면 전체 클릭을 먹어 IsPointerOverGameObject()가 항상 true가 되고,
-        // MapCommand→BuildingUiLink 경로가 막혀 타일·바닥 클릭이 전부 죽는다.
+        // MapCommand의 UI 위 클릭 체크가 막혀 타일·바닥 클릭이 전부 죽는다.
         if (panel != null && panel.TryGetComponent(out UnityEngine.UI.Graphic g))
         {
             if (g.raycastTarget)

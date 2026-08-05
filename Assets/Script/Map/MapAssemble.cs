@@ -33,11 +33,10 @@ public class MapAssemble : MonoBehaviour
         PlaceFinder finder = new PlaceFinder(pointerPick, palette, placeYOffset);
         UnitReplace replace = new UnitReplace(mapGame.Units);
 
-        BuildingUiLink buildingUi = new BuildingUiLink();
-        buildingUi.ui = mapGame.Ui;
-        buildingUi.rule = mapGame.Rule;
+        DayNightBuildRule dayNightRule = new DayNightBuildRule();
+        dayNightRule.rule = mapGame.Rule;
 
-        skillCast = new HeroSkillCastController { buildingUi = buildingUi };
+        skillCast = new HeroSkillCastController { dayNightRule = dayNightRule };
 
         RangeInfo rangeInfo = new RangeInfo();
         RangeTileData rangeStore = new RangeTileData();
@@ -66,7 +65,7 @@ public class MapAssemble : MonoBehaviour
         action.placer = mapGame.Placer;
         action.remover = new UnitRemover(mapGame.Units, mapGame.HeroRoster);
         action.replace = replace;
-        action.buildingUi = buildingUi;
+        action.dayNightRule = dayNightRule;
         action.view = view;
         action.heroRoster = mapGame.HeroRoster;
         action.skillCast = skillCast;
@@ -76,7 +75,6 @@ public class MapAssemble : MonoBehaviour
         command.dragDetect = new DragDetect(dragPixels);
         command.rightDragDetect = new DragDetect(dragPixels);
         command.replace = replace;
-        command.buildingUi = buildingUi;
         command.action = action;
         ghost = new PlaceGhost(ghostAlpha);
         command.ghost = ghost;

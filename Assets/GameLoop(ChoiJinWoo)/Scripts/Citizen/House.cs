@@ -1,43 +1,29 @@
-using System;
-using System.Collections.Generic;
-using UnityEngine;
-using VContainer;
-
-public class House : MonoBehaviour, IPlaceAble
+// 맵 배치가 사라지면서 GameObject/Transform이 필요 없어져 일반 클래스로 전환했다.
+// 예전 Start()/OnDestroy()가 하던 일을 Init()/Release()로 명시적으로 호출한다.
+public class House
 {
-    [SerializeField] private int maxCitizenAmount;
-    [Header("건설에 필요한 자원")]
-    [SerializeField] private List<ResourceCost> cost;
-    [Header("건물 이름")]
-    [SerializeField] private string houseName;
-    [Header("건물 설명")]
-    [SerializeField] private string houseInfo;
-    private CitizenManager manager;
-    private ResourcesManager resourcesManager;
-    private MapBoard board;
-    public (ProductionType Type, int Amount)[] Resources
+    private readonly HouseConfig config;
+    private readonly CitizenManager citizenManager;
+    private readonly ResourcesManager resourcesManager;
+
+    public string HouseName => config.HouseName;
+    public string HouseInfo => config.HouseInfo;
+    public (ProductionType Type, int Amount)[] Resources => config.Resources;
+
+    public House(HouseConfig config, CitizenManager citizenManager, ResourcesManager resourcesManager)
     {
-        get
-        {
-            var temp = new (ProductionType, int)[cost.Count];
-
-            for (int i = 0; i < cost.Count; i++)
-            {
-                temp[i] = (cost[i].Type, -cost[i].Amount);
-            }
-
-            return temp;
-        }
+        this.config = config;
+        this.citizenManager = citizenManager;
+        this.resourcesManager = resourcesManager;
     }
 
-    public MapBoard Board => board;
-    public string HouseName => houseName;
-    public string HouseInfo => houseInfo;
+    public void Init()
+    {
+        citizenManager.IncreaseMaxCitizen(config.MaxCitizenAmount);
+        resourcesManager.ProductChanged(Resources);
+    }
 
-    public event Action OnBreak;
-    public event Action OnResur;
-
-    public void OnDestroy()
+    public void Release()
     {
         var resources = Resources;
         var refund = new (ProductionType Type, int Amount)[resources.Length];
@@ -45,30 +31,6 @@ public class House : MonoBehaviour, IPlaceAble
         {
             refund[i] = (resources[i].Type, -resources[i].Amount);
         }
-
         resourcesManager.ProductChanged(refund);
-    }
-
-    public void SetBoard(MapBoard board)
-    {
-        this.board = board;
-    }
-
-    [Inject]
-    private void Construct(CitizenManager manager)
-    {
-        this.manager = manager;
-    }
-
-    [Inject]
-    private void Construct(ResourcesManager resourcesManager)
-    {
-        this.resourcesManager = resourcesManager;
-    }
-
-    private void Start()
-    {
-        manager.IncreaseMaxCitizen(maxCitizenAmount);
-        resourcesManager.ProductChanged(Resources);
     }
 }

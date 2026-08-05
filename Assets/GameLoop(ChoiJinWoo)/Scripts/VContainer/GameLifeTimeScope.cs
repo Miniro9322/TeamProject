@@ -10,7 +10,8 @@ public class GameLifeTimeScope : LifetimeScope
     [SerializeField] private EnviromentManager EnviromentManagerPrefab;
     [SerializeField] private GameManager GameManagerPrefab;
     [SerializeField] private FacilityManager FacilityManager;
-    [SerializeField] private BuildingPrefabRegistry buildingPrefabRegistry;
+    [SerializeField] private ProductionEconomyConfig economyConfig;
+    [SerializeField] private ResourceIconSet resourceIconSet;
     [SerializeField] private Light sunLight;
 
     protected override void Configure(IContainerBuilder builder)
@@ -29,13 +30,15 @@ public class GameLifeTimeScope : LifetimeScope
         builder.RegisterComponentInNewPrefab(UiManagerPrefab, Lifetime.Singleton).AsSelf();
         builder.RegisterComponentInNewPrefab(EnviromentManagerPrefab, Lifetime.Singleton).AsSelf();
         builder.RegisterComponentInNewPrefab(GameManagerPrefab, Lifetime.Singleton).AsSelf();
-        builder.RegisterInstance(buildingPrefabRegistry);
+        builder.RegisterInstance(economyConfig);
+        builder.RegisterInstance(resourceIconSet);
         builder.RegisterComponentOnNewGameObject<PoolManager>(Lifetime.Singleton).AsSelf();
-        builder.Register<BuildingPool>(Lifetime.Singleton);
         builder.Register<FacilityManager>(Lifetime.Singleton).AsSelf();
+        builder.Register<BaseConstructor>(Lifetime.Singleton).AsSelf();
         builder.Register<BuffManager>(Lifetime.Singleton).As<ITickable>().AsSelf();
         builder.Register<HeroRoster>(Lifetime.Singleton).AsSelf();
         builder.Register<UpgradeState>(Lifetime.Singleton);
+        builder.Register<UiPanelStack>(Lifetime.Singleton).AsSelf();
 
         if (sunLight != null)
         {
@@ -51,6 +54,11 @@ public class GameLifeTimeScope : LifetimeScope
         builder.RegisterComponentInHierarchy<MapGame>();
         builder.RegisterComponentInHierarchy<AddCitizen>();
         builder.RegisterComponentInHierarchy<SpawnerManager>().AsSelf();
+        builder.RegisterComponentInHierarchy<FacilityBuildChoicePanel>();
+        builder.RegisterComponentInHierarchy<CenterHubPanel>();
+        builder.RegisterComponentInHierarchy<RegionOverviewPanel>();
+        builder.RegisterComponentInHierarchy<RegionDetailPanel>();
+        builder.RegisterComponentInHierarchy<BuildingPanel>();
 
         // PoolManager는 RegisterComponentOnNewGameObject라 아무도 Resolve하지 않으면 실제로 생성되지 않는다(lazy).
         // 여기서 강제로 한 번 Resolve해 _resolver가 붙은 상태로 즉시 만들어지게 한다.

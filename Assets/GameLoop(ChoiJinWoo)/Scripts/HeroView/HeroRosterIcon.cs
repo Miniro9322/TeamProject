@@ -25,9 +25,9 @@ public class HeroRosterIcon : MonoBehaviour
         button.onClick.AddListener(() => this.onClick?.Invoke(this.entry, this));
     }
 
-    public void UpdateLevel(Hero hero)
+    public void UpdateLevel(int statLevel, int skillLevel)
     {
-        statLevelText.text = $"LV.{hero.StatLevel}";
-        skillLevelText.text = $"LV.{hero.SkillLevel}";
+        statLevelText.text = $"LV.{statLevel}";
+        skillLevelText.text = $"LV.{skillLevel}";
     }
 }
