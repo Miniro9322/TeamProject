@@ -60,6 +60,17 @@ public class EnemyLanes : MonoBehaviour
         ApplyLanes(built);
     }
 
+    // 이 일차로 다시 계산한다. 날짜가 바뀌면 MapAssemble이 부른다.
+    public void RefreshForDay(int day)
+    {
+        if (routes != null)
+        {
+            routes.SetActiveDay(day);
+        }
+
+        RefreshLanes();
+    }
+
     // 레인 계산에 사용할 ILaneBuilder 구현체를 교체합니다.
     public void SetBuilder(ILaneBuilder value)
     {

@@ -50,6 +50,8 @@ public class MapMakerWindow : EditorWindow
     private bool _shelfOpen = true;
     private Vector2 _shelfScroll;
     private MapTool _tool = MapTool.Select;
+    // 지금 창에서 보고 고치는 일차. 0 = 공통.
+    private int _day;
     private List<TileTheme> _themes;
     private TileTheme _theme;
     private GameObject _pick;
@@ -61,6 +63,7 @@ public class MapMakerWindow : EditorWindow
     // 편집 중인 레인의 신원. 좌표가 아니라 지정 항목 참조라 같은 스폰에 레인이 여러 개여도 갈린다.
     private RouteData _routeData;
     private int _routeModule = -1;
+    private int _routeDay;
     private RouteMode _routeMode = RouteMode.Draw;
 
     // 그리는 중인 한 획. 스폰 칸에서 눌렀을 때만 열리고, 손을 뗄 때까지 지나간 칸이 쌓인다.
@@ -176,6 +179,8 @@ public class MapMakerWindow : EditorWindow
         // 저작 경로를 그대로 반영해 그린다. 그리기 전에 사전을 맞춰야 되돌리기 직후에도 선이 진짜를 말한다.
         RouteConfig routes = RouteEdit.Find(module);
         RouteEdit.Sync(routes);
+        DrawDayTabs(routes);
+        RouteEdit.SetDay(routes, _day);
         List<LaneData> lanes = LaneQuery.BuildLanes(cells, routes);
         _lanes = lanes;
 
@@ -219,7 +224,7 @@ public class MapMakerWindow : EditorWindow
             }
         }
 
-        List<string> problems = TileAuthorRule.FindProblems(cells, lanes, tiles.Count);
+        List<string> problems = TileAuthorRule.FindProblems(cells, lanes, tiles.Count, _day);
 
         int overrideCount = overrides?.Count ?? 0;
         DrawActionPreview(module, cells);
@@ -304,6 +309,47 @@ public class MapMakerWindow : EditorWindow
         }
     }
 
+    // 일차 탭. 이미 쓰인 날짜만 버튼으로 늘어놓고, 공통은 항상 맨 앞이다.
+    // 아직 탭이 없는 날짜는 오른쪽 숫자칸에 직접 입력해서 간다.
+    private void DrawDayTabs(RouteConfig routes)
+    {
+        using (new EditorGUILayout.HorizontalScope(EditorStyles.toolbar))
+        {
+            DayButton("공통", 0);
+
+            if (routes != null)
+            {
+                IReadOnlyList<int> usedDays = routes.UsedDays;
+                for (int i = 0; i < usedDays.Count; i++)
+                {
+                    DayButton($"{usedDays[i]}일차", usedDays[i]);
+                }
+            }
+
+            GUILayout.FlexibleSpace();
+
+            GUILayout.Label("일차", EditorStyles.miniLabel, GUILayout.Width(28));
+            int typed = EditorGUILayout.IntField(_day, EditorStyles.toolbarTextField, GUILayout.Width(30));
+
+            if (typed != _day)
+            {
+                _day = Mathf.Max(typed, 0);
+                Relayout(); // 날짜가 바뀌면 격자·경로·문제가 전부 그 날짜 것으로 바뀐다
+            }
+        }
+    }
+
+    private void DayButton(string label, int day)
+    {
+        bool pressed = GUILayout.Toggle(_day == day, label, EditorStyles.toolbarButton, GUILayout.Width(52));
+
+        if (pressed && _day != day)
+        {
+            _day = day;
+            Relayout();
+        }
+    }
+
     // 도구 줄. 팔레트(무엇을)와 도구(어떻게)를 나눠, 같은 클릭이 상황마다 다른 뜻이 되지 않게 한다.
     private void DrawToolRow()
     {
@@ -379,12 +425,12 @@ public class MapMakerWindow : EditorWindow
     {
         RouteConfig config = RouteEdit.Ensure(_modules[_moduleIndex]);
 
-        if (config.TryGetRoutes(spawn.Coord, out List<RouteData> found))
+        if (config.TryGetOwnRoute(spawn.Coord, out List<RouteData> found))
         {
             return found[0];
         }
 
-        return RouteEdit.AddRoute(config, spawn.Coord);
+        return RouteEdit.AddRoute(config, spawn.Coord, _day);
     }
 
     // 편집 중인 경로의 목록 번호. 저작 API가 번호로 집는다.
@@ -399,18 +445,31 @@ public class MapMakerWindow : EditorWindow
         return _routeData == null;
     }
 
-    // 모듈을 갈아타면 편집 중이던 스폰을 놓는다 — 남의 모듈 좌표로 노드를 찍지 않는다.
+    // 모듈을 갈아타거나 날짜를 바꾸면 편집 중이던 경로를 놓는다 —
+    // 남의 모듈 좌표나 다른 날짜의 경로를 그대로 붙잡고 고치지 않는다.
     private void SyncRoute()
     {
-        if (_routeModule == _moduleIndex)
+        if (IsRouteContextCurrent())
         {
             return;
         }
 
         _routeModule = _moduleIndex;
+        _routeDay = _day;
         _routeData = null;
         _routeDrawing = false;
         _stroke.Clear();
+    }
+
+    // 지금 고른 경로가 지금 모듈·날짜 것과 같은가.
+    private bool IsRouteContextCurrent()
+    {
+        if (_routeModule != _moduleIndex)
+        {
+            return false;
+        }
+
+        return _routeDay == _day;
     }
 
     private void ToolButton(MapTool tool)
@@ -630,6 +689,7 @@ public class MapMakerWindow : EditorWindow
 
     // 켜진 붓을 다시 누르면 아무 붓도 안 든 상태로 돌아간다 —
     // 끄는 길이 없으면 한번 고른 사람은 다른 붓으로 갈아타는 것 말고는 빠져나올 수 없다.
+    // 붓을 고르는 순간 칠하기 모드로도 같이 넘어간다 — 붓만 고르고 격자를 눌러도 안 칠해지는 혼란을 없앤다.
     private void PickBrush(MapBrush brush, bool on)
     {
         _brush = MapBrush.None;
@@ -637,6 +697,7 @@ public class MapMakerWindow : EditorWindow
         if (on)
         {
             _brush = brush;
+            _tool = MapTool.Paint;
         }
 
         Relayout(); // 붓에 따라 설명 줄이 붙거나 떨어진다

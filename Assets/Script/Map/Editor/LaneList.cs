@@ -151,7 +151,7 @@ public static class LaneList
             {
                 if (GUILayout.Button("+갈래", EditorStyles.miniButton, GUILayout.Width(44)))
                 {
-                    return RouteEdit.AddRoute(routes, lane.Start.Coord);
+                    return RouteEdit.AddRoute(routes, lane.Start.Coord, routes.SelectedDay);
                 }
             }
 
