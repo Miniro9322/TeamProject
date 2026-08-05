@@ -17,9 +17,9 @@ public static class FlyingPathfinder
         if (!board.TryGetCell(board.WorldToCell(startWorld), out Tile startTile)) return list;
         List<Tile> path = Pathfinder.FindPath(
             new[] { startTile },
-            t => t.Coord == goalCell,
-            t => AllNeighbors(board, t),
-            t => GridCalculator.GetDistance(t.Coord, goalCell));
+            tile => tile.Coord == goalCell,
+            PassInner,
+            tile => GridCalculator.GetDistance(tile.Coord, goalCell));
 
         if (path == null) return list;
         float flightY = startWorld.y + flightHeight;
@@ -31,10 +31,9 @@ public static class FlyingPathfinder
         return list;
     }
     
-    private static IEnumerable<Tile> AllNeighbors(MapBoard board, Tile tile)
+    // 공중 유닛은 지형(언덕·벽)을 가리지 않지만, 외곽 장식 줄은 판 밖이라 지나지 않는다.
+    private static bool PassInner(Tile tile)
     {
-        foreach (Vector2Int dir in GridCalculator.Directions)
-            if (board.TryGetCell(tile.Coord + dir, out Tile nb))
-                yield return nb;
+        return !tile.IsSpecial;
     }
 }

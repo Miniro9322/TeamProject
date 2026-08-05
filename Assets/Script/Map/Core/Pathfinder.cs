@@ -4,115 +4,97 @@ using System;
  //탐색 알고리즘(임시용)
 public static class Pathfinder
 {
- 
-    public static List<T> FindPath<T>(
-        IEnumerable<T> sources,
-        Func<T, bool> isGoal,
-        Func<T, IEnumerable<T>> getNeighbors,
-        Func<T, int> heuristic = null)
+    // 출발 칸까지 온 비용(아직 한 칸도 안 움직였다)
+    private const int StartCost = 0;
+
+    // 이웃 칸으로 한 칸 옮기는 비용
+    private const int StepCost = 1;
+
+    // 시작 칸에서 목표 칸까지 가장 짧은 길을 찾는다(A*). 이웃은 타일이 미리 이어 둔 목록에서 읽는다.
+    public static List<Tile> FindPath(
+        IEnumerable<Tile> sources,
+        Func<Tile, bool> isGoal,
+        Func<Tile, bool> canPass,
+        Func<Tile, int> heuristic)
     {
-        return heuristic == null
-            ? Bfs(sources, isGoal, getNeighbors)
-            : AStar(sources, isGoal, getNeighbors, heuristic);
-    }
+        var cameFrom = new Dictionary<Tile, Tile>();
+        var bestCost = new Dictionary<Tile, int>();
+        var open = new List<Tile>();
 
-    private static List<T> Bfs<T>(
-        IEnumerable<T> sources, Func<T, bool> isGoal, Func<T, IEnumerable<T>> getNeighbors)
-    {
-        var cameFrom = new Dictionary<T, T>();
-        var visited = new HashSet<T>();
-        var queue = new Queue<T>();
-
-        foreach (T s in sources)
+        foreach (Tile source in sources)
         {
-            if (!visited.Add(s)) continue;
-            if (isGoal(s)) return new List<T> { s };
-            queue.Enqueue(s);
-        }
-
-        while (queue.Count > 0)
-        {
-            T current = queue.Dequeue();
-            foreach (T next in getNeighbors(current))
+            if (bestCost.ContainsKey(source))
             {
-                if (!visited.Add(next)) continue;
-                cameFrom[next] = current;
-                if (isGoal(next)) return Reconstruct(cameFrom, next);
-                queue.Enqueue(next);
+                continue;
             }
-        }
 
-        return null;
-    }
-    private static List<T> AStar<T>(
-        IEnumerable<T> sources, Func<T, bool> isGoal, Func<T, IEnumerable<T>> getNeighbors, Func<T, int> heuristic)
-    {
-        var cameFrom = new Dictionary<T, T>();
-        var gScore = new Dictionary<T, int>();
-        var open = new List<T>();
+            if (isGoal(source))
+            {
+                return new List<Tile> { source };
+            }
 
-        foreach (T s in sources)
-        {
-            if (gScore.ContainsKey(s)) continue;
-            if (isGoal(s)) return new List<T> { s };
-            gScore[s] = 0;
-            open.Add(s);
+            bestCost[source] = StartCost;
+            open.Add(source);
         }
 
         while (open.Count > 0)
         {
-            
-            int best = 0;
-            int bestF = gScore[open[0]] + heuristic(open[0]);
-            for (int i = 1; i < open.Count; i++)
+            int pick = 0;
+            int pickScore = bestCost[open[0]] + heuristic(open[0]);
+
+            for (int index = 1; index < open.Count; index++)
             {
-                int f = gScore[open[i]] + heuristic(open[i]);
-                if (f < bestF) { bestF = f; best = i; }
+                int score = bestCost[open[index]] + heuristic(open[index]);
+                if (score < pickScore)
+                {
+                    pickScore = score;
+                    pick = index;
+                }
             }
 
-            T current = open[best];
-            if (isGoal(current)) return Reconstruct(cameFrom, current);
-            open.RemoveAt(best);
-
-            int g = gScore[current];
-            foreach (T next in getNeighbors(current))
+            Tile current = open[pick];
+            if (isGoal(current))
             {
-                int tentative = g + 1;
-                if (gScore.TryGetValue(next, out int known) && tentative >= known) continue;
+                return Reconstruct(cameFrom, current);
+            }
 
-                cameFrom[next] = current;
-                gScore[next] = tentative;
-                if (!open.Contains(next)) open.Add(next);
+            open.RemoveAt(pick);
+            int reached = bestCost[current] + StepCost;
+
+            foreach (Tile neighbor in current.NeighborTiles)
+            {
+                if (!canPass(neighbor))
+                {
+                    continue;
+                }
+
+                if (bestCost.TryGetValue(neighbor, out int known) && reached >= known)
+                {
+                    continue;
+                }
+
+                cameFrom[neighbor] = current;
+                bestCost[neighbor] = reached;
+
+                if (!open.Contains(neighbor))
+                {
+                    open.Add(neighbor);
+                }
             }
         }
 
         return null;
     }
 
-   
-    public static int ReachableCount<T>(IEnumerable<T> sources, Func<T, IEnumerable<T>> getNeighbors)
+    // 도착 칸에서 온 길을 거꾸로 되짚어 스폰부터의 순서로 편다.
+    private static List<Tile> Reconstruct(Dictionary<Tile, Tile> cameFrom, Tile goal)
     {
-        var visited = new HashSet<T>();
-        var queue = new Queue<T>();
-        foreach (T s in sources) if (visited.Add(s)) queue.Enqueue(s);
+        var path = new List<Tile> { goal };
+        Tile current = goal;
 
-        while (queue.Count > 0)
+        while (cameFrom.TryGetValue(current, out Tile previous))
         {
-            T current = queue.Dequeue();
-            foreach (T next in getNeighbors(current))
-                if (visited.Add(next)) queue.Enqueue(next);
-        }
-
-        return visited.Count;
-    }
-
-    private static List<T> Reconstruct<T>(Dictionary<T, T> cameFrom, T goal)
-    {
-        var path = new List<T> { goal };
-        T current = goal;
-        while (cameFrom.TryGetValue(current, out T prev))
-        {
-            current = prev;
+            current = previous;
             path.Add(current);
         }
 
