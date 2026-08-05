@@ -219,6 +219,18 @@ public class TileGridView
             EditorGUI.DrawRect(Inset(rect, cellPixels * 0.28f), mark);
         }
 
+        // 헤엄 칸은 지형이 지상이라 바탕색이 같다 — 아래 띠로 붓과 상관없이 늘 보이게 한다.
+        if (tile.State.Pass == PassType.Swim)
+        {
+            DrawSwim(rect, cellPixels, lit);
+        }
+
+        // 불 칸도 지형색이 지상과 같다 — 헤엄의 아래 띠와 겹치지 않게 오른쪽 세로 띠로 둔다.
+        if (tile.IsFire)
+        {
+            DrawFire(rect, cellPixels, lit);
+        }
+
         if (tile.IsEnemySpawn)
         {
             DrawSpawn(rect, spawnLit);
@@ -239,6 +251,32 @@ public class TileGridView
         }
 
         DrawLetter(rect, tile, cellPixels, lit);
+    }
+
+    // 헤엄 칸 아래 띠. 걷는 적이 못 지나는 칸이라는 표시다.
+    private static void DrawSwim(Rect rect, int cellPixels, bool lit)
+    {
+        Color color = MapMakerPalette.Swim;
+        if (!lit)
+        {
+            color = MapMakerPalette.Dim(color);
+        }
+
+        float band = Mathf.Max(2f, cellPixels * 0.22f);
+        EditorGUI.DrawRect(new Rect(rect.x, rect.yMax - band, rect.width, band), color);
+    }
+
+    // 불 칸 오른쪽 띠. 올라선 유닛이 지속피해를 받는 칸이라는 표시다.
+    private static void DrawFire(Rect rect, int cellPixels, bool lit)
+    {
+        Color color = MapMakerPalette.Fire;
+        if (!lit)
+        {
+            color = MapMakerPalette.Dim(color);
+        }
+
+        float band = Mathf.Max(2f, cellPixels * 0.22f);
+        EditorGUI.DrawRect(new Rect(rect.xMax - band, rect.y, band, rect.height), color);
     }
 
     /// <summary>
@@ -306,6 +344,8 @@ public class TileGridView
             case MapBrush.Special: return tile.Terrain == TerrainType.Special;
             case MapBrush.Empty: return tile.Terrain == TerrainType.Empty;
             case MapBrush.Spawn: return tile.IsEnemySpawn;
+            case MapBrush.Swim: return tile.State.Pass == PassType.Swim;
+            case MapBrush.Fire: return tile.IsFire;
             default: return TileFlagQuery.IsOn(tile, _brush);
         }
     }

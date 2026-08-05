@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -52,6 +53,33 @@ public partial class Tile : MonoBehaviour
     /// <summary>적 통행 가능 지형인가. 고지·빈 타일은 막힘, 지상·본진은 통행(설계: 고지=이동 차단).</summary>
     public bool Walkable => State.Terrain is TerrainType.Ground or TerrainType.Core;
 
+    // 걸어서 오는 상대 기준. 지상이어도 헤엄 칸이면 막힌다.
+    public bool CanWalk => CanPass(PassType.Walk);
+
+    // 이 칸에 걸린 기믹. 길찾기·배치와는 무관하고 올라선 유닛에게만 영향을 준다.
+    public GimmickType Gimmick => State.Gimmick;
+
+    // 불 칸인가. 지나갈 수도, 아군을 놓을 수도 있지만 올라서 있으면 계속 아프다.
+    public bool IsFire => Gimmick == GimmickType.Fire;
+
+    // 이 칸을 지나갈 수 있는지.(현재는 물적도 일반 땅 밟을 수 있게 오픈된 형태)
+    public bool CanPass(PassType way)
+    {
+        return Walkable && (State.Pass == PassType.Walk || way == PassType.Swim);
+    }
+
+    // 이웃 타일(런타임 캐시, 직렬화하지 않음)
+    private Tile[] neighborTiles = Array.Empty<Tile>();
+
+    // 상하좌우에 실제로 있는 타일들. 읽기 전용이라 밖에서 못 바꾼다.
+    public ReadOnlySpan<Tile> NeighborTiles => neighborTiles;
+
+    // TileLink가 이어 준 이웃을 새긴다. 저작 도구가 못 건드리게 같은 어셈블리 안에서만 연다.
+    internal void SetNeighbors(Tile[] tiles)
+    {
+        neighborTiles = tiles;
+    }
+
     public Vector3 WorldTop => new(transform.position.x, _topY, transform.position.z);
 
     /// <summary>MapBoard가 스캔 시 윗면 높이를 캐시해 준다(WorldTop·배치·경로 기준).</summary>
@@ -71,6 +99,7 @@ public partial class Tile : MonoBehaviour
     {
         OccupantObject = go;
         State.Occupant = kind;
+
     }
 
     //배치되어 있는 유닛을 해제 후 반환.
@@ -80,6 +109,7 @@ public partial class Tile : MonoBehaviour
 
         OccupantObject = null;
         State.Occupant = OccupantKind.None;
+
 
         return go;
     }
@@ -93,10 +123,26 @@ public partial class Tile : MonoBehaviour
     //타일에 적 진입 등록
     public void AddEnemy(GameObject enemy)
     {
-        if (!_enemies.Contains(enemy)) _enemies.Add(enemy);
+        if (_enemies.Contains(enemy))
+        {
+            return;
+        }
+
+        _enemies.Add(enemy);
+        FireReceiver.ReceiveEntry(this, enemy.transform);
     }
 
     //타일에 적 이탈 등록
-    public void RemoveEnemy(GameObject enemy) => _enemies.Remove(enemy);
+    public void RemoveEnemy(GameObject enemy)
+    {
+        if (!_enemies.Remove(enemy))
+        {
+            return;
+        }
+
+        FireReceiver.ReceiveExit(this, enemy.transform);
+    }
+
+
 }
     

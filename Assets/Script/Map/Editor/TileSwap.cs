@@ -184,6 +184,8 @@ public static class TileSwap
         now.CanMelee = was.CanMelee;
         now.CanRanged = was.CanRanged;
         now.CanBuild = was.CanBuild;
+        now.Pass = was.Pass;
+        now.Gimmick = was.Gimmick;
         now.Flags = was.Flags;
         now.Occupant = was.Occupant;
 

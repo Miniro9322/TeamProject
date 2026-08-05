@@ -7,6 +7,17 @@ public enum TerrainType
     Empty,  // 장식/미사용 빈 타일(외곽 경계 포함)
     Special // 특수 타일. 이벤트/보상/장식용. 배치 불가
 }
+public enum PassType
+{
+    Walk, // 걸어서 지난다(기본)
+    Swim  // 헤엄쳐야 지난다
+}
+
+public enum GimmickType
+{
+    None, // 아무 일도 없는 평범한 칸(기본)
+    Fire  // 올라선 유닛이 지속피해를 받는다
+}
 
 /// <summary>기존 씬 데이터 호환용 값. 새 코드는 TileState의 명시 필드를 사용한다.</summary>
 public enum TileFlags

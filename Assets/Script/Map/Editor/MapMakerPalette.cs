@@ -69,6 +69,12 @@ public static class MapMakerPalette
     /// <summary>장식 붓 표식 — 지형이 아니라 타일 위에 얹는 것이라 지형색과 겹치지 않는 연두로 둔다.</summary>
     public static readonly Color Decor = new(0.580f, 0.859f, 0.420f);
 
+    /// <summary>헤엄 칸 표식 — 지형색은 지상과 같으므로 이 색 띠로만 갈린다.</summary>
+    public static readonly Color Swim = new(0.361f, 0.620f, 0.980f);
+
+    /// <summary>불 칸 표식 — 헤엄과 같은 이유로 띠로만 갈리며, 물과 정반대 색으로 둔다.</summary>
+    public static readonly Color Fire = new(0.949f, 0.412f, 0.188f);
+
     /// <summary>칸 글자(P·G·H·B) — 지형색 위에서 읽히도록 거의 흰색으로 둔다.</summary>
     public static readonly Color Letter = new(0.945f, 0.945f, 0.945f);
 
