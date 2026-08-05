@@ -23,6 +23,8 @@ public enum EnemyAttribute
     Regeneration = 1 << 4, // 재생: 체력이 빠르게 참
     HitsShield = 1 << 5, //타수 보호막: 데미지1고정으로 일정 타수로만 피해를받음
     Burrow = 1 << 6, //잠행 : 은신이랑 비슷 사막전용
+    Swim = 1 << 7, //수영 : 기믹타일 물 을 지나갈수 있음
+    Flame = 1 << 8, //화염족 : 기믹타일 불에 닿으면 데미지를 받지않고 일시적 강해짐
 }
 // 디버프 종류는 DebuffType(Script/Debuff/DebuffEnum.cs) 하나로 통일했다 — 아이콘도 그걸로 고른다.
 // EnemyDebuffKind는 삭제됐다. 종류가 늘면 DebuffEnum에 비트를 추가하면 된다.

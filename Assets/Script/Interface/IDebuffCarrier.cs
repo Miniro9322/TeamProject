@@ -11,4 +11,14 @@ public interface IDebuffCarrier
 
     /// <summary>걸리지 않는 디버프 종류들(OR 조합). 없으면 DebuffType.None.</summary>
     DebuffType ImmuneDebuffs { get; }
+
+    /// <summary>
+    /// ImmuneDebuffs로 막힌 디버프를 대상에게 알린다. "막았다는 사실 자체가 효과"인 특성에 쓴다 —
+    /// 화염족(Flame)이 점화를 튕겨내는 대신 그 지속시간만큼 재생을 얻는 식.
+    /// duration은 오버라이드가 적용된 최종값, 즉 막히지 않았다면 걸렸을 시간이다.
+    ///
+    /// 기본 구현이 비어 있으므로 새 구현체(Hero 등)는 이 멤버를 몰라도 된다 —
+    /// 위 두 줄만 구현하면 여전히 장부·면역이 켜진다.
+    /// </summary>
+    void OnDebuffBlocked(DebuffType type, float duration) { }
 }

@@ -36,6 +36,8 @@ Golem,골렘,Golem,ゴーレム
 Golem_Desc,펠루시아를 수호하는 고대병기 대륙을 침입한 인간들을 향해 분노한거 같다.,An ancient weapon that guards Felucia. It seems enraged at the humans who invaded the continent.,フェルシアを守護する古代兵器。大陸に侵入した人間たちに怒っているようだ。
 Worm,웜,Worm,Worm
 Worm_Desc,주변에 모래가 많다면 조심해야 할것입니다. 보이지 않는곳에서 갑작스런 습격이 있을것이니..,Todo,TODO
+FireGolem,화염 골렘,Todo,Todk
+FireGolem_Desc,불타는 대지에 출현하는 화염 골렘 강력한 불의 기운이 담겨 모든 불에 면역이 되며 주변에 화염피해를 준다.,Todo,Todo
 DeathAttacker,죽음의 분쇄자,Death Crusher,死の粉砕者
 DeathAttacker_Desc,펠루시아 대륙의 강자 그의 주먹에 닿은자는 먼지처럼 사라진다고 한다.,The mightiest of the continent of Felucia. Those touched by his fist are said to vanish like dust.,フェルシア大陸の強者。その拳に触れた者は塵のように消えるという。
 Skill_SpiderBite,물기,Bite,噛みつき
@@ -47,6 +49,7 @@ Skill_Scorpion_Shield,보호막,Shield,バリア
 Skill_DeathRushAttack,수라,Asura,修羅
 Skill_DamageZoneSkill,초음파,Ultrasonic Pulse,超音波
 Skill_ExplosiveSkill,자폭,Self-Destruct,自爆
+Skill_FireZoneSkill,화염의 오라,Flame Aura,dd
 Desc_SpiderBite,적을 물어 피해를 준다,Bites the enemy to deal damage,敵を噛んでダメージを与える
 Desc_SpiderSplitSKill,거미가 사망시 분열을 한다.,The spider splits apart when it dies.,蜘蛛は死亡時に分裂する。
 Desc_SpiderToxin_Dash,독거미가 일정거리 빠르게 이동을 한다,The toxic spider dashes a set distance quickly,毒蜘蛛が一定距離を素早く移動する
@@ -56,6 +59,7 @@ Desc_Scorpion_Shield,펠루시아 의 전갈이 보호막을 둘러 주변 적 �
 Desc_DeathRushAttack,죽음의 분쇄자가 강력한 의지를 담아 영웅을 향하여 연속으로 공격을 한다.,The Death Crusher charges the heroes and strikes repeatedly with overwhelming will.,死の粉砕者が強い意志を込めて英雄に向かって連続で攻撃する。
 Desc_DamageZoneSkill,박쥐가 주변 영웅에게 초음파를 이용해 일정 주기마다 피해를 입힌다.,The bat uses ultrasonic waves to damage nearby heroes at regular intervals.,コウモリが超音波を使って周囲の英雄に一定周期でダメージを与える。
 Desc_ExplosivedSkill,고대 병기 골렘이 사망시 골렘의 핵이 폭발해 주변 영웅에게 자폭데미지를 입힌다.,When the ancient weapon golem dies its core detonates and damages nearby heroes.,古代兵器ゴーレムが死亡すると核が爆発し、周囲の英雄にダメージを与える。
+Desc_FireZoneSkill,주변에 화염을 둘러 영웅들에게 피해를 준다,ㅇㅇ,ㅇㅇ
 Stat_Attack,공격력,Attack,攻撃力
 Stat_AttackSpeed,공격속도,AttackSpeed,攻撃速度
 Stat_Health,체력,Health,体力
@@ -71,10 +75,12 @@ Berserk,폭주,Berserk,暴走
 Regeneration,재생,Regeneration,再生
 HitsShield,타수 보호막,Hit Shield,打数バリア
 Burrow,잠복,Burrow,Burrow
+Flame,화염족,todo,todo
 Cloaking_Desc,외부로부터 외형을 숨겨 공격 대상에서 제외된다. 저지 했을 시에만 공격 할 수 있다.,Hides its form and is excluded from targeting. It can only be attacked while blocked.,姿を隠して攻撃対象から外れる。阻止されている時のみ攻撃できる。
 Fly_Desc,원거리 유닛만 공격할 수 있다. 그리고 지형지물을 무시하고 이동한다,Only ranged units can attack it. It also ignores terrain and moves freely.,遠距離ユニットのみ攻撃できる。また地形を無視して移動する。
 UnJudged_Desc,저지할 수 없어 막는 유닛을 통과한다,Cannot be blocked and passes through blockers,阻止できずブロックユニットを通り抜ける
 Berserk_Desc,체력 50% 이하일 때 이동속도와 공격력이 증가한다,Gains move speed and attack below 50% HP,HPが50%以下で移動速度と攻撃力が上昇する
 Regeneration_Desc,체력을 계속 회복한다.,Rapidly regenerates HP over time,時間経過でHPが急速に回復する
 HitsShield_Desc,받는 피해가 1로 고정되며 일정 타수만큼만 피해를 받는다,Takes 1 fixed damage per hit for a set number of hits,被ダメージが1に固定され一定の打数だけダメージを受ける
-Burrow_Desc,땅속에 숨어 이동을 하며 공격대상에서 제외된다. 저지 했을 시 영웅에게 피해를주며 밖으로 나온다.,Todo,Todo
+Burrow_Desc,땅속에 숨어 이동을 하며 공격대상에서 제외된다. 저지 했을 시 영웅에게 피해를주며 기절을 걸고 밖으로 나온다.,Todo,Todo
+Flame_Desc,모든 불 데미지에 면역이며 불에 닿으면 강해진다. 고유 특성으로 화염의 오라 를 가지고있다.,Todo,Todo

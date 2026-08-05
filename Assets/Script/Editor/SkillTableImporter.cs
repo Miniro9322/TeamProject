@@ -75,6 +75,8 @@ public static class SkillTableImporter
             switch (type)
             {
                 case "DamageZone" : return typeof(DamageZoneSO);
+                // 화염 오라. Damage/TickInterval 칸은 Ignite_Basic을 못 읽었을 때의 폴백으로만 쓰인다.
+                case "FireZone" : return typeof(FireZoneSO);
                 case "Explosived" : return typeof(ExplosiveSkillSO);
                 case "RushAttack" : return typeof(RushAttackSkillSO);
             }
