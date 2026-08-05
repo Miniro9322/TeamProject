@@ -9,7 +9,7 @@ public class PlaceAction
     public UnitPlacer placer;
     public UnitRemover remover;
     public UnitReplace replace;
-    public BuildingUiLink buildingUi;
+    public DayNightBuildRule dayNightRule;
     public MapView view;
     public HeroRoster heroRoster;
     public HeroSkillCastController skillCast;
@@ -77,7 +77,7 @@ public class PlaceAction
     // GameManager의 CanBuild가 낮을 뜻한다(DayState가 낮에 true, 밤에 false로 바꾼다).
     private bool IsNightTime()
     {
-        return !buildingUi.CanBuild();
+        return !dayNightRule.CanBuild();
     }
 
     // 로스터로 고른 영웅만 해당. 제거될 때 UnitRemover가 이 링크를 보고 엔트리를 되돌린다.

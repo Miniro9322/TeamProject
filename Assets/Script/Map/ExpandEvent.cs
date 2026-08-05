@@ -13,8 +13,6 @@ public class ExpandEvent : MonoBehaviour
     public IReadOnlyList<ModuleLogic> Choices => _choices;
 
     [SerializeField] private List<Transform> regionPoint;
-
-    private int expandCount = 0;
     // 선택지는 버튼 수만큼만 올린다.
 
      

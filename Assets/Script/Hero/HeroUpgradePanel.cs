@@ -46,7 +46,7 @@ public class HeroUpgradePanel : MonoBehaviour
     {
         RectTransform rt = (RectTransform)transform;
         Vector3 pos = rt.position;
-        pos.y = ((RectTransform)icon.transform).position.y;
+        pos.x = ((RectTransform)icon.transform).position.x;
         rt.position = pos;
         currentIcon = icon;
 

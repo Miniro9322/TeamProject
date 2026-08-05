@@ -2,13 +2,13 @@
 // PlaceAction.SelectTile을 통해 매 클릭마다 호출되며, MapAssemble이 조립한다.
 public class HeroSkillCastController
 {
-    public BuildingUiLink buildingUi;
+    public DayNightBuildRule dayNightRule;
     private Hero selectedCaster;
     public Hero SelectedCaster => selectedCaster;
 
     public void HandleClick(Tile tile)
     {
-        if (tile == null || buildingUi.CanBuild()) return; // 낮에는 동작 안 함(CanBuild==true가 낮)
+        if (tile == null || dayNightRule.CanBuild()) return; // 낮에는 동작 안 함(CanBuild==true가 낮)
 
         if (selectedCaster == null)
         {

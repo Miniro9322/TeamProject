@@ -12,6 +12,7 @@ public class BuildingPanel : MonoBehaviour, IClosablePanel
     [SerializeField] private List<CostAmountView> upgradeCostRows; // 최대 개수만큼 미리 배치, 남는 칸은 자동으로 숨김
     [SerializeField] private TextMeshProUGUI FacilityLevelText;
     [SerializeField] private Button upgradeButton;
+    [SerializeField] private RegionDetailPanel parentPanel; // 이 패널을 여는 쪽 - 그 안의 슬롯 버튼 클릭은 "바깥 클릭"이 아니다
     private ProductionFacility facility;
     private RegionFacilitySlots region;
     private int slotIndex;
@@ -30,7 +31,10 @@ public class BuildingPanel : MonoBehaviour, IClosablePanel
 
     private void Awake()
     {
-        outsideCloser = new ClickOutsideCloser((RectTransform)transform);
+        // parentPanel(RegionDetailPanel) 안의 다른 슬롯 버튼을 눌러도 "바깥 클릭"으로 안 잡히게 self로
+        // 취급한다 - 안 그러면 다른 지어진 칸 클릭 -> 여기 Update()가 먼저 Close() -> 곧이어
+        // RegionDetailPanel이 다시 SetActive(true)하는 순서가 되어 매번 깜빡였다.
+        outsideCloser = new ClickOutsideCloser((RectTransform)transform, parentPanel != null ? parentPanel.transform : null);
     }
 
     private void OnEnable()
@@ -92,6 +96,9 @@ public class BuildingPanel : MonoBehaviour, IClosablePanel
 
     public void InitFacilityInfo(ProductionFacility facility, RegionFacilitySlots region, int slotIndex)
     {
+        // 이미 열려있던 채로 다른 칸을 골랐을 수 있으니, 이전 시설 구독부터 정리한다.
+        if (this.facility != null) this.facility.OnWorkerChanged -= UpdatePanel;
+
         this.facility = facility;
         this.region = region;
         this.slotIndex = slotIndex;

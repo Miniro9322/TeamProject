@@ -9,13 +9,12 @@ using UnityEngine.SceneManagement;
 
 public class UiManager : MonoBehaviour
 {
-    [SerializeField] private BuildingPanel buildingUi;
     [SerializeField] private RequestSupportUi requestSupportUi;
     [SerializeField] private GameObject GamaOverUi;
     [SerializeField] private GameObject GameSpeedUi;
     [SerializeField] private GameObject MenuPanel;
     [SerializeField] private Key MenuKey = Key.T;
-    public bool BuildingUiOpen => buildingUi.gameObject.activeSelf;
+
     public byte UnlockedHero;
     public byte UnlockedEnemy;
 
@@ -24,7 +23,6 @@ public class UiManager : MonoBehaviour
 
     private void Awake()
     {
-        buildingUi.gameObject.SetActive(false);
         requestSupportUi.gameObject.SetActive(false);
         GamaOverUi.SetActive(false);
         GameSpeedUi.SetActive(false);
@@ -39,10 +37,6 @@ public class UiManager : MonoBehaviour
 
         if (keyboard.escapeKey.wasPressedThisFrame)
         {
-            if (buildingUi.gameObject.activeSelf)
-            {
-                CloseBuildingUi();
-            }
 
             if (MenuPanel.activeSelf)
             {
@@ -62,11 +56,6 @@ public class UiManager : MonoBehaviour
     public void ToggleGameSpeedUi(bool value)
     {
         GameSpeedUi.SetActive(value);
-    }
-
-    public void CloseBuildingUi()
-    {
-        buildingUi.gameObject.SetActive(false);
     }
 
     public async UniTask OpenRequestSupportUi()

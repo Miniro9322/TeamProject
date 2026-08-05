@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+    using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
@@ -42,7 +42,6 @@ public class RegionOverviewPanel : MonoBehaviour, IClosablePanel
     // Start는 모든 오브젝트의 Awake가 끝난 뒤에 불리므로 이 경쟁 상태가 없다.
     private void Start()
     {
-        gameObject.SetActive(false);
         gameManager.ChangeToNight += OnNight;
         enviromentManager.OnDay += OnDayStart;
     }
