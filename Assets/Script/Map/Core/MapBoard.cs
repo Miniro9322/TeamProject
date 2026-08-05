@@ -75,11 +75,8 @@ public class MapBoard : MonoBehaviour
         _playRect = InnerRect();
         _floorY = LowestFloor();
 
-        Debug.Log($"[MapBoard] 타일 {_cells.Count}개 (안쪽 {_playRect.width}×{_playRect.height} @{_playRect.min}, " +
-            $"셀크기 {CellSize:0.###}), 스폰 {_spawns.Count}, 본진 {_cores.Count}", this);
-
-        if (!HasEndpoints)
-            Debug.LogWarning("[MapBoard] 스폰(isEnemySpawn) 또는 본진(Terrain=Core) 타일을 찾지 못했습니다.", this);
+        // 3) 이웃 잇기. 길찾기가 좌표를 더해 격자를 뒤지지 않고 타일이 들고 있는 이웃을 바로 읽게 한다.
+        TileLink.LinkNeighbors(_cells);
     }
 
     // 클릭 판정용 기둥의 바닥. 가장 낮은 타일 윗면보다 한 칸 더 내려간 높이라 어떤 타일도 두께를 가진다.
@@ -131,7 +128,7 @@ public class MapBoard : MonoBehaviour
         }
 
         List<Tile> path = Pathfinder.FindPath(
-            _spawns, t => t.Terrain == TerrainType.Core, WalkableNeighbors, HeuristicToNearestCore);
+            _spawns, IsCore, CanWalk, HeuristicToNearestCore);
         SetLanes(path);
 
         return path;
@@ -156,12 +153,10 @@ public class MapBoard : MonoBehaviour
         }
     }
 
-    private IEnumerable<Tile> WalkableNeighbors(Tile tile)
-    {
-        foreach (Vector2Int dir in GridCalculator.Directions)
-            if (_cells.TryGetValue(tile.Coord + dir, out Tile nb) && nb.Walkable)
-                yield return nb;
-    }
+    private static bool IsCore(Tile tile) => tile.Terrain == TerrainType.Core;
+
+    // 걸어서 오는 적 기준으로 길을 찾는다 — 헤엄 칸은 통로에서 빠진다.
+    private static bool CanWalk(Tile tile) => tile.CanWalk;
 
     // 가장 가까운 본진까지의 칸 거리. 경로 찾기가 어느 쪽을 먼저 뒤질지 정하는 데 쓴다.
     private int HeuristicToNearestCore(Tile tile)

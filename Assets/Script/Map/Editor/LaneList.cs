@@ -12,8 +12,8 @@ using UnityEngine;
 /// </summary>
 public static class LaneList
 {
-    /// <summary>경로 줄들. 고른 경로의 번호를 돌려준다(누르지 않았으면 받은 값 그대로).</summary>
-    public static int Draw(IReadOnlyList<LaneData> lanes, int chosen, RouteConfig routes)
+    /// <summary>경로 줄들. 고른 경로를 돌려준다(누르지 않았으면 받은 것 그대로).</summary>
+    public static RouteData Draw(IReadOnlyList<LaneData> lanes, RouteData chosen, RouteConfig routes)
     {
         if (lanes.Count == 0)
         {
@@ -22,35 +22,95 @@ public static class LaneList
             return chosen;
         }
 
-        int picked = chosen;
+        RouteData picked = chosen;
 
         // 하나를 고르면 나머지가 죽으므로, 전부 다시 보는 길을 같은 자리에 둔다.
-        using (new EditorGUI.DisabledScope(chosen < 0))
+        using (new EditorGUI.DisabledScope(IsNone(chosen)))
         {
             if (GUILayout.Button("← 전체 보기 (모든 경로 다시 보기)", EditorStyles.miniButton))
             {
-                picked = -1;
+                picked = null;
             }
         }
 
         for (int i = 0; i < lanes.Count; i++)
         {
-            if (DrawLane(lanes[i], i, i == chosen, routes))
-            {
-                picked = i;
-            }
+            picked = Keep(picked, DrawLane(lanes[i], i, RowStyle(lanes[i], chosen), routes));
 
-            if (i == chosen)
+            if (IsChosen(lanes[i], chosen))
             {
                 DrawWaits(lanes[i], routes);
             }
         }
 
-        GUILayout.Label("줄을 누르면 그 경로만 남고 나머지는 회색으로 죽습니다. 경로 도구의 편집 대상도 같이 옮겨집니다.",
+        GUILayout.Label("줄을 누르면 그 경로만 남고 나머지는 회색으로 죽습니다. " +
+            "[+갈래]는 그 스폰에 길을 하나 더 만듭니다.",
             EditorStyles.wordWrappedMiniLabel);
         DrawGuide();
 
         return picked;
+    }
+
+    // 고른 것이 없는가.
+    private static bool IsNone(RouteData route)
+    {
+        return route == null;
+    }
+
+    // 경로를 적어 둘 자리가 아직 없는가.
+    private static bool HasNoConfig(RouteConfig routes)
+    {
+        return routes == null;
+    }
+
+    // 이 줄이 지금 고른 경로인가.
+    private static bool IsChosen(LaneData lane, RouteData chosen)
+    {
+        if (IsNone(chosen))
+        {
+            return false;
+        }
+
+        return lane.Route == chosen;
+    }
+
+    // 새로 고른 것이 있으면 그것, 없으면 하던 것.
+    private static RouteData Keep(RouteData current, RouteData picked)
+    {
+        if (IsNone(picked))
+        {
+            return current;
+        }
+
+        return picked;
+    }
+
+    // 고른 줄만 굵게 쓴다.
+    private static GUIStyle RowStyle(LaneData lane, RouteData chosen)
+    {
+        if (IsChosen(lane, chosen))
+        {
+            return EditorStyles.miniBoldLabel;
+        }
+
+        return EditorStyles.miniLabel;
+    }
+
+    // 이 줄의 색점. 길이 끊겼으면 문제 색으로 찍는다.
+    private static Color MarkColor(LaneData lane, int index)
+    {
+        if (IsValidLane(lane))
+        {
+            return MapMakerPalette.Lane(index);
+        }
+
+        return MapMakerPalette.Problem;
+    }
+
+    // 본진까지 이어진 레인인가.
+    private static bool IsValidLane(LaneData lane)
+    {
+        return lane.IsValid;
     }
 
     // 경로 도구 사용법. 처음 여는 사람이 문서를 찾아가지 않아도 되게 쓰는 자리에 둔다.
@@ -66,41 +126,52 @@ public static class LaneList
             "· [비우기] : 그린 것을 다 지웁니다 — 그 경로는 다시 자동 최단 경로가 됩니다.\n" +
             "· [← 전체 보기] : 고른 것을 놓고 모든 경로를 다시 봅니다.\n" +
             "· 끌다 만 나머지는 본진까지 자동으로 이어집니다.\n" +
-            "· 지나갈 수 없는 칸은 그리기에선 건너뛰고, 점 찍기로 넣으면 그 경로가 끊깁니다.",
+            "· 지나갈 수 없는 칸에는 선이 안 들어갑니다 — 벽 앞에서 멈춥니다.",
             MessageType.None);
     }
 
-    // 줄 전체가 버튼이다 — 작은 버튼 하나만 누를 수 있으면 고르는 자리를 겨냥해야 한다.
-    private static bool DrawLane(LaneData lane, int index, bool chosen, RouteConfig routes)
+    // 줄 하나. 눌렸으면 이제 고를 경로를 내고, 안 눌렸으면 null.
+    private static RouteData DrawLane(LaneData lane, int index, GUIStyle style, RouteConfig routes)
     {
         using (new EditorGUILayout.HorizontalScope())
         {
             // 격자에 그려진 선과 같은 색을 찍는다 — 이 점이 줄과 선을 잇는 유일한 단서다.
             Rect mark = GUILayoutUtility.GetRect(11f, 13f, GUILayout.Width(11));
-            EditorGUI.DrawRect(new Rect(mark.x, mark.y + 2f, 9f, 9f),
-                lane.IsValid ? MapMakerPalette.Lane(index) : MapMakerPalette.Problem);
+            EditorGUI.DrawRect(new Rect(mark.x, mark.y + 2f, 9f, 9f), MarkColor(lane, index));
 
             int nodes = NodeCount(lane, routes);
-            GUIStyle style = chosen ? EditorStyles.miniBoldLabel : EditorStyles.miniLabel;
-            bool hit = GUILayout.Button(Word(lane, nodes), style);
+
+            if (GUILayout.Button(Word(lane, nodes), style))
+            {
+                return lane.Route;
+            }
+
+            // 갈래를 늘리는 유일한 자리. 만든 항목을 그대로 넘겨 번호를 거치지 않는다.
+            using (new EditorGUI.DisabledScope(HasNoConfig(routes)))
+            {
+                if (GUILayout.Button("+갈래", EditorStyles.miniButton, GUILayout.Width(44)))
+                {
+                    return RouteEdit.AddRoute(routes, lane.Start.Coord);
+                }
+            }
 
             using (new EditorGUI.DisabledScope(nodes == 0))
             {
                 // 뒤로가기는 맨 뒤 한 칸씩. 마지막에 그린 것부터 빠지므로 손이 기억하는 순서와 같다.
                 if (GUILayout.Button("뒤로", EditorStyles.miniButton, GUILayout.Width(34)))
                 {
-                    RouteEdit.PopNode(routes, lane.Start.Coord);
-                    return true; // 줄어든 경로를 바로 보게 고른 상태로 넘긴다
+                    RouteEdit.PopNode(routes, routes.IndexOf(lane.Route));
+                    return lane.Route; // 줄어든 경로를 바로 보게 고른 상태로 넘긴다
                 }
 
                 if (GUILayout.Button("비우기", EditorStyles.miniButton, GUILayout.Width(44)))
                 {
-                    RouteEdit.ClearNodes(routes, lane.Start.Coord);
-                    return true;
+                    RouteEdit.ClearNodes(routes, routes.IndexOf(lane.Route));
+                    return lane.Route;
                 }
             }
 
-            return hit;
+            return null;
         }
     }
 
@@ -112,16 +183,16 @@ public static class LaneList
             return;
         }
 
-        routes.TryGetRoute(lane.Start.Coord, out RouteData route);
+        RouteData route = lane.Route;
 
         for (int i = 0; i < route.Nodes.Count; i++)
         {
-            DrawWait(routes, lane.Start.Coord, route, i);
+            DrawWait(routes, route, i);
         }
     }
 
     // 경유 칸 한 줄. 초를 고쳐 넣은 프레임에만 저작에 적어 되돌리기가 한 번에 하나씩 쌓이게 한다.
-    private static void DrawWait(RouteConfig routes, Vector2Int spawn, RouteData route, int slot)
+    private static void DrawWait(RouteConfig routes, RouteData route, int slot)
     {
         using (new EditorGUILayout.HorizontalScope())
         {
@@ -133,7 +204,7 @@ public static class LaneList
 
             if (EditorGUI.EndChangeCheck())
             {
-                RouteEdit.SetWait(routes, spawn, slot, seconds);
+                RouteEdit.SetWait(routes, routes.IndexOf(route), slot, seconds);
             }
 
             GUILayout.Label("초", EditorStyles.miniLabel, GUILayout.Width(16));
@@ -148,12 +219,12 @@ public static class LaneList
             return 0;
         }
 
-        if (!routes.TryGetRoute(lane.Start.Coord, out RouteData route))
+        if (lane.Route == null)
         {
             return 0;
         }
 
-        return route.Nodes.Count;
+        return lane.Route.Nodes.Count;
     }
 
     private static string Word(LaneData lane, int nodes)

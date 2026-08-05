@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0d0dc31f1e64bd946ae2541c874c4761, type: 3}
+  m_Name: DebuffEffectSet
+  m_EditorClassIdentifier: Assembly-CSharp::DebuffEffectSetSO
+  effects:
+  - type: 128
+    prefab: {fileID: 4559387069821353362, guid: b0b4a08ca40fb814c8bc564c3abae1cd, type: 3}
+    anchor: 0
+    offset: {x: 0, y: 0, z: 0}
+  - type: 32
+    prefab: {fileID: 619307698193062030, guid: 1b0fac918ec00cb4583671b43efe4de9, type: 3}
+    anchor: 1
+    offset: {x: 0, y: 0, z: 0}
+  - type: 256
+    prefab: {fileID: 3572908927145077862, guid: e73c4d0e9e609ab4cb585cdb885b562e, type: 3}
+    anchor: 2
+    offset: {x: 0, y: 0, z: 0}
+  - type: 16
+    prefab: {fileID: 9067360258435573752, guid: 2ed192d47094c5144b00d5b47bb736ba, type: 3}
+    anchor: 1
+    offset: {x: 0, y: 0, z: 0}
+  - type: 1550
+    prefab: {fileID: 8420494518240603768, guid: f81b9e1679b95e34e881e438ce10150e, type: 3}
+    anchor: 1
+    offset: {x: 0, y: 0, z: 0}
+  - type: 1
+    prefab: {fileID: 8420494518240603768, guid: f81b9e1679b95e34e881e438ce10150e, type: 3}
+    anchor: 2
+    offset: {x: 0, y: 0, z: 0}
