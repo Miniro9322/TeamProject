@@ -102,7 +102,7 @@ public class StageInfoView : MonoBehaviour
 
     // rowContainer는 행을 담기만 하는 껍데기다. 여기에 Image가 붙어 있으면(특히 전체 화면 스트레치)
     // 화면 전체의 클릭을 먹어 IsPointerOverGameObject()가 항상 true가 되고,
-    // 그러면 MapCommand→BuildingUiLink 경로가 막혀 타일·바닥 클릭이 전부 죽는다.
+    // 그러면 MapCommand의 UI 위 클릭 체크가 막혀 타일·바닥 클릭이 전부 죽는다.
     // 자기 Graphic만 끈다 — 자식인 행(row)은 클릭 대상이라 건드리면 안 된다.
     private void DisableContainerRaycast()
     {

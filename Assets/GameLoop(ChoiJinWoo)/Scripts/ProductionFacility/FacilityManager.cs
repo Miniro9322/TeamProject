@@ -30,7 +30,17 @@ public class FacilityManager
 
     public void SumProduct()
     {
-        foreach(var facility in facilities)
+        var totals = GetTotalProduction();
+        resourcesManager.ProductChanged(totals);
+        products.Clear();
+    }
+
+    // 하루가 끝나길 기다리지 않고 지금 배치된 인력 기준 일일 총 생산량을 읽고 싶을 때(가운데 성 UI 등).
+    // 자원에 반영하지 않는 조회 전용 — SumProduct와 같은 합산 로직을 재사용한다.
+    public (ProductionType Type, int Amount)[] GetTotalProduction()
+    {
+        products.Clear();
+        foreach (var facility in facilities)
         {
             var product = facility.ProduceProduction();
             if (product == default)
@@ -47,7 +57,6 @@ public class FacilityManager
             }
         }
 
-        resourcesManager.ProductChanged(products.ToArray());
-        products.Clear();
+        return products.ToArray();
     }
 }

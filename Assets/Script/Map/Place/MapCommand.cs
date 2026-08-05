@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 // 마우스 눌림/뗌을 받아 현재 모드에 맞는 동작을 고른다. 스스로 일하지 않고 PlaceAction에 시킨다.
 public class MapCommand : MonoBehaviour
@@ -13,7 +14,6 @@ public class MapCommand : MonoBehaviour
     public DragDetect dragDetect;
     public DragDetect rightDragDetect;
     public UnitReplace replace;
-    public BuildingUiLink buildingUi;
     public PlaceAction action;
     public PlaceGhost ghost;
     public PlaceFinder finder;
@@ -80,11 +80,10 @@ public class MapCommand : MonoBehaviour
         if (tile == null)
         {
             action.skillCast?.ClearSelection(); // 타일 밖 클릭 = 스킬 시전 취소
-            buildingUi.CloseUnlessOverUi();
             return;
         }
 
-        if (!buildingUi.OpenIfBuilding(tile, palette.Mode))
+        if (EventSystem.current.IsPointerOverGameObject())
         {
             return;
         }
@@ -117,7 +116,6 @@ public class MapCommand : MonoBehaviour
 
         if (tile == null)
         {
-            buildingUi.CloseUnlessOverUi();
             return;
         }
 

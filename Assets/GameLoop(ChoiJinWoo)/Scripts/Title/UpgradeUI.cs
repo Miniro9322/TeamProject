@@ -73,6 +73,7 @@ public class UpgradeUI : MonoBehaviour
         CreateButton(HeroUpgradeData, HeroUpgradeParent);
         upgradeInfoPanel.ConfirmClicked += OnConfirmUnlock;
         RefreshAll();
+        OnNodeClicked(nodes.First().Key);
     }
 
     private void CreateButton(List<BaseUpgradeData> datas, List<GameObject> parents)

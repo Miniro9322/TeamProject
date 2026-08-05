@@ -44,6 +44,7 @@ public class HeroSetPanel : MonoBehaviour
         game.ResourcesManager.ProductUpdate -= RefreshInteractable;
         game.Ui.UnlockChanged -= AddNewlyUnlockedIcons;
         view.OnOffMode -= RefreshInteractable;
+        HeroInfoPanel.gameObject.SetActive(false);
     }
 
     public void OnHero(Placeable slot)

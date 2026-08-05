@@ -1,16 +1,14 @@
-using System;
 using UnityEngine;
 using VContainer;
 using VContainer.Unity;
 
 // 슬롯의 프리팹으로 유닛을 만들어 판에 놓는 담당.
+// 생산 시설·집은 기반시설 UI(BaseConstructor)로 옮겨가 더 이상 맵에 배치되지 않는다 - 여기 남은 건 Hero뿐이다.
 public class UnitPlacer
 {
     // MapGame이 주입 완료 후 넣어준다.
     public PlacedUnitData unitList;
     public IObjectResolver resolver;
-    public ResourcesManager resourcesManager;
-    public BuildingPool pool;
 
     // 슬롯을 자리에 놓는다. 못 놓으면 false.
     public bool TryPlace(PlaceData data, Placeable slot, out GameObject placedUnit)
@@ -30,49 +28,12 @@ public class UnitPlacer
         return true;
     }
 
-    // 슬롯의 프리팹으로 오브젝트를 만든다. 비용을 못 내면 null.
+    // 슬롯의 프리팹으로 영웅 오브젝트를 만든다.
     private GameObject Create(Placeable slot)
     {
         CheckPrefab(slot);
 
-        if (!CanAfford(slot))
-        {
-            return null;
-        }
-
-        return Spawn(slot);
-    }
-
-    // 비용을 낼 수 있는가. 영웅은 로스터에서 이미 냈으므로 항상 true.
-    private bool CanAfford(Placeable slot)
-    {
-        if (slot.kind != OccupantKind.Building && slot.kind != OccupantKind.Resource)
-        {
-            return true;
-        }
-
-        return PlaceCost.TryGet(slot, out PlaceCost cost)
-            && resourcesManager.CheckResources(cost.Resources);
-    }
-
-    // 생산 시설은 풀에서 빌리고, 나머지는 새로 만든다.
-    private GameObject Spawn(Placeable slot)
-    {
-        if (slot.kind == OccupantKind.Resource)
-        {
-            if (!slot.prefab.TryGetComponent(out ProductionFacility facility))
-            {
-                return null;
-            }
-
-            return pool.Rent(facility.ProductionType);
-        }
-
-        if (slot.kind == OccupantKind.Building)
-        {
-            return resolver.Instantiate(slot.prefab);
-        }
-
+        // 영웅은 로스터 "생성" 단계(HeroSetPanel)에서 이미 비용을 치렀으므로 여기선 다시 검사하지 않는다.
         if (!slot.prefab.TryGetComponent(out Hero _))
         {
             return null;
