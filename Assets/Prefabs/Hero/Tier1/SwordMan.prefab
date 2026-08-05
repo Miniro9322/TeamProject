@@ -439,7 +439,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &6176338964184814417
 Transform:
   m_ObjectHideFlags: 0
@@ -2705,7 +2705,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &7909811544978434431
 Transform:
   m_ObjectHideFlags: 0
@@ -2975,7 +2975,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &7182219937923387562
 Transform:
   m_ObjectHideFlags: 0
@@ -3245,7 +3245,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &5087593978546807696
 Transform:
   m_ObjectHideFlags: 0
@@ -4582,7 +4582,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &8606776828546276010
 Transform:
   m_ObjectHideFlags: 0
@@ -6233,7 +6233,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &6419928072699199386
 Transform:
   m_ObjectHideFlags: 0
@@ -9170,7 +9170,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &5640067480769828026
 Transform:
   m_ObjectHideFlags: 0
@@ -11687,7 +11687,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &7485898993070701997
 Transform:
   m_ObjectHideFlags: 0
@@ -12914,7 +12914,6 @@ GameObject:
   m_Component:
   - component: {fileID: 5007865040228602982}
   - component: {fileID: 364525912173520321}
-  - component: {fileID: 2720685726154429119}
   m_Layer: 0
   m_Name: SwordMan
   m_TagString: Hero
@@ -13000,20 +12999,6 @@ MonoBehaviour:
   board: {fileID: 0}
   auraZonePrefabs: []
   occupantKind: 1
---- !u!114 &2720685726154429119
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5228687494590014126}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 71f4ec0063568874f8d0c94daeb655ad, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::NthHitHeavyTrait
-  everyN: 4
-  heavyAttackData: {fileID: 11400000, guid: de2156b1ee549f84198f677e451c4db2, type: 2}
 --- !u!1 &5299033108214222058
 GameObject:
   m_ObjectHideFlags: 0
@@ -15717,7 +15702,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &8133086008593414352
 Transform:
   m_ObjectHideFlags: 0
@@ -16395,7 +16380,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &8727949311067280270
 Transform:
   m_ObjectHideFlags: 0
@@ -16575,7 +16560,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &5370946208674296008
 Transform:
   m_ObjectHideFlags: 0
@@ -17237,7 +17222,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &3843106086453441853
 Transform:
   m_ObjectHideFlags: 0
@@ -17808,7 +17793,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &5428322530170253752
 Transform:
   m_ObjectHideFlags: 0
