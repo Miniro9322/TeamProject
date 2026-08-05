@@ -32,6 +32,14 @@ public class SettingUI : MonoBehaviour
         (3840, 2160),
     };
 
+    private (Slider slider, string param)[] VolumeSliders => new[]
+    {
+        (masterVolume, "MasterVolume"),
+        (bgmVolume, "BgmVolume"),
+        (sfxVolume, "SfxVolume"),
+        (systemVolume, "System"),
+    };
+
     private void OnEnable()
     {
         //창 모드
@@ -53,20 +61,12 @@ public class SettingUI : MonoBehaviour
         screenMode.onValueChanged.AddListener(ChangeScreenMode);
 
         //오디오
-        masterVolume.value = PlayerPrefs.GetFloat("MasterVolume", 1f);
-        bgmVolume.value = PlayerPrefs.GetFloat("BgmVolume", 1f);
-        sfxVolume.value = PlayerPrefs.GetFloat("SfxVolume", 1f);
-        systemVolume.value = PlayerPrefs.GetFloat("System", 1f);
-
-        ApplyVolume("MasterVolume", masterVolume.value);
-        ApplyVolume("BgmVolume", bgmVolume.value);
-        ApplyVolume("SfxVolume", sfxVolume.value);
-        ApplyVolume("System", systemVolume.value);
-
-        masterVolume.onValueChanged.AddListener(v => SetVolume("MasterVolume", v));
-        bgmVolume.onValueChanged.AddListener(v => SetVolume("BgmVolume", v));
-        sfxVolume.onValueChanged.AddListener(v => SetVolume("SfxVolume", v));
-        systemVolume.onValueChanged.AddListener(v => SetVolume("System", v));
+        foreach (var (slider, param) in VolumeSliders)
+        {
+            slider.value = PlayerPrefs.GetFloat(param, 1f);
+            ApplyVolume(param, slider.value);
+            slider.onValueChanged.AddListener(v => SetVolume(param, v));
+        }
 
         //해상도
         resolutions = Screen.resolutions
@@ -102,10 +102,10 @@ public class SettingUI : MonoBehaviour
 
     private void OnDisable()
     {
-        masterVolume.onValueChanged.RemoveAllListeners();
-        bgmVolume.onValueChanged.RemoveAllListeners();
-        sfxVolume.onValueChanged.RemoveAllListeners();
-        systemVolume.onValueChanged.RemoveAllListeners();
+        foreach (var (slider, _) in VolumeSliders)
+        {
+            slider.onValueChanged.RemoveAllListeners();
+        }
         screenMode.onValueChanged.RemoveAllListeners();
     }
 

@@ -22,6 +22,14 @@ public class HeroRoster
         return entry;
     }
 
+    // 합성 등으로 개체 자체가 소멸할 때 씀 — Available로 되돌리는 MarkAvailable과 달리 엔트리를 목록에서 아예 뺀다.
+    public bool Remove(HeroRosterEntry entry)
+    {
+        bool removed = _entries.Remove(entry);
+        if (removed) Changed?.Invoke();
+        return removed;
+    }
+
     // 배치/제거로 엔트리 상태만 바뀌었을 때 UI 갱신용
     public void NotifyStateChanged()
     {

@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using UnityEngine;
 
 // 배치된 유닛을 판에서 치우는 담당.
@@ -27,12 +26,6 @@ public class UnitRemover
 
         if(unit == null) return null;
 
-        if (IsHouse(unit))
-        {
-            Debug.Log("집은 재배치만 가능합니다.");
-            return null;
-        }
-
         if (!_unitList.TryGetArea(unit, out PlacementArea area))
         {
             return null;
@@ -56,29 +49,21 @@ public class UnitRemover
         _unitList.Clear();
     }
 
-    // 집인가. 집은 제거가 아니라 재배치만 된다.
-    private static bool IsHouse(GameObject unit)
-    {
-        return unit.TryGetComponent<House>(out _);
-    }
-
-    // 생산건물은 풀에 반납하고, 영웅은 로스터로 되돌린 뒤 파괴한다.
+    // 영웅(로스터 출신)이면 로스터로 되돌리고 파괴.
+    // 생산 시설·집은 기반시설 UI(BaseConstructor.Demolish)로 옮겨가 더 이상 맵 유닛으로 존재하지 않는다.
     private void DestroyOrReturnToPool(GameObject unit)
     {
-        ProductionFacility facility = unit.GetComponent<ProductionFacility>();
-        if (facility != null)
+        HeroRosterLink link = unit.GetComponent<HeroRosterLink>();
+        if (link != null && link.Entry != null)
         {
-            facility.Release();
-        }
-        else
-        {
-            HeroRosterLink link = unit.GetComponent<HeroRosterLink>();
-            if (link != null && link.Entry != null)
+            if (unit.TryGetComponent(out Hero hero))
             {
-                link.Entry.MarkAvailable();
-                _heroRoster.NotifyStateChanged();
+                link.Entry.SaveUpgradeState(hero.SkillLevel, hero.StatLevel);
+                HeroSelectionService.ClearIfSelected(hero);
             }
-            Object.Destroy(unit);
+            link.Entry.MarkAvailable();
+            _heroRoster.NotifyStateChanged();
         }
+        Object.Destroy(unit);
     }
 }

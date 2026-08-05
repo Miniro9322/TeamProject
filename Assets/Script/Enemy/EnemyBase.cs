@@ -62,8 +62,22 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
     public bool IsUnJudged => (Dataattribute & EnemyAttribute.UnJudged) != 0; // 저지 불가
     public bool IsBerserk => (Dataattribute & EnemyAttribute.Berserk) != 0; //폭주
     public bool IsHitsShield => (Dataattribute & EnemyAttribute.HitsShield) != 0; // 타수 보호막
-    public bool IsRegeneration => (Dataattribute & EnemyAttribute.Regeneration) != 0; // 재생
+    // 재생. 원본 특성이거나, 화염족이 점화된 동안(FlameIgniteRegen)이면 켜진다.
+    public bool IsRegeneration => (Dataattribute & EnemyAttribute.Regeneration) != 0 || FlameIgniteRegen;
     public bool IsBurrow => (Dataattribute & EnemyAttribute.Burrow) != 0; // 잠행: 숨어 이동, 저지 시 솟아올라 공격
+    public bool IsSwim => (Dataattribute & EnemyAttribute.Swim) != 0; // 수영: 헤엄 칸(PassType.Swim)을 지나갈 수 있음
+    // 화염족: 점화를 튕겨내며 그만큼 재생을 얻고, 화염 오라(FlameAuraSkillId)를 특성으로 갖는다.
+    public bool IsFlame => (Dataattribute & EnemyAttribute.Flame) != 0;
+    // 화염족이 점화를 튕겨낸 뒤 재생이 유지되는 만료 시각(_shieldExpiry와 같은 방식 — 코루틴 없이 지연 만료라 풀링 안전).
+    // 장부(_debuffTracker)를 못 쓰는 이유: ImmuneDebuffs가 Ignite를 막으므로 DebuffSO.Apply가
+    // 장부에 기록하기 전에 되돌아간다. 그래서 "막혔다"는 알림(OnDebuffBlocked)에서 직접 시각을 새긴다.
+    private float _flameRegenExpiry;
+    private bool FlameIgniteRegen => Time.time < _flameRegenExpiry;
+
+    /// <summary>화염족이 불에 닿아 강해져 있는 동안. 불 칸을 밟는 내내 1초마다 갱신되고,
+    /// 벗어나면 마지막 점화가 지속됐을 시간만큼 남았다가 꺼진다.
+    /// 재생과 화염 오라(FireZoneSO)가 같은 창을 본다 — 시계를 하나만 두려고 여기로 모았다.</summary>
+    public bool FlameEmpowered => FlameIgniteRegen;
     public bool IsDead { get; protected set; }
     public bool IsSpawnInvincible = false;
     private StatContainer sc = new();
@@ -158,6 +172,10 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
     // (EnemyCloak의 CloakSettings, 위의 EnemyEffectPrefab/Stun과 같은 방식).
     // 종류를 추가할 때 프리팹 8개를 다시 손대지 않아도 된다 — 에셋 하나만 고치면 전부 반영된다.
     private const string DebuffEffectSetPath = "EnemyEffectPrefab/DebuffEffectSet";
+    // 화염족이 특성으로 갖는 화염 오라 스킬 ID(Resources/Skills 아래).
+    // 특성이 곧 오라이므로 CSV Skills 칸에 안 적어도 LoadStats가 붙여 준다.
+    // 화염족이 아닌 적에게 붙이고 싶으면 그때만 Skills 칸에 직접 적으면 된다.
+    private const string FlameAuraSkillId = "FireZoneSkill";
     protected virtual void Awake()
     {
         _baseScale = transform.localScale; // 프리팹 원래 스케일 스냅샷(분열 축소 후 복구 기준)
@@ -181,6 +199,7 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
         LoadStats();
         _attacking = false;
         _shieldExpiry = 0f;
+        _flameRegenExpiry = 0f;         // 풀 재사용 시 이전 개체가 남긴 화염족 재생 제거
         _debuffTracker.Clear();         // 풀 재사용 시 이전 개체의 디버프 잔여 제거(스턴 포함)
         _stunAnimActive = false;        // animator.Rebind()로 bool도 초기화되므로 상태만 맞춰둔다
         _berserkOn = false;
@@ -201,7 +220,9 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
         _move.ArrivedAtCore += HandleArrivedAtCore;
         RunSkillLoop(skillCts.Token).Forget();
         RunAttackLoop(skillCts.Token).Forget();
-        if(IsRegeneration)Regeneration(skillCts.Token).Forget();
+        // 화염족은 스폰 시점엔 재생이 꺼져 있어도 점화되면 켜지므로 루프를 미리 돌려둔다.
+        // 루프 안에서 매 프레임 IsRegeneration을 다시 보므로 꺼진 동안은 회복하지 않는다.
+        if(IsRegeneration || IsFlame)Regeneration(skillCts.Token).Forget();
     }
     protected virtual void OnDisable()
     {
@@ -233,6 +254,7 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
     public void EnterMap(MapBoard board, IReadOnlyList<Vector3> waypoints = null, bool snapToStart = true)
     {
         _move.Flying = IsFly; // 공중 특성이면 지형 무시(본진으로 직선). Map/길찾기는 건드리지 않음
+        _move.Swimming = IsSwim; // 수영 특성이면 헤엄 칸까지 열어 경로 재탐색(공중이면 무시된다)
         _move.EnterMap(board, waypoints, snapToStart, MoveSpeed, enemyKey);
     }
 
@@ -265,7 +287,7 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
     // Class는 CSV(EnemyTable)에서 오므로 새 보스를 추가해도 데이터 작업 없이 적용된다.
     // 프리팹의 immuneDebuffs는 여기에 더해진다(빼지는 못한다 — 보스인데 기절이 걸려야 하는 예외가 생기면 그때 방식을 바꾼다).
     public DebuffType ImmuneDebuffs =>
-        immuneDebuffs | (BossStunImmunity && Class == EnemyClass.Boss ? DebuffType.Stun : DebuffType.None);
+        immuneDebuffs | (BossStunImmunity && Class == EnemyClass.Boss ? DebuffType.Stun : DebuffType.None)|(IsFlame?DebuffType.Ignite:DebuffType.None);
 
     public bool IsImmuneTo(DebuffType mask) => (ImmuneDebuffs & mask) != 0;
         
@@ -279,6 +301,10 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
         UpdateExposedAttribute();       // 저지 상태에 따라 Hero가 보는 Attribute를 갱신
         _cloak.Tick(CloakClear);
         _burrow.Tick(CloakClear, transform.position); // 은신과 같은 트리거(저지/사망) — 저지되면 솟아오른다
+        // 불 칸 위면 스스로 점화된다. 이동(_move.Tick)이 끝난 뒤라야 이번 프레임 위치로 칸을 판정한다.
+        // 불 칸 점화는 Map 쪽 FireReceiver가 타일 진입/이탈로 걸어 준다(적·영웅 공용) —
+        // 여기서 위치를 폴링하던 EnemyFireTile은 그것과 중복이라 걷어냈다.
+        // 화염족 처리(ImmuneDebuffs로 막고 OnDebuffBlocked가 재생·오라 창을 여는 것)는 누가 걸든 그대로 동작한다.
         StunTick();                     // 스턴 만료를 감지해 Animator bool을 끈다
         // 임시 테스트 — 넘패드1 기절 / 2 속박 / 3 침묵. 적마다 Update가 돌므로 화면의 모든 적이 동시에 걸린다.
         // Keyboard.current는 키보드가 없는 환경에서 null이라 반드시 확인해야 한다.
@@ -341,6 +367,17 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
     }
 
     public bool HasDebuff(DebuffType mask) => _debuffTracker.HasAny(mask);
+
+    // 면역(ImmuneDebuffs)으로 막힌 디버프 알림 — DebuffSO.Apply가 부른다.
+    // 화염족은 점화를 튕겨내는 대신, 막힌 점화가 지속됐을 시간만큼 재생을 얻는다(불에 닿으면 오히려 강해진다).
+    // 겹치면 더 늦은 만료 시각이 이긴다 — 불 칸에 계속 서 있으면 갱신되며 유지된다.
+    public void OnDebuffBlocked(DebuffType type, float duration)
+    {
+        if (IsDead || duration <= 0f) return;
+        if (!IsFlame || type != DebuffType.Ignite) return;
+
+        _flameRegenExpiry = Mathf.Max(_flameRegenExpiry, Time.time + duration);
+    }
     public float DebuffRemaining(DebuffType type) => _debuffTracker.GetRemaining(type);
 
     /// <summary>
@@ -403,6 +440,8 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
         if (IsCloaking && Board != null && Board.IsBlocked(gameObject)
             && (!IsBurrow || _burrow.IsSurfaced))
             exposed &= ~EnemyAttribute.Cloaking;
+        // 화염족이 점화된 동안 얻는 재생도 밖에서 보이게 켠다 — 도감/툴팁이 실제 상태와 어긋나지 않게.
+        if (FlameIgniteRegen) exposed |= EnemyAttribute.Regeneration;
         Attribute = exposed;
     }
 
@@ -524,6 +563,20 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
 
         ApplyData(data);
         EnemyStatLoader.ResolveSkills(data.Skills, skills);
+        // 화염 오라는 화염족이 특성으로 갖는 것이다 — 특성만 켜면 붙으므로 CSV 두 칸(Attribute·Skills)을
+        // 맞춰 적을 필요가 없다(빠뜨려서 오라가 조용히 없는 사고를 막는다).
+        // ApplyData가 바로 위에서 Dataattribute를 정하므로 이 시점의 IsFlame은 유효하고,
+        // LoadStats는 Awake·OnEnable에서 매번 불리지만 HasFlameAura가 두 번째부터 걸러낸다.
+        if (IsFlame && !HasFlameAura()) EnemyStatLoader.ResolveSkills(FlameAuraSkillId, skills);
+    }
+
+    // 이미 화염 오라 계열 스킬을 들고 있는가. 수치를 달리한 전용 에셋을 Skills 칸에 적은 경우
+    // 기본 오라를 덧붙이면 오라가 둘 돌아 피해와 이펙트가 두 겹이 된다 — 그걸 막는다.
+    private bool HasFlameAura()
+    {
+        for (int i = 0; i < skills.Count; i++)
+            if (skills[i] is FireZoneSO) return true;
+        return false;
     }
     
     protected virtual void ApplyData(EnemyTable.Data data)
@@ -630,7 +683,9 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
     {
         while(!IsDead)
         {
-            if(Hp<MaxHp)
+            // 매 프레임 다시 본다 — 화염족은 점화가 붙었다 풀리는 동안 재생이 켜졌다 꺼진다.
+            // 원본 재생 특성이면 항상 true라 기존 거동과 같다.
+            if(IsRegeneration && Hp<MaxHp)
             Hp = Mathf.Min(Mathf.Max(1f,Hp + MaxHp * RegenPerSecond * Time.deltaTime), MaxHp);
             await UniTask.Yield(token);
         }

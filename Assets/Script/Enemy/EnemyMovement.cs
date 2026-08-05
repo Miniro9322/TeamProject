@@ -34,6 +34,10 @@ public class EnemyMovement
     /// <summary>공중(지형 무시). true면 중간 경로점을 건너뛰고 본진(마지막 웨이포인트)으로 직선 이동한다.</summary>
     public bool Flying { get; set; }
 
+    /// <summary>수영(헤엄 칸 통행). true면 물 칸(PassType.Swim)까지 길로 인정해 경로를 다시 찾는다.
+    /// Flying이 켜져 있으면 그쪽이 더 넓은 통행권이라 이 값은 무시된다.</summary>
+    public bool Swimming { get; set; }
+
     /// <summary>본진 도달 신호 — 구독자(EnemyBase)가 OnArrivedAtCore + 디스폰을 처리한다.</summary>    
     public event System.Action ArrivedAtCore;
 
@@ -109,6 +113,15 @@ public class EnemyMovement
             Vector3 startW = snapToStart ? src[0] : _tf.position;
             var flying = FlyingPathfinder.BuildWaypoints(board, startW, src[src.Count - 1],0.5f);
             if (flying.Count > 0) src = flying;
+        }
+        // 공중이 아니면서 수영이면 물 칸까지 열고 다시 찾는다. Flying은 통행권이 더 넓으니 그쪽이 우선.
+        // src가 비어 있어도(= 물이 걷는 길을 완전히 막은 맵) 현재 위치에서 찾아야 하므로 Count로 막지 않는다.
+        else if (Swimming)
+        {
+            Vector3 startW = src.Count > 0 && snapToStart ? src[0] : _tf.position;
+            Vector3 goalW = src.Count > 0 ? src[src.Count - 1] : _tf.position;
+            var swimming = SwimPathfinder.BuildWaypoints(board, startW, goalW);
+            if (swimming.Count > 0) src = swimming;
         }
 
         foreach (Vector3 p in src) _path.Add(p);

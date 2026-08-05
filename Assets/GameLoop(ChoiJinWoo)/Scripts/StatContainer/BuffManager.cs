@@ -17,8 +17,7 @@ public class BuffManager : ITickable
 
         if (existing == null)
         {
-            var modifier = new Modifier(modType, value, duration, StatLayer.Buff, source);
-            target.Stats.AddModifier(type, modifier);
+            var modifier = CreateAndApplyModifier(target, type, modType, value, duration, source);
 
             activeBuffs.Add(new ActiveBuff
             {
@@ -34,13 +33,19 @@ public class BuffManager : ITickable
 
         if (existing.Stacks < maxStacks)
         {
-            var modifier = new Modifier(modType, value, duration, StatLayer.Buff, source);
-            target.Stats.AddModifier(type, modifier);
+            var modifier = CreateAndApplyModifier(target, type, modType, value, duration, source);
             existing.Modifiers.Add(modifier);
             existing.Stacks++;
         }
 
         existing.RemainingTime = duration;
+    }
+
+    private static Modifier CreateAndApplyModifier(IUnit target, StatType type, ModifierType modType, float value, float duration, object source)
+    {
+        var modifier = new Modifier(modType, value, duration, StatLayer.Buff, source);
+        target.Stats.AddModifier(type, modifier);
+        return modifier;
     }
 
     public void Tick()

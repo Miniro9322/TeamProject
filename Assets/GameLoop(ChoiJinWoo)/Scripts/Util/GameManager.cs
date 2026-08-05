@@ -36,7 +36,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private HeroType initialUnlockedHero = HeroType.SwordMan | HeroType.Archer;
     private byte unlockedHero;
     public byte UnlockHero => unlockedHero;
-    private byte UnlockedEnemy = 0b000111;
+    private byte unlockedEnemy = 0b000111;
     public bool isGameOver = false;
     public event Action HpChanged;
     public int Hp => hp;
@@ -48,7 +48,7 @@ public class GameManager : MonoBehaviour
         this.waveSpawner = waveSpawner;
         this.upgradeState = upgradeState;
         unlockedHero = (byte)initialUnlockedHero;
-        uiManager.UnlockedEnemy = UnlockedEnemy;
+        uiManager.UnlockedEnemy = unlockedEnemy;
         uiManager.UnlockedHero = unlockedHero;
 
         hp += (int)upgradeState.GetTotalEffect(hpUpgrades);
@@ -159,6 +159,6 @@ public class GameManager : MonoBehaviour
     public void UpdateUnlock()
     {
         unlockedHero = uiManager.UnlockedHero;
-        UnlockedEnemy = uiManager.UnlockedEnemy;
+        unlockedEnemy = uiManager.UnlockedEnemy;
     }
 }

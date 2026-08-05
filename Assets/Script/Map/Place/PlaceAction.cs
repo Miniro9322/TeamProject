@@ -9,16 +9,42 @@ public class PlaceAction
     public UnitPlacer placer;
     public UnitRemover remover;
     public UnitReplace replace;
-    public BuildingUiLink buildingUi;
+    public DayNightBuildRule dayNightRule;
     public MapView view;
     public HeroRoster heroRoster;
     public HeroSkillCastController skillCast;
+    public HeroCombineManager combineManager;
+
+    private Hero lastClickedHero;
+    private float lastClickTime;
+    private const float DoubleClickWindow = 0.3f;
 
     public void SelectTile(Tile tile)
     {
         view.Select(tile);
         skillCast?.HandleClick(tile);
         ShowOutline(tile);
+        TryDoubleClickCombine(tile);
+    }
+
+    // 짧은 시간 안에 같은 영웅이 다시 클릭되면 더블클릭으로 보고 그 자리에서 합성을 시도한다.
+    private void TryDoubleClickCombine(Tile tile)
+    {
+        if (combineManager == null || !TryGetHero(tile, out Hero hero))
+        {
+            lastClickedHero = null;
+            return;
+        }
+
+        bool isDoubleClick = hero == lastClickedHero && Time.time - lastClickTime <= DoubleClickWindow;
+        lastClickedHero = hero;
+        lastClickTime = Time.time;
+
+        if (isDoubleClick)
+        {
+            combineManager.TryCombine(hero.MergeKey);
+            lastClickedHero = null; // 연속 트리거 방지, 성공/실패 상관없이 한 번만 시도
+        }
     }
 
     // 고른 칸에 영웅이 서 있으면 테두리를 켜고, 아니면 끈다.
@@ -77,7 +103,7 @@ public class PlaceAction
     // GameManager의 CanBuild가 낮을 뜻한다(DayState가 낮에 true, 밤에 false로 바꾼다).
     private bool IsNightTime()
     {
-        return !buildingUi.CanBuild();
+        return !dayNightRule.CanBuild();
     }
 
     // 로스터로 고른 영웅만 해당. 제거될 때 UnitRemover가 이 링크를 보고 엔트리를 되돌린다.
@@ -86,6 +112,11 @@ public class PlaceAction
         if (entry == null) return;
         entry.MarkPlaced(placedUnit);
         placedUnit.AddComponent<HeroRosterLink>().Entry = entry;
+
+        // 이전에 제거되며 저장해둔 강화 진행도가 있으면 새로 생성된 인스턴스에 되돌린다.
+        if ((entry.SkillLevel > 0 || entry.StatLevel > 0) && placedUnit.TryGetComponent(out Hero hero))
+            hero.RestoreUpgradeState(entry.SkillLevel, entry.StatLevel);
+
         heroRoster.NotifyStateChanged();
     }
 

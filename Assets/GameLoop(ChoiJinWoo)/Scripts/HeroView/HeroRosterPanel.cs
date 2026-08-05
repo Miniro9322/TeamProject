@@ -10,6 +10,7 @@ public class HeroRosterPanel : MonoBehaviour, IBeginDragHandler, IScrollHandler
     [SerializeField] private HeroRosterIcon iconPrefab;
     [SerializeField] private Transform container;
     [SerializeField] private HeroUpgradePanel heroUpgradePanel;
+    [SerializeField] private HeroCombineManager combineManager;
     private GameObject currentObject = null;
 
     private void OnEnable()
@@ -35,10 +36,14 @@ public class HeroRosterPanel : MonoBehaviour, IBeginDragHandler, IScrollHandler
         foreach (HeroRosterEntry entry in game.HeroRoster.Entries)
         {
             HeroRosterIcon icon = Instantiate(iconPrefab, container);
-            icon.Set(entry, OnIconClicked);
-            if (entry.PlacedUnit != null)
-                if (entry.PlacedUnit.GetComponent<Hero>() is Hero hero)
-                    icon.UpdateLevel(hero);
+            icon.Set(entry, OnIconClicked, OnIconDoubleClicked);
+
+            // 배치 중이면 실시간 값을, 제거되어 있으면 제거 시점에 저장해둔 값을 보여준다.
+            Hero placedHero = entry.PlacedUnit != null ? entry.PlacedUnit.GetComponent<Hero>() : null;
+            if (placedHero != null)
+                icon.UpdateLevel(placedHero.StatLevel, placedHero.SkillLevel);
+            else
+                icon.UpdateLevel(entry.StatLevel, entry.SkillLevel);
         }
     }
 
@@ -49,18 +54,27 @@ public class HeroRosterPanel : MonoBehaviour, IBeginDragHandler, IScrollHandler
             cameraRig.focus = entry.PlacedUnit.transform.position;
             cameraRig.ApplyNow();
             HeroSelectionService.Select(entry.PlacedUnit.GetComponent<Hero>());
-            if (currentObject != entry.PlacedUnit)
+            // 바깥 클릭으로 패널이 닫혀 있으면(activeSelf == false) 같은 영웅이라도 다시 열어야 한다.
+            if (!heroUpgradePanel.gameObject.activeSelf || currentObject != entry.PlacedUnit)
             {
                 currentObject = entry.PlacedUnit;
                 heroUpgradePanel.gameObject.SetActive(true);
                 heroUpgradePanel.InitHeroInfo(entry.PlacedUnit.GetComponent<Hero>());
-                heroUpgradePanel.PositionAtIconY(icon);
+                heroUpgradePanel.PositionAtIconY(icon, container);
             }
         }
         else
         {
             view.SetHero(entry);
         }
+    }
+
+    // 배치된 영웅 아이콘을 더블클릭하면 그 영웅의 MergeKey로 바로 합성을 시도한다.
+    private void OnIconDoubleClicked(HeroRosterEntry entry)
+    {
+        if (entry.State != HeroRosterState.Placed) return;
+        if (!entry.PlacedUnit.TryGetComponent(out Hero hero)) return;
+        combineManager.TryCombine(hero.MergeKey);
     }
 
     public void OnBeginDrag(PointerEventData eventData)

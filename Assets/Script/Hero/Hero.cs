@@ -19,6 +19,12 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
     [SerializeField] private List<BaseUpgradeData> statUpgradeCostUpgrades;
     [SerializeField] private List<BaseUpgradeData> statUpgrades;
     [SerializeField] private List<HeroUpgradeData> upgradeDatas;
+    [SerializeField] private HeroData heroData;
+    public int Tier => heroData.Tier;
+    public int UnitId => heroData.UnitId;
+    public string HeroName => heroData.HeroName;
+    public MergeKey MergeKey => new MergeKey(heroData.UnitId, heroData.Tier);
+
     private int skillLevel = 0;
     private int statLevel = 0;
     public int SkillLevel => skillLevel;
@@ -287,7 +293,8 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
         currentHp = Mathf.Min(currentHp + amount, sc[StatType.HP]);
     }
 
-    protected OccupantKind occupantKind;
+    [SerializeField] protected OccupantKind occupantKind;
+    public OccupantKind OccupantKind => occupantKind;
 
     public event Action OnBreak;
     public event Action OnResur;
@@ -619,12 +626,30 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
         {
             resourcesManager.ProductChanged(StatUpgradeCost);
             statLevel++;
-            Modifier mod = new Modifier(ModifierType.Additive, 0.1f, 0f, StatLayer.Equip, this);
-            sc.AddModifier(StatType.HP, mod);
-            mod = new Modifier(ModifierType.Additive, 0.05f, 0f, StatLayer.Equip, this);
-            sc.AddModifier(StatType.ATK, mod);
-            mod = new Modifier(ModifierType.Flat, 1f, 0f, StatLayer.Equip, this);
-            sc.AddModifier(StatType.DEF, mod);
+            ApplyStatUpgradeModifiers();
         }
+    }
+
+    private void ApplyStatUpgradeModifiers()
+    {
+        Modifier mod = new Modifier(ModifierType.Additive, 0.1f, 0f, StatLayer.Equip, this);
+        sc.AddModifier(StatType.HP, mod);
+        mod = new Modifier(ModifierType.Additive, 0.05f, 0f, StatLayer.Equip, this);
+        sc.AddModifier(StatType.ATK, mod);
+        mod = new Modifier(ModifierType.Flat, 1f, 0f, StatLayer.Equip, this);
+        sc.AddModifier(StatType.DEF, mod);
+    }
+
+    // 로스터 제거 전에 저장해둔 강화 진행도를, 재배치로 새로 생성된 인스턴스에 되돌려 적용한다.
+    // 비용 검사 없이 이미 치른 강화를 그대로 재현하는 것이므로 SkillUpgrade/StatUpgrade를 거치지 않는다.
+    public void RestoreUpgradeState(int savedSkillLevel, int savedStatLevel)
+    {
+        for (int i = 0; i < savedSkillLevel && i < upgradeDatas.Count; i++)
+            upgradeDatas[i].Upgrade(this);
+        skillLevel = savedSkillLevel;
+
+        for (int i = 0; i < savedStatLevel; i++)
+            ApplyStatUpgradeModifiers();
+        statLevel = savedStatLevel;
     }
 }

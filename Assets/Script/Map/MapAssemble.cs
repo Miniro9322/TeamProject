@@ -19,6 +19,7 @@ public class MapAssemble : MonoBehaviour
     [SerializeField] private float ghostAlpha = 0.45f;
     [SerializeField] private TilePaintView tilePaintView;
     [SerializeField] private RangeInput rangeInput;
+    [SerializeField] private HeroCombineManager combineManager;
 
     private List<PathTrail> pathTrails;
     private List<EnemyLanes> laneModules;
@@ -33,11 +34,10 @@ public class MapAssemble : MonoBehaviour
         PlaceFinder finder = new PlaceFinder(pointerPick, palette, placeYOffset);
         UnitReplace replace = new UnitReplace(mapGame.Units);
 
-        BuildingUiLink buildingUi = new BuildingUiLink();
-        buildingUi.ui = mapGame.Ui;
-        buildingUi.rule = mapGame.Rule;
+        DayNightBuildRule dayNightRule = new DayNightBuildRule();
+        dayNightRule.rule = mapGame.Rule;
 
-        skillCast = new HeroSkillCastController { buildingUi = buildingUi };
+        skillCast = new HeroSkillCastController { dayNightRule = dayNightRule };
 
         RangeInfo rangeInfo = new RangeInfo();
         RangeTileData rangeStore = new RangeTileData();
@@ -66,16 +66,16 @@ public class MapAssemble : MonoBehaviour
         action.placer = mapGame.Placer;
         action.remover = new UnitRemover(mapGame.Units, mapGame.HeroRoster);
         action.replace = replace;
-        action.buildingUi = buildingUi;
+        action.dayNightRule = dayNightRule;
         action.view = view;
         action.heroRoster = mapGame.HeroRoster;
         action.skillCast = skillCast;
+        action.combineManager = combineManager;
 
         command.pointerPick = pointerPick;
         command.dragDetect = new DragDetect(dragPixels);
         command.rightDragDetect = new DragDetect(dragPixels);
         command.replace = replace;
-        command.buildingUi = buildingUi;
         command.action = action;
         ghost = new PlaceGhost(ghostAlpha);
         command.ghost = ghost;
