@@ -1,6 +1,13 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using Random = UnityEngine.Random;
+
+[Serializable]
+public class HeroTierList
+{
+    public List<GameObject> heroPrefabs;
+}
 
 // 같은 영웅 3개를 합성해 다음 티어 영웅 1개를 만드는 담당.
 // 위치·Kind는 이어받지 않는다 — 결과 영웅은 HeroRoster에 Available 엔트리로만 추가되고,
@@ -8,7 +15,7 @@ using Random = UnityEngine.Random;
 public class HeroCombineManager : MonoBehaviour
 {
     // index = 현재 Tier, 값 = 그 Tier에서 합성했을 때 나올 수 있는 다음 티어 프리팹 후보들.
-    [SerializeField] private List<List<GameObject>> heroForTierPrefabs;
+    [SerializeField] private List<HeroTierList> heroForTierPrefabs;
     [SerializeField] private MapGame game;
 
     // HeroRoster.Entries를 MergeKey로 묶어둔 캐시. HeroRoster가 원본, 여긴 조회용 인덱스일 뿐.
@@ -73,11 +80,11 @@ public class HeroCombineManager : MonoBehaviour
     private bool Combine(List<Hero> heroes)
     {
         int tier = heroes[0].MergeKey.Tier;
-        if (tier < 0 || tier >= heroForTierPrefabs.Count || heroForTierPrefabs[tier].Count == 0)
+        if (tier < 0 || tier >= heroForTierPrefabs.Count || heroForTierPrefabs[tier].heroPrefabs.Count == 0)
             return false; // 최고 티어거나 매핑 데이터 없음
 
-        List<GameObject> nextTierPrefabs = heroForTierPrefabs[tier];
-        GameObject nextTierPrefab = nextTierPrefabs[Random.Range(0, nextTierPrefabs.Count)];
+        HeroTierList nextTierPrefabs = heroForTierPrefabs[tier];
+        GameObject nextTierPrefab = nextTierPrefabs.heroPrefabs[Random.Range(0, nextTierPrefabs.heroPrefabs.Count)];
 
         foreach (Hero hero in heroes)
         {
@@ -96,7 +103,7 @@ public class HeroCombineManager : MonoBehaviour
             Destroy(hero.gameObject);
         }
 
-        Placeable newSlot = new Placeable { label = nextTierPrefab.name, prefab = nextTierPrefab };
+        Placeable newSlot = new Placeable { label = nextTierPrefab.name, prefab = nextTierPrefab, kind = nextTierPrefab.GetComponent<Hero>().OccupantKind };
         game.HeroRoster.Add(newSlot);
 
         return true;

@@ -293,7 +293,8 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
         currentHp = Mathf.Min(currentHp + amount, sc[StatType.HP]);
     }
 
-    protected OccupantKind occupantKind;
+    [SerializeField] protected OccupantKind occupantKind;
+    public OccupantKind OccupantKind => occupantKind;
 
     public event Action OnBreak;
     public event Action OnResur;
