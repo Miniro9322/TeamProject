@@ -28,7 +28,7 @@ public class DayNightButton : MonoBehaviour
     private void OnButton()
     {
         gameManager.OnNight();
-        text.gameObject.SetActive(false);
+        if(text != null) text.gameObject.SetActive(false);
         RotateThenHide().Forget();
     }
 
@@ -62,7 +62,7 @@ public class DayNightButton : MonoBehaviour
         gameObject.SetActive(true);
         button.interactable = true;
         if (icon != null) icon.localRotation = Quaternion.identity; // 다음 낮에 다시 누를 수 있게 원위치
-        text.gameObject.SetActive(true);
+        if (text != null) text.gameObject.SetActive(true);
     }
 
     private void OnDestroy()

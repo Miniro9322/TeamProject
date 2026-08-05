@@ -26,7 +26,7 @@ public class UpgradeInfoUI : MonoBehaviour
         nameText.text = data.displayName;
         descText.text = data.description;
         costText.text = data.cost.ToString();
-        icon.sprite = data.lockedIcon;
+        icon.sprite = data.icon;
         confirmButton.gameObject.SetActive(canUnlockNow); // 여기서만 잠금 여부가 반영됨
         gameObject.SetActive(true);
     }
