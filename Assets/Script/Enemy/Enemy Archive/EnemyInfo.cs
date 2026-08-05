@@ -39,6 +39,7 @@ public class EnemyInfo : MonoBehaviour
     public Color regenerationColor = new Color(0.18f, 0.80f, 0.44f); // 재생 - 초록
     public Color hitsShieldColor   = new Color(0.95f, 0.77f, 0.06f); // 타수 보호막 - 노랑
     public Color burrowColor       = new Color(0.65f, 0.32f, 0.20f); // 잠행 - 적갈색
+    public Color FlameColor = new Color(0.96f,0.12f,0.12f);
 
     [Tooltip("고유 특성으로 표기한 스킬의 글자색. 특성 단어와 눈으로 구분되게 다른 색을 주는 게 좋다.")]
     public Color signatureSkillColor = new Color(0.95f, 0.55f, 0.85f); // 고유 스킬 - 분홍
