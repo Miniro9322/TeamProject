@@ -88,12 +88,22 @@ public static class LaneList
     // 고른 줄만 굵게 쓴다.
     private static GUIStyle RowStyle(LaneData lane, RouteData chosen)
     {
-        if (IsChosen(lane, chosen))
+        return LaneButtonStyle(IsChosen(lane, chosen));
+    }
+
+    private static GUIStyle _laneButton;
+    private static GUIStyle _laneButtonChosen;
+
+    // 옆의 +갈래·뒤로·비우기와 같은 버튼 모양을 쓴다. 한 번만 만들어 매 프레임 새로 짓지 않는다.
+    private static GUIStyle LaneButtonStyle(bool chosen)
+    {
+        if (_laneButton == null)
         {
-            return EditorStyles.miniBoldLabel;
+            _laneButton = new GUIStyle(EditorStyles.miniButton) { alignment = TextAnchor.MiddleLeft };
+            _laneButtonChosen = new GUIStyle(_laneButton) { fontStyle = FontStyle.Bold };
         }
 
-        return EditorStyles.miniLabel;
+        return chosen ? _laneButtonChosen : _laneButton;
     }
 
     // 이 줄의 색점. 길이 끊겼으면 문제 색으로 찍는다.
