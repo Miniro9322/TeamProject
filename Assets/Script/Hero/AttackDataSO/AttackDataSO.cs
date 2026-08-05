@@ -8,15 +8,22 @@ public enum AnimSelectMode { Sequential, Random }
 public enum AttackTimingMode { Discrete, Continuous }
 
 // timingMode == Continuous 전용. 채널링 한 tick이 "잠긴 타겟에 즉시 피해(Beam)"인지 "실제 투사체
-// 발사(ProjectileVolley)"인지를 명시한다. 예전엔 projectilePrefab != null 이라는 필드 이름과 무관한
-// null 체크로 갈렸다.
+// 발사(ProjectileVolley)"인지 "타겟 잠금 없이 caster 위치 중심 AOE(SelfArea)"인지를 명시한다.
+// 예전엔 projectilePrefab != null 이라는 필드 이름과 무관한 null 체크로 갈렸다.
+//
+// SelfArea: 잠긴 타겟이 없어도(특정 적이 죽거나 벗어나도) 끊기지 않는다 — 매 틱 AttackDamageUtil의
+// 자기중심 AOE 분기(attackType=Area, targetMode=SameTarget)를 그대로 호출해 ctx.self 주변 areaRange
+// 내 모든 적을 때린다. 제자리에서 계속 도는 근접 채널링(예: 회전 베기) 용도. continuousDuration>0이면
+// 그 시간 동안 무조건 돌고, continuousDuration<=0("무제한")이면 다른 delivery와 동일한 "유효 대상 없으면
+// 종료" 계약을 따른다 — SelfArea에선 그 유효 대상이 "자기 위치 areaRange 안의 적 존재 여부"다.
 //
 // 스코프 경고: 이 enum은 ContinuousBeamStrategy 단 한 곳에서만 읽는다. 근접/원거리/힐 구분을
 // 여기에 추가하지 말 것 — 그 축은 {SwordMan,Archer,Mage,Healer}AttackState가 주입하는
 // IAttackExecutor가 유일한 권위이고, 데이터 쪽에 같은 구분을 만들면 진실 소스가 둘이 된다.
+// SelfArea도 "근접 전용"이 아니라 "타겟 고정 없는 자기중심 AOE 틱"이라는 배달 형태를 뜻할 뿐이다.
 // groundZonePrefab도 넣지 말 것 — 장판은 배달 방식이 아니라 모든 배달 방식에 부가로 co-occur하는
 // 옵션이다(MeleeAttackExecutor/RangedAttackExecutor/Projectile.Hit에서 각각 독립적으로 체크됨).
-public enum ContinuousDelivery { Beam = 0, ProjectileVolley = 1 }
+public enum ContinuousDelivery { Beam = 0, ProjectileVolley = 1, SelfArea = 2 }
 
 [CreateAssetMenu(fileName = "AttackData", menuName = "HeroAttack/AttackData")]
 public class AttackDataSO : ScriptableObject
@@ -49,9 +56,9 @@ public class AttackDataSO : ScriptableObject
 
     [Header("타이밍")]
     public AttackTimingMode timingMode = AttackTimingMode.Discrete;
-    [Tooltip("timingMode==Continuous 전용: 매 tick 즉시 피해(Beam)인지 투사체 발사(ProjectileVolley)인지")]
+    [Tooltip("timingMode==Continuous 전용: 매 tick 즉시 피해(Beam)인지 투사체 발사(ProjectileVolley)인지 타겟 고정 없는 자기중심 AOE(SelfArea)인지")]
     public ContinuousDelivery continuousDelivery = ContinuousDelivery.Beam;
-    [Tooltip("timingMode==Continuous 전용: 채널링 총 지속시간(초). 0 이하로 두면 시간 제한 없이 타겟이 죽거나 사거리를 벗어날 때까지 계속 채널링한다.")]
+    [Tooltip("timingMode==Continuous 전용: 채널링 총 지속시간(초). 0 이하로 두면 시간 제한 없이 유효 대상이 사라질 때까지 계속 채널링한다(Beam/ProjectileVolley는 잠긴 타겟, SelfArea는 자기 주변 areaRange 안의 적 존재 여부가 기준).")]
     public float continuousDuration = 2f;
     [Tooltip("timingMode==Continuous 전용: 피해 틱 주기(초)")]
     public float continuousTickInterval = 0.2f;
@@ -91,6 +98,10 @@ public class AttackDataSO : ScriptableObject
             Debug.LogWarning($"[{name}] Beam이므로 projectilePrefab({projectilePrefab.name})은 무시됩니다.", this);
         if (continuousDelivery == ContinuousDelivery.Beam && beamEffectPrefab == null)
             Debug.LogWarning($"[{name}] Beam인데 beamEffectPrefab이 비어 있습니다.", this);
+        if (continuousDelivery == ContinuousDelivery.SelfArea && projectilePrefab != null)
+            Debug.LogWarning($"[{name}] SelfArea이므로 projectilePrefab({projectilePrefab.name})은 무시됩니다.", this);
+        if (continuousDelivery == ContinuousDelivery.SelfArea && !(attackType == AttackType.Area && targetMode == TargetMode.SameTarget))
+            Debug.LogWarning($"[{name}] SelfArea는 attackType=Area, targetMode=SameTarget일 때만 자기중심 AOE 분기를 탑니다. 지금 설정으로는 데미지가 들어가지 않습니다.", this);
     }
 #endif
 }

@@ -15,7 +15,13 @@ using UnityEngine.Pool;
 // 보충) 각자 즉시 데미지(data.beamEffectPrefab이 있으면 캐스터→타겟을 잇는 이펙트를 채널링 내내
 // 스폰/갱신 — 두 점 갱신은 Hero.UpdateLinkEndpoints에 위임), ProjectileVolley면 매 tick 실제 투사체를
 // 발사하는 방식으로 갈린다(attackCount/targetCount로 매 tick 몇 발을 어디에 쏠지 결정 —
-// RangedAttackExecutor.FireVolley와 동일한 타겟팅 규칙).
+// RangedAttackExecutor.FireVolley와 동일한 타겟팅 규칙). SelfArea면 타겟 잠금 없이 매 tick
+// AttackDamageUtil의 자기중심 AOE 분기(attackType=Area, targetMode=SameTarget)를 그대로 호출해
+// ctx.self 주변을 때리므로 특정 적 하나가 죽어도 끊기지 않는다(제자리 회전 근접 채널링 용도) —
+// data.beamEffectPrefab이 있으면 캐스터→타겟 라인이 아니라 자기 위치에 붙는 이펙트 하나만 채널링
+// 내내 따라다닌다. continuousDuration>0이면 그 시간 동안 무조건 돌고, continuousDuration<=0("무제한")
+// 이면 Beam/ProjectileVolley와 동일하게 "유효 대상 없으면 종료" 계약을 따른다 — 여기서는 자기 위치
+// areaRange 안에 적이 하나도 없어지는 순간이 그 종료 조건이다.
 public class ContinuousBeamStrategy : IAttackDeliveryStrategy
 {
     public async UniTask Deliver(Hero hero, AttackDataSO data, AttackContext ctx, IAttackExecutor executor, CancellationToken ct)
@@ -29,6 +35,7 @@ public class ContinuousBeamStrategy : IAttackDeliveryStrategy
             ctx.anim.SetBool(animParam, true);
 
         bool isBeam = data.continuousDelivery == ContinuousDelivery.Beam;
+        bool isSelfArea = data.continuousDelivery == ContinuousDelivery.SelfArea;
         // attackCount개 빔을 동시에 든다 — SameTarget이면 전부 hero.Target(데미지 배수), DifferentEnemies면
         // targetCount종에게 라운드로빈 분배(FireProjectileVolley와 동일 규칙). 슬롯 타겟은 DifferentEnemies
         // 쪽만 저장해두고 매 틱 생존 확인 — SameTarget은 hero.Target을 매번 그대로 읽어서 재타겟팅에도
@@ -40,6 +47,12 @@ public class ContinuousBeamStrategy : IAttackDeliveryStrategy
                 beamSlots.Add((t, hero.SpawnPersistentEffect(data.beamEffectPrefab, ctx.muzzle.position, Quaternion.identity)));
         }
 
+        // SelfArea 전용 — 캐스터→타겟 라인이 아니라 캐스터 위치에 붙는 단일 이펙트(회전 이펙트 등)이므로
+        // 빔 슬롯처럼 여러 개/UpdateLinkEndpoints가 필요 없다. 매 틱 self 위치로만 갱신한다.
+        GameObject selfEffectGo = isSelfArea && data.beamEffectPrefab != null
+            ? hero.SpawnPersistentEffect(data.beamEffectPrefab, ctx.self.position, Quaternion.identity)
+            : null;
+
         try
         {
             float interval = Mathf.Max(0.05f, data.continuousTickInterval);
@@ -49,6 +62,21 @@ public class ContinuousBeamStrategy : IAttackDeliveryStrategy
                 if (isBeam)
                 {
                     if (!await TickBeams(hero, data, ctx, beamSlots, ct)) break; // 남은 빔 없음 — 채널링 종료
+                }
+                else if (isSelfArea)
+                {
+                    // 특정 적 하나의 생사와는 무관하게 계속 돈다(SameTarget처럼 잠긴 타겟이 없으므로).
+                    // 다만 continuousDuration<=0("무제한")일 때는 Beam/ProjectileVolley와 동일한 계약 —
+                    // "유효 대상이 없으면 종료" — 을 자기중심 AOE에 맞게 적용한다: 자기 위치 areaRange
+                    // 안에 적이 하나도 없으면 여기서 끝낸다. duration>0(고정 시간)이면 이 체크 없이 끝까지 돈다.
+                    if (data.continuousDuration <= 0f)
+                    {
+                        RangeShape aoeShape = AttackDamageUtil.ResolveAoeShape(data);
+                        bool anyEnemyNearby = hero.GetObjectsInRange(ctx.self.position, data.areaRange, aoeShape, RangeQueryAffinity.Enemy).Count > 0;
+                        if (!anyEnemyNearby) break;
+                    }
+                    if (selfEffectGo != null) selfEffectGo.transform.position = ctx.self.position;
+                    await AttackDamageUtil.ApplyInstantDamage(data, hero.Context, ct);
                 }
                 else
                 {
@@ -66,6 +94,7 @@ public class ContinuousBeamStrategy : IAttackDeliveryStrategy
             if (!string.IsNullOrEmpty(animParam)) ctx.anim.SetBool(animParam, false);
             foreach (var slot in beamSlots)
                 hero.DespawnEffect(data.beamEffectPrefab, slot.beamGo);
+            if (selfEffectGo != null) hero.DespawnEffect(data.beamEffectPrefab, selfEffectGo);
         }
     }
 
