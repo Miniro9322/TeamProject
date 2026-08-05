@@ -33,8 +33,10 @@ public class WaveSpawner : MonoBehaviour
     [Tooltip("이번 라운드에 활성화할 포탈(레인) 최대 개수.")]
     [SerializeField] private int maxActivePortals = 3;
 
-    // 스폰 타일별 전체 경로(맵당 1회 캐시). GetPaths가 스폰당 1경로를 준다.
+    // 스폰 타일별 전체 경로(날짜가 바뀌기 전까지 캐시). GetPaths가 스폰당 1경로를 준다.
     private IReadOnlyList<IReadOnlyList<Vector3>> _allPaths;
+    // enemyLanes.Changed 중복 구독 방지용. EnsurePaths가 캐시 히트로 일찍 끝나도 한 번만 걸린다.
+    private bool _hookedLaneChanges;
     // 이번 라운드에 활성화된 경로들. 포탈 표시(낮)와 적 경로 배분(밤)이 이 집합을 공유한다.
     private readonly List<IReadOnlyList<Vector3>> _activePaths = new();
     // 활성 레인 추첨용 임시 버퍼(GC 회피).
@@ -82,7 +84,25 @@ public class WaveSpawner : MonoBehaviour
         if (_allPaths != null || board == null) return;
         if (enemyLanes == null)
             enemyLanes = board.GetComponent<EnemyLanes>() ?? board.gameObject.AddComponent<EnemyLanes>();
+        if (!_hookedLaneChanges)
+        {
+            enemyLanes.Changed += OnLanesChanged; // 날짜가 바뀌어 레인이 다시 구워지면 캐시를 버리고 다시 받는다
+            _hookedLaneChanges = true;
+        }
         _allPaths = enemyLanes.GetPaths(0f);
+    }
+
+    // EnemyLanes가 레인을 다시 구울 때(날짜 변경 등) 호출된다. 캐시를 비우고 그 자리에서 새 경로로 다시 채운다.
+    private void OnLanesChanged()
+    {
+        _allPaths = null;
+        EnsurePaths();
+    }
+
+    private void OnDestroy()
+    {
+        if (enemyLanes != null)
+            enemyLanes.Changed -= OnLanesChanged;
     }
 
     // 이번 라운드에 켤 포탈(레인)을 min~max 범위에서 랜덤 개수만큼 활성화한다.
