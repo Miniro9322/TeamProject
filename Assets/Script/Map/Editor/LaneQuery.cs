@@ -15,6 +15,7 @@ public static class LaneQuery
     // 저작된 경로가 있으면 그대로 따라가 창의 선이 게임에서 걷는 길과 같아집니다.
     public static List<LaneData> BuildLanes(Dictionary<Vector2Int, Tile> cells, RouteConfig routes)
     {
+        TileLink.LinkNeighbors(cells);   // 창은 MapBoard.Build를 거치지 않으므로 여기서 직접 잇는다
         List<Tile> spawns = CollectSpawns(cells);
         List<Tile> cores = CollectCores(cells);
         var input = new LaneInputData(cells, spawns, cores);

@@ -88,6 +88,16 @@ public static class TileActionPreview
             return turnOff ? "적 스폰 끄기" : "적 스폰 켜기";
         }
 
+        if (brush == MapBrush.Swim)
+        {
+            return SwimWord(tile, turnOff);
+        }
+
+        if (brush == MapBrush.Fire)
+        {
+            return FireWord(turnOff);
+        }
+
         if (IsPlaceBrush(brush))
         {
             return PlaceWord(tile, brush, turnOff);
@@ -244,12 +254,44 @@ public static class TileActionPreview
             return $"{word} 끄기";
         }
 
+        if (tile.State.Pass != PassType.Walk)
+        {
+            return $"{word} 켜기 — 다만 헤엄 칸에는 아군을 놓을 수 없습니다";
+        }
+
         if (TileFlagQuery.TakesEffect(tile.Terrain, brush))
         {
             return $"{word} 켜기";
         }
 
         return $"{word} 켜기 — 다만 {Word(tile.Terrain)}에서는 지금 규칙상 효과가 없습니다";
+    }
+
+    // 통행 방식 붓. 지형이 원래 못 지나는 칸이면 켜도 달라지는 것이 없으므로 그 자리에서 알린다.
+    private static string SwimWord(Tile tile, bool turnOff)
+    {
+        if (turnOff)
+        {
+            return "헤엄 통행 끄기 — 걷는 적이 다시 지나갑니다";
+        }
+
+        if (!tile.Walkable)
+        {
+            return $"헤엄 통행 켜기 — 다만 {Word(tile.Terrain)}은 원래 못 지나는 칸입니다";
+        }
+
+        return "헤엄 통행 켜기 — 걷는 적은 이 칸을 못 지납니다(길이 돌아갑니다)";
+    }
+
+    // 불 붓. 길을 막지도, 배치를 막지도 않으므로 지형과 상관없이 말이 하나다.
+    private static string FireWord(bool turnOff)
+    {
+        if (turnOff)
+        {
+            return "불 끄기";
+        }
+
+        return "불 켜기 — 올라선 아군·적이 모두 지속피해를 받습니다";
     }
 
     private static bool IsPlaceBrush(MapBrush brush)

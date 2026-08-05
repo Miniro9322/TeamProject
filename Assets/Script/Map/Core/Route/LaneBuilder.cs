@@ -23,36 +23,51 @@ public class LaneBuilder : ILaneBuilder
 
         for (int i = 0; i < spawns.Count; i++)
         {
-            lanes.Add(BuildLane(input, spawns[i], cores));
+            AddSpawnLanes(input, spawns[i], cores, lanes);
         }
 
         return lanes;
     }
 
-    // 스폰 하나의 레인을 만듭니다. 계산에 실패하면 빈 레인을 냅니다.
-    private LaneData BuildLane(LaneInputData input, Tile spawn, HashSet<Tile> cores)
+    // 이 스폰에 지정된 경로마다 레인 하나를 만듭니다. 지정이 없으면 자동 최단 경로 하나만 냅니다.
+    private void AddSpawnLanes(LaneInputData input, Tile spawn, HashSet<Tile> cores, List<LaneData> lanes)
+    {
+        List<RouteData> spawnRoutes = GetRoutes(spawn);
+
+        if (spawnRoutes.Count == 0)
+        {
+            lanes.Add(BuildLane(input, spawn, null, cores));
+            return;
+        }
+
+        for (int index = 0; index < spawnRoutes.Count; index++)
+        {
+            lanes.Add(BuildLane(input, spawn, spawnRoutes[index], cores));
+        }
+    }
+
+    // 레인 하나를 만듭니다. 계산에 실패하면 빈 레인을 냅니다.
+    private LaneData BuildLane(LaneInputData input, Tile spawn, RouteData route, HashSet<Tile> cores)
     {
         if (cores.Count == 0)
         {
-            return new LaneData(spawn, null, Array.Empty<Tile>());
+            return new LaneData(spawn, null, route, Array.Empty<Tile>());
         }
 
-        List<Tile> path = FindRoute(input, spawn, cores);
+        List<Tile> path = FindRoute(input, spawn, route, cores);
 
         if (path == null || path.Count == 0)
         {
-            return new LaneData(spawn, null, Array.Empty<Tile>());
+            return new LaneData(spawn, null, route, Array.Empty<Tile>());
         }
 
         Tile goal = path[path.Count - 1];
-        return new LaneData(spawn, goal, path);
+        return new LaneData(spawn, goal, route, path);
     }
 
-    // 저작 경로가 있으면 그 노드를 따르고, 없으면 최단 경로를 씁니다.
-    private List<Tile> FindRoute(LaneInputData input, Tile spawn, HashSet<Tile> cores)
+    // 지정 경로가 있으면 그 노드를 따르고, 없으면 최단 경로를 씁니다.
+    private List<Tile> FindRoute(LaneInputData input, Tile spawn, RouteData route, HashSet<Tile> cores)
     {
-        RouteData route = GetRoute(spawn);
-
         if (route == null)
         {
             return AutoPath(input, spawn, cores);
@@ -68,17 +83,23 @@ public class LaneBuilder : ILaneBuilder
         return NodePath(input, spawn, nodes, cores);
     }
 
-    // 이 스폰에 저작된 경로를 찾습니다. 없으면 null입니다.
-    private RouteData GetRoute(Tile spawn)
+    // 이 스폰에 지정된 경로들. 보관처가 없거나 지정이 없으면 빈 목록입니다.
+    private List<RouteData> GetRoutes(Tile spawn)
     {
         if (routes == null)
         {
-            return null;
+            return EmptyRoutes;
         }
 
-        routes.TryGetRoute(spawn.Coord, out RouteData route);
-        return route;
+        if (routes.TryGetRoutes(spawn.Coord, out List<RouteData> found))
+        {
+            return found;
+        }
+
+        return EmptyRoutes;
     }
+
+    private static readonly List<RouteData> EmptyRoutes = new();
 
     // 저작 좌표를 지나갈 수 있는 타일로 바꿉니다. 하나라도 어긋나면 실패합니다.
     private static List<Tile> GetNodes(
@@ -91,7 +112,7 @@ public class LaneBuilder : ILaneBuilder
         {
             bool found = cells.TryGetValue(coords[i].Coord, out Tile tile);
 
-            if (!found || !tile.Walkable)
+            if (!found || !tile.CanWalk)
             {
                 return null;
             }
@@ -142,7 +163,7 @@ public class LaneBuilder : ILaneBuilder
         return Pathfinder.FindPath(
             new[] { from },
             tile => tile == node,
-            tile => GetNeighbors(input.Cells, tile),
+            CanWalk,
             tile => GridCalculator.GetDistance(tile.Coord, node.Coord));
     }
 
@@ -152,7 +173,7 @@ public class LaneBuilder : ILaneBuilder
         return Pathfinder.FindPath(
             new[] { from },
             tile => cores.Contains(tile),
-            tile => GetNeighbors(input.Cells, tile),
+            CanWalk,
             tile => GetDistance(tile, cores));
     }
 
@@ -165,20 +186,8 @@ public class LaneBuilder : ILaneBuilder
         }
     }
 
-    // 현재 타일의 상하좌우에서 이동 가능한 이웃 타일만 반환합니다.
-    private static IEnumerable<Tile> GetNeighbors(
-        IReadOnlyDictionary<Vector2Int, Tile> cells,
-        Tile tile)
-    {
-        foreach (Vector2Int step in GridCalculator.Directions)
-        {
-            bool found = cells.TryGetValue(tile.Coord + step, out Tile side);
-            if (found && side.Walkable)
-            {
-                yield return side;
-            }
-        }
-    }
+    // 적이 지나갈 수 있는 칸인지 판단합니다. 걸어서 오는 적 기준이라 헤엄 칸은 통로에서 빠집니다.
+    private static bool CanWalk(Tile tile) => tile.CanWalk;
 
     // 현재 타일에서 가장 가까운 코어까지의 맨해튼 거리를 구합니다.
     private static int GetDistance(Tile tile, HashSet<Tile> cores)

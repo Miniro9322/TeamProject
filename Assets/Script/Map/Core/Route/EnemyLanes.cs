@@ -11,10 +11,18 @@ public class EnemyLanes : MonoBehaviour
     [SerializeField] private RouteConfig routes;
 
     private readonly List<LaneData> lanes = new();
+
+    // 스폰마다 그 스폰에서 갈라지는 레인들. 계산 단계가 만들면서 밀어 넣는다.
+    private readonly List<List<LaneData>> spawnLanes = new();
+    private readonly Dictionary<Tile, int> spawnSlot = new();
+
     private ILaneBuilder builder;
 
     public IReadOnlyList<LaneData> Lanes => lanes;
     public bool IsReady { get; private set; }
+
+    // 스폰 수. GetPaths가 내는 목록과 번호가 그대로 짝이 된다.
+    public int SpawnCount => spawnLanes.Count;
 
     public event Action Changed;
 
@@ -37,6 +45,8 @@ public class EnemyLanes : MonoBehaviour
     {
         IsReady = false;
         lanes.Clear();
+        spawnLanes.Clear();
+        spawnSlot.Clear();
         Prepare();
 
         if (!CanBuild())
@@ -61,10 +71,10 @@ public class EnemyLanes : MonoBehaviour
         builder = value;
     }
 
-    // 유효한 모든 레인을 지정 높이가 적용된 월드 좌표 경로 목록으로 반환합니다.
+    // 스폰마다 대표 경로 하나. 번호가 SpawnCount와 짝이 맞아야 해서 막힌 스폰도 빈 자리로 남긴다.
     public IReadOnlyList<IReadOnlyList<Vector3>> GetPaths(float yOffset)
     {
-        //외부 호출시 
+        //외부 호출시
         //IReadOnlyList<IReadOnlyList<Vector3>> paths = enemyLanes.GetPaths(0f);
         //로 선언.
         var paths = new List<IReadOnlyList<Vector3>>();
@@ -74,19 +84,24 @@ public class EnemyLanes : MonoBehaviour
             return paths;
         }
 
-        for (int i = 0; i < lanes.Count; i++)
+        for (int i = 0; i < spawnLanes.Count; i++)
         {
-            LaneData lane = lanes[i];
-
-            if (!lane.IsValid)
-            {
-                continue;
-            }
-
-            paths.Add(lane.GetPoints(yOffset));
+            paths.Add(spawnLanes[i][0].GetPoints(yOffset));
         }
 
         return paths;
+    }
+
+    // 이 스폰에서 갈라지는 길 수.
+    public int BranchCount(int spawnIndex)
+    {
+        return spawnLanes[spawnIndex].Count;
+    }
+
+    // 이 스폰의 이 갈래 경로. 적 한 마리가 그대로 받아 걷는다.
+    public IReadOnlyList<Vector3> GetBranchPath(int spawnIndex, int branchIndex, float yOffset)
+    {
+        return spawnLanes[spawnIndex][branchIndex].GetPoints(yOffset);
     }
 
     // MapBoard 참조와 기본 LaneBuilder가 준비되었는지 확인합니다.
@@ -141,9 +156,23 @@ public class EnemyLanes : MonoBehaviour
         for (int i = 0; i < built.Count; i++)
         {
             lanes.Add(built[i]);
+            AddToSpawn(built[i]);
         }
 
         IsReady = true;
         Changed?.Invoke();
+    }
+
+    // 이 레인을 제 스폰 묶음에 넣는다. 처음 보는 스폰이면 묶음을 새로 연다.
+    private void AddToSpawn(LaneData lane)
+    {
+        if (spawnSlot.TryGetValue(lane.Start, out int found))
+        {
+            spawnLanes[found].Add(lane);
+            return;
+        }
+
+        spawnSlot[lane.Start] = spawnLanes.Count;
+        spawnLanes.Add(new List<LaneData> { lane });
     }
 }

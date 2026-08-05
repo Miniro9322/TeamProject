@@ -39,6 +39,9 @@ public class WaveSpawner : MonoBehaviour
     private readonly List<IReadOnlyList<Vector3>> _activePaths = new();
     // 활성 레인 추첨용 임시 버퍼(GC 회피).
     private readonly List<IReadOnlyList<Vector3>> _laneBuffer = new();
+    // 활성 포탈의 스폰 번호. _activePaths와 같은 순서라야 그 포탈의 갈래를 고를 수 있다.
+    private readonly List<int> _activeSpawns = new();
+    private readonly List<int> _spawnBuffer = new();
     /// <summary>이번 라운드에 켜진 포탈(레인)들의 경로. 각 경로 [0]이 포탈 위치.</summary>
     public IReadOnlyList<IReadOnlyList<Vector3>> ActivePaths => _activePaths;
 
@@ -93,15 +96,17 @@ public class WaveSpawner : MonoBehaviour
     {
         EnsurePaths();
         _activePaths.Clear();
+        _activeSpawns.Clear();
 
         _laneBuffer.Clear();
+        _spawnBuffer.Clear();
         if (_allPaths != null)
             for (int i = 0; i < _allPaths.Count; i++)
-                if (_allPaths[i] != null && _allPaths[i].Count > 0) _laneBuffer.Add(_allPaths[i]);
+                if (_allPaths[i] != null && _allPaths[i].Count > 0) { _laneBuffer.Add(_allPaths[i]); _spawnBuffer.Add(i); }
 
         if (_laneBuffer.Count == 0) // 레인 정보 없음 → 단일 경로 폴백
         {
-            if (waypoints != null && waypoints.Count > 0) _activePaths.Add(waypoints);
+            if (waypoints != null && waypoints.Count > 0) { _activePaths.Add(waypoints); _activeSpawns.Add(NoSpawn); }
             return _activePaths.Count;
         }
 
@@ -110,7 +115,9 @@ public class WaveSpawner : MonoBehaviour
         {
             int j = UnityEngine.Random.Range(i, _laneBuffer.Count);
             (_laneBuffer[i], _laneBuffer[j]) = (_laneBuffer[j], _laneBuffer[i]);
+            (_spawnBuffer[i], _spawnBuffer[j]) = (_spawnBuffer[j], _spawnBuffer[i]);
             _activePaths.Add(_laneBuffer[i]);
+            _activeSpawns.Add(_spawnBuffer[i]);
         }
         return _activePaths.Count;
     }
@@ -121,27 +128,46 @@ public class WaveSpawner : MonoBehaviour
     {
         EnsurePaths();
         _activePaths.Clear();
+        _activeSpawns.Clear();
 
         IReadOnlyList<Vector3> corner = null;
         int best = -1;
+        int cornerSpawn = NoSpawn;
         if (_allPaths != null)
             for (int i = 0; i < _allPaths.Count; i++)
             {
                 var p = _allPaths[i];
                 if (p == null || p.Count == 0) continue;
-                if (p.Count > best) { best = p.Count; corner = p; }
+                if (p.Count > best) { best = p.Count; corner = p; cornerSpawn = i; }
             }
 
-        if (corner == null) corner = waypoints;                 // 레인 정보 없으면 단일 경로 폴백
-        if (corner != null && corner.Count > 0) _activePaths.Add(corner);
+        if (corner == null) { corner = waypoints; cornerSpawn = NoSpawn; } // 레인 정보 없으면 단일 경로 폴백
+        if (corner != null && corner.Count > 0) { _activePaths.Add(corner); _activeSpawns.Add(cornerSpawn); }
         return _activePaths.Count;
     }
 
-    // 활성 포탈 중 하나를 랜덤으로 골라 그 경로를 준다. 활성 집합이 비면 단일 경로 폴백.
+    // 레인 정보 없이 켠 폴백 경로라 스폰 번호가 없다는 표시.
+    private const int NoSpawn = -1;
+
+    // 활성 포탈 중 하나를 랜덤으로 고르고, 그 포탈의 갈래 중 하나를 준다. 활성 집합이 비면 단일 경로 폴백.
     private IReadOnlyList<Vector3> NextSpawnPath()
     {
         if (_activePaths.Count == 0) return waypoints;
-        return _activePaths[UnityEngine.Random.Range(0, _activePaths.Count)];
+        return BranchPath(UnityEngine.Random.Range(0, _activePaths.Count));
+    }
+
+    // 이 포탈에서 갈라지는 길 중 하나. 갈래가 하나뿐이거나 막혀 있으면 대표 경로 그대로.
+    private IReadOnlyList<Vector3> BranchPath(int pick)
+    {
+        int spawn = _activeSpawns[pick];
+        if (enemyLanes == null || spawn == NoSpawn) return _activePaths[pick];
+
+        int branches = enemyLanes.BranchCount(spawn);
+        if (branches <= 1) return _activePaths[pick];
+
+        var branch = enemyLanes.GetBranchPath(spawn, UnityEngine.Random.Range(0, branches), 0f);
+        if (branch == null || branch.Count == 0) return _activePaths[pick];
+        return branch;
     }
     public void ResetText()
     {

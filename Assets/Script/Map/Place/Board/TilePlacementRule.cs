@@ -25,6 +25,12 @@ public static class TilePlacementRule
             return false;
         }
 
+        // 걷기가 아닌 통행 칸(헤엄 등)은 아군이 설 자리가 아니다 — 지형이 지상이어도 놓지 못한다.
+        if (tile.Pass != PassType.Walk)
+        {
+            return false;
+        }
+
         return placing switch
         {
             OccupantKind.MeleeHero  => CheckMelee(tile),

@@ -13,10 +13,16 @@ public static class TileAuthorRule
     /// 지상은 CanMelee·CanBuild 중 하나도 없을 때, 고지는 CanRanged가 없을 때 해당한다.
     /// 본진·특수·빈 타일은 원래 배치 불가라 문제로 보지 않는다.
     /// 스폰 칸도 빼둔다 — 적이 튀어나오는 자리를 비워두는 것은 실수가 아니라 저작 의도다.
+    /// 걷기가 아닌 통행 칸(헤엄 등)도 빼둔다 — 유닛이 설 자리가 아니라 비어 있는 것이 정상이다.
     /// </summary>
     public static bool IsDeadCell(Tile tile)
     {
         if (tile.IsEnemySpawn)
+        {
+            return false;
+        }
+
+        if (tile.State.Pass != PassType.Walk)
         {
             return false;
         }
@@ -53,6 +59,8 @@ public static class TileAuthorRule
             CanMelee = source.CanMelee,
             CanRanged = source.CanRanged,
             CanBuild = source.CanBuild,
+            Pass = source.Pass,
+            Gimmick = source.Gimmick,
             Flags = source.Flags,
             Occupant = source.Occupant
         };
@@ -90,15 +98,50 @@ public static class TileAuthorRule
 
         if (spawnCount > 0 && coreCount > 0)
         {
-            AddLaneProblems(lanes, problems);
+            AddLaneProblems(lanes, cells, problems);
         }
 
         AddDeadCells(cells, problems);
+        AddSwimCells(cells, problems);
         return problems;
+    }
+
+    // 헤엄 칸에 켜 둔 배치 허용은 규칙이 막아 아무 일도 안 하므로 지우라고 알린다.
+    private static void AddSwimCells(Dictionary<Vector2Int, Tile> cells, List<string> problems)
+    {
+        var placeable = new List<string>();
+
+        foreach (Tile tile in cells.Values)
+        {
+            if (tile.State.Pass == PassType.Walk)
+            {
+                continue;
+            }
+
+            if (!HasPlaceFlag(tile))
+            {
+                continue;
+            }
+
+            placeable.Add(tile.State.Label);
+        }
+
+        if (placeable.Count > 0)
+        {
+            problems.Add($"헤엄 칸인데 배치 허용이 켜진 칸 {placeable.Count}개 " +
+                $"({Preview(placeable)}) — 규칙이 막아 아무것도 놓이지 않습니다. Alt+클릭으로 허용을 끄세요.");
+        }
+    }
+
+    // 이 칸에 배치 허용이 하나라도 켜져 있는가. 옛 Flags 비트까지 합쳐 본다.
+    private static bool HasPlaceFlag(Tile tile)
+    {
+        return TileFlagQuery.CanMelee(tile) || TileFlagQuery.CanRanged(tile) || TileFlagQuery.CanBuild(tile);
     }
 
     private static void AddLaneProblems(
         IReadOnlyList<LaneData> lanes,
+        Dictionary<Vector2Int, Tile> cells,
         List<string> problems)
     {
         for (int i = 0; i < lanes.Count; i++)
@@ -109,9 +152,52 @@ public static class TileAuthorRule
                 continue;
             }
 
-            problems.Add($"스폰 {lane.Start.Coord}에서 본진까지 가는 길이 없습니다 — " +
-                "High나 Empty가 통로를 완전히 막았습니다.");
+            problems.Add(LaneWord(lane, cells));
         }
+    }
+
+    // 이 레인이 왜 죽었는지 한 줄로. 저작 노드가 막혔으면 몇 번인지 짚는다.
+    private static string LaneWord(
+        LaneData lane,
+        Dictionary<Vector2Int, Tile> cells)
+    {
+        string blocked = BlockedNodes(lane.Route, cells);
+
+        if (blocked.Length > 0)
+        {
+            return $"스폰 {lane.Start.Coord}의 경로 노드 {blocked}이(가) 지날 수 없는 칸입니다 — " +
+                "노드를 옮기거나 지우세요(헤엄 칸에 찍힌 노드가 흔한 원인입니다).";
+        }
+
+        return $"스폰 {lane.Start.Coord}에서 본진까지 가는 길이 없습니다 — " +
+            "High·Empty 또는 헤엄 칸이 통로를 완전히 막았습니다.";
+    }
+
+    // 이 레인에 지정된 노드 중 걸어서 못 지나는 것들의 번호. 없으면 빈 글자.
+    private static string BlockedNodes(
+        RouteData route,
+        Dictionary<Vector2Int, Tile> cells)
+    {
+        if (route == null)
+        {
+            return string.Empty;
+        }
+
+        var numbers = new List<string>();
+
+        for (int i = 0; i < route.Nodes.Count; i++)
+        {
+            bool found = cells.TryGetValue(route.Nodes[i].Coord, out Tile tile);
+
+            if (found && tile.CanWalk)
+            {
+                continue;
+            }
+
+            numbers.Add($"{i + 1}번");
+        }
+
+        return string.Join(", ", numbers);
     }
 
     // 배치 플래그가 비어 못 쓰는 칸을 지형별로 세어 알린다. 인스펙터로는 눈에 안 띄는 실수다.
