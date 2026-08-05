@@ -40,6 +40,9 @@ public class EnemyInfo : MonoBehaviour
     public Color hitsShieldColor   = new Color(0.95f, 0.77f, 0.06f); // 타수 보호막 - 노랑
     public Color burrowColor       = new Color(0.65f, 0.32f, 0.20f); // 잠행 - 적갈색
 
+    [Tooltip("고유 특성으로 표기한 스킬의 글자색. 특성 단어와 눈으로 구분되게 다른 색을 주는 게 좋다.")]
+    public Color signatureSkillColor = new Color(0.95f, 0.55f, 0.85f); // 고유 스킬 - 분홍
+
     private string enemyName;
     private string enemyDesc;
     private string enemyType;
@@ -219,20 +222,48 @@ public class EnemyInfo : MonoBehaviour
         SetActive(rightArrowButton, page < LastPage);
     }
 
-    // data.Attribute 원본("Fly|Cloaking" 등)을 파싱해 각 특성을 번역·결합. 없으면 "특성 없음"(None).
+    // data.Attribute 원본("Fly|Cloaking|FireZoneSkill" 등)을 파싱해 각 항목을 번역·결합. 없으면 "특성 없음"(None).
+    //
+    // EnemyAttribute로 파싱되는 토큰은 특성, 아니면 SkillTable의 스킬 ID로 본다 —
+    // "고유 특성으로 이 스킬을 가진다"를 특성 줄에 같이 세우기 위함이다.
+    // 표시 순서는 CSV에 적은 순서를 그대로 따른다(enum 선언 순서가 아니다) — 저작자가 순서를 쥔다.
+    //
+    // 이 칸은 표시 전용이다. 적이 실제로 그 스킬을 쓰는지는 EnemyTable의 Skills 칸이 정하고,
+    // EnemyBase.ParseAttribute는 여기 적힌 스킬 ID를 (enum이 아니므로) 조용히 무시한다.
     private string LocalizeAttributes(string raw)
     {
         var st = DataTableManager.StringTable;
-        EnemyAttribute attr = ParseAttribute(raw);
-
         var parts = new List<string>();
-        foreach (EnemyAttribute f in Enum.GetValues(typeof(EnemyAttribute)))
-            if (f != EnemyAttribute.None && (attr & f) != 0)
+        var seen = new HashSet<string>();   // 같은 토큰을 두 번 적어도 한 번만 표기
+
+        if (!string.IsNullOrEmpty(raw))
+        {
+            foreach (string token in raw.Split(new[] { '|', ';' }, StringSplitOptions.RemoveEmptyEntries))
             {
-                // 색 입히고 <link>로 감싼다 → AttributeTooltip이 hover 감지. link ID = 특성 enum 이름
-                string colored = Wrap(st.Get(f.ToString()), AttrColor(f));
-                parts.Add($"<link=\"{f}\">{colored}</link>");
+                string id = token.Trim();
+                if (id.Length == 0 || !seen.Add(id)) continue;
+
+                if (Enum.TryParse(id, true, out EnemyAttribute flag))
+                {
+                    if (flag == EnemyAttribute.None) continue;   // "None"을 적은 경우 — 아래 폴백이 처리한다
+                    // 색 입히고 <link>로 감싼다 → AttributeTooltip이 hover 감지. link ID = 특성 enum 이름
+                    parts.Add($"<link=\"{flag}\">{Wrap(st.Get(flag.ToString()), AttrColor(flag))}</link>");
+                    continue;
+                }
+
+                SkillTable.Data skill = DataTableManager.SkillTable?.Get(id);
+                if (skill == null)
+                {
+                    // 예전엔 조용히 사라져서 오타를 못 잡았다. 특성도 스킬도 아니면 알려준다.
+                    Debug.LogWarning($"EnemyInfo: 특성 칸의 '{id}'는 EnemyAttribute도 스킬 ID도 아니라 건너뛴다.", this);
+                    continue;
+                }
+                // link ID = 스킬 ID. 툴팁이 SkillTable에서 그 행의 Desc 키를 찾아 준다.
+                // NameKey가 빈 칸이면 null이고 StringTable.Get(null)은 예외를 던지므로 스킬 ID를 그대로 보여준다.
+                string label = string.IsNullOrEmpty(skill.NameKey) ? id : st.Get(skill.NameKey);
+                parts.Add($"<link=\"{id}\">{Wrap(label, signatureSkillColor)}</link>");
             }
+        }
 
         return parts.Count > 0 ? string.Join(attributeSeparator, parts) : st.Get("None");
     }
@@ -256,16 +287,6 @@ public class EnemyInfo : MonoBehaviour
     // TMP 리치 텍스트 color 태그로 감싸기
     private static string Wrap(string text, Color c)
         => $"<color=#{ColorUtility.ToHtmlStringRGB(c)}>{text}</color>";
-
-    private static EnemyAttribute ParseAttribute(string raw)
-    {
-        if (string.IsNullOrEmpty(raw)) return EnemyAttribute.None;
-        EnemyAttribute result = EnemyAttribute.None;
-        foreach (var token in raw.Split(new[] { '|', ';' }, StringSplitOptions.RemoveEmptyEntries))
-            if (Enum.TryParse(token.Trim(), true, out EnemyAttribute flag))
-                result |= flag;
-        return result;
-    }
 
     private static void SetText(TMP_Text t, string value)
     {

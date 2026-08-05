@@ -42,6 +42,9 @@ public abstract class DebuffSO : ScriptableObject
         if ((type & ctx.immuneMask) != 0)
         {
             DebuffDebug.Log($"{name}({type}) 면역 — 대상={(ctx.targetObject != null ? ctx.targetObject.name : "?")}", ctx.targetObject);
+            // 막았다는 사실을 대상에게 알린다 — 면역이 곧 트리거인 특성이 있다(화염족: 점화를 튕겨내며 재생을 얻음).
+            // 장부에는 남기지 않는다. 안 걸린 디버프가 아이콘으로 뜨면 "보이는 것 == 걸린 것"이 깨진다.
+            ctx.carrier?.OnDebuffBlocked(type, dur);
             return;
         }
 

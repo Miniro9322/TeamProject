@@ -13,6 +13,7 @@ public struct DebuffContext
     public IStunAble stunnable;
     public DebuffTracker ledger;      // 대상이 IDebuffCarrier가 아니면 null
     public DebuffType immuneMask;     // 대상이 안 걸리는 종류. DebuffSO.Apply가 여기서 걸러낸다
+    public IDebuffCarrier carrier;    // 면역으로 막혔을 때 알려 줄 대상. ledger와 같은 곳에서 찾는다
     public BuffManager buffManager;
     public GameManager gameManager;
     public object source;             // BuffManager의 스택 판정 키. 보통 디버프를 건 SO 자신
@@ -39,6 +40,7 @@ public struct DebuffContext
         ctx.stunnable = host as IStunAble ?? host.GetComponentInParent<IStunAble>();
 
         IDebuffCarrier carrier = host as IDebuffCarrier ?? host.GetComponentInParent<IDebuffCarrier>();
+        ctx.carrier = carrier;
         ctx.ledger = carrier?.Debuffs;
         ctx.immuneMask = carrier?.ImmuneDebuffs ?? DebuffType.None;
 
