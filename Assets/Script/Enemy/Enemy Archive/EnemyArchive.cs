@@ -17,6 +17,7 @@ public class EnemyArchive : MonoBehaviour
     private bool built;
     private readonly Dictionary<string, EnemyArchiveButton> buttons = new();   // enemyKey → 버튼
 
+    
     void OnEnable()
     {
         Build();
@@ -52,7 +53,10 @@ public class EnemyArchive : MonoBehaviour
 
     private void OnClickEnemy(EnemyTable.Data data)
     {
-        if (infoPanel != null) infoPanel.Info(data);
+        if (infoPanel == null) return;
+        // 미해금 ? 이미지는 목록 버튼과 같은 것을 쓴다 — 인스펙터에 두 번 꽂지 않게 여기서 넘겨준다.
+        infoPanel.SetLockIcon(lockIcon);
+        infoPanel.Info(data);
     }
 
     // 외부(스테이지 정보 툴팁의 도감 버튼)에서 특정 적 페이지를 바로 띄울 때.

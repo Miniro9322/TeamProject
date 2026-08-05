@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -27,6 +29,13 @@ public class EnemyInfo : MonoBehaviour
     [TextArea] public string lockedMessage = "???";
     public GameObject lockedEnemyText;
 
+    // 미해금일 때 e_Image에 띄울 ? 스프라이트. 목록 버튼(EnemyArchiveButton)과 같은 것을 쓰려고
+    // 인스펙터에 또 꽂지 않고 EnemyArchive가 SetLockIcon으로 넘겨 준다 — 출처를 하나로 둔다.
+    private Sprite lockIcon;
+
+    /// <summary>목록이 쓰는 ? 스프라이트를 상세 패널에도 알려 준다. EnemyArchive가 적을 띄울 때마다 호출한다.</summary>
+    public void SetLockIcon(Sprite icon) => lockIcon = icon;
+
     [Header("특성 표시")]
     [Tooltip("특성이 여러 개일 때 구분자 (예: \", \" 또는 \" | \")")]
     public string attributeSeparator = ", ";
@@ -43,6 +52,27 @@ public class EnemyInfo : MonoBehaviour
 
     [Tooltip("고유 특성으로 표기한 스킬의 글자색. 특성 단어와 눈으로 구분되게 다른 색을 주는 게 좋다.")]
     public Color signatureSkillColor = new Color(0.95f, 0.55f, 0.85f); // 고유 스킬 - 분홍
+
+    [Header("책 펼침 연출")]
+    [Tooltip("책 펼침 애니메이터(BookAnimatorCon). 비워두면 트리거를 쏘지 않고 페이드만 한다.")]
+    [SerializeField] private Animator bookAnimator;
+    [Tooltip("펼침을 시작시킬 트리거 이름. BookAnimatorCon의 파라미터와 같아야 한다.")]
+    [SerializeField] private string openTrigger = "Open";
+    [Tooltip("페이드할 대상. 비워두면 텍스트들과 적 아이콘(e_Image)의 alpha를 직접 건드린다 — " +
+             "컴포넌트 추가 없이 바로 동작한다. 테두리·배경까지 통째로 페이드하려면 그것들을 묶은 부모에 " +
+             "CanvasGroup을 붙여 여기 꽂는다(그 경우 아래 개별 alpha는 건드리지 않는다).")]
+    [SerializeField] private CanvasGroup textGroup;
+    [Tooltip("펼침 시작 후 텍스트가 뜨기 시작할 시각(초). 펼침 클립 길이의 8할쯤으로 맞추면 '다 펼쳐질 때쯤' 뜬다. " +
+             "클립에 Animation Event로 AnimEvent_BookOpened를 걸어두면 그게 먼저 걸리고 이 값은 안전망(타임아웃)으로만 쓰인다.")]
+    [SerializeField] private float revealDelay = 0.5f;
+    [Tooltip("서서히 뜨는 데 걸리는 시간(초). 0이면 즉시 표시(연출 없이 기존 거동).")]
+    [SerializeField] private float fadeDuration = 0.35f;
+
+    // 진행 중인 페이드. 다른 적을 연달아 누르면 앞선 페이드를 끊고 처음부터 다시 한다.
+    private CancellationTokenSource revealCts;
+    // Animation Event가 왔는지. revealDelay는 이벤트를 안 걸었을 때를 위한 안전망이다
+    // (EnemyBurrow가 파고들기 이벤트에 타임아웃을 함께 두는 것과 같은 구조).
+    private bool bookOpenedEvent;
 
     private string enemyName;
     private string enemyDesc;
@@ -98,7 +128,7 @@ public class EnemyInfo : MonoBehaviour
         if (!EnemyArchiveData.IsUnlocked(current.Name)) return;
 
         int keepPage = page;
-        Info(current);
+        Info(current, playOpenAnimation: false); // 언어만 바뀐 것이라 책을 다시 펼치지 않는다
         page = Mathf.Clamp(keepPage, 0, LastPage);
         Show();
     }
@@ -109,6 +139,8 @@ public class EnemyInfo : MonoBehaviour
     // 처음엔 비워둔 상태로 시작
     public void Clear()
     {
+        CancelReveal();
+        SetRevealAlpha(1f);   // 페이드 도중 닫혀도 다음에 열 때 글자가 투명하게 남아 있지 않게
         current = null;
         enemyName = string.Empty;
         enemyDesc = string.Empty;
@@ -128,11 +160,17 @@ public class EnemyInfo : MonoBehaviour
         SetActive(rightArrowButton, false);
     }
 
-    public void Info(EnemyTable.Data data)
+    public void Info(EnemyTable.Data data) => Info(data, true);
+
+    /// <summary>playOpenAnimation=false면 책을 다시 펼치지 않고 글자만 갈아끼운다(언어 전환 등).</summary>
+    public void Info(EnemyTable.Data data, bool playOpenAnimation)
     {
         if (data == null) { Clear(); return; }
 
         current = data; // 언어 전환 시 다시 그릴 대상(미해금이어도 기억해둬야 잠금 문구가 갱신된다)
+
+        // 해금 여부와 무관하게 책은 펼쳐진다 — 잠금 문구도 같이 서서히 떠야 자연스럽다.
+        if (playOpenAnimation) PlayOpenAndReveal();
 
         if (!EnemyArchiveData.IsUnlocked(data.Name)) { ShowLocked(); return; }
 
@@ -180,7 +218,12 @@ public class EnemyInfo : MonoBehaviour
         SetText(e_Attribute, string.Empty);
         SetText(e_SkillNameText, string.Empty);
         SetText(e_SkillDescText, string.Empty);
-        if (e_Image != null) e_Image.enabled = false;
+        if (e_Image != null)
+        {
+            // 목록 버튼과 같은 ? 이미지를 띄운다. 안 꽂혀 있으면(null) 예전처럼 그냥 숨긴다.
+            e_Image.sprite = lockIcon;
+            e_Image.enabled = lockIcon != null;
+        }
         SetActive(leftArrowButton, false);
         SetActive(rightArrowButton, false);
     }
@@ -288,6 +331,88 @@ public class EnemyInfo : MonoBehaviour
     // TMP 리치 텍스트 color 태그로 감싸기
     private static string Wrap(string text, Color c)
         => $"<color=#{ColorUtility.ToHtmlStringRGB(c)}>{text}</color>";
+
+    // ---- 책 펼침 + 텍스트 페이드 ----
+
+    /// <summary>펼침 클립 마지막 프레임에 Animation Event로 이 이름을 걸면 정확한 타이밍에 텍스트가 뜬다.
+    /// 안 걸어도 revealDelay가 안전망으로 대신 띄운다(EnemyBase의 AnimEvent_Burrowed와 같은 구조).</summary>
+    public void AnimEvent_BookOpened() => bookOpenedEvent = true;
+
+    // 책을 펼치고, 다 펼쳐질 때쯤 텍스트를 서서히 띄운다.
+    private void PlayOpenAndReveal()
+    {
+        CancelReveal();
+        bookOpenedEvent = false;
+
+        if (bookAnimator != null)
+        {
+            // 같은 트리거가 큐에 남아 있으면 다음 펼침이 즉시 소비돼 버린다 — 눌러 둔 것을 먼저 지운다.
+            bookAnimator.ResetTrigger(openTrigger);
+            bookAnimator.SetTrigger(openTrigger);
+        }
+
+        SetRevealAlpha(0f);   // 펼치는 동안은 텍스트·아이콘을 감춰 둔다
+        revealCts = new CancellationTokenSource();
+        RevealAfterOpen(revealCts.Token).Forget();
+    }
+
+    private void CancelReveal()
+    {
+        revealCts?.Cancel();
+        revealCts?.Dispose();
+        revealCts = null;
+    }
+
+    private async UniTask RevealAfterOpen(CancellationToken token)
+    {
+        // 도감은 Time.timeScale이 0인 동안에도 열리므로(일시정지 중 확인) 전부 unscaled로 잰다.
+        // 같은 이유로 bookAnimator의 Update Mode도 Unscaled Time이어야 펼침 애니가 멈추지 않는다.
+        float t = 0f;
+        while (!bookOpenedEvent && t < revealDelay)
+        {
+            t += Time.unscaledDeltaTime;
+            await UniTask.Yield(token);
+        }
+
+        t = 0f;
+        while (t < fadeDuration)
+        {
+            t += Time.unscaledDeltaTime;
+            SetRevealAlpha(Mathf.Clamp01(t / fadeDuration));
+            await UniTask.Yield(token);
+        }
+        SetRevealAlpha(1f);
+    }
+
+    // textGroup이 꽂혀 있으면 그쪽 alpha 하나로, 없으면 텍스트들과 적 아이콘의 alpha를 직접 건드린다.
+    // 도감 제목(m_ArchiveText)은 책과 무관하게 항상 보여야 하므로 건드리지 않는다.
+    private void SetRevealAlpha(float a)
+    {
+        if (textGroup != null) { textGroup.alpha = a; return; }
+
+        SetAlpha(e_NameText, a);
+        SetAlpha(e_TypeText, a);
+        SetAlpha(e_Attribute, a);
+        SetAlpha(e_DescText, a);
+        SetAlpha(e_SkillNameText, a);
+        SetAlpha(e_SkillDescText, a);
+        // 아이콘은 enabled로 켜고 끄는 것과 별개로 색 alpha만 조절한다 —
+        // Info가 sprite 유무로 enabled를 정한 뒤에도 이 값이 그대로 남아 같은 타이밍에 떠오른다.
+        SetAlpha(e_Image, a);
+    }
+
+    private static void SetAlpha(TMP_Text t, float a)
+    {
+        if (t != null) t.alpha = a;
+    }
+
+    private static void SetAlpha(Image img, float a)
+    {
+        if (img == null) return;
+        Color c = img.color;
+        c.a = a;
+        img.color = c;
+    }
 
     private static void SetText(TMP_Text t, string value)
     {
