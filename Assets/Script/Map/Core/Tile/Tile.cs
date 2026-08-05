@@ -129,7 +129,7 @@ public partial class Tile : MonoBehaviour
         }
 
         _enemies.Add(enemy);
-        EnterFire(enemy);
+        FireReceiver.ReceiveEntry(this, enemy.transform);
     }
 
     //타일에 적 이탈 등록
@@ -139,8 +139,6 @@ public partial class Tile : MonoBehaviour
         {
             return;
         }
-
-        ExitFire(enemy);
     }
 
     //불 칸일 때만 이 유닛을 불 줄 맨 뒤에 세운다.
