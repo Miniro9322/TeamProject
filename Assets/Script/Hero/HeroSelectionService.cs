@@ -3,6 +3,8 @@ public static class HeroSelectionService
 {
     private static Hero current;
 
+    public static Hero Current => current;
+
     public static void Select(Hero hero)
     {
         if (hero == null || current == hero) return;

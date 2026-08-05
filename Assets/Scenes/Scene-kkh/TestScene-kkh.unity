@@ -2707,7 +2707,7 @@ MonoBehaviour:
     placedIcon: {fileID: 21300000, guid: c20a970509f45d2408899087978f2753, type: 3}
     kind: 1
   - label: Archer
-    prefab: {fileID: 9004755700449656008, guid: a7ac5654ef98242468e00fe2dcff3d7a, type: 3}
+    prefab: {fileID: 9004755700449656008, guid: ca79c758b242b1f43b792e4c008ee16f, type: 3}
     icon: {fileID: 21300000, guid: 4d7007f4c3adf4b47bf765f6f552bd05, type: 3}
     placedIcon: {fileID: 21300000, guid: f40b145fd0e58e14b974983688fc9049, type: 3}
     kind: 2
@@ -7856,6 +7856,51 @@ MonoBehaviour:
   m_ChildScaleWidth: 0
   m_ChildScaleHeight: 0
   m_ReverseArrangement: 0
+--- !u!1 &1131347017
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1131347019}
+  - component: {fileID: 1131347018}
+  m_Layer: 0
+  m_Name: HeroCombineManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1131347018
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1131347017}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 11612f27d0b97304a999ba4ca4a744de, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HeroCombineManager
+  game: {fileID: 314587623}
+--- !u!4 &1131347019
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1131347017}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1564.8479, y: 0.00001, z: 18.76551}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1159633546
 GameObject:
   m_ObjectHideFlags: 0
@@ -20261,3 +20306,4 @@ SceneRoots:
   - {fileID: 1344506130}
   - {fileID: 1662097483}
   - {fileID: 250356135}
+  - {fileID: 1131347019}
