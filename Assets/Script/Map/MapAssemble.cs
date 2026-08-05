@@ -19,6 +19,7 @@ public class MapAssemble : MonoBehaviour
     [SerializeField] private float ghostAlpha = 0.45f;
     [SerializeField] private TilePaintView tilePaintView;
     [SerializeField] private RangeInput rangeInput;
+    [SerializeField] private HeroCombineManager combineManager;
 
     private List<PathTrail> pathTrails;
     private PlaceGhost ghost;
@@ -69,6 +70,7 @@ public class MapAssemble : MonoBehaviour
         action.view = view;
         action.heroRoster = mapGame.HeroRoster;
         action.skillCast = skillCast;
+        action.combineManager = combineManager;
 
         command.pointerPick = pointerPick;
         command.dragDetect = new DragDetect(dragPixels);

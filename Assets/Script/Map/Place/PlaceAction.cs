@@ -13,12 +13,38 @@ public class PlaceAction
     public MapView view;
     public HeroRoster heroRoster;
     public HeroSkillCastController skillCast;
+    public HeroCombineManager combineManager;
+
+    private Hero lastClickedHero;
+    private float lastClickTime;
+    private const float DoubleClickWindow = 0.3f;
 
     public void SelectTile(Tile tile)
     {
         view.Select(tile);
         skillCast?.HandleClick(tile);
         ShowOutline(tile);
+        TryDoubleClickCombine(tile);
+    }
+
+    // 짧은 시간 안에 같은 영웅이 다시 클릭되면 더블클릭으로 보고 그 자리에서 합성을 시도한다.
+    private void TryDoubleClickCombine(Tile tile)
+    {
+        if (combineManager == null || !TryGetHero(tile, out Hero hero))
+        {
+            lastClickedHero = null;
+            return;
+        }
+
+        bool isDoubleClick = hero == lastClickedHero && Time.time - lastClickTime <= DoubleClickWindow;
+        lastClickedHero = hero;
+        lastClickTime = Time.time;
+
+        if (isDoubleClick)
+        {
+            combineManager.TryCombine(hero.MergeKey);
+            lastClickedHero = null; // 연속 트리거 방지, 성공/실패 상관없이 한 번만 시도
+        }
     }
 
     // 고른 칸에 영웅이 서 있으면 테두리를 켜고, 아니면 끈다.
