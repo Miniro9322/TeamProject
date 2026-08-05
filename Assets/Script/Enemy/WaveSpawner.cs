@@ -39,6 +39,8 @@ public class WaveSpawner : MonoBehaviour
     private bool _hookedLaneChanges;
     // 이번 라운드에 활성화된 경로들. 포탈 표시(낮)와 적 경로 배분(밤)이 이 집합을 공유한다.
     private readonly List<IReadOnlyList<Vector3>> _activePaths = new();
+    // 이번 라운드에 활성화된 포탈(스폰) 번호. _activePaths와 같은 순서라야 그 포탈의 갈래를 고를 수 있다.
+    public IReadOnlyList<int> ActiveSpawns => _activeSpawns;
     // 활성 레인 추첨용 임시 버퍼(GC 회피).
     private readonly List<IReadOnlyList<Vector3>> _laneBuffer = new();
     // 활성 포탈의 스폰 번호. _activePaths와 같은 순서라야 그 포탈의 갈래를 고를 수 있다.
