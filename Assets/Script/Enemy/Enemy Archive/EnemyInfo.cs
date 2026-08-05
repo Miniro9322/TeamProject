@@ -74,6 +74,10 @@ public class EnemyInfo : MonoBehaviour
     // (EnemyBurrow가 파고들기 이벤트에 타임아웃을 함께 두는 것과 같은 구조).
     private bool bookOpenedEvent;
 
+    /// <summary>책이 펼쳐지고 있는 동안 true(펼침이 끝나 텍스트가 뜨기 시작하면 false).
+    /// EnemyArchive가 이걸 보고 클릭을 무시한다 — 펼치는 중에 다른 적으로 갈아끼우면 애니가 끊겨 보인다.</summary>
+    public bool IsBookOpening { get; private set; }
+
     private string enemyName;
     private string enemyDesc;
     private string enemyType;
@@ -352,8 +356,9 @@ public class EnemyInfo : MonoBehaviour
         }
 
         SetRevealAlpha(0f);   // 펼치는 동안은 텍스트·아이콘을 감춰 둔다
+        IsBookOpening = true; // 이 사이엔 EnemyArchive가 적 버튼 클릭을 무시한다
         revealCts = new CancellationTokenSource();
-        RevealAfterOpen(revealCts.Token).Forget();
+        RevealAfterOpen(revealCts).Forget();
     }
 
     private void CancelReveal()
@@ -361,27 +366,41 @@ public class EnemyInfo : MonoBehaviour
         revealCts?.Cancel();
         revealCts?.Dispose();
         revealCts = null;
+        IsBookOpening = false;   // 취소로 끝나도 잠금이 남으면 클릭이 영구히 막힌다
     }
 
-    private async UniTask RevealAfterOpen(CancellationToken token)
+    // own을 그대로 받는 이유 — 취소된 앞선 작업의 finally가 뒤늦게 깨어나
+    // 새로 시작한 연출의 IsBookOpening을 꺼버리는 것을 막는다(revealCts와 같은지 확인).
+    private async UniTask RevealAfterOpen(CancellationTokenSource own)
     {
-        // 도감은 Time.timeScale이 0인 동안에도 열리므로(일시정지 중 확인) 전부 unscaled로 잰다.
-        // 같은 이유로 bookAnimator의 Update Mode도 Unscaled Time이어야 펼침 애니가 멈추지 않는다.
-        float t = 0f;
-        while (!bookOpenedEvent && t < revealDelay)
+        CancellationToken token = own.Token;
+        try
         {
-            t += Time.unscaledDeltaTime;
-            await UniTask.Yield(token);
-        }
+            // 도감은 Time.timeScale이 0인 동안에도 열리므로(일시정지 중 확인) 전부 unscaled로 잰다.
+            // 같은 이유로 bookAnimator의 Update Mode도 Unscaled Time이어야 펼침 애니가 멈추지 않는다.
+            float t = 0f;
+            while (!bookOpenedEvent && t < revealDelay)
+            {
+                t += Time.unscaledDeltaTime;
+                await UniTask.Yield(token);
+            }
 
-        t = 0f;
-        while (t < fadeDuration)
-        {
-            t += Time.unscaledDeltaTime;
-            SetRevealAlpha(Mathf.Clamp01(t / fadeDuration));
-            await UniTask.Yield(token);
+            IsBookOpening = false;   // 펼침 끝 — 여기서부터 다른 적으로 넘어갈 수 있다
+
+            t = 0f;
+            while (t < fadeDuration)
+            {
+                t += Time.unscaledDeltaTime;
+                SetRevealAlpha(Mathf.Clamp01(t / fadeDuration));
+                await UniTask.Yield(token);
+            }
+            SetRevealAlpha(1f);
         }
-        SetRevealAlpha(1f);
+        finally
+        {
+            // 취소(패널 닫힘 등)로 빠져나가도 잠금을 반드시 푼다. 단 지금 살아있는 연출이 내 것일 때만.
+            if (revealCts == own) IsBookOpening = false;
+        }
     }
 
     // textGroup이 꽂혀 있으면 그쪽 alpha 하나로, 없으면 텍스트들과 적 아이콘의 alpha를 직접 건드린다.

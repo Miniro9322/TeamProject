@@ -20,6 +20,8 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
     [SerializeField] private GameObject burrowMarkerPrefab;
     [Tooltip("파고들기/솟아오르기 애니 이벤트가 안 왔을 때 강제로 다음 상태로 넘기는 시간(초). 클립 길이보다 넉넉하게.")]
     [SerializeField] private float burrowTimeout = 3f;
+    [Tooltip("잠수(Pool)/상승(Up) 애니 이벤트가 안 왔을 때 강제로 다음 상태로 넘기는 시간(초). IsSwim일 때만 사용. 클립 길이보다 넉넉하게.")]
+    [SerializeField] private float swimTimeout = 3f;
     [Tooltip("솟아오르며 영웅에게 거는 스턴 시간(초). 0이면 스턴을 걸지 않는다. Hero가 IStunAble을 구현하기 전까진 효과 없음.")]
     [SerializeField] private float burrowEmergeStun = 2f;
     [Tooltip("적 머리 위 체력바. 없는 프리팹이면 비워두면 된다(체력바 로직 전체가 no-op).")]
@@ -188,6 +190,7 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
         // 잠행 몹은 은신 셰이더 페이드를 쓰지 않는다(연출을 EnemyBurrow가 전담) — Cloaking 비트는 피격 판정용으로만 남긴다.
         if (IsCloaking && !IsBurrow) _cloak.Setup(gameObject, cloakSettings); // Attribute 결정(LoadStats) 뒤에 호출
         if (IsBurrow) _burrow.Setup(gameObject, animator, burrowMarkerPrefab, burrowTimeout);
+        if (IsSwim) _swim.Setup(animator, swimTimeout);   // Attribute 결정(LoadStats) 뒤에 호출
         stunEffectPrefab = Resources.Load<GameObject>("EnemyEffectPrefab/Stun");
         // Resources.Load는 내부 캐시가 있어 적마다 불러도 에셋을 다시 읽지 않는다.
         var debuffEffectSet = Resources.Load<DebuffEffectSetSO>(DebuffEffectSetPath);
@@ -232,6 +235,7 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
         if (IsDead) SendDieEvent();
         _cloak.Reset();
         _burrow.Reset();   // 지면 마커를 풀에 반납(안 하면 적에 딸려가 재사용 시 되살아난다)
+        _swim.Reset();     // 지상 상태로 되돌린다(안 하면 재사용된 개체가 헤엄 중인 채로 걸어 나온다)
         _bar.Reset();
         _debuffs.Reset();  // 소환된 아이콘을 풀에 반납(안 하면 다음 스폰이 이전 개체의 디버프 아이콘을 물고 나온다)
         _debuffEffects.Reset(); // 디버프 중에 죽어도 이펙트가 남지 않게 풀에 반납
@@ -266,6 +270,8 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
     private readonly EnemyHealthBar _bar = new();
     // 잠행 연출은 EnemyBurrow가 전담(Burrowed bool·렌더러 on/off·지면 마커). 잠행 몹이 아니면 통째로 no-op.
     private readonly EnemyBurrow _burrow = new();
+    // 수영 연출은 EnemySwim이 전담(물칸 진입 시 Pool→헤엄, 지상칸 만나면 Up→지상). 수영 몹이 아니면 통째로 no-op.
+    private readonly EnemySwim _swim = new();
     // 체력바 아래 디버프 아이콘은 EnemyDebuffBar가 전담. 아이콘을 안 꽂은 프리팹이면 통째로 no-op.
     private readonly EnemyDebuffBar _debuffs = new();
     // 디버프 이펙트는 EnemyDebuffEffects가 전담(종류별 프리팹·앵커, 중복 시 갱신, 앵커 추종).
@@ -295,13 +301,17 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
 
     protected virtual void Update()
     {
+        // 물 구간이면 이동 상태를 IsMoving 대신 IsSwim으로 보고하게 한다(둘이 동시에 켜지지 않는다).
+        _move.SwimAnim = _swim.UseSwimAnim;
         // active=사망/기절·속박 아님 → 그 동안 이동 정지(Idle).
         // 잠행 몹은 파고들기/솟아오르기 모션 중에도 멈춘다 — 안 그러면 걸어가면서 땅을 파고 솟는 게 보인다.
-        _move.Tick(!IsDead && !CannotMove && !_burrow.IsTransitioning, MoveSpeed);
+        // 수영 몹도 잠수(Pool)/상승(Up) 모션 중엔 멈춘다 — 같은 이유.
+        _move.Tick(!IsDead && !CannotMove && !_burrow.IsTransitioning && !_swim.IsTransitioning, MoveSpeed);
         UpdateExposedAttribute();       // 저지 상태에 따라 Hero가 보는 Attribute를 갱신
         _cloak.Tick(CloakClear);
         _burrow.Tick(CloakClear, transform.position); // 은신과 같은 트리거(저지/사망) — 저지되면 솟아오른다
-        // 불 칸 위면 스스로 점화된다. 이동(_move.Tick)이 끝난 뒤라야 이번 프레임 위치로 칸을 판정한다.
+        // 이동이 끝난 뒤에 불러야 이번 프레임 위치로 칸을 판정한다(물칸 진입/이탈 감지).
+        _swim.Tick(Board, transform.position);
         // 불 칸 점화는 Map 쪽 FireReceiver가 타일 진입/이탈로 걸어 준다(적·영웅 공용) —
         // 여기서 위치를 폴링하던 EnemyFireTile은 그것과 중복이라 걷어냈다.
         // 화염족 처리(ImmuneDebuffs로 막고 OnDebuffBlocked가 재생·오라 창을 여는 것)는 누가 걸든 그대로 동작한다.
@@ -503,6 +513,13 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
     // 각 클립 마지막 프레임에 Animation Event로 이 메서드 이름을 걸어준다.
     // 안 걸어도 EnemyBurrow의 타임아웃이 강제로 넘겨주지만(경고 로그), 연출 타이밍이 어긋난다.
     public void AnimEvent_Burrowed() => _burrow.NotifyBurrowed();   // 파고들기 끝 → 렌더러 off
+
+    // ---- 수영 Animation Event ----
+    // Pool(잠수)·Up(상승) 클립 마지막 프레임에 Animation Event로 이 이름을 걸어준다.
+    // 안 걸면 EnemySwim의 swimTimeout이 강제로 넘겨주지만(경고 로그) 연출 타이밍이 어긋난다.
+    public void AnimEvent_Dived() => _swim.NotifyDived();     // 잠수 끝 → 헤엄 이동 시작
+    public void AnimEvent_Emerged() => _swim.NotifyEmerged(); // 상승 끝 → 지상 이동 복귀
+
     public void AnimEvent_Surfaced()
     {
         _burrow.NotifySurfaced();

@@ -29,11 +29,15 @@ public static class DotRegistry
     private static readonly List<Entry> entries = new();
     private static GameManager subscribedGm;
 
+    // 장부(DebuffTracker)가 없는 대상의 이펙트 표시용 버퍼. 매 프레임 재사용해 할당을 피한다.
+    private static readonly Dictionary<Component, DebuffType> ledgerlessMasks = new();
+
     // 도메인 리로드를 끈 플레이 모드에서 이전 세션 장부가 남는 것을 막는다.
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void ResetStatics()
     {
         entries.Clear();
+        ledgerlessMasks.Clear();
         subscribedGm = null;
         DotDriver.ResetInstance();
     }
@@ -127,6 +131,25 @@ public static class DotRegistry
             DebuffDebug.Log($"DotRegistry {e.Host.name} {e.Type} 틱 {e.Damage}피해 — Hp {hpBefore:F0}→{e.Target.Hp:F0}," +
                 $" {e.Expiry - Time.time:F1}초 남음", e.Host);
         }
+
+        SyncLedgerlessEffects();
+    }
+
+    // 장부가 없는 대상(영웅)은 디버프 이펙트를 굴려 줄 곳이 없다 — 여기서 대신 밀어 준다.
+    // 적은 DebuffTracker가 있어 EnemyDebuffEffects가 프리팹 앵커로 그리므로 제외한다(이중 표시 방지).
+    // 제거는 DebuffEffectView가 "이번 프레임 목록에 없으면 반납"으로 처리하므로 해제 통보가 따로 필요 없다.
+    private static void SyncLedgerlessEffects()
+    {
+        ledgerlessMasks.Clear();
+        for (int i = 0; i < entries.Count; i++)
+        {
+            Entry e = entries[i];
+            if (e.Ledger != null || e.Host == null) continue;
+
+            ledgerlessMasks.TryGetValue(e.Host, out DebuffType mask);
+            ledgerlessMasks[e.Host] = mask | e.Type;   // 독·점화가 같이 걸려 있으면 OR로 합친다
+        }
+        DebuffEffectView.Sync(ledgerlessMasks);
     }
 
     private static Entry Find(IDamageAble target, DebuffType type)

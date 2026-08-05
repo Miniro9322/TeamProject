@@ -54,6 +54,8 @@ public class EnemyArchive : MonoBehaviour
     private void OnClickEnemy(EnemyTable.Data data)
     {
         if (infoPanel == null) return;
+        // 책이 펼쳐지는 중엔 무시한다 — 도중에 다른 적으로 갈아끼우면 펼침 애니가 끊겨 보인다.
+        if (infoPanel.IsBookOpening) return;
         // 미해금 ? 이미지는 목록 버튼과 같은 것을 쓴다 — 인스펙터에 두 번 꽂지 않게 여기서 넘겨준다.
         infoPanel.SetLockIcon(lockIcon);
         infoPanel.Info(data);
