@@ -10,6 +10,7 @@ public class HeroRosterPanel : MonoBehaviour, IBeginDragHandler, IScrollHandler
     [SerializeField] private HeroRosterIcon iconPrefab;
     [SerializeField] private Transform container;
     [SerializeField] private HeroUpgradePanel heroUpgradePanel;
+    [SerializeField] private HeroCombineManager combineManager;
     private GameObject currentObject = null;
 
     private void OnEnable()
@@ -35,7 +36,7 @@ public class HeroRosterPanel : MonoBehaviour, IBeginDragHandler, IScrollHandler
         foreach (HeroRosterEntry entry in game.HeroRoster.Entries)
         {
             HeroRosterIcon icon = Instantiate(iconPrefab, container);
-            icon.Set(entry, OnIconClicked);
+            icon.Set(entry, OnIconClicked, OnIconDoubleClicked);
 
             // 배치 중이면 실시간 값을, 제거되어 있으면 제거 시점에 저장해둔 값을 보여준다.
             Hero placedHero = entry.PlacedUnit != null ? entry.PlacedUnit.GetComponent<Hero>() : null;
@@ -66,6 +67,14 @@ public class HeroRosterPanel : MonoBehaviour, IBeginDragHandler, IScrollHandler
         {
             view.SetHero(entry);
         }
+    }
+
+    // 배치된 영웅 아이콘을 더블클릭하면 그 영웅의 MergeKey로 바로 합성을 시도한다.
+    private void OnIconDoubleClicked(HeroRosterEntry entry)
+    {
+        if (entry.State != HeroRosterState.Placed) return;
+        if (!entry.PlacedUnit.TryGetComponent(out Hero hero)) return;
+        combineManager.TryCombine(hero.MergeKey);
     }
 
     public void OnBeginDrag(PointerEventData eventData)

@@ -79,6 +79,8 @@ public class HeroCombineManager : MonoBehaviour
 
     private bool Combine(List<Hero> heroes)
     {
+        if (game.Rule != null && !game.Rule.CanBuild) return false; // 밤에는 합성 불가
+
         int tier = heroes[0].MergeKey.Tier;
         if (tier < 0 || tier >= heroForTierPrefabs.Count || heroForTierPrefabs[tier].heroPrefabs.Count == 0)
             return false; // 최고 티어거나 매핑 데이터 없음

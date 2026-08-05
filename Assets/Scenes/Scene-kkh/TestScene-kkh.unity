@@ -2948,6 +2948,7 @@ MonoBehaviour:
   ghostAlpha: 0.45
   tilePaintView: {fileID: 1235437630}
   rangeInput: {fileID: 314587633}
+  combineManager: {fileID: 1131347018}
 --- !u!114 &314587633
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3406,7 +3407,8 @@ MonoBehaviour:
   UiManagerPrefab: {fileID: -4134638076424000530, guid: 3e385b1b4e8959b4bafa91f57614b6ba, type: 3}
   EnviromentManagerPrefab: {fileID: 3058046442922278118, guid: dc7a1595742996c4299a9f573dbd0bbb, type: 3}
   GameManagerPrefab: {fileID: 2650317754315711049, guid: a872fe8395423844096d9274b9a994af, type: 3}
-  buildingPrefabRegistry: {fileID: 11400000, guid: 1d3447ef54d848e4fb3e5b5ecb9a6b87, type: 2}
+  economyConfig: {fileID: 0}
+  resourceIconSet: {fileID: 0}
   sunLight: {fileID: 1303599631}
 --- !u!4 &347216668
 Transform:
@@ -8350,6 +8352,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::AddCitizen
   amountInput: {fileID: 1629296172}
+  costIcon: {fileID: 0}
   costText: {fileID: 952484016}
   costAmount: 10
   closeKey: 60
@@ -13053,9 +13056,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c3a2356be9b88294a816a9d45e970757, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BuildModePanel
-  facilityPanel: {fileID: 1773534133}
   heroPanel: {fileID: 745711992}
   rosterPanel: {fileID: 2048319985}
+  InfoPanel: {fileID: 0}
   view: {fileID: 314587628}
   game: {fileID: 314587623}
   closeKey: 60
@@ -15649,6 +15652,7 @@ MonoBehaviour:
   facilityInfoPanel: {fileID: 1724245712}
   facilityIcon: {fileID: 255272557}
   facilityInfoText: {fileID: 839610886}
+  currentLabel: 
 --- !u!114 &1773534136
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -15780,6 +15784,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ToggleDayNight
   button: {fileID: 1792757730}
+  icon: {fileID: 0}
+  text: {fileID: 0}
 --- !u!114 &1792757730
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -18482,6 +18488,7 @@ MonoBehaviour:
   iconPrefab: {fileID: 518169462295036758, guid: 251aec095fea3194ca1bc5a317a1b17a, type: 3}
   container: {fileID: 1412555572}
   heroUpgradePanel: {fileID: 491204433}
+  combineManager: {fileID: 1131347018}
 --- !u!1001 &2070673078
 PrefabInstance:
   m_ObjectHideFlags: 0
