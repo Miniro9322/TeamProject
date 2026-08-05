@@ -12,16 +12,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3e63ecebd4cd6e044a8a127ea3df05bc, type: 3}
   m_Name: ChannelingSpinAttackData
   m_EditorClassIdentifier: Assembly-CSharp::AttackDataSO
-  range: 3
-  rangeShape: 0
+  range: 1
+  rangeShape: 1
   unattackableTarget: 3
-  attackType: 0
-  attackPer: 1
+  attackType: 1
+  attackPer: 0.5
   attackCount: 1
   targetMode: 0
   targetCount: 1
   shotInterval: 0.1
-  areaShape: 0
+  areaShape: 1
   areaRange: 1
   lineLength: 2
   chainRange: 2
@@ -29,8 +29,8 @@ MonoBehaviour:
   chainFalloff: 0.8
   chainEffectPrefab: {fileID: 0}
   chainEffectLifetime: 0.3
-  timingMode: 0
-  continuousDelivery: 0
+  timingMode: 1
+  continuousDelivery: 1
   continuousDuration: 2
   continuousTickInterval: 0.2
   beamEffectPrefab: {fileID: 0}
