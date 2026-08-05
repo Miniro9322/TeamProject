@@ -1,5 +1,6 @@
 using System;
 using TMPro;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -7,6 +8,9 @@ public class BaseUpgradeButton : MonoBehaviour
 {
     [SerializeField] private Button button;
     [SerializeField] private Image icon;
+    [SerializeField] private Image buttonImage;
+    [SerializeField] private Sprite lockedIcon;
+    [SerializeField] private Sprite unlockedIcon;
 
     public BaseUpgradeData Data { get; private set; }
     public event Action<BaseUpgradeData> Clicked;
@@ -14,7 +18,8 @@ public class BaseUpgradeButton : MonoBehaviour
     public void Set(BaseUpgradeData data, bool unlocked)
     {
         Data = data;
-        icon.sprite = unlocked ? data.unlockedIcon : data.lockedIcon;
+        icon.sprite = data.icon;
+        buttonImage.sprite = unlocked ? unlockedIcon : lockedIcon;
         button.onClick.RemoveAllListeners();
         button.onClick.AddListener(() => Clicked?.Invoke(data));
     }

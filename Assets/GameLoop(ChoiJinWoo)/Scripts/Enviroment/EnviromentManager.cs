@@ -7,6 +7,7 @@ public class EnviromentManager : MonoBehaviour
 {
     [SerializeField] private Light sunLight;
     [SerializeField] private float transitionDuration = 2f;
+    public float TransitionDuration => transitionDuration;
 
     [Header("Day Settings")]
     [SerializeField] private Color dayColor = Color.white;

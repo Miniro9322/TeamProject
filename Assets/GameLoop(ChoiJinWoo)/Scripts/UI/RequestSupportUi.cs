@@ -76,19 +76,15 @@ public class RequestSupportUi : MonoBehaviour
         FillButton(secondButton, secondLabel, secondChoice.ModuleID);
     }
 
-    public void FirstButton()
-    {
-        OnUnlock?.Invoke((byte)firstChoice.UnlockHero);
-        SelectChoice(firstChoice.ModuleID);
-        supportListCopy.Remove(firstChoice);
-        gameObject.SetActive(false);
-    }
+    public void FirstButton() => Choose(firstChoice);
 
-    public void SecondButton()
+    public void SecondButton() => Choose(secondChoice);
+
+    private void Choose(SupportRegion choice)
     {
-        OnUnlock?.Invoke((byte)secondChoice.UnlockHero);
-        SelectChoice(secondChoice.ModuleID);
-        supportListCopy.Remove(secondChoice);
+        OnUnlock?.Invoke((byte)choice.UnlockHero);
+        SelectChoice(choice.ModuleID);
+        supportListCopy.Remove(choice);
         gameObject.SetActive(false);
     }
 

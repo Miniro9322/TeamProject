@@ -35,33 +35,7 @@ public class ProductionValue : ScriptableObject
     public int DefaultMaxWorker => defaultMaxWorker;
     public string FacilityName => facilityName;
     public string FacilityInfo => facilityInfo;
-    public (ProductionType Type, int Amount)[] ConstructProduct
-    {
-        get
-        {
-            var temp = new (ProductionType, int)[constructCost.Count];
+    public (ProductionType Type, int Amount)[] ConstructProduct => constructCost.ToNegatedCostArray();
 
-            for (int i = 0; i < constructCost.Count; i++)
-            {
-                temp[i] = (constructCost[i].Type, -constructCost[i].Amount);
-            }
-
-            return temp;
-        }
-    }
-
-    public (ProductionType Type, int Amount)[] UpgradeCost
-    {
-        get
-        {
-            var temp = new (ProductionType, int)[upgradeCost.Count];
-
-            for (int i = 0; i < upgradeCost.Count; i++)
-            {
-                temp[i] = (upgradeCost[i].Type, -upgradeCost[i].Amount);
-            }
-
-            return temp;
-        }
-    }
+    public (ProductionType Type, int Amount)[] UpgradeCost => upgradeCost.ToNegatedCostArray();
 }
