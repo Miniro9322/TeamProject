@@ -135,12 +135,19 @@ public static class DebuffTableImporter
                 return ApplyStatEffects(stat, id, rows);
 
             case DotDebuffSO dot:
-                dot.damagePerTick = FirstValue(rows, r => r.DamagePerTick) ?? 0;
+                dot.percentPerTick = FirstValue(rows, r => r.PercentPerTick) ?? 0f;
                 dot.interval = FirstValue(rows, r => r.Interval) ?? 1f;
-                if (dot.damagePerTick <= 0)
+                if (dot.percentPerTick <= 0f)
                 {
-                    Debug.LogWarning($"DebuffTableImporter: '{id}'의 DamagePerTick이 비었거나 0 이하다");
+                    Debug.LogWarning($"DebuffTableImporter: '{id}'의 PercentPerTick이 비었거나 0 이하다 (대상 최대 체력의 %, 0.5 = 0.5%)");
                     return false;
+                }
+                // 고정 피해 시절 값(4, 5 ...)을 그대로 옮겨 적으면 한 틱에 최대 체력의 4~5%가 들어간다.
+                // 틀렸다고 단정할 순 없으니 막지는 않고, 단위를 착각한 것 같으면 알려만 준다.
+                if (dot.percentPerTick > 100f)
+                {
+                    Debug.LogWarning($"DebuffTableImporter: '{id}'의 PercentPerTick이 {dot.percentPerTick}다 — " +
+                        $"이 칸은 대상 최대 체력의 비율(%)이라 100을 넘으면 한 틱에 최대 체력 이상이 들어간다. 고정 피해값을 적은 게 아닌지 확인할 것");
                 }
                 return true;
 

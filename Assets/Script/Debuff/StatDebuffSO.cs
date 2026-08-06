@@ -1,10 +1,16 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
 /// 스탯 감소 디버프. 시간 관리를 전부 BuffManager에 맡긴다 — 자체 타이머가 없다.
 ///
-/// Slow·ASDown·ArmorBreak·Exhaust는 클래스를 따로 만들 이유가 없어 이 하나의 에셋 인스턴스로 만든다
+/// Slow·ASDown·ArmorBreak·Exhaust·Frost는 클래스를 따로 만들 이유가 없어 이 하나의 에셋 인스턴스로 만든다
 /// (Slow = SPD 하나, Exhaust = AS·SPD·ATK 셋을 한 에셋에 넣으면 끝).
+///
+/// ※ 스탯 감소 디버프를 새로 만들 땐 반드시 아래 AllowedTypes에 그 종류를 더할 것.
+///   빠뜨리면 DebuffTableImporter가 "이 파생형이 지원하지 않는다"며 에셋 자체를 안 만든다(조용히 없는 디버프가 된다).
+///   여러 스탯을 한꺼번에 깎는 종류라면 EnemyDebuffBar.ExplainedStats에도 같이 등록해야
+///   아이콘이 중복해서 뜨지 않는다.
 /// </summary>
 [CreateAssetMenu(menuName = "Debuff/Stat Debuff", fileName = "StatDebuff")]
 public class StatDebuffSO : DebuffSO
@@ -13,19 +19,55 @@ public class StatDebuffSO : DebuffSO
     public DebuffStatEffect[] effects;
 
     public override DebuffType AllowedTypes =>
-        DebuffType.Slow | DebuffType.ATKDown | DebuffType.ASDown | DebuffType.ArmorBreak | DebuffType.Exhaust;
+        DebuffType.Slow | DebuffType.ATKDown | DebuffType.ASDown | DebuffType.ArmorBreak
+        | DebuffType.Exhaust | DebuffType.Frost;
 
     protected override bool OnApply(in DebuffContext ctx, float duration, float scale)
     {
         if (ctx.unit == null || ctx.buffManager == null || effects == null) return false;
 
+        int applied = 0;
         for (int i = 0; i < effects.Length; i++)
         {
+            // 대상이 안 가진 스탯은 건너뛴다. 영웅은 제자리에 서 있는 유닛이라 SPD를 등록하지 않는데
+            // (Hero는 HP·ATK·DEF·BLK·AS만 AddStat), 그대로 넘기면 BuffManager → StatContainer.AddModifier가
+            // 딕셔너리 조회에서 KeyNotFoundException을 던진다. 예외가 여기서 새면 앞 칸은 이미 걸리고
+            // 뒤 칸은 안 걸린 반쪽 상태로 스킬 코루틴까지 죽는다.
+            if (!HasStat(ctx.unit.Stats, effects[i].statType))
+            {
+                DebuffDebug.Log($"{name}({type}) {effects[i].statType} 건너뜀 — 대상 " +
+                    $"{(ctx.targetObject != null ? ctx.targetObject.name : "?")}에 그 스탯이 없다");
+                continue;
+            }
+
             // scale은 감소분에 곱한다 — Additive -0.3에 scale 1.67이면 -0.5(50% 감소)가 된다.
             ctx.buffManager.ApplyStackingModifier(ctx.unit, effects[i].statType, effects[i].modifierType,
                 effects[i].value * scale, duration, effects[i].maxStacks, ctx.source ?? this);
+            applied++;
         }
-        return effects.Length > 0;
+
+        // 한 칸도 못 걸었으면 안 걸린 것이다 — true를 주면 아무 일도 안 하는 디버프가
+        // 장부와 아이콘에만 남는다("보이는 것 == 걸린 것"이 깨진다).
+        return applied > 0;
+    }
+
+    // 이 대상이 그 스탯을 가지고 있는가.
+    // StatContainer에 조회용 API가 없어(GetValue/인덱서 모두 없는 키면 던진다) 읽어 보고 판단한다.
+    // StatContainer는 GameLoop 쪽 파일이라 여기서 Has(StatType)를 넣을 수 없다 —
+    // 그쪽에 TryGetValue가 생기면 이 메서드를 그걸로 갈아끼우면 된다.
+    // 디버프를 거는 순간에만 불리므로(매 프레임이 아니다) 예외 비용은 문제가 되지 않는다.
+    private static bool HasStat(StatContainer sc, StatType type)
+    {
+        if (sc == null) return false;
+        try
+        {
+            _ = sc[type];
+            return true;
+        }
+        catch (KeyNotFoundException)
+        {
+            return false;
+        }
     }
 }
 

@@ -170,6 +170,10 @@ public class EnemyDebuffBar
         if ((tracked & DebuffType.ArmorBreak) != 0) mask |= 1 << (int)StatType.DEF;
         if ((tracked & DebuffType.Exhaust) != 0)
             mask |= (1 << (int)StatType.AS) | (1 << (int)StatType.SPD) | (1 << (int)StatType.ATK);
+        // 빙결은 공속·이속·방어력을 함께 깎는다 — 등록해두지 않으면 빙결 하나에
+        // 둔화·공속감소·방깎 아이콘까지 덩달아 뜬다(탈진과 같은 이유).
+        if ((tracked & DebuffType.Frost) != 0)
+            mask |= (1 << (int)StatType.AS) | (1 << (int)StatType.SPD) | (1 << (int)StatType.DEF);
         return mask;
     }
 }

@@ -31,37 +31,104 @@ public static class DebuffEffectView
     // 순회 중 제거하면 인덱스가 깨지므로 지울 키를 모아 뒀다가 지운다(매 프레임 재사용해 할당을 피한다).
     private static readonly List<Component> stale = new();
 
+    /// <summary>
+    /// 지속 피해가 아닌 디버프(스탯·상태)가 장부 없는 대상에 걸렸을 때의 만료 시각.
+    /// DotRegistry가 지속 피해를 들고 굴리듯, 이쪽은 나머지를 든다 — 빙결·둔화는 BuffManager로 가는데
+    /// 거긴 이펙트 뷰와 연결이 없어서 여기 기록해두지 않으면 영웅에게 아무것도 안 뜬다.
+    /// </summary>
+    private struct Entry
+    {
+        public Component Host;
+        public DebuffType Type;
+        public float Expiry;
+    }
+
+    private static readonly List<Entry> tracked = new();
+    // 지속 피해 마스크와 위 장부를 합친 이번 프레임 결과. 매 프레임 재사용해 할당을 피한다.
+    private static readonly Dictionary<Component, DebuffType> merged = new();
+
     // 도메인 리로드를 끈 플레이 모드에서 지난 세션의 이펙트 기록이 남는 것을 막는다.
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void ResetStatics()
     {
         spawned.Clear();
         stale.Clear();
+        tracked.Clear();
+        merged.Clear();
         set = null;
         setLoaded = false;
     }
 
     /// <summary>
-    /// 이번 프레임에 걸려 있는 상태를 그대로 넘긴다(대상 → 걸린 종류 마스크).
+    /// 장부 없는 대상에 지속 피해가 아닌 디버프가 걸렸음을 알린다(DebuffSO.Apply가 부른다).
+    /// 같은 대상·같은 종류가 이미 있으면 더 늦은 만료 시각이 이긴다 — 겹쳐 들어와도 이펙트는 하나다.
+    /// </summary>
+    public static void Track(Component host, DebuffType type, float duration)
+    {
+        if (host == null || type == DebuffType.None || duration <= 0f) return;
+        if (!EnsureSet()) return;   // 이펙트 에셋이 없으면 기록해봐야 그릴 것이 없다
+
+        // 만료를 굴려 줄 곳이 DotRegistry.Tick(DotDriver)뿐이다. 지속 피해가 한 번도 안 걸린 판에서는
+        // 구동체가 아예 없으므로 여기서 만들어 둔다 — 안 하면 걸리기만 하고 영영 안 사라진다.
+        DotDriver.Ensure();
+
+        float expiry = Time.time + duration;
+        for (int i = 0; i < tracked.Count; i++)
+        {
+            if (tracked[i].Host != host || tracked[i].Type != type) continue;
+            if (tracked[i].Expiry >= expiry) return;   // 이미 더 늦게 끝난다
+            Entry longer = tracked[i];
+            longer.Expiry = expiry;
+            tracked[i] = longer;
+            return;
+        }
+        tracked.Add(new Entry { Host = host, Type = type, Expiry = expiry });
+    }
+
+    /// <summary>
+    /// 이번 프레임 지속 피해 상태를 그대로 넘긴다(대상 → 걸린 종류 마스크). DotRegistry.Tick이 매 프레임 부른다.
+    /// 여기에 Track으로 쌓인 스탯·상태 디버프를 합쳐 그린다.
     /// 목록에서 빠진 대상의 이펙트는 여기서 반납된다 — 호출부가 해제를 따로 알려 줄 필요가 없다.
     /// </summary>
-    public static void Sync(Dictionary<Component, DebuffType> active)
+    public static void Sync(Dictionary<Component, DebuffType> dots)
     {
         if (!EnsureSet()) return;
+
+        // 0) 지속 피해 마스크 + 이 클래스가 든 장부를 합친다.
+        merged.Clear();
+        if (dots != null)
+        {
+            foreach (KeyValuePair<Component, DebuffType> pair in dots)
+                if (pair.Key != null) merged[pair.Key] = pair.Value;
+        }
+
+        // 만료·파괴·사망을 여기서 걷어낸다. 지속 피해가 아닌 디버프는 이 장부가 유일한 시계다.
+        // 사망 판정을 DotRegistry와 같은 규칙(Hp <= 0)으로 두어, 죽은 영웅 위에 서리가 남지 않게 한다.
+        for (int i = tracked.Count - 1; i >= 0; i--)
+        {
+            Entry e = tracked[i];
+            if (e.Host == null || Time.time >= e.Expiry
+                || (e.Host is IDamageAble dmg && dmg.Hp <= 0f))
+            {
+                tracked.RemoveAt(i);
+                continue;
+            }
+
+            merged.TryGetValue(e.Host, out DebuffType mask);
+            merged[e.Host] = mask | e.Type;
+        }
 
         // 1) 이번 프레임 목록에 없는 대상(해제·사망·풀 반납·파괴)은 전부 반납.
         stale.Clear();
         foreach (KeyValuePair<Component, GameObject[]> pair in spawned)
         {
-            if (pair.Key == null || active == null || !active.ContainsKey(pair.Key))
+            if (pair.Key == null || !merged.ContainsKey(pair.Key))
                 stale.Add(pair.Key);
         }
         for (int i = 0; i < stale.Count; i++) Clear(stale[i]);
 
-        if (active == null) return;
-
         // 2) 걸려 있는 대상은 마스크대로 칸을 켜고 끈다.
-        foreach (KeyValuePair<Component, DebuffType> pair in active)
+        foreach (KeyValuePair<Component, DebuffType> pair in merged)
         {
             if (pair.Key == null) continue;
             Apply(pair.Key, pair.Value);
@@ -75,8 +142,15 @@ public static class DebuffEffectView
         {
             // 파괴된 대상은 키로 다시 찾을 수 없으므로 null 키 항목을 통째로 걷어낸다.
             RemoveDestroyed();
+            for (int i = tracked.Count - 1; i >= 0; i--)
+                if (tracked[i].Host == null) tracked.RemoveAt(i);
             return;
         }
+
+        // 장부도 같이 끊는다 — 안 끊으면 다음 프레임 Sync가 만료 전인 항목을 보고 이펙트를 다시 소환한다.
+        for (int i = tracked.Count - 1; i >= 0; i--)
+            if (tracked[i].Host == host) tracked.RemoveAt(i);
+
         if (!spawned.TryGetValue(host, out GameObject[] slots)) return;
 
         for (int i = 0; i < slots.Length; i++) Despawn(slots, i);
