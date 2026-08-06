@@ -12,6 +12,9 @@ using UnityEngine;
 /// </summary>
 public class EnemyMovement
 {
+    private const string MovingBool = "IsMoving"; // 지상 이동
+    private const string SwimBool = "IsSwim";     // 헤엄 이동(수영 몹만 — 없는 컨트롤러는 이 이름을 쓰지 않는다)
+
     private readonly GameObject _go;
     private readonly Transform _tf;
     private readonly Animator _animator;
@@ -22,6 +25,7 @@ public class EnemyMovement
     private Vector2Int _lastCell = new(int.MinValue, int.MinValue); // 직전 칸 — 바뀐 프레임에만 보드 갱신
     private bool _moving;
     private bool _animMoving; // Animator에 보고한 마지막 이동 상태 — 바뀐 프레임에만 SetBool 호출
+    private bool _animSwim;   // 그때 보고한 대상이 IsSwim이었는지(false면 IsMoving)
 
     public MapBoard Board { get; private set; }
     public bool HasPath => _path.Count > 0;
@@ -37,6 +41,10 @@ public class EnemyMovement
     /// <summary>수영(헤엄 칸 통행). true면 물 칸(PassType.Swim)까지 길로 인정해 경로를 다시 찾는다.
     /// Flying이 켜져 있으면 그쪽이 더 넓은 통행권이라 이 값은 무시된다.</summary>
     public bool Swimming { get; set; }
+
+    /// <summary>물 구간 안에 있는 동안 true — 이동 상태를 IsMoving 대신 IsSwim으로 보고한다.
+    /// EnemySwim이 매 프레임 갈아끼운다. 통행권(Swimming)과 달리 "지금 물에 들어가 있는가"라 별개 값이다.</summary>
+    public bool SwimAnim { get; set; }
 
     /// <summary>본진 도달 신호 — 구독자(EnemyBase)가 OnArrivedAtCore + 디스폰을 처리한다.</summary>    
     public event System.Action ArrivedAtCore;
@@ -192,11 +200,22 @@ public class EnemyMovement
     }
 
     // 이동 상태를 Animator에 반영 — 바뀐 프레임에만 SetBool을 호출해 낭비/리셋 방지.
+    // 물 구간(SwimAnim)에서는 같은 이동 상태를 IsSwim으로 보고한다.
     private void SetMoving(bool moving)
     {
-        if (_animMoving == moving) return;
+        bool swim = SwimAnim;
+        if (_animMoving == moving && _animSwim == swim) return;
+
+        if (_animator != null)
+        {
+            // 보고 대상이 바뀌는 프레임엔 이전 파라미터를 먼저 내린다 — 안 내리면 IsMoving과 IsSwim이
+            // 같이 true로 남아 Animator가 어느 전이를 타는지 전이 순서에 따라 갈린다.
+            if (_animSwim != swim) _animator.SetBool(_animSwim ? SwimBool : MovingBool, false);
+            _animator.SetBool(swim ? SwimBool : MovingBool, moving);
+        }
+
         _animMoving = moving;
-        if (_animator != null) _animator.SetBool("IsMoving", moving);
+        _animSwim = swim;
     }
 
     private void FaceToward(Vector3 target)
