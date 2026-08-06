@@ -38,7 +38,10 @@ public class EnemySwim
     private float _pending;             // 전이 대기 시간(잠수/상승 중 하나만 대기하므로 하나로 충분)
     private Vector2Int _lastCell = new(int.MinValue, int.MinValue);
     private bool _paramChecked;
-
+    private GameObject _markerPrefab;
+    private GameObject _marker;
+    private Renderer[] _renderers;
+    private bool IsSwiming => _phase ==Phase.Swimming;
     public bool IsSetup => _animator != null;
 
     /// <summary>잠수/상승 모션 재생 중인지 — 이 동안엔 제자리에 멈춘다.
@@ -51,11 +54,13 @@ public class EnemySwim
     public bool UseSwimAnim => IsSetup && _phase != Phase.Ground;
 
     // 수영 몹일 때 EnemyBase가 (Attribute 결정 뒤) 1회 호출.
-    public void Setup(Animator animator, float timeout)
+    public void Setup(Animator animator, float timeout,GameObject root)
     {
-        if (animator == null) return;
+        if (animator == null||root == null) return;
         _animator = animator;
         _timeout = timeout > 0f ? timeout : 3f;
+        _renderers = root.GetComponentsInChildren<Renderer>(true);
+        _markerPrefab = Resources.Load<GameObject>("EnemyEffectPrefab/Bubble");
     }
 
     /// <summary>매 프레임 호출. 이동(EnemyMovement.Tick)이 끝난 뒤에 불러야 이번 프레임 위치로 칸을 판정한다.</summary>
@@ -75,6 +80,7 @@ public class EnemySwim
         }
 
         WatchPendingTransition();
+        UpdateMarker(position);
     }
 
     /// <summary>Pool(잠수) 클립 마지막 프레임의 Animation Event → EnemyBase.AnimEvent_Dived가 호출.</summary>
@@ -110,7 +116,23 @@ public class EnemySwim
         if (_phase == Phase.Ground && onSwimCell) Begin(Phase.Diving, DiveTrigger);
         else if (_phase == Phase.Swimming && !onSwimCell) Begin(Phase.Surfacing, SurfaceTrigger);
     }
-
+    private void UpdateMarker(Vector3 pos)
+    {
+        if (IsSwiming)
+        {
+            if (_marker == null)
+            {
+                if (_markerPrefab == null) return;
+                _marker = PoolManager.Instance.Spawn(_markerPrefab, pos, Quaternion.identity);
+            }
+            else
+            {
+                _marker.transform.position = pos; // 물에서 이동하는동안
+            }
+            return;
+        }
+        if (_marker != null) { PoolManager.Instance.Despawn(_marker); _marker = null; }
+    }
     private void Begin(Phase phase, string trigger)
     {
         _phase = phase;

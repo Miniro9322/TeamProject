@@ -196,7 +196,7 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
         // 잠행 몹은 은신 셰이더 페이드를 쓰지 않는다(연출을 EnemyBurrow가 전담) — Cloaking 비트는 피격 판정용으로만 남긴다.
         if (IsCloaking && !IsBurrow) _cloak.Setup(gameObject, cloakSettings); // Attribute 결정(LoadStats) 뒤에 호출
         if (IsBurrow) _burrow.Setup(gameObject, animator, burrowMarkerPrefab, burrowTimeout);
-        if (IsSwim) _swim.Setup(animator, swimTimeout);   // Attribute 결정(LoadStats) 뒤에 호출
+        if (IsSwim) _swim.Setup(animator, swimTimeout,gameObject);   // Attribute 결정(LoadStats) 뒤에 호출
         stunEffectPrefab = Resources.Load<GameObject>("EnemyEffectPrefab/Stun");
         // Resources.Load는 내부 캐시가 있어 적마다 불러도 에셋을 다시 읽지 않는다.
         var debuffEffectSet = Resources.Load<DebuffEffectSetSO>(DebuffEffectSetPath);
