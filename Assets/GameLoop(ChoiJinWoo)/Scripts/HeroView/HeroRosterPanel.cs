@@ -69,12 +69,11 @@ public class HeroRosterPanel : MonoBehaviour, IBeginDragHandler, IScrollHandler
         }
     }
 
-    // 배치된 영웅 아이콘을 더블클릭하면 그 영웅의 MergeKey로 바로 합성을 시도한다.
+    // 로스터 아이콘을 더블클릭하면(배치 여부 상관없이) 그 영웅의 MergeKey로 바로 합성을 시도한다.
     private void OnIconDoubleClicked(HeroRosterEntry entry)
     {
-        if (entry.State != HeroRosterState.Placed) return;
-        if (!entry.PlacedUnit.TryGetComponent(out Hero hero)) return;
-        combineManager.TryCombine(hero.MergeKey);
+        if (!entry.TryGetMergeKey(out MergeKey key)) return;
+        combineManager.TryCombine(key);
     }
 
     public void OnBeginDrag(PointerEventData eventData)

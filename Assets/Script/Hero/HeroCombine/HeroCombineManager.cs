@@ -12,55 +12,63 @@ public class HeroCombineManager : MonoBehaviour
     [SerializeField] private MapGame game;
 
     // 특정 MergeKey로 합성 가능한(3개 이상 모인) 후보가 있는지.
-    public bool TryGetCombinable(MergeKey key, out List<Hero> candidates)
+    public bool TryGetCombinable(MergeKey key, out List<HeroRosterEntry> candidates)
     {
         return heroRegistry.TryGetCombinable(key, out candidates);
     }
 
-    // Key로 바로 합성 시도 — 그 Key로 모인 것 중 앞의 3개를 쓴다.
+    // Key로 바로 합성 시도 — 그 Key로 모인 것 중 앞의 3개를 쓴다(로스터 전용 사본이 먼저 오도록 정렬돼 있음).
     public bool TryCombine(MergeKey key)
     {
-        if (!TryGetCombinable(key, out List<Hero> candidates)) return false;
+        if (!TryGetCombinable(key, out List<HeroRosterEntry> candidates)) return false;
         return Combine(candidates.GetRange(0, 3));
     }
 
-    // 정확히 이 3개로 합성 시도(테스트 UI용) — MergeKey 캐시를 거치지 않고 직접 검증한다.
+    // 정확히 이 3개로 합성 시도(테스트 UI용) — 맵에서 선택된 배치 영웅만 다루므로 MergeKey는 인스턴스에서 바로 읽는다.
     public bool TryCombine(List<Hero> heroes)
     {
         if (heroes == null || heroes.Count != 3) return false;
 
         MergeKey key = heroes[0].MergeKey;
-        for (int i = 1; i < heroes.Count; i++)
-            if (!heroes[i].MergeKey.Equals(key)) return false;
+        var entries = new List<HeroRosterEntry>(3);
+        foreach (Hero hero in heroes)
+        {
+            if (!hero.MergeKey.Equals(key)) return false;
+            if (!hero.TryGetComponent(out HeroRosterLink link) || link.Entry == null) return false;
+            entries.Add(link.Entry);
+        }
 
-        return Combine(heroes);
+        return Combine(entries);
     }
 
-    private bool Combine(List<Hero> heroes)
+    private bool Combine(List<HeroRosterEntry> entries)
     {
         if (game.Rule != null && !game.Rule.CanBuild) return false; // 밤에는 합성 불가
+        if (!entries[0].TryGetMergeKey(out MergeKey key)) return false;
 
-        int tier = heroes[0].MergeKey.Tier;
+        int tier = key.Tier;
         if (!heroRegistry.TryGetNextTierPrefabs(tier, out List<GameObject> nextTierPrefabs))
             return false; // 최고 티어거나 매핑 데이터 없음
 
         GameObject nextTierPrefab = nextTierPrefabs[Random.Range(0, nextTierPrefabs.Count)];
 
-        foreach (Hero hero in heroes)
+        foreach (HeroRosterEntry entry in entries)
         {
-            HeroRosterLink link = hero.GetComponent<HeroRosterLink>();
-            HeroRosterEntry entry = link != null ? link.Entry : null;
-
-            if (game.Units.TryGetArea(hero.gameObject, out PlacementArea area))
+            GameObject unit = entry.PlacedUnit;
+            if (unit != null)
             {
-                AreaPlace.Remove(area);
-                game.Units.Remove(hero.gameObject);
+                if (unit.TryGetComponent(out Hero hero)) HeroSelectionService.ClearIfSelected(hero);
+
+                if (game.Units.TryGetArea(unit, out PlacementArea area))
+                {
+                    AreaPlace.Remove(area);
+                    game.Units.Remove(unit);
+                }
+
+                Destroy(unit);
             }
 
-            if (entry != null) game.HeroRoster.Remove(entry);
-
-            HeroSelectionService.ClearIfSelected(hero);
-            Destroy(hero.gameObject);
+            game.HeroRoster.Remove(entry);
         }
 
         Placeable newSlot = new Placeable { label = nextTierPrefab.name, prefab = nextTierPrefab, kind = nextTierPrefab.GetComponent<Hero>().OccupantKind };
