@@ -43,6 +43,7 @@ public class MapView : MonoBehaviour
     }
     public bool IsPlacing { get { return palette.Mode == PlaceMode.Place; } }
     public bool IsReplacing { get { return palette.Mode == PlaceMode.Replace; } }
+    public bool IsRemoving { get { return palette.Mode == PlaceMode.Remove; } }
     public bool IsOff { get { return palette.Mode == PlaceMode.Off; } }
     public Vector2Int HeldSize { get { return replace.HeldSize; } }
 

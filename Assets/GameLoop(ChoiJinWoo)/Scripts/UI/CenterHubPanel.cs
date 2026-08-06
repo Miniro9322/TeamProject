@@ -26,6 +26,7 @@ public class CenterHubPanel : MonoBehaviour, IClosablePanel
     private void Awake()
     {
         if (openButton != null) openButton.onClick.AddListener(Toggle);
+        if (addCitizenPanel.gameObject.activeSelf) addCitizenPanel.gameObject.SetActive(false);
         outsideCloser = new ClickOutsideCloser((RectTransform)transform, openButton != null ? openButton.transform : null);
         gameObject.SetActive(false);
     }

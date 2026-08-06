@@ -19,6 +19,12 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
     [SerializeField] private List<BaseUpgradeData> statUpgradeCostUpgrades;
     [SerializeField] private List<BaseUpgradeData> statUpgrades;
     [SerializeField] private List<HeroUpgradeData> upgradeDatas;
+    [SerializeField] private HeroData heroData;
+    public int Tier => heroData.Tier;
+    public int UnitId => heroData.UnitId;
+    public string HeroName => heroData.HeroName;
+    public MergeKey MergeKey => new MergeKey(heroData.UnitId, heroData.Tier);
+
     private int skillLevel = 0;
     private int statLevel = 0;
     public int SkillLevel => skillLevel;
@@ -287,7 +293,8 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
         currentHp = Mathf.Min(currentHp + amount, sc[StatType.HP]);
     }
 
-    protected OccupantKind occupantKind;
+    [SerializeField] protected OccupantKind occupantKind;
+    public OccupantKind OccupantKind => occupantKind;
 
     public event Action OnBreak;
     public event Action OnResur;
