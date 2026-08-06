@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -9,12 +10,13 @@ public class HeroRosterIcon : MonoBehaviour, IPointerClickHandler
 {
     [SerializeField] private Image icon;
     [SerializeField] private Button button;
-    [SerializeField] private TextMeshProUGUI statLevelText;
-    [SerializeField] private TextMeshProUGUI skillLevelText;
+
+    private const float DoubleClickWindow = 0.3f; // PlaceAction.DoubleClickWindow와 동일한 값
 
     private HeroRosterEntry entry;
     private Action<HeroRosterEntry, HeroRosterIcon> onClick;
     private Action<HeroRosterEntry> onDoubleClick;
+    private Coroutine pendingSingleClick;
 
     public void Set(HeroRosterEntry entry, Action<HeroRosterEntry, HeroRosterIcon> onClick, Action<HeroRosterEntry> onDoubleClick = null)
     {
@@ -23,20 +25,32 @@ public class HeroRosterIcon : MonoBehaviour, IPointerClickHandler
         this.onDoubleClick = onDoubleClick;
 
         icon.sprite = entry.State == HeroRosterState.Placed ? entry.Slot.placedIcon : entry.Slot.icon;
-
-        button.onClick.RemoveAllListeners();
-        button.onClick.AddListener(() => this.onClick?.Invoke(this.entry, this));
     }
 
-    // 배치된 영웅 아이콘을 빠르게 두 번 클릭하면 합성 시도로 본다.
+    // 첫 클릭은 곧바로 실행하지 않고 잠깐 기다린다. 그 안에 두 번째 클릭이 오면 단일 클릭 동작은
+    // 취소되고 더블클릭 동작만 실행된다 — 더블클릭에 단일 클릭 동작(배치모드 진입 등)이 같이
+    // 발동하지 않도록 하기 위함.
     public void OnPointerClick(PointerEventData eventData)
     {
-        if (eventData.clickCount >= 2) onDoubleClick?.Invoke(entry);
+        if (eventData.clickCount >= 2)
+        {
+            if (pendingSingleClick != null)
+            {
+                StopCoroutine(pendingSingleClick);
+                pendingSingleClick = null;
+            }
+            onDoubleClick?.Invoke(entry);
+            return;
+        }
+
+        if (pendingSingleClick != null) StopCoroutine(pendingSingleClick);
+        pendingSingleClick = StartCoroutine(FireSingleClickAfterDelay());
     }
 
-    public void UpdateLevel(int statLevel, int skillLevel)
+    private IEnumerator FireSingleClickAfterDelay()
     {
-        statLevelText.text = $"LV.{statLevel}";
-        skillLevelText.text = $"LV.{skillLevel}";
+        yield return new WaitForSeconds(DoubleClickWindow);
+        pendingSingleClick = null;
+        onClick?.Invoke(entry, this);
     }
 }

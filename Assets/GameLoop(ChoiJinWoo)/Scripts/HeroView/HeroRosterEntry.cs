@@ -43,4 +43,20 @@ public class HeroRosterEntry
         State = HeroRosterState.Available;
         PlacedUnit = null;
     }
+
+    // 배치 여부와 무관하게 이 엔트리의 MergeKey를 구한다. 배치돼 있으면 실제 인스턴스에서,
+    // 아니면 슬롯의 프리팹 에셋에서 읽는다. 프리팹 참조가 끊긴 경우(Placeable.prefab == null 등)
+    // 를 조용히 실패로 처리해 합성 인덱싱이 로스터 갱신 이벤트를 죽이지 않게 한다.
+    public bool TryGetMergeKey(out MergeKey key)
+    {
+        GameObject source = PlacedUnit != null ? PlacedUnit : Slot?.prefab;
+        if (source != null && source.TryGetComponent(out Hero hero))
+        {
+            key = hero.MergeKey;
+            return true;
+        }
+
+        key = default;
+        return false;
+    }
 }

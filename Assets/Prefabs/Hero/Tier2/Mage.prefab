@@ -14229,7 +14229,7 @@ Transform:
   m_GameObject: {fileID: 5127629013743316858}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -3.9099, y: -0, z: -12.27597}
+  m_LocalPosition: {x: 0, y: -0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -14291,7 +14291,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: ffc47afd9a8a789428b4107c94522400, type: 2}
   heroData: {fileID: 11400000, guid: 7b24cda69c861a246a1d580c74ef91bd, type: 2}
   basePattern:
-  - {fileID: 11400000, guid: 127bbc211d754c04a9a535a12b34656a, type: 2}
+  - {fileID: 11400000, guid: c53dd6855832d87479859bd709aec13a, type: 2}
   anim: {fileID: 5966798527436522038}
   animEvents: {fileID: 2471352903922337075}
   statData: {fileID: 11400000, guid: 6614047bf1925954e8d65ccadaedec43, type: 2}
@@ -14312,7 +14312,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::NthHitHeavyTrait
   everyN: 4
-  heavyAttackData: {fileID: 11400000, guid: c86fad42437ee1747a4325a8938839fb, type: 2}
+  heavyAttackData: {fileID: 11400000, guid: bb6ecc8208f6e174dbf0507f08b62cf8, type: 2}
 --- !u!1 &5160900259636390969
 GameObject:
   m_ObjectHideFlags: 0

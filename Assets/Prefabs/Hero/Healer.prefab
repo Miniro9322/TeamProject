@@ -1964,7 +1964,7 @@ Animator:
   m_Controller: {fileID: 9100000, guid: eb7a8abd464cc2446a7752f6a7b56605, type: 2}
   m_CullingMode: 1
   m_UpdateMode: 0
-  m_ApplyRootMotion: 1
+  m_ApplyRootMotion: 0
   m_LinearVelocityBlending: 0
   m_StabilizeFeet: 0
   m_AnimatePhysics: 0
@@ -3564,18 +3564,15 @@ MonoBehaviour:
   - {fileID: 11400000, guid: e49aeb40aaf6e0a41adff4f16efb55cb, type: 2}
   - {fileID: 11400000, guid: f93954c4747b7434b993fd535229b9b1, type: 2}
   - {fileID: 11400000, guid: 10ffec894dcfda24d8addaf23fdc03e5, type: 2}
+  heroData: {fileID: 0}
   basePattern:
   - {fileID: 11400000, guid: 9386eca0c07f29e439c141a69d3c3435, type: 2}
-  selectors: []
-  procs: []
   anim: {fileID: 3834446522129468286}
   animEvents: {fileID: 3661874174853682023}
   statData: {fileID: 11400000, guid: 33d8087b0e44c674e9999b408441f263, type: 2}
   board: {fileID: 0}
-  range: 5
-  rangeShape: 0
-  auraZones: []
-  unattackableTarget: 3
+  auraZonePrefabs: []
+  occupantKind: 0
 --- !u!1 &7347644779608144769
 GameObject:
   m_ObjectHideFlags: 0

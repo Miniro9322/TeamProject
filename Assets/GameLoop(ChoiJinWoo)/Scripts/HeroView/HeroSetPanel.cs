@@ -1,21 +1,20 @@
 using System.Collections.Generic;
-using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
 
-// 영웅 "생성" 전용 패널. 버튼을 수동으로 늘리지 않고, PlacePalette에 등록된 영웅 슬롯 수만큼 자동으로 만든다.
-// 아이콘은 패널이 켜질 때 한 번만 만들고, 자원/시민 변화에는 파괴/재생성 없이 interactable만 갱신한다.
+// 영웅 "생성" 전용 패널. 근접/원거리 버튼 2개뿐 — 누르면 고정 비용을 내고 HeroCreateManager가
+// 티어 확률대로 뽑은 영웅 하나를 로스터에 추가한다.
 public class HeroSetPanel : MonoBehaviour
 {
     [SerializeField] private MapView view;
     [SerializeField] private MapGame game;
-    [SerializeField] private HeroCreateIcon iconPrefab;
-    [SerializeField] private Transform container;
-    [SerializeField] private HeroInfoUI HeroInfoPanel;
-    [SerializeField] private Image HeroInfoIcon;
-    [SerializeField] private TextMeshProUGUI heroInfoText;
+    [SerializeField] private HeroCreateManager createManager;
+    [SerializeField] private HeroCreateIcon meleeIcon;
+    [SerializeField] private HeroCreateIcon rangedIcon;
 
-    private readonly Dictionary<Placeable, HeroCreateIcon> icons = new();
+    [Header("생성 1회당 고정 소모 비용")]
+    [SerializeField] private int citizenCost = 2;
+    [SerializeField] private List<ResourceCost> resourceCost;
+
     private bool wasBlocked;
 
     //모드 전환을 알리는 이벤트가 없어서 BuildModePanel의 Esc 감지처럼 매 프레임 폴링한다.
@@ -32,82 +31,50 @@ public class HeroSetPanel : MonoBehaviour
         wasBlocked = view.IsOff;
         game.CitizenManager.CitizenChanged += RefreshInteractable;
         game.ResourcesManager.ProductUpdate += RefreshInteractable;
-        game.Ui.UnlockChanged += AddNewlyUnlockedIcons;
         view.OnOffMode += RefreshInteractable;
-        AddNewlyUnlockedIcons();
-        HeroInfoPanel.gameObject.SetActive(false);
+
+        meleeIcon.Set(false, () => OnCreate(OccupantKind.MeleeHero));
+        rangedIcon.Set(false, () => OnCreate(OccupantKind.RangedHero));
+        RefreshInteractable();
     }
 
     private void OnDisable()
     {
         game.CitizenManager.CitizenChanged -= RefreshInteractable;
         game.ResourcesManager.ProductUpdate -= RefreshInteractable;
-        game.Ui.UnlockChanged -= AddNewlyUnlockedIcons;
         view.OnOffMode -= RefreshInteractable;
-        HeroInfoPanel.gameObject.SetActive(false);
     }
 
-    public void OnHero(Placeable slot)
+    private void OnCreate(OccupantKind kind)
     {
-        HeroInfoPanel.gameObject.SetActive(true);
-        HeroInfoPanel.Set(slot, OnCreate);
-    }
+        if (!view.IsOff || !CanAffordFixedCost()) return;
+        if (!createManager.TryRollHero(kind, out HeroData picked)) return; // 비용은 결과가 나온 뒤에 낸다.
 
-    public void OnCreate(Placeable slot)
-    {
-        HeroInfoPanel.gameObject.SetActive(false);
+        game.CitizenManager.UseCitizen(citizenCost);
+        view.resourcesManager.ProductChanged(resourceCost.ToNegatedCostArray());
 
-        if (!view.CheckCanBuild(slot.label)) return;
-
-        game.CitizenManager.UseCitizen(slot.prefab.GetComponent<Hero>().CitizenAmount);
-        view.resourcesManager.ProductChanged(slot.prefab.GetComponent<Hero>().Cost);
-        HeroRosterEntry entry = game.HeroRoster.Add(slot);
-        view.SetHero(entry);   // 생성과 동시에 배치 모드로 진입(타일 클릭하면 바로 배치)
-    }
-
-    // 해금된 영웅 슬롯 중 아직 아이콘이 없는 것만 만든다(이미 만든 아이콘은 안 건드림).
-    // OnEnable 최초 빌드와, 실시간 해금(UnlockChanged) 둘 다 이걸 그대로 쓴다.
-    private void AddNewlyUnlockedIcons()
-    {
-        byte unlocked = game.Ui.UnlockedHero;
-
-        foreach (Placeable slot in view.Items)
+        Placeable slot = new Placeable
         {
-            if (icons.ContainsKey(slot)) continue;
-            if (slot.kind != OccupantKind.MeleeHero && slot.kind != OccupantKind.RangedHero) continue;
-
-            HeroType type = TypeOf(slot.label);
-            if (((byte)type & unlocked) != (byte)type) continue;
-
-            HeroCreateIcon icon = Instantiate(iconPrefab, container);
-            icon.Set(slot, view.IsOff && view.CheckCanBuild(slot.label), OnHero, slot.label);
-            icons[slot] = icon;
-        }
+            label = picked.HeroName,
+            prefab = picked.HeroPrefab,
+            icon = picked.Icon,
+            placedIcon = picked.Icon,
+            kind = kind,
+        };
+        game.HeroRoster.Add(slot);
     }
 
-    // 자원/시민 변화, 모드 진입/종료 시 여기로 온다 — 아이콘을 새로 만들지 않고 interactable만 갱신한다.
-    // Off 모드가 아니면(배치·재배치·제거 등) 무조건 비활성화(자원/시민 여유가 있어도 또 생성 못 하게).
+    private bool CanAffordFixedCost()
+    {
+        return game.CitizenManager.CheckCanUseCitizen(citizenCost)
+            && view.resourcesManager.CheckResources(resourceCost.ToNegatedCostArray());
+    }
+
+    // 자원/시민 변화, 모드 진입/종료 시 여기로 온다. Off 모드가 아니면(배치·재배치·제거 등) 무조건 비활성화.
     private void RefreshInteractable()
     {
-        bool off = view.IsOff;
-        foreach (var kv in icons)
-        {
-            kv.Value.SetInteractable(off && view.CheckCanBuild(kv.Key.label));
-        }
-    }
-
-    // 해금 체크는 기존 방식(라벨 → HeroType) 그대로 유지.
-    private static HeroType TypeOf(string label)
-    {
-        switch (label)
-        {
-            case "SwordMan": return HeroType.SwordMan;
-            case "Archer": return HeroType.Archer;
-            case "DualSwordMan": return HeroType.DualSwordMan;
-            case "SpearMan": return HeroType.SpearMan;
-            case "Mage": return HeroType.Mage;
-            case "THS": return HeroType.THS;
-            default: return 0;
-        }
+        bool canCreate = view.IsOff && CanAffordFixedCost();
+        meleeIcon.SetInteractable(canCreate);
+        rangedIcon.SetInteractable(canCreate);
     }
 }
