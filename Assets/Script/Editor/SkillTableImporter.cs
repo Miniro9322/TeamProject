@@ -79,6 +79,8 @@ public static class SkillTableImporter
                 case "FireZone" : return typeof(FireZoneSO);
                 case "Explosived" : return typeof(ExplosiveSkillSO);
                 case "RushAttack" : return typeof(RushAttackSkillSO);
+                // 팬텀 블리츠. Value=분신 마릿수, ValueScale=5일마다 늘어나는 마릿수, TickInterval=타격 간격.
+                case "PhantomBlitz" : return typeof(PhantomBlitz);
             }
         } 
         if (category == "Utility")
@@ -90,6 +92,9 @@ public static class SkillTableImporter
                 case "Heal": return typeof(HealSkillDataSO); // 나중에 스킬 추가
                 case "Shield": return typeof(ShieldSkillDataSO);
                 case "Split": return typeof(SplitSkillDataSO);
+                // 눈의 정령. 수치는 Range(빙결을 뿌릴 반경)와 Cooldown만 쓴다 —
+                // 빙결 자체의 세기·지속시간은 DebuffTable의 Frost_Basic이 들고 있다.
+                case "SpiritofSnow": return typeof(SpiritofSnow);
                 
             }
         }
@@ -115,6 +120,13 @@ public static class SkillTableImporter
                     case RushAttackSkillSO rushAttack :
                         rushAttack.value = Mathf.RoundToInt(d.Value ?? 0f);
                         rushAttack.valueScale = Mathf.RoundToInt(d.ValueScale ?? 0f);
+                        break;
+
+                    // value = 분신 마릿수. 분신 프리팹·이펙트는 표에 담을 수 없으므로
+                    // 에셋(Resources/Skills/PhantomBlitz)의 인스펙터에서 꽂는다 — 임포터가 덮어쓰지 않는다.
+                    case PhantomBlitz phantom :
+                        phantom.value = Mathf.RoundToInt(d.Value ?? 0f);
+                        phantom.valueScale = Mathf.RoundToInt(d.ValueScale ?? 0f);
                         break;
                 }
                 break;

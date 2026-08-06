@@ -8,6 +8,9 @@ using UnityEngine;
 public struct DebuffContext
 {
     public GameObject targetObject;
+    // 통로를 찾은 유닛 본체(콜라이더가 아니라 Hero/EnemyBase 쪽). 이펙트 장부의 키로 쓴다 —
+    // DotRegistry가 Host로 쓰는 것과 같은 오브젝트여야 한 대상이 두 항목으로 갈라지지 않는다.
+    public Component host;
     public IUnit unit;
     public IDamageAble damageable;
     public IStunAble stunnable;
@@ -35,6 +38,7 @@ public struct DebuffContext
         ctx.unit = target as IUnit ?? target.GetComponentInParent<IUnit>();
         // 유닛 본체를 찾았으면 나머지 통로도 거기서 찾는다 — 콜라이더에서 매번 부모를 다시 타는 것을 피한다.
         Component host = ctx.unit as Component ?? target;
+        ctx.host = host;
         ctx.targetObject = host.gameObject;
         ctx.damageable = host as IDamageAble ?? host.GetComponentInParent<IDamageAble>();
         ctx.stunnable = host as IStunAble ?? host.GetComponentInParent<IStunAble>();
