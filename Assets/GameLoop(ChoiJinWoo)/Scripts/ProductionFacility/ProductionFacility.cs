@@ -22,7 +22,7 @@ public class ProductionFacility : IUpgradableOccupant
 
     // 건설 비용 미리보기/체크용 — 인스턴스 없이도 PreviewConstructCost로 같은 계산을 쓸 수 있다.
     public (ProductionType Type, int Amount)[] GetConstructCost() =>
-        ApplyDiscount(basicValue.ConstructProduct, ConstructCostDiscount);
+        basicValue.ConstructProduct.ApplyDiscount(ConstructCostDiscount);
 
     public event Action OnWorkerChanged;
 
@@ -44,6 +44,7 @@ public class ProductionFacility : IUpgradableOccupant
     public int ProductAmount => productAmount;
     private (ProductionType Type, int Amount)[] upgradeCostCopy = Array.Empty<(ProductionType, int)>();
     private (ProductionType Type, int Amount)[] totalUpgradeSpent = Array.Empty<(ProductionType, int)>();
+    private (ProductionType Type, int Amount)[] constructCostPaid = Array.Empty<(ProductionType, int)>();
     public (ProductionType Type, int Amount)[] UpgradeCostCopy => upgradeCostCopy;
     public int UpgradeCount => upgradeCount;
 
@@ -74,15 +75,7 @@ public class ProductionFacility : IUpgradableOccupant
         ProductionValue basicValue, ProductionEconomyConfig economyConfig, UpgradeState upgradeState)
     {
         float discount = upgradeState.GetTotalEffect(economyConfig.ConstructCostUpgrades);
-        return ApplyDiscount(basicValue.ConstructProduct, discount);
-    }
-
-    private static (ProductionType Type, int Amount)[] ApplyDiscount((ProductionType Type, int Amount)[] cost, float discount)
-    {
-        var result = new (ProductionType, int)[cost.Length];
-        for (int i = 0; i < cost.Length; i++)
-            result[i] = (cost[i].Type, UnityEngine.Mathf.RoundToInt(cost[i].Amount * (1f - discount)));
-        return result;
+        return basicValue.ConstructProduct.ApplyDiscount(discount);
     }
 
     public void Init()
@@ -90,14 +83,15 @@ public class ProductionFacility : IUpgradableOccupant
         productAmount = basicValue.DefaultAmount + amountUpgrade * 10 + ProductAmountBonus;
         maxWorker = basicValue.DefaultMaxWorker + citizenUpgrade;
         workerAmount = 0;
-        upgradeCostCopy = ApplyDiscount(BasicValue.UpgradeCost, UpgradeCostDiscount);
+        upgradeCostCopy = BasicValue.UpgradeCost.ApplyDiscount(UpgradeCostDiscount);
         totalUpgradeSpent = new (ProductionType, int)[upgradeCostCopy.Length];
         for (int i = 0; i < totalUpgradeSpent.Length; i++)
         {
             totalUpgradeSpent[i] = (upgradeCostCopy[i].Type, 0);
         }
 
-        resourcesManager.ProductChanged(GetConstructCost());
+        constructCostPaid = GetConstructCost();
+        resourcesManager.ProductChanged(constructCostPaid);
         facilityManager.AddFacility(this);
     }
 
@@ -118,7 +112,7 @@ public class ProductionFacility : IUpgradableOccupant
         ReleaseAllWorkers();
         facilityManager.RemoveFacility(this);
 
-        var construct = basicValue.ConstructProduct;
+        var construct = constructCostPaid;
         var refund = new (ProductionType Type, int Amount)[construct.Length + totalUpgradeSpent.Length];
         for (int i = 0; i < construct.Length; i++)
         {
@@ -198,7 +192,7 @@ public class ProductionFacility : IUpgradableOccupant
             totalUpgradeSpent[i] = (totalUpgradeSpent[i].Type, totalUpgradeSpent[i].Amount + upgradeCostCopy[i].Amount);
         }
 
-        var baseCost = ApplyDiscount(basicValue.UpgradeCost, UpgradeCostDiscount);
+        var baseCost = basicValue.UpgradeCost.ApplyDiscount(UpgradeCostDiscount);
         for (int i = 0; i < upgradeCostCopy.Length; i++)
         {
             upgradeCostCopy[i] = (baseCost[i].Type, baseCost[i].Amount * (upgradeCount + 1));

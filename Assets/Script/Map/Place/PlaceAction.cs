@@ -98,7 +98,7 @@ public class PlaceAction
     private HeroRosterEntry CreateHeroEntry(Placeable slot)
     {
         Hero heroPrefab = slot.prefab.GetComponent<Hero>();
-        view.citizenManager.UseCitizen(heroPrefab.CitizenAmount);
+        view.citizenManager.UseCitizenForHero(heroPrefab.CitizenAmount);
         view.resourcesManager.ProductChanged(heroPrefab.Cost);
         return heroRoster.Add(slot);
     }

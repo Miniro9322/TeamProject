@@ -1,5 +1,6 @@
 using System;
 using Cysharp.Threading.Tasks;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using VContainer;
@@ -8,6 +9,7 @@ public class DayNightButton : MonoBehaviour
 {
     [SerializeField] private Button button;
     [SerializeField] private RectTransform icon;
+    [SerializeField] private TextMeshProUGUI dayText;
     private GameManager gameManager;
     private EnviromentManager enviromentManager;
 
@@ -31,6 +33,7 @@ public class DayNightButton : MonoBehaviour
         // 여기 구독하면 실제 빛 변화와 아이콘 회전이 동시에 시작된다.
         icon.transform.rotation = Quaternion.identity;
         gameManager.ChangeToDay += OnDayStart;
+        dayText.text = $"Day {gameManager.DayCount}";
     }
 
     // 낮 -> 밤: 버튼만 바로 비활성화한다. 아이콘은 계속 떠있는 채로 -180도만큼 돈다(안 숨김).
@@ -80,6 +83,7 @@ public class DayNightButton : MonoBehaviour
             currentZ %= 360f;
         }
         icon.localRotation = Quaternion.Euler(0f, 0f, currentZ);
+        dayText.text = $"Day {gameManager.DayCount}";
         onComplete?.Invoke();
     }
 

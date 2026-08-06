@@ -136,7 +136,7 @@ public class FacilityBuildChoicePanel : MonoBehaviour, IClosablePanel
         {
             var config = currentOption.houseConfig;
             sb.Append($"{config.HouseName}\n{config.HouseInfo}\n건설 소모 자원\n");
-            foreach (var c in config.Resources)
+            foreach (var c in House.PreviewConstructCost(config, economyConfig, upgradeState))
             {
                 sb.Append($"{c.Type}: {-c.Amount} ");
             }

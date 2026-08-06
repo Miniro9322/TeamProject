@@ -8,11 +8,17 @@ public class House : IUpgradableOccupant
     private readonly HouseConfig config;
     private readonly CitizenManager citizenManager;
     private readonly ResourcesManager resourcesManager;
+    private readonly UpgradeState upgradeState;
+    private readonly ProductionEconomyConfig economyConfig;
+
+    private float ConstructCostDiscount => upgradeState.GetTotalEffect(economyConfig.ConstructCostUpgrades);
+    private float UpgradeCostDiscount => upgradeState.GetTotalEffect(economyConfig.UpgradeCostUpgrades);
 
     private int maxUpgrade = 4;
     private int upgradeCount = 0;
     private (ProductionType Type, int Amount)[] upgradeCostCopy = Array.Empty<(ProductionType, int)>();
     private (ProductionType Type, int Amount)[] totalUpgradeSpent = Array.Empty<(ProductionType, int)>();
+    private (ProductionType Type, int Amount)[] constructCostPaid = Array.Empty<(ProductionType, int)>();
 
     public string HouseName => config.HouseName;
     public string HouseInfo => config.HouseInfo;
@@ -26,19 +32,36 @@ public class House : IUpgradableOccupant
 
     public event Action Changed;
 
-    public House(HouseConfig config, CitizenManager citizenManager, ResourcesManager resourcesManager)
+    public House(
+        HouseConfig config,
+        CitizenManager citizenManager,
+        ResourcesManager resourcesManager,
+        UpgradeState upgradeState,
+        ProductionEconomyConfig economyConfig)
     {
         this.config = config;
         this.citizenManager = citizenManager;
         this.resourcesManager = resourcesManager;
+        this.upgradeState = upgradeState;
+        this.economyConfig = economyConfig;
+    }
+
+    // 인스턴스를 만들지 않고도(건설 전 미리보기) 같은 할인 공식으로 건설 비용을 계산한다
+    // (ProductionFacility.PreviewConstructCost와 동일 패턴).
+    public static (ProductionType Type, int Amount)[] PreviewConstructCost(
+        HouseConfig config, ProductionEconomyConfig economyConfig, UpgradeState upgradeState)
+    {
+        float discount = upgradeState.GetTotalEffect(economyConfig.ConstructCostUpgrades);
+        return config.Resources.ApplyDiscount(discount);
     }
 
     public void Init()
     {
         citizenManager.IncreaseMaxCitizen(config.MaxCitizenAmount);
-        resourcesManager.ProductChanged(Resources);
+        constructCostPaid = Resources.ApplyDiscount(ConstructCostDiscount);
+        resourcesManager.ProductChanged(constructCostPaid);
 
-        upgradeCostCopy = config.UpgradeCost;
+        upgradeCostCopy = config.UpgradeCost.ApplyDiscount(UpgradeCostDiscount);
         totalUpgradeSpent = new (ProductionType, int)[upgradeCostCopy.Length];
         for (int i = 0; i < totalUpgradeSpent.Length; i++)
         {
@@ -49,7 +72,7 @@ public class House : IUpgradableOccupant
     // 철거: 건설 비용 + 그동안 강화에 쓴 비용을 환불한다(ProductionFacility.Release()와 동일 패턴).
     public void Release()
     {
-        var resources = Resources;
+        var resources = constructCostPaid;
         var refund = new (ProductionType Type, int Amount)[resources.Length + totalUpgradeSpent.Length];
         for (int i = 0; i < resources.Length; i++)
         {
@@ -74,7 +97,7 @@ public class House : IUpgradableOccupant
             totalUpgradeSpent[i] = (totalUpgradeSpent[i].Type, totalUpgradeSpent[i].Amount + upgradeCostCopy[i].Amount);
         }
 
-        var baseCost = config.UpgradeCost;
+        var baseCost = config.UpgradeCost.ApplyDiscount(UpgradeCostDiscount);
         for (int i = 0; i < upgradeCostCopy.Length; i++)
         {
             upgradeCostCopy[i] = (baseCost[i].Type, baseCost[i].Amount * (upgradeCount + 1));

@@ -31,7 +31,8 @@ public class BaseConstructor
                 return option.facilityValue != null &&
                     resourcesManager.CheckResources(ProductionFacility.PreviewConstructCost(option.facilityValue, economyConfig, upgradeState));
             case OccupantKind.Building:
-                return option.houseConfig != null && resourcesManager.CheckResources(option.houseConfig.Resources);
+                return option.houseConfig != null &&
+                    resourcesManager.CheckResources(House.PreviewConstructCost(option.houseConfig, economyConfig, upgradeState));
             default:
                 return false;
         }
@@ -59,7 +60,7 @@ public class BaseConstructor
 
     private House BuildHouse(BuildableFacility option)
     {
-        var house = new House(option.houseConfig, citizenManager, resourcesManager);
+        var house = new House(option.houseConfig, citizenManager, resourcesManager, upgradeState, economyConfig);
         house.Init();
         return house;
     }
