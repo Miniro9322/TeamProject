@@ -83,7 +83,8 @@ public class EnemyLanes : MonoBehaviour
     }
 
     // 스폰마다 대표 경로 하나. 번호가 SpawnCount와 짝이 맞아야 해서 막힌 스폰도 빈 자리로 남긴다.
-    public IReadOnlyList<IReadOnlyList<Vector3>> GetPaths(float yOffset)
+    // pass를 생략하면 걷기 경로를 낸다.
+    public IReadOnlyList<IReadOnlyList<Vector3>> GetPaths(float yOffset, PassType pass = PassType.Walk)
     {
         //외부 호출시
         //IReadOnlyList<IReadOnlyList<Vector3>> paths = enemyLanes.GetPaths(0f);
@@ -97,7 +98,7 @@ public class EnemyLanes : MonoBehaviour
 
         for (int i = 0; i < spawnLanes.Count; i++)
         {
-            paths.Add(spawnLanes[i][0].GetPoints(yOffset));
+            paths.Add(spawnLanes[i][0].GetPoints(pass, yOffset));
         }
 
         return paths;
@@ -109,10 +110,10 @@ public class EnemyLanes : MonoBehaviour
         return spawnLanes[spawnIndex].Count;
     }
 
-    // 이 스폰의 이 갈래 경로. 적 한 마리가 그대로 받아 걷는다.
-    public IReadOnlyList<Vector3> GetBranchPath(int spawnIndex, int branchIndex, float yOffset)
+    // 이 스폰의 이 갈래 경로. 적 한 마리가 그대로 받아 걷는다. pass를 생략하면 걷기 경로를 낸다.
+    public IReadOnlyList<Vector3> GetBranchPath(int spawnIndex, int branchIndex, float yOffset, PassType pass = PassType.Walk)
     {
-        return spawnLanes[spawnIndex][branchIndex].GetPoints(yOffset);
+        return spawnLanes[spawnIndex][branchIndex].GetPoints(pass, yOffset);
     }
 
     // MapBoard 참조와 기본 LaneBuilder가 준비되었는지 확인합니다.

@@ -33,7 +33,69 @@ public static class LaneList
             }
         }
 
-        for (int i = 0; i < lanes.Count; i++)
+        Vector2Int? focus = FocusSpawn(chosen);
+        int index = 0;
+
+        while (index < lanes.Count)
+        {
+            int end = GroupEnd(lanes, index);
+            picked = Keep(picked, DrawGroup(lanes, index, end, chosen, routes, focus));
+            index = end;
+        }
+
+        GUILayout.Label("줄을 누르면 그 경로만 남고 나머지는 회색으로 죽습니다. " +
+            "[+갈래]는 그 스폰에 길을 하나 더 만듭니다.",
+            EditorStyles.wordWrappedMiniLabel);
+        DrawGuide();
+
+        return picked;
+    }
+
+    // 지금 고른 경로가 나온 스폰. 고른 것이 없으면 null이라 어떤 스폰도 접지 않는다.
+    private static Vector2Int? FocusSpawn(RouteData chosen)
+    {
+        if (IsNone(chosen))
+        {
+            return null;
+        }
+
+        return chosen.Spawn;
+    }
+
+    // 같은 스폰 좌표가 몇 번째까지 이어지는가. 목록은 이미 스폰 단위로 붙어 나온다(LaneBuilder).
+    private static int GroupEnd(IReadOnlyList<LaneData> lanes, int start)
+    {
+        Vector2Int spawn = lanes[start].Start.Coord;
+        int end = start + 1;
+
+        while (end < lanes.Count && lanes[end].Start.Coord == spawn)
+        {
+            end++;
+        }
+
+        return end;
+    }
+
+    // 스폰 한 묶음. 초점이 없거나 이 스폰이 초점이면 갈래를 펼치고, 아니면 한 줄로 접는다.
+    private static RouteData DrawGroup(
+        IReadOnlyList<LaneData> lanes, int start, int end,
+        RouteData chosen, RouteConfig routes, Vector2Int? focus)
+    {
+        bool expand = !focus.HasValue || lanes[start].Start.Coord == focus.Value;
+
+        if (!expand)
+        {
+            return DrawFold(lanes, start, end);
+        }
+
+        if (end - start > 1)
+        {
+            GUILayout.Label($"스폰 {lanes[start].Start.Coord}", EditorStyles.miniBoldLabel);
+        }
+
+        RouteData picked = null;
+
+        for (int i = start; i < end; i++)
         {
             picked = Keep(picked, DrawLane(lanes[i], i, RowStyle(lanes[i], chosen), routes));
 
@@ -43,12 +105,34 @@ public static class LaneList
             }
         }
 
-        GUILayout.Label("줄을 누르면 그 경로만 남고 나머지는 회색으로 죽습니다. " +
-            "[+갈래]는 그 스폰에 길을 하나 더 만듭니다.",
-            EditorStyles.wordWrappedMiniLabel);
-        DrawGuide();
-
         return picked;
+    }
+
+    // 접힌 스폰 한 줄. 갈래마다 점을 찍어 격자 선 색과 맞추고, 누르면 그 스폰이 초점이 된다.
+    private static RouteData DrawFold(IReadOnlyList<LaneData> lanes, int start, int end)
+    {
+        bool hasRoute = lanes[start].Route != null;
+
+        using (new EditorGUILayout.HorizontalScope())
+        {
+            for (int i = start; i < end; i++)
+            {
+                Rect mark = GUILayoutUtility.GetRect(9f, 13f, GUILayout.Width(9));
+                EditorGUI.DrawRect(new Rect(mark.x, mark.y + 2f, 7f, 7f), MarkColor(lanes[i], i));
+            }
+
+            string word = $"스폰 {lanes[start].Start.Coord} · {end - start}개 경로";
+
+            using (new EditorGUI.DisabledScope(!hasRoute))
+            {
+                if (GUILayout.Button(word, EditorStyles.miniButton))
+                {
+                    return lanes[start].Route;
+                }
+            }
+        }
+
+        return null;
     }
 
     // 고른 것이 없는가.

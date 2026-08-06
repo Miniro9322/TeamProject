@@ -108,9 +108,6 @@ public class CameraInput : MonoBehaviour
         if (keyboard.sKey.isPressed) { move -= forward; }
         if (keyboard.dKey.isPressed) { move += right; }
         if (keyboard.aKey.isPressed) { move -= right; }
-        if (keyboard.eKey.isPressed) { move += Vector3.up; }
-        if (keyboard.qKey.isPressed) { move -= Vector3.up; }
-
         if (move != Vector3.zero)
         {
             rig.focus += move.normalized * (keySpeed * Time.unscaledDeltaTime);

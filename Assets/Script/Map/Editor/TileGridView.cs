@@ -406,12 +406,27 @@ public class TileGridView
             return;
         }
 
+        // 헤엄 경로를 먼저 깔아 둔다 — 걷기 선이 그 위를 덮어 그리므로, 물을 지나 갈라지는
+        // 구간만 물색 선이 삐져나와 보인다(겹치는 구간은 걷기 선에 가려 평소와 같다).
+        DrawSwimUnderlay(area, cellPixels, lane.SwimTiles, lit);
         DrawPath(area, cellPixels, lane.Tiles, color, lit);
 
         if (lit)
         {
             DrawFlow(area, cellPixels, lane.Tiles, color);
         }
+    }
+
+    // 헤엄 적이 실제로 밟는 물길. 물이 없는 레인은 걷기 경로와 완전히 겹쳐 그려도 티가 안 난다.
+    private void DrawSwimUnderlay(Rect area, int cellPixels, IReadOnlyList<Tile> swimPath, bool lit)
+    {
+        if (swimPath.Count == 0)
+        {
+            return;
+        }
+
+        Color color = lit ? MapMakerPalette.Swim : MapMakerPalette.Dim(MapMakerPalette.Swim);
+        DrawPath(area, cellPixels, swimPath, color, false);
     }
 
     // 죽인 선은 검은 테두리를 빼고 한 겹만 남긴다 — 테두리까지 그리면 죽여도 여전히 눈에 먼저 든다.

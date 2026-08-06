@@ -26,8 +26,9 @@ public class MapMakerWindow : EditorWindow
     /// <summary>격자 위아래로 도구 줄·예고줄·상태줄이 늘 차지하는 높이 — 창에 맞출 때 이만큼 빼고 잰다.</summary>
     private const float ChromeHeight = 150f;
 
-    /// <summary>선반이 기본으로 차지하는 최대 높이 — 썸네일 두 줄. 넘치면 선반 안에서 스크롤한다.</summary>
-    private const float ShelfHeight = 168f;
+    // 손잡이로 끄는 선반 높이의 위아래 한계.
+    private const float MinShelf = 60f;
+    private const float MaxShelf = 480f;
 
     /// <summary>선반의 탭. 셋 다 저작 중 계속 보고 싶은 것이라 접이식으로 자리를 나눠 쓴다.</summary>
     private enum ShelfTab
@@ -45,9 +46,13 @@ public class MapMakerWindow : EditorWindow
     private MapBrush _brush = MapBrush.None;
     private int _cellPixels = 20;
     private bool _showInert;
+    // 창이 열리고 처음으로 칸 수를 알게 된 프레임에만 자동으로 맞춤을 적용한다.
+    private bool _needsFit = true;
 
     private ShelfTab _shelf = ShelfTab.Prefab;
     private bool _shelfOpen = true;
+    private float _shelfHeight = 168f;
+    private bool _shelfDragging;
     private Vector2 _shelfScroll;
     private MapTool _tool = MapTool.Select;
     // 지금 창에서 보고 고치는 일차. 0 = 공통.
@@ -59,6 +64,11 @@ public class MapMakerWindow : EditorWindow
     private readonly HashSet<Vector2Int> _swapped = new();
     private int _strokeGroup;
     private Vector2Int _hover = new(-1, -1);
+    // 이 붓질에서 방금 처리한 칸. 같은 칸 안에서 마우스가 흔들리기만 해도 드래그 이벤트가 계속 들어와
+    // 매번 다시 찍고 매번 레인을 재계산하던 것을 막는다.
+    private Vector2Int _strokeCell = new(int.MinValue, int.MinValue);
+    // Shift+클릭 구간의 기준 칸 — 드래그로 지나간 칸이 아니라 마지막으로 "누른" 칸을 기억한다.
+    private Vector2Int? _rangeAnchor;
     private string _targetSeen = string.Empty;
     // 편집 중인 레인의 신원. 좌표가 아니라 지정 항목 참조라 같은 스폰에 레인이 여러 개여도 갈린다.
     private RouteData _routeData;
@@ -110,6 +120,7 @@ public class MapMakerWindow : EditorWindow
     {
         _themes = null;    // 편집 대상이 바뀌었다 — 테마도 다시 모으고 모듈에 맞춰 다시 고른다
         _themeModule = -1;
+        _rangeAnchor = null; // 대상이 바뀌면 기준 칸도 남의 모듈 좌표가 된다
 
         List<Grid> found = ModuleScan.FindModules();
         _modules = found.ToArray();
@@ -117,7 +128,7 @@ public class MapMakerWindow : EditorWindow
 
         for (int i = 0; i < _modules.Length; i++)
         {
-            _moduleNames[i] = _modules[i].transform.root.name;
+            _moduleNames[i] = ModuleScan.ModuleName(_modules[i]);
         }
 
         if (_moduleIndex >= _modules.Length)
@@ -175,6 +186,12 @@ public class MapMakerWindow : EditorWindow
         var view = new TileGridView(cells, _brush);
         _cols = view.Cols;
         _rows = view.Rows;
+
+        if (_needsFit)
+        {
+            _cellPixels = FitCell();
+            _needsFit = false;
+        }
 
         // 저작 경로를 그대로 반영해 그린다. 그리기 전에 사전을 맞춰야 되돌리기 직후에도 선이 진짜를 말한다.
         RouteConfig routes = RouteEdit.Find(module);
@@ -275,6 +292,7 @@ public class MapMakerWindow : EditorWindow
                 if (picked != _moduleIndex)
                 {
                     _moduleIndex = picked;
+                    _rangeAnchor = null; // 다른 모듈의 좌표는 이 모듈에서 뜻이 다르다
                     Relayout();
                 }
             }
@@ -391,7 +409,7 @@ public class MapMakerWindow : EditorWindow
     {
         if (_shelfOpen)
         {
-            return ShelfHeight + 24f;
+            return _shelfHeight + 24f;
         }
 
         return 24f;
@@ -1084,9 +1102,21 @@ public class MapMakerWindow : EditorWindow
         if (input.type == EventType.MouseDown)
         {
             input.Use();
+            Vector2Int coord = view.CoordAt(input.mousePosition, area, _cellPixels);
+
+            // Shift+클릭 = 경로 도구가 아닌 한, 기준 칸부터 지금 칸까지 직사각형 전부에 한 번에 적용한다.
+            if (input.shift && _tool != MapTool.Route && _rangeAnchor.HasValue)
+            {
+                StampRange(_rangeAnchor.Value, coord, cells, input.alt);
+                _rangeAnchor = coord;
+                return;
+            }
+
             _swapped.Clear(); // 새 붓질 — 이번에 교체한 칸 기록을 비운다
+            _strokeCell = new Vector2Int(int.MinValue, int.MinValue); // 새 붓질 — 마지막 칸 기록을 비운다
             _strokeGroup = TileStamp.BeginStroke();
             StampAt(input.mousePosition, area, view, cells, input.alt);
+            _rangeAnchor = coord; // 다음 Shift+클릭이 여기부터 구간을 잡도록 기준으로 남긴다
             return;
         }
 
@@ -1121,6 +1151,48 @@ public class MapMakerWindow : EditorWindow
             return; // 격자 밖이거나 타일이 없는 칸 — 아직 없는 칸을 새로 만들지는 않는다
         }
 
+        if (coord == _strokeCell)
+        {
+            return; // 방금 처리한 칸과 같다 — 마우스가 이 칸 안에서만 흔들린 것이다
+        }
+
+        _strokeCell = coord;
+        ApplyToCell(coord, tile, cells, turnOff);
+        Relayout(); // 경로가 바로 다시 계산돼 보이도록. 찍으면서 예고줄·붓이 바뀌므로 프레임을 접는다
+    }
+
+    // Shift+클릭 구간. 기준 칸과 지금 칸을 맞모서리로 삼은 직사각형 전부에 지금 도구를 한 번에 적용한다.
+    // 한 붓질로 묶어야 되돌리기가 한 번에 통째로 풀린다.
+    private void StampRange(Vector2Int from, Vector2Int to, Dictionary<Vector2Int, Tile> cells, bool turnOff)
+    {
+        _swapped.Clear();
+        _strokeCell = new Vector2Int(int.MinValue, int.MinValue);
+        int group = TileStamp.BeginStroke();
+
+        int minX = Mathf.Min(from.x, to.x);
+        int maxX = Mathf.Max(from.x, to.x);
+        int minY = Mathf.Min(from.y, to.y);
+        int maxY = Mathf.Max(from.y, to.y);
+
+        for (int x = minX; x <= maxX; x++)
+        {
+            for (int y = minY; y <= maxY; y++)
+            {
+                var coord = new Vector2Int(x, y);
+                if (cells.TryGetValue(coord, out Tile tile))
+                {
+                    ApplyToCell(coord, tile, cells, turnOff);
+                }
+            }
+        }
+
+        TileStamp.EndStroke(group);
+        Relayout();
+    }
+
+    // 칸 하나에 지금 도구를 적용한다. 한 칸 클릭과 구간 적용이 이 한 곳을 같이 쓴다.
+    private void ApplyToCell(Vector2Int coord, Tile tile, Dictionary<Vector2Int, Tile> cells, bool turnOff)
+    {
         _hover = coord;
 
         switch (_tool)
@@ -1155,8 +1227,6 @@ public class MapMakerWindow : EditorWindow
                 TileStamp.Stamp(tile, _brush, !turnOff);
                 break;
         }
-
-        Relayout(); // 경로가 바로 다시 계산돼 보이도록. 찍으면서 예고줄·붓이 바뀌므로 프레임을 접는다
     }
 
     // 제일 위 한 겹을 지운다. 한 붓질에 같은 칸을 두 번 지우지 않는다 —
@@ -1433,6 +1503,11 @@ public class MapMakerWindow : EditorWindow
     {
         int picks = _theme != null ? _theme.For(_brush).Length : 0;
 
+        if (_shelfOpen)
+        {
+            DrawGrip();
+        }
+
         using (new EditorGUILayout.HorizontalScope(EditorStyles.toolbar))
         {
             ShelfButton(ShelfTab.Prefab, $"프리팹 {picks}");
@@ -1455,7 +1530,7 @@ public class MapMakerWindow : EditorWindow
             return;
         }
 
-        using (var view = new EditorGUILayout.ScrollViewScope(_shelfScroll, GUILayout.MaxHeight(ShelfHeight)))
+        using (var view = new EditorGUILayout.ScrollViewScope(_shelfScroll, GUILayout.MaxHeight(_shelfHeight)))
         {
             _shelfScroll = view.scrollPosition;
 
@@ -1473,6 +1548,34 @@ public class MapMakerWindow : EditorWindow
                     DrawPrefabShelf(module);
                     break;
             }
+        }
+    }
+
+    // 선반 위 손잡이. 위아래로 끌면 선반 높이가 늘거나 줄어 격자와 자리를 나눠 갖는다.
+    private void DrawGrip()
+    {
+        Rect handle = GUILayoutUtility.GetRect(0f, 5f, GUILayout.ExpandWidth(true));
+        EditorGUI.DrawRect(handle, new Color(0f, 0f, 0f, 0.35f));
+        EditorGUIUtility.AddCursorRect(handle, MouseCursor.ResizeVertical);
+
+        Event input = Event.current;
+
+        if (input.type == EventType.MouseDown && handle.Contains(input.mousePosition))
+        {
+            _shelfDragging = true;
+            input.Use();
+        }
+
+        if (input.type == EventType.MouseUp)
+        {
+            _shelfDragging = false;
+        }
+
+        if (_shelfDragging && input.type == EventType.MouseDrag)
+        {
+            _shelfHeight = Mathf.Clamp(_shelfHeight - input.delta.y, MinShelf, MaxShelf);
+            input.Use();
+            Relayout();
         }
     }
 
