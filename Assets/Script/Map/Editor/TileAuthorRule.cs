@@ -69,11 +69,12 @@ public static class TileAuthorRule
         return copy;
     }
 
-    /// <summary>이 모듈에서 지금 잡히는 문제들. 없으면 빈 목록.</summary>
+    /// <summary>이 모듈에서 지금 잡히는 문제들. 없으면 빈 목록. day는 지금 창이 보고 있는 일차다.</summary>
     public static List<string> FindProblems(
         Dictionary<Vector2Int, Tile> cells,
         IReadOnlyList<LaneData> lanes,
-        int tileCount)
+        int tileCount,
+        int day)
     {
         var problems = new List<string>();
 
@@ -98,7 +99,7 @@ public static class TileAuthorRule
 
         if (spawnCount > 0 && coreCount > 0)
         {
-            AddLaneProblems(lanes, cells, problems);
+            AddLaneProblems(lanes, cells, day, problems);
         }
 
         AddDeadCells(cells, problems);
@@ -142,6 +143,7 @@ public static class TileAuthorRule
     private static void AddLaneProblems(
         IReadOnlyList<LaneData> lanes,
         Dictionary<Vector2Int, Tile> cells,
+        int day,
         List<string> problems)
     {
         for (int i = 0; i < lanes.Count; i++)
@@ -152,25 +154,39 @@ public static class TileAuthorRule
                 continue;
             }
 
-            problems.Add(LaneWord(lane, cells));
+            problems.Add(LaneWord(lane, cells, day));
         }
     }
 
-    // 이 레인이 왜 죽었는지 한 줄로. 저작 노드가 막혔으면 몇 번인지 짚는다.
+    // 이 레인이 왜 죽었는지 한 줄로. 저작 노드가 막혔으면 몇 번인지 짚고, 지금 보는 일차도 밝힌다 —
+    // 안 밝히면 다른 날짜를 보다가 이 경고를 보고 엉뚱한 날짜를 고치러 간다.
     private static string LaneWord(
         LaneData lane,
-        Dictionary<Vector2Int, Tile> cells)
+        Dictionary<Vector2Int, Tile> cells,
+        int day)
     {
         string blocked = BlockedNodes(lane.Route, cells);
+        string dayWord = DayWord(day);
 
         if (blocked.Length > 0)
         {
-            return $"스폰 {lane.Start.Coord}의 경로 노드 {blocked}이(가) 지날 수 없는 칸입니다 — " +
+            return $"[{dayWord}] 스폰 {lane.Start.Coord}의 경로 노드 {blocked}이(가) 지날 수 없는 칸입니다 — " +
                 "노드를 옮기거나 지우세요(헤엄 칸에 찍힌 노드가 흔한 원인입니다).";
         }
 
-        return $"스폰 {lane.Start.Coord}에서 본진까지 가는 길이 없습니다 — " +
+        return $"[{dayWord}] 스폰 {lane.Start.Coord}에서 본진까지 가는 길이 없습니다 — " +
             "High·Empty 또는 헤엄 칸이 통로를 완전히 막았습니다.";
+    }
+
+    // 화면에 보일 날짜 이름. 공통(0)은 "공통"으로, 나머지는 "N일차"로 적는다.
+    private static string DayWord(int day)
+    {
+        if (day == 0)
+        {
+            return "공통";
+        }
+
+        return $"{day}일차";
     }
 
     // 이 레인에 지정된 노드 중 걸어서 못 지나는 것들의 번호. 없으면 빈 글자.

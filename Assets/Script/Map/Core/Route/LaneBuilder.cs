@@ -46,41 +46,40 @@ public class LaneBuilder : ILaneBuilder
         }
     }
 
-    // 레인 하나를 만듭니다. 계산에 실패하면 빈 레인을 냅니다.
+    // 레인 하나를 걷기·헤엄 두 통행 방식으로 각각 계산해 함께 담습니다. 걷기가 실패하면 빈 레인을 냅니다.
+    // 헤엄은 걷기보다 지날 수 있는 칸이 더 넓어(물+걷는 칸) 걷기가 되면 헤엄도 항상 됩니다.
     private LaneData BuildLane(LaneInputData input, Tile spawn, RouteData route, HashSet<Tile> cores)
     {
         if (cores.Count == 0)
         {
-            return new LaneData(spawn, null, route, Array.Empty<Tile>());
+            return new LaneData(spawn, null, route, Array.Empty<Tile>(), Array.Empty<Tile>());
         }
 
-        List<Tile> path = FindRoute(input, spawn, route, cores);
+        List<Tile> walk = FindRoute(input, spawn, route, cores, PassType.Walk);
 
-        if (path == null || path.Count == 0)
+        if (walk == null || walk.Count == 0)
         {
-            return new LaneData(spawn, null, route, Array.Empty<Tile>());
+            return new LaneData(spawn, null, route, Array.Empty<Tile>(), Array.Empty<Tile>());
         }
 
-        Tile goal = path[path.Count - 1];
-        return new LaneData(spawn, goal, route, path);
+        List<Tile> swim = FindRoute(input, spawn, route, cores, PassType.Swim);
+        Tile goal = walk[walk.Count - 1];
+        return new LaneData(spawn, goal, route, walk, swim ?? EmptyTiles);
     }
 
+    // 헤엄 계산이 실패했을 때 대신 담는 빈 목록.
+    private static readonly List<Tile> EmptyTiles = new();
+
     // 지정 경로가 있으면 그 노드를 따르고, 없으면 최단 경로를 씁니다.
-    private List<Tile> FindRoute(LaneInputData input, Tile spawn, RouteData route, HashSet<Tile> cores)
+    private List<Tile> FindRoute(LaneInputData input, Tile spawn, RouteData route, HashSet<Tile> cores, PassType pass)
     {
         if (route == null)
         {
-            return AutoPath(input, spawn, cores);
+            return AutoPath(input, spawn, cores, pass);
         }
 
-        List<Tile> nodes = GetNodes(input.Cells, route.Nodes);
-
-        if (nodes == null)
-        {
-            return null;
-        }
-
-        return NodePath(input, spawn, nodes, cores);
+        List<Tile> nodes = GetNodes(input.Cells, route.Nodes, pass);
+        return NodePath(input, spawn, nodes, cores, pass);
     }
 
     // 이 스폰에 지정된 경로들. 보관처가 없거나 지정이 없으면 빈 목록입니다.
@@ -101,10 +100,12 @@ public class LaneBuilder : ILaneBuilder
 
     private static readonly List<RouteData> EmptyRoutes = new();
 
-    // 저작 좌표를 지나갈 수 있는 타일로 바꿉니다. 하나라도 어긋나면 실패합니다.
+    // 저작 좌표 중 이 통행 방식으로 지날 수 있는 칸만 추립니다. 못 지나는 칸은 건너뛰어,
+    // 그 한 칸 때문에 경로 전체가 무효화되지 않게 합니다 — 남은 칸 사이는 자동 경로가 이어줍니다.
     private static List<Tile> GetNodes(
         IReadOnlyDictionary<Vector2Int, Tile> cells,
-        IReadOnlyList<RouteNode> coords)
+        IReadOnlyList<RouteNode> coords,
+        PassType pass)
     {
         var nodes = new List<Tile>(coords.Count);
 
@@ -112,9 +113,9 @@ public class LaneBuilder : ILaneBuilder
         {
             bool found = cells.TryGetValue(coords[i].Coord, out Tile tile);
 
-            if (!found || !tile.CanWalk)
+            if (!found || !tile.CanPass(pass))
             {
-                return null;
+                continue;
             }
 
             nodes.Add(tile);
@@ -128,14 +129,15 @@ public class LaneBuilder : ILaneBuilder
         LaneInputData input,
         Tile spawn,
         IReadOnlyList<Tile> nodes,
-        HashSet<Tile> cores)
+        HashSet<Tile> cores,
+        PassType pass)
     {
         var path = new List<Tile> { spawn };
         Tile current = spawn;
 
         for (int i = 0; i < nodes.Count; i++)
         {
-            List<Tile> segment = NodeSegment(input, current, nodes[i]);
+            List<Tile> segment = NodeSegment(input, current, nodes[i], pass);
 
             if (segment == null)
             {
@@ -146,7 +148,7 @@ public class LaneBuilder : ILaneBuilder
             current = nodes[i];
         }
 
-        List<Tile> last = AutoPath(input, current, cores);
+        List<Tile> last = AutoPath(input, current, cores, pass);
 
         if (last == null)
         {
@@ -157,23 +159,23 @@ public class LaneBuilder : ILaneBuilder
         return path;
     }
 
-    // 한 지점에서 지정된 노드까지의 최단 구간을 계산합니다.
-    private static List<Tile> NodeSegment(LaneInputData input, Tile from, Tile node)
+    // 한 지점에서 지정된 노드까지, 이 통행 방식으로 갈 수 있는 최단 구간을 계산합니다.
+    private static List<Tile> NodeSegment(LaneInputData input, Tile from, Tile node, PassType pass)
     {
         return Pathfinder.FindPath(
             new[] { from },
             tile => tile == node,
-            CanWalk,
+            tile => tile.CanPass(pass),
             tile => GridCalculator.GetDistance(tile.Coord, node.Coord));
     }
 
-    // 코어까지의 최단 경로를 계산합니다.
-    private static List<Tile> AutoPath(LaneInputData input, Tile from, HashSet<Tile> cores)
+    // 코어까지, 이 통행 방식으로 갈 수 있는 최단 경로를 계산합니다.
+    private static List<Tile> AutoPath(LaneInputData input, Tile from, HashSet<Tile> cores, PassType pass)
     {
         return Pathfinder.FindPath(
             new[] { from },
             tile => cores.Contains(tile),
-            CanWalk,
+            tile => tile.CanPass(pass),
             tile => GetDistance(tile, cores));
     }
 
@@ -185,9 +187,6 @@ public class LaneBuilder : ILaneBuilder
             path.Add(segment[i]);
         }
     }
-
-    // 적이 지나갈 수 있는 칸인지 판단합니다. 걸어서 오는 적 기준이라 헤엄 칸은 통로에서 빠집니다.
-    private static bool CanWalk(Tile tile) => tile.CanWalk;
 
     // 현재 타일에서 가장 가까운 코어까지의 맨해튼 거리를 구합니다.
     private static int GetDistance(Tile tile, HashSet<Tile> cores)

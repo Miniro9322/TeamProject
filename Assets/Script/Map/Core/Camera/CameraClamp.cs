@@ -73,6 +73,27 @@ public class CameraClamp
         return 0f;                         // 맵이 화면을 덮음 → 자유 이동
     }
 
+    // 상자 8꼭짓점이 화면 채움 비율(fillH, fillV) 안에 다 들어오는 최소 거리.
+    // focus를 상자 중심에 고정해두고 계산하므로, 축별 화면 위치가 거리에 선형으로만 반응해 반복 없이 바로 구해진다.
+    public float FitDistance(Vector3 focus, Bounds area, Quaternion rotation, float fieldOfView, float aspect, float fillH, float fillV)
+    {
+        rot = rotation;
+        tanV = Mathf.Tan(fieldOfView * 0.5f * Mathf.Deg2Rad);
+        tanH = tanV * aspect;
+        FillCorners(area);
+
+        Quaternion inv = Quaternion.Inverse(rot);
+        float need = 0f;
+        for (int i = 0; i < corners.Length; i++)
+        {
+            Vector3 local = inv * (corners[i] - focus);
+            float needX = Mathf.Abs(local.x) / (fillH * tanH) - local.z;
+            float needY = Mathf.Abs(local.y) / (fillV * tanV) - local.z;
+            need = Mathf.Max(need, Mathf.Max(needX, needY));
+        }
+        return need;
+    }
+
     // 기울기가 0에 가까우면 그 축은 화면에서 사라진 상태. 그냥 나누면 NaN이라 반드시 걸러야 한다.
     private float SafeDivide(float shift, float slope)
     {
