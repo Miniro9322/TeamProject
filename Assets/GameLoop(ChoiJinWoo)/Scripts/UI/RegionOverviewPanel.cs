@@ -28,20 +28,16 @@ public class RegionOverviewPanel : MonoBehaviour, IClosablePanel
     private EnviromentManager enviromentManager;
     private bool isNight;
 
+    // 낮/밤 구독은 Start가 아니라 여기서 한다 - 이 오브젝트는 씬에서 처음부터 비활성 상태라
+    // (버튼을 눌러야 처음 활성화됨) Start/Awake는 한 번도 안 켜지면 영영 안 불린다. [Inject]는
+    // 활성 여부와 무관하게 VContainer가 실행해주므로, 버튼을 한 번도 안 눌러도 구독이 걸린다.
     [Inject]
     private void Construct(UiPanelStack panelStack, GameManager gameManager, EnviromentManager enviromentManager)
     {
         this.panelStack = panelStack;
         this.gameManager = gameManager;
         this.enviromentManager = enviromentManager;
-    }
 
-    // Awake가 아니라 Start에서 자기 자신을 끈다 - Awake는 씬 오브젝트마다 실행 순서가 보장되지 않아서,
-    // 여기서 SetActive(false)를 하면 곧바로 OnDisable -> hubPanel.Close()가 불리는데, 그 시점에
-    // CenterHubPanel.Awake()(버튼 리스너 연결)가 아직 안 돌았으면 그 오브젝트가 영영 못 켜진다.
-    // Start는 모든 오브젝트의 Awake가 끝난 뒤에 불리므로 이 경쟁 상태가 없다.
-    private void Start()
-    {
         gameManager.ChangeToNight += OnNight;
         enviromentManager.OnDay += OnDayStart;
     }
