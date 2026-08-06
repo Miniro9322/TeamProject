@@ -1089,7 +1089,7 @@ Animator:
   m_GameObject: {fileID: 8947023061105610466}
   m_Enabled: 1
   m_Avatar: {fileID: 9000000, guid: 7f76fa10cea3c65419c6c31a27d62003, type: 3}
-  m_Controller: {fileID: 9100000, guid: 57a33b69309a598498283f5badfe8e89, type: 2}
+  m_Controller: {fileID: 9100000, guid: 56b81d2307750dc4cb3ddfe097e6dcff, type: 2}
   m_CullingMode: 1
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
@@ -1120,6 +1120,7 @@ MonoBehaviour:
   burrowMarkerPrefab: {fileID: 0}
   burrowTimeout: 3
   swimTimeout: 3
+  swimSpeedMultiplier: 1.5
   burrowEmergeStun: 2
   healthSlider: {fileID: 0}
   bossName: {fileID: 0}
