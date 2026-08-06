@@ -1,4 +1,5 @@
-    using System.Collections.Generic;
+using System.Collections.Generic;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
@@ -18,6 +19,7 @@ public class RegionOverviewPanel : MonoBehaviour, IClosablePanel
     [SerializeField] private List<RegionNodeView> nodes;
     [SerializeField] private List<RegionFacilitySlots> regions; // 인스펙터에서 지역 오브젝트들을 직접 연결
     [SerializeField] private Button openButton; // 거점 화면을 여는 버튼 - 밤에는 비활성화
+    [SerializeField] private GameObject redDot; // 새로 해금된 지역이 있으면 openButton 위에 표시
 
     // RegionDetailPanel이 자기 바깥-클릭 판정에서 지역 노드 버튼만 제외하는 데 쓴다
     // (오버뷰 전체가 아니라 노드들만 - 오버뷰는 화면 전체를 덮고 있어서 전체를 제외하면 바깥 클릭이 아예 안 잡힌다).
@@ -40,12 +42,41 @@ public class RegionOverviewPanel : MonoBehaviour, IClosablePanel
 
         gameManager.ChangeToNight += OnNight;
         enviromentManager.OnDay += OnDayStart;
+
+        // 레드닷 감지는 패널이 닫혀있어도 계속 돌아야 해서(닫힌 버튼 위에 띄우는 용도) OnEnable이 아니라
+        // 여기서 항상 구독해둔다. Refresh용 BindModules()/UnbindModules()와는 별개다.
+        // 한 프레임 미뤄서 구독한다 - Construct는 MapRegistry.Awake()보다 먼저 돌 수도 있어서,
+        // 그 시점에 바로 registry.AllModules를 돌면 아직 비어있어 구독이 하나도 안 걸릴 수 있다.
+        SubscribeModulesDeferred().Forget();
+    }
+
+    private async UniTaskVoid SubscribeModulesDeferred()
+    {
+        await UniTask.Yield();
+        foreach (var module in registry.AllModules.Values)
+        {
+            module.OnStateChanged += OnAnyModuleUnlocked;
+        }
     }
 
     private void OnDestroy()
     {
         gameManager.ChangeToNight -= OnNight;
         enviromentManager.OnDay -= OnDayStart;
+
+        foreach (var module in registry.AllModules.Values)
+        {
+            module.OnStateChanged -= OnAnyModuleUnlocked;
+        }
+    }
+
+    // 지역이 새로 해금되면(잠김 -> 준비됨) 거점 버튼 위에 레드닷을 띄운다 - 패널을 열면(OpenPanel) 확인한 걸로 치고 끈다.
+    private void OnAnyModuleUnlocked(ModuleState state)
+    {
+        if (state == ModuleState.Preparing && redDot != null)
+        {
+            redDot.SetActive(true);
+        }
     }
 
     // 밤이 되면 열려있던 거점 화면을 즉시 닫고, 여는 버튼 자체를 꺼버린다
@@ -147,6 +178,7 @@ public class RegionOverviewPanel : MonoBehaviour, IClosablePanel
         if (isNight) return; // 밤에는 거점 화면을 열 수 없다.
 
         gameObject.SetActive(true);
+        if (redDot != null) redDot.SetActive(false); // 열었으니 확인한 걸로 치고 끈다
     }
 
     public void Close()

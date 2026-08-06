@@ -29,6 +29,7 @@ public class DayNightButton : MonoBehaviour
         // 그걸 쓰면 아이콘 회전이 실제 빛 전환보다 한 박자 늦게 시작된다. GameManager.ChangeToDay는
         // 전환이 "시작되는" 시점에 불리고 EnviromentManager도 이걸로 빛 전환을 시작하므로,
         // 여기 구독하면 실제 빛 변화와 아이콘 회전이 동시에 시작된다.
+        icon.transform.rotation = Quaternion.identity;
         gameManager.ChangeToDay += OnDayStart;
     }
 

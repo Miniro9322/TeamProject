@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -8,6 +9,11 @@ public class PlacePalette : MonoBehaviour
     private int _index;
     private PlaceMode _mode = PlaceMode.Off;
     private HeroRosterEntry _runtimeEntry;
+    // "생성" 버튼이 배치 모드만 열어둘 때 쓴다. 로스터 등록 전이라 엔트리가 없다.
+    private Placeable _pendingCreateSlot;
+
+    // 모드가 바뀔 때마다 알린다(UI가 매 프레임 폴링하지 않게).
+    public event Action OnModeChanged;
 
     public PlaceMode Mode
     {
@@ -29,10 +35,17 @@ public class PlacePalette : MonoBehaviour
         get { return _runtimeEntry; }
     }
 
+    // 배치 성공 시 PlaceAction이 실제 생성(비용 차감·로스터 등록)을 할지 판단하는 데 쓴다.
+    public Placeable PendingCreateSlot
+    {
+        get { return _pendingCreateSlot; }
+    }
+
     // 현재 슬롯을 돌려준다(인덱스가 유효하다는 가정). 검사는 TryCurrentSlot이 한다.
     public Placeable CurrentSlot()
     {
         if (_runtimeEntry != null) return _runtimeEntry.Slot;
+        if (_pendingCreateSlot != null) return _pendingCreateSlot;
         return _slots[_index];
     }
 
@@ -40,6 +53,7 @@ public class PlacePalette : MonoBehaviour
     public bool TryCurrentSlot(out Placeable slot)
     {
         if (_runtimeEntry != null) { slot = _runtimeEntry.Slot; return true; }
+        if (_pendingCreateSlot != null) { slot = _pendingCreateSlot; return true; }
         if (_index < 0 || _index >= _slots.Count) { slot = null; return false; }
         slot = _slots[_index];
         return true;
@@ -49,7 +63,8 @@ public class PlacePalette : MonoBehaviour
     {
         _index = index;
         _runtimeEntry = null;
-        _mode = PlaceMode.Place;
+        _pendingCreateSlot = null;
+        SetMode(PlaceMode.Place);
     }
 
     public void SelectSlot(string label)
@@ -60,17 +75,27 @@ public class PlacePalette : MonoBehaviour
             {
                 _index = _slots.IndexOf(slot);
                 _runtimeEntry = null;
-                _mode = PlaceMode.Place;
+                _pendingCreateSlot = null;
+                SetMode(PlaceMode.Place);
                 break;
             }
         }
     }
 
-    // 로스터 엔트리를 현재 배치 대상으로 선택한다.
+    // 로스터 엔트리를 현재 배치 대상으로 선택한다(이미 생성된 영웅의 재배치).
     public void SelectRuntimeSlot(HeroRosterEntry entry)
     {
         _runtimeEntry = entry;
-        _mode = PlaceMode.Place;
+        _pendingCreateSlot = null;
+        SetMode(PlaceMode.Place);
+    }
+
+    // "생성" 버튼: 배치 모드만 열어둔다. 실제 생성은 PlaceAction이 배치에 성공했을 때 한다.
+    public void SelectHeroCreate(Placeable slot)
+    {
+        _runtimeEntry = null;
+        _pendingCreateSlot = slot;
+        SetMode(PlaceMode.Place);
     }
 
     public Placeable GetSlot(string label)
@@ -88,18 +113,27 @@ public class PlacePalette : MonoBehaviour
     public void SelectReplace()
     {
         _runtimeEntry = null;
-        _mode = PlaceMode.Replace;
+        _pendingCreateSlot = null;
+        SetMode(PlaceMode.Replace);
     }
 
     public void SelectRemove()
     {
         _runtimeEntry = null;
-        _mode = PlaceMode.Remove;
+        _pendingCreateSlot = null;
+        SetMode(PlaceMode.Remove);
     }
 
     public void ClearMode()
     {
-        _mode = PlaceMode.Off;
         _runtimeEntry = null;
+        _pendingCreateSlot = null;
+        SetMode(PlaceMode.Off);
+    }
+
+    private void SetMode(PlaceMode mode)
+    {
+        _mode = mode;
+        OnModeChanged?.Invoke();
     }
 }

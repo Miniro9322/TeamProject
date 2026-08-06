@@ -59,10 +59,8 @@ public class HeroSetPanel : MonoBehaviour
 
         if (!view.CheckCanBuild(slot.label)) return;
 
-        game.CitizenManager.UseCitizen(slot.prefab.GetComponent<Hero>().CitizenAmount);
-        view.resourcesManager.ProductChanged(slot.prefab.GetComponent<Hero>().Cost);
-        HeroRosterEntry entry = game.HeroRoster.Add(slot);
-        view.SetHero(entry);   // 생성과 동시에 배치 모드로 진입(타일 클릭하면 바로 배치)
+        // 배치 모드만 연다. 비용 차감·로스터 등록은 타일에 실제로 배치될 때(PlaceAction.PlaceUnit) 일어난다.
+        view.SetHeroCreate(slot);
     }
 
     // 해금된 영웅 슬롯 중 아직 아이콘이 없는 것만 만든다(이미 만든 아이콘은 안 건드림).

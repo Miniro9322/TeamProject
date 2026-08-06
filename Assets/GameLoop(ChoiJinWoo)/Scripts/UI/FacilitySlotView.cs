@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 // 구조물 그리드의 칸 하나. 빈 칸/지어진 칸을 오브젝트로 나누지 않고 아이콘 스프라이트 + 텍스트만
-// 바꿔서 표현한다. 레벨/배치 인력은 생산 시설에만 있는 개념이라 House는 빈 문자열로 넘어온다.
+// 바꿔서 표현한다. 배치 인력(workers)은 생산 시설에만 있는 개념이라 House는 빈 문자열로 넘어온다.
 public class FacilitySlotView : MonoBehaviour
 {
     [SerializeField] private Image icon;

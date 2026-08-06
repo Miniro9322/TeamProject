@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 // 배치된 유닛을 집어 다른 자리에 다시 놓는 담당.
@@ -12,6 +13,9 @@ public class UnitReplace
     {
         _unitList = unitList;
     }
+
+    // 집었다/내려놨다가 바뀔 때마다 알린다(UI가 매 프레임 폴링하지 않게).
+    public event Action OnHoldChanged;
 
     public bool IsHolding => held.Unit != null;
     public Tile HeldFromTile => held.FromTile;
@@ -34,12 +38,23 @@ public class UnitReplace
         }
 
         OccupantKind kind = tile.State.Occupant;   // 칸을 비우면 None이 되므로 먼저 읽는다.
+        Vector3 fromPosition = unit.transform.position;   // 비우기 전에 미리 읽는다(취소 시 되돌릴 자리).
 
         AreaPlace.Remove(area);
         _unitList.Remove(unit);
 
-        held = new HeldData(unit, tile, kind, area.Size);
+        held = new HeldData(unit, tile, area, fromPosition, kind, area.Size);
+        OnHoldChanged?.Invoke();
         return true;
+    }
+
+    // 재배치를 취소하고 집었던 자리에 그대로 되돌린다.
+    public void ReturnHeld()
+    {
+        PlaceData data = new PlaceData(held.FromArea, held.FromPosition, true);
+        AreaPlace.Place(data, held.Unit, held.Kind);
+        _unitList.Add(held.Unit, held.FromArea);
+        ClearHeld();
     }
 
     // 집은 유닛을 목표 자리 한가운데로 옮긴다.
@@ -73,12 +88,13 @@ public class UnitReplace
     // 집은 유닛을 파괴하고 집은 상태를 해제한다.
     public void CancelHeldAndDestroy()
     {
-        Object.Destroy(held.Unit);
+        UnityEngine.Object.Destroy(held.Unit);
         ClearHeld();
     }
 
     private void ClearHeld()
     {
         held = default;
+        OnHoldChanged?.Invoke();
     }
 }
