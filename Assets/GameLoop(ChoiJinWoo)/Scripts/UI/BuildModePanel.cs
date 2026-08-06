@@ -85,13 +85,19 @@ public class BuildModePanel : MonoBehaviour
 
     public void OnRemoveButton()
     {
-        view.SetRemove();
+        if (view.IsRemoving)
+            view.ClearMode();
+        else
+            view.SetRemove();
         InfoPanel.SetActive(false);
     }
 
     public void OnReplaceButton()
     {
-        view.SetReplace();
+        if (view.IsReplacing)
+            view.ClearMode();
+        else
+            view.SetReplace();
         InfoPanel.SetActive(false);
     }
 
