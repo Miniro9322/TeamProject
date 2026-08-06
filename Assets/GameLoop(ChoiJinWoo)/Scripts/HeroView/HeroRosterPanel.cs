@@ -34,12 +34,12 @@ public class HeroRosterPanel : MonoBehaviour
             HeroRosterIcon icon = Instantiate(iconPrefab, container);
             icon.Set(entry, OnIconClicked, OnIconDoubleClicked);
 
-            // 배치 중이면 실시간 값을, 제거되어 있으면 제거 시점에 저장해둔 값을 보여준다.
-            Hero placedHero = entry.PlacedUnit != null ? entry.PlacedUnit.GetComponent<Hero>() : null;
-            if (placedHero != null)
-                icon.UpdateLevel(placedHero.StatLevel, placedHero.SkillLevel);
-            else
-                icon.UpdateLevel(entry.StatLevel, entry.SkillLevel);
+            //// 배치 중이면 실시간 값을, 제거되어 있으면 제거 시점에 저장해둔 값을 보여준다.
+            //Hero placedHero = entry.PlacedUnit != null ? entry.PlacedUnit.GetComponent<Hero>() : null;
+            //if (placedHero != null)
+            //    icon.UpdateLevel(placedHero.StatLevel, placedHero.SkillLevel);
+            //else
+            //    icon.UpdateLevel(entry.StatLevel, entry.SkillLevel);
         }
     }
 

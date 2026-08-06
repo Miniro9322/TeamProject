@@ -10,8 +10,6 @@ public class HeroRosterIcon : MonoBehaviour, IPointerClickHandler
 {
     [SerializeField] private Image icon;
     [SerializeField] private Button button;
-    [SerializeField] private TextMeshProUGUI statLevelText;
-    [SerializeField] private TextMeshProUGUI skillLevelText;
 
     private const float DoubleClickWindow = 0.3f; // PlaceAction.DoubleClickWindow와 동일한 값
 
@@ -54,11 +52,5 @@ public class HeroRosterIcon : MonoBehaviour, IPointerClickHandler
         yield return new WaitForSeconds(DoubleClickWindow);
         pendingSingleClick = null;
         onClick?.Invoke(entry, this);
-    }
-
-    public void UpdateLevel(int statLevel, int skillLevel)
-    {
-        statLevelText.text = $"LV.{statLevel}";
-        skillLevelText.text = $"LV.{skillLevel}";
     }
 }
