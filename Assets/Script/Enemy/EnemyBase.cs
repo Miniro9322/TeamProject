@@ -22,6 +22,8 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
     [SerializeField] private float burrowTimeout = 3f;
     [Tooltip("잠수(Pool)/상승(Up) 애니 이벤트가 안 왔을 때 강제로 다음 상태로 넘기는 시간(초). IsSwim일 때만 사용. 클립 길이보다 넉넉하게.")]
     [SerializeField] private float swimTimeout = 3f;
+    [Tooltip("물속(헤엄 중) 이동속도 배율. IsSwim일 때만 사용 — 1이면 지상과 같다.")]
+    [SerializeField, Min(1f)] private float swimSpeedMultiplier = 1.5f;
     [Tooltip("솟아오르며 영웅에게 거는 스턴 시간(초). 0이면 스턴을 걸지 않는다. Hero가 IStunAble을 구현하기 전까진 효과 없음.")]
     [SerializeField] private float burrowEmergeStun = 2f;
     [Tooltip("적 머리 위 체력바. 없는 프리팹이면 비워두면 된다(체력바 로직 전체가 no-op).")]
@@ -55,6 +57,10 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
     public float AttackSpeed => sc[StatType.AS];
     public int Range { get; protected set; }
     public float MoveSpeed => Mathf.Max(0.1f,sc[StatType.SPD]);
+    // 실제 이동에 쓰는 속도 — 물 구간에 들어가 있는 동안만 배율을 곱한다.
+    // 스탯(sc)에 버프로 걸지 않는 이유: 사망·디스폰·풀 재사용·스턴·상승 타임아웃마다 해제 시점을 챙겨야 하고
+    // 한 군데라도 놓치면 재사용된 적에게 속도 버프가 영구히 남는다. 매 프레임 다시 계산하면 남을 상태가 없다.
+    private float CurrentMoveSpeed => _swim.UseSwimAnim ? MoveSpeed * swimSpeedMultiplier : MoveSpeed;
     public EnemyType Type { get; protected set; }        // 근거리/원거리
     public EnemyClass Class { get; protected set; }      // 일반/엘리트/보스
     public EnemyAttribute Attribute { get; protected set; } // 외부에서 볼수있는 특성
@@ -306,7 +312,7 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
         // active=사망/기절·속박 아님 → 그 동안 이동 정지(Idle).
         // 잠행 몹은 파고들기/솟아오르기 모션 중에도 멈춘다 — 안 그러면 걸어가면서 땅을 파고 솟는 게 보인다.
         // 수영 몹도 잠수(Pool)/상승(Up) 모션 중엔 멈춘다 — 같은 이유.
-        _move.Tick(!IsDead && !CannotMove && !_burrow.IsTransitioning && !_swim.IsTransitioning, MoveSpeed);
+        _move.Tick(!IsDead && !CannotMove && !_burrow.IsTransitioning && !_swim.IsTransitioning, CurrentMoveSpeed);
         UpdateExposedAttribute();       // 저지 상태에 따라 Hero가 보는 Attribute를 갱신
         _cloak.Tick(CloakClear);
         _burrow.Tick(CloakClear, transform.position); // 은신과 같은 트리거(저지/사망) — 저지되면 솟아오른다

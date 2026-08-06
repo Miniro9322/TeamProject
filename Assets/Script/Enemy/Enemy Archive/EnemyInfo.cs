@@ -49,6 +49,7 @@ public class EnemyInfo : MonoBehaviour
     public Color hitsShieldColor   = new Color(0.95f, 0.77f, 0.06f); // 타수 보호막 - 노랑
     public Color burrowColor       = new Color(0.65f, 0.32f, 0.20f); // 잠행 - 적갈색
     public Color FlameColor = new Color(0.96f,0.12f,0.12f);
+    public Color SwimColor = new Color(0.16f,0.88f,0.22f);
 
     [Tooltip("고유 특성으로 표기한 스킬의 글자색. 특성 단어와 눈으로 구분되게 다른 색을 주는 게 좋다.")]
     public Color signatureSkillColor = new Color(0.95f, 0.55f, 0.85f); // 고유 스킬 - 분홍
@@ -328,6 +329,8 @@ public class EnemyInfo : MonoBehaviour
             case EnemyAttribute.Regeneration: return regenerationColor;
             case EnemyAttribute.HitsShield:   return hitsShieldColor;
             case EnemyAttribute.Burrow: return burrowColor;
+            case EnemyAttribute.Swim: return SwimColor;
+            case EnemyAttribute.Flame: return FlameColor;
             default:                          return Color.white;
         }
     }
