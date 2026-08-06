@@ -47,10 +47,11 @@ public class HeroCombineManager : MonoBehaviour
         if (!entries[0].TryGetMergeKey(out MergeKey key)) return false;
 
         int tier = key.Tier;
-        if (!heroRegistry.TryGetNextTierPrefabs(tier, out List<GameObject> nextTierPrefabs))
+        if (!heroRegistry.TryGetNextTierHeroDatas(tier, out List<HeroData> nextTierDatas))
             return false; // 최고 티어거나 매핑 데이터 없음
 
-        GameObject nextTierPrefab = nextTierPrefabs[Random.Range(0, nextTierPrefabs.Count)];
+        HeroData nextTierData = nextTierDatas[Random.Range(0, nextTierDatas.Count)];
+        GameObject nextTierPrefab = nextTierData.HeroPrefab;
 
         foreach (HeroRosterEntry entry in entries)
         {
@@ -71,7 +72,14 @@ public class HeroCombineManager : MonoBehaviour
             game.HeroRoster.Remove(entry);
         }
 
-        Placeable newSlot = new Placeable { label = nextTierPrefab.name, prefab = nextTierPrefab, kind = nextTierPrefab.GetComponent<Hero>().OccupantKind };
+        Placeable newSlot = new Placeable
+        {
+            label = nextTierPrefab.name,
+            prefab = nextTierPrefab,
+            icon = nextTierData.Icon,
+            placedIcon = nextTierData.Icon,
+            kind = nextTierPrefab.GetComponent<Hero>().OccupantKind,
+        };
         game.HeroRoster.Add(newSlot);
 
         return true;
