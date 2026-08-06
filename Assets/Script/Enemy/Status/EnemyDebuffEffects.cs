@@ -74,10 +74,6 @@ public class EnemyDebuffEffects
         _spawned = new GameObject[_entries.Length];
     }
 
-    /// <summary>
-    /// tracker에 걸린 종류에 맞춰 이펙트를 소환/반납한다.
-    /// suppress가 true면(사망 등) 전부 반납한다 — 사망 애니 위에 별이 돌고 있으면 이상하다.
-    /// </summary>
     public void Tick(DebuffTracker tracker, bool suppress)
     {
         if (!IsSetup) return;

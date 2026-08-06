@@ -8,9 +8,10 @@ public class SpiderToxin : EnemyBase
     public int attack;
     public int def; //테스트용 인스펙터 확인용 스탯들
 
-    // 독 수치(틱 피해·간격·지속시간)는 DebuffTable.csv의 Poison_Spider가 들고 있다.
-    // 표의 틱 피해는 이 적의 기본 공격력 기준이고, 강화되면 StatRatio(ATK)만큼 같이 세진다
-    // (이관 전 AttackPower * poisonRatio와 같은 거동 — 표 값 4 = 기본 공격력 15 x 0.3).
+    // 독 수치(틱 비율·간격·지속시간)는 DebuffTable.csv의 Poison_Spider가 들고 있다.
+    // 표의 틱 피해는 고정값이 아니라 "맞는 쪽 최대 체력의 %"다 — 이 거미의 공격력과는 무관하다.
+    // 아래 scale(StatRatio(ATK))은 "강화된 거미는 독도 세다"만 남긴 배율이다. 기본 상태면 1이라 표 값 그대로 들어가고,
+    // 공격력 버프를 받으면 그 비율만큼 %도 커진다(공격력이 곱해지는 게 아니라 %가 곱해진다).
     [SerializeField] private string poisonDebuffId = "Poison_Spider";
     private DebuffSO poisonDebuff;
     private bool poisonResolved;   // 결과가 아니라 "시도했는지"를 기억한다 — 에셋이 없을 때 매 타격마다 경고가 쏟아지지 않게

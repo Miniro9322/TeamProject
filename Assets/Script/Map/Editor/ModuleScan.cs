@@ -55,6 +55,18 @@ public static class ModuleScan
         return PrefabUtility.GetCorrespondingObjectFromSource(near);
     }
 
+    // 목록에 띄울 모듈 이름. 상위에 묶어 두면 계층 꼭대기는 전부 같은 이름이라 프리팹 뿌리를 본다.
+    public static string ModuleName(Grid module)
+    {
+        GameObject near = PrefabUtility.GetNearestPrefabInstanceRoot(module.gameObject);
+        if (near != null)
+        {
+            return near.name;
+        }
+
+        return module.gameObject.name;
+    }
+
     /// <summary>편집 대상 안의 모든 Grid = 모듈 목록.</summary>
     public static List<Grid> FindModules()
     {

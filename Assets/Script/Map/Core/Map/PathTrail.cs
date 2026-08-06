@@ -20,12 +20,16 @@ public class PathTrail : MonoBehaviour
     [SerializeField] private float loopGap = 1.2f;
     [SerializeField] private bool isAutoPlay = true;
 
+    // 폴백 경로라 갈래 정보가 없다는 표시. WaveSpawner.NoSpawn과 같은 뜻(값의 원본은 그쪽).
+    private const int NoSpawn = -1;
+
     private readonly List<TrailRun> runs = new();
     private WaveSpawner spawner; //활성화된 스폰 지점 참조.
     private ModuleLogic module;
+    private EnemyLanes enemyLanes; //스폰별 갈래 조회용.
     private bool isLooping;
     private bool isPlaying;
-    private bool isWaiting; 
+    private bool isWaiting;
     private bool isRefreshPending; //재생 요청이 대기 중인지 여부. 재생 중이면 무시.
     private float elapsed;
     private float moveTime;
@@ -35,6 +39,7 @@ public class PathTrail : MonoBehaviour
     {
         spawner = GetComponent<WaveSpawner>();
         module = GetComponent<ModuleLogic>();
+        enemyLanes = GetComponent<EnemyLanes>();
     }
 
     // 모듈 상태 변경 이벤트를 구독합니다.
@@ -63,11 +68,81 @@ public class PathTrail : MonoBehaviour
         StopTrail();
         ClearRuns();
 
+        List<IReadOnlyList<Vector3>> points = CollectRuns();
+        for (int i = 0; i < points.Count; i++)
+        {
+            AddRun(points[i]);
+        }
+    }
+
+    // 활성 포탈 전부의 트레일 점 목록만 계산한다(판단만, 실행 없음).
+    private List<IReadOnlyList<Vector3>> CollectRuns()
+    {
         IReadOnlyList<IReadOnlyList<Vector3>> paths = spawner.ActivePaths;
+        IReadOnlyList<int> spawns = spawner.ActiveSpawns;
+        var runs = new List<IReadOnlyList<Vector3>>();
+
+        // 활성 포탈 수는 라운드마다(min~maxActivePortals 사이 랜덤) 달라져 미리 정할 수 없다 — 그 수만큼 순회한다.
         for (int i = 0; i < paths.Count; i++)
         {
-            AddRun(paths[i]);
+            runs.AddRange(PortalRuns(paths[i], SpawnOf(spawns, i)));
         }
+
+        return runs;
+    }
+
+    // 이 포탈에서 그릴 점 목록. 갈래가 있으면 갈래 전부, 없으면 대표 경로 하나.
+    private List<IReadOnlyList<Vector3>> PortalRuns(IReadOnlyList<Vector3> representative, int spawnIndex)
+    {
+        List<IReadOnlyList<Vector3>> branches = BranchRuns(spawnIndex);
+
+        if (branches.Count > 0)
+        {
+            return branches;
+        }
+
+        return new List<IReadOnlyList<Vector3>> { representative };
+    }
+
+    // 이 스폰의 갈래 점 목록 전부. 갈래 정보가 없으면 빈 목록(널 반환 금지 규칙).
+    private List<IReadOnlyList<Vector3>> BranchRuns(int spawnIndex)
+    {
+        var runs = new List<IReadOnlyList<Vector3>>();
+
+        if (spawnIndex == NoSpawn)
+        {
+            return runs;
+        }
+
+        if (enemyLanes == null) // WaveSpawner가 Start에서야 EnemyLanes를 붙이는 모듈은 Awake 시점엔 아직 없다 — 실제 발생 경로
+        {
+            return runs;
+        }
+
+        // 갈래 수는 스폰·날짜마다 달라 미리 정할 수 없다 — 그 수만큼 순회한다.
+        int count = enemyLanes.BranchCount(spawnIndex);
+        for (int i = 0; i < count; i++)
+        {
+            runs.Add(enemyLanes.GetBranchPath(spawnIndex, i, 0f));
+        }
+
+        return runs;
+    }
+
+    // i번째 포탈의 스폰 번호. 목록이 없거나 짧으면 폴백 표시를 낸다.
+    private static int SpawnOf(IReadOnlyList<int> spawns, int index)
+    {
+        if (spawns == null)
+        {
+            return NoSpawn;
+        }
+
+        if (index >= spawns.Count)
+        {
+            return NoSpawn;
+        }
+
+        return spawns[index];
     }
 
     // 포털 갱신 다음 프레임에 최신 활성 경로를 반복 재생합니다.

@@ -25,7 +25,10 @@ public class DebuffTable : DataTable
         public int? MaxStacks { get; set; }
 
         // Category=Dot 전용.
-        public int? DamagePerTick { get; set; }
+        // 틱 피해는 고정값이 아니라 대상 최대 체력의 비율(%)이다 — 0.5면 한 틱에 최대 체력의 0.5%.
+        // 고정값이면 체력 100 잡몹과 5000 보스에 같은 숫자가 들어가고, 적 체력이 UpHealthScale로
+        // 불어나는 동안 지속 피해만 제자리다. 비율로 두면 표를 안 고쳐도 같이 따라간다.
+        public float? PercentPerTick { get; set; }
         public float? Interval { get; set; }
     }
 

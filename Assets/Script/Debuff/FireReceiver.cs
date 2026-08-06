@@ -20,30 +20,27 @@ public static class FireReceiver
     // 불 타일에 들어온 대상의 점화 갱신을 시작한다.
     public static void ReceiveEntry(Tile tile, Component target)
     {
-        if (!CanApply(tile))
+        if (CanIgnite(tile, target))
         {
-            return;
+            StartRefresh(target);
         }
-
-        StartRefresh(target);
     }
 
     // 불 타일에서 나간 대상의 갱신을 멈추고 마지막 점화를 적용한다.
     public static void ReceiveExit(Tile tile, Component target)
     {
-        if (!CanApply(tile))
+        if (CanIgnite(tile, target))
         {
-            return;
+            Active.Remove(target);
+            ApplyEffect(target);
         }
-
-        Active.Remove(target);
-        ApplyEffect(target);
     }
 
-    // 현재 타일이 불 타일인지 확인한다.
-    private static bool CanApply(Tile tile)
+    // 지상 적에게 불 타일 점화를 적용할 수 있는지 확인한다.
+    private static bool CanIgnite(Tile tile, Component target)
     {
-        return tile.IsFire;
+        EnemyBase enemyBase = target.GetComponent<EnemyBase>();
+        return tile.IsFire && enemyBase.IsFly == false;
     }
 
     // 대상을 등록하고 즉시 점화를 적용한다.

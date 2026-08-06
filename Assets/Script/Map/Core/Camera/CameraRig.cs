@@ -33,6 +33,7 @@ public class CameraRig : MonoBehaviour
     private readonly CameraClamp clamp = new();
     private Bounds area;
     private bool hasArea;
+    private bool clampSuspended;
 
     // 화면에 실제로 그리는 표시 상태. focus/yaw/pitch/distance는 '목표'이고 이 값이 매 프레임 목표로
     private Vector3 showFocus;
@@ -69,6 +70,25 @@ public class CameraRig : MonoBehaviour
         area = next;
         hasArea = true;
         ApplyNow();
+    }
+
+    // 상자가 화면 채움 비율(fill)만큼 차지하는 거리. focus를 상자 중심에 둔 상태를 가정한다(확장 완료 프레이밍용).
+    public float FitDistance(Vector3 focusPoint, Bounds bounds, float fill)
+    {
+        float raw = clamp.FitDistance(focusPoint, bounds, Rotation, fieldOfView, cam.aspect, fill, fill);
+        return Mathf.Clamp(raw, minDistance, maxDistance);
+    }
+
+    // 확장 자동 이동처럼 목표 지점이 이미 정해진 동안 울타리가 끼어들지 않게 잠시 끈다.
+    public void SuspendClamp()
+    {
+        clampSuspended = true;
+    }
+
+    // 자동 이동이 끝나거나 가로채졌을 때 울타리를 다시 켠다.
+    public void ResumeClamp()
+    {
+        clampSuspended = false;
     }
 
     // 지금 값들을 화면(카메라 위치·각도·줌)에 한 번에 반영한다.
@@ -112,11 +132,16 @@ public class CameraRig : MonoBehaviour
     // 초점이 맵 밖으로 나가지 않게 경계 안으로 되돌린다.
     private void ApplyLimit()
     {
-        if (!hasArea)
+        if (!CanClamp())
         {
             return;
         }
         focus = clamp.FitFocus(focus, area, Rotation, distance, fieldOfView, cam.aspect, fillH, fillV);
+    }
+
+    private bool CanClamp()
+    {
+        return hasArea && !clampSuspended;
     }
 
     // 원근/직교 여부와 줌 크기를 카메라 렌즈에 반영한다.
