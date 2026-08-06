@@ -49,8 +49,15 @@ public class HeroSetPanel : MonoBehaviour
 
     public void OnHero(Placeable slot)
     {
-        HeroInfoPanel.gameObject.SetActive(true);
-        HeroInfoPanel.Set(slot, OnCreate);
+        //HeroInfoPanel.gameObject.SetActive(true);
+        //HeroInfoPanel.Set(slot, OnCreate);
+
+
+        if (!view.CheckCanBuild(slot.label)) return;
+
+        game.CitizenManager.UseCitizen(slot.prefab.GetComponent<Hero>().CitizenAmount);
+        view.resourcesManager.ProductChanged(slot.prefab.GetComponent<Hero>().Cost);
+        HeroRosterEntry entry = game.HeroRoster.Add(slot);
     }
 
     public void OnCreate(Placeable slot)
@@ -62,7 +69,7 @@ public class HeroSetPanel : MonoBehaviour
         game.CitizenManager.UseCitizen(slot.prefab.GetComponent<Hero>().CitizenAmount);
         view.resourcesManager.ProductChanged(slot.prefab.GetComponent<Hero>().Cost);
         HeroRosterEntry entry = game.HeroRoster.Add(slot);
-        view.SetHero(entry);   // 생성과 동시에 배치 모드로 진입(타일 클릭하면 바로 배치)
+        //view.SetHero(entry);   // 생성과 동시에 배치 모드로 진입(타일 클릭하면 바로 배치)
     }
 
     // 해금된 영웅 슬롯 중 아직 아이콘이 없는 것만 만든다(이미 만든 아이콘은 안 건드림).

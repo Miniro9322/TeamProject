@@ -8,6 +8,7 @@ public class HeroTable : DataTable
         public int UnitId { get; set; }
         public int Tier { get; set; }
         public string HeroName { get; set; }
+        public int HeroType { get; set; }
     }
 
     private readonly Dictionary<int, Data> table = new();

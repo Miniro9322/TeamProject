@@ -23,7 +23,7 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
     public int Tier => heroData.Tier;
     public int UnitId => heroData.UnitId;
     public string HeroName => heroData.HeroName;
-    public MergeKey MergeKey => new MergeKey(heroData.UnitId, heroData.Tier);
+    public MergeKey MergeKey => heroData.MergeKey;
 
     private int skillLevel = 0;
     private int statLevel = 0;

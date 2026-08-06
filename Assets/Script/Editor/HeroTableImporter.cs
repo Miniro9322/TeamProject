@@ -39,6 +39,7 @@ public static class HeroTableImporter
             so.UnitId = data.UnitId;
             so.Tier = data.Tier;
             so.HeroName = data.HeroName;
+            so.HeroType = data.HeroType;
 
             if (isNew)
             {
