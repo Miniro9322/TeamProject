@@ -89,4 +89,12 @@ public class UiManager : MonoBehaviour
 
         Application.Quit();
     }
+
+    public void OpenMenuPanel()
+    {
+        if(MenuPanel.activeSelf == false)
+            MenuPanel.SetActive(true);
+        else
+            MenuPanel.SetActive(false);
+    }
 }
