@@ -15,6 +15,7 @@ public static class RouteEdit
 {
     private const string RoutesField = "routes";
     private const string SpawnField = "spawn";
+    private const string DayField = "day";
     private const string NodesField = "nodes";
     private const string ColField = "col";
     private const string RowField = "row";
@@ -22,6 +23,17 @@ public static class RouteEdit
 
     // 새로 찍은 칸이 멈추지 않는다는 뜻. 멈추게 하려면 사람이 목록에서 따로 적는다.
     private const float UnauthoredWaitTime = 0f;
+
+    /// <summary>지금 볼 일차를 정한다. 아직 RouteConfig가 없으면 정할 것이 없다.</summary>
+    public static void SetDay(RouteConfig config, int day)
+    {
+        if (config == null)
+        {
+            return;
+        }
+
+        config.SetActiveDay(day);
+    }
 
     /// <summary>이 모듈의 RouteConfig. 아직 없으면 null.</summary>
     public static RouteConfig Find(Grid module)
@@ -139,7 +151,7 @@ public static class RouteEdit
     }
 
     /// <summary>이 스폰에 빈 경로 항목을 하나 더 만들고 그 항목을 돌려준다.</summary>
-    public static RouteData AddRoute(RouteConfig config, Vector2Int spawn)
+    public static RouteData AddRoute(RouteConfig config, Vector2Int spawn, int day)
     {
         var owner = new SerializedObject(config);
         SerializedProperty routes = owner.FindProperty(RoutesField);
@@ -148,6 +160,7 @@ public static class RouteEdit
         int made = routes.arraySize - 1;
         SerializedProperty added = routes.GetArrayElementAtIndex(made);
         added.FindPropertyRelative(SpawnField).vector2IntValue = spawn;
+        added.FindPropertyRelative(DayField).intValue = day;
         added.FindPropertyRelative(NodesField).ClearArray();
         owner.ApplyModifiedProperties();
 

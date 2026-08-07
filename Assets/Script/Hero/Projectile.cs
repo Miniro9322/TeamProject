@@ -151,8 +151,8 @@ public class Projectile : MonoBehaviour
             {
                 AttackDamageUtil.ApplyTargetDebuffs(go.GetComponentInParent<IUnit>(), cfg.buffList, cfg.buffManager, cfg.source);
                 ApplyHealOptions(damage);
+                SpawnHitEffect(go.transform.position);
             }
-            SpawnHitEffect();
         }
         else if (cfg.attackType == AttackType.Area)
         {
@@ -163,8 +163,8 @@ public class Projectile : MonoBehaviour
                 cfg.hero.NotifyHit(go, (int)damage, false);
                 AttackDamageUtil.ApplyTargetDebuffs(enemy as IUnit, cfg.buffList, cfg.buffManager, cfg.source);
                 ApplyHealOptions(damage);
+                SpawnHitEffect(go.transform.position);
             }
-            SpawnHitEffect();
         }
         else if (target != null && target.GetComponentInParent<IDamageAble>() is IDamageAble damageable)
         {
@@ -172,7 +172,7 @@ public class Projectile : MonoBehaviour
             cfg.hero.NotifyHit(target.gameObject, (int)damage, false);
             AttackDamageUtil.ApplyTargetDebuffs(target.GetComponentInParent<IUnit>(), cfg.buffList, cfg.buffManager, cfg.source);
             ApplyHealOptions(damage);
-            SpawnHitEffect();
+            SpawnHitEffect(target.position);
         }
 
         if (cfg.groundZonePrefab != null)
@@ -181,10 +181,10 @@ public class Projectile : MonoBehaviour
         Return();
     }
 
-    private void SpawnHitEffect()
+    private void SpawnHitEffect(Vector3 pos)
     {
         if (hitEffectPrefab != null)
-            cfg.hero.SpawnEffect(hitEffectPrefab, transform.position, Quaternion.identity, hitEffectLifetime);
+            cfg.hero.SpawnEffect(hitEffectPrefab, pos, Quaternion.identity, hitEffectLifetime);
     }
 
     private void ApplyHealOptions(float damageDealt)

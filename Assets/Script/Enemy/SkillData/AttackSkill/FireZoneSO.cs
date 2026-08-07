@@ -39,37 +39,47 @@ public class FireZoneSO : AttackSkillDataSO
     [Header("수치 출처")]
     [Tooltip("피해량·틱 간격을 가져올 지속피해 디버프 에셋 ID(Resources/DebuffSO 아래). " +
              "불 칸 점화와 같은 수치를 쓰려고 여기서 읽는다 — 한쪽만 고쳐서 어긋나는 것을 막는다. " +
-             "못 찾으면 이 SO의 damage/tickInterval 값으로 되돌아간다.")]
+             "못 찾으면 아래 fallbackPercentPerTick / tickInterval 값으로 되돌아간다.")]
     [SerializeField] private string damageSourceDebuffId = "Ignite_Basic";
+
+    [Tooltip("위 디버프 에셋을 못 찾았을 때 쓸 틱 피해 비율(대상 최대 체력의 %, 1 = 1%). " +
+             "AttackSkillDataSO의 damage는 고정 피해값이라 여기 쓰지 않는다 — " +
+             "그대로 비율로 읽으면 damage=30이 한 틱에 최대 체력 30%가 되어 버린다.")]
+    [SerializeField, Min(0.01f)] private float fallbackPercentPerTick = 1f;
 
     private bool loggedScale;
     private bool loggedNumbers;
 
-    /// <summary>Ignite 에셋에서 틱 피해·간격을 읽는다. 못 찾으면 이 SO에 저작된 값으로 되돌아간다.</summary>
-    private void ResolveNumbers(out int damagePerTick, out float interval)
+    /// <summary>
+    /// Ignite 에셋에서 틱 피해 비율·간격을 읽는다. 못 찾으면 이 SO에 저작된 값으로 되돌아간다.
+    /// 반환하는 것은 고정 피해값이 아니라 <b>대상 최대 체력의 %</b>다 — 점화(DotDebuffSO)와 단위를 맞춘다.
+    /// 실제 피해값은 대상마다 다르므로 때리는 자리에서 DotRegistry.PercentDamage로 환산한다.
+    /// </summary>
+    private void ResolveNumbers(out float percentPerTick, out float interval)
     {
-        damagePerTick = Mathf.RoundToInt(damage);
+        percentPerTick = fallbackPercentPerTick;
         interval = tickInterval;
 
         var dot = DebuffLoader.Get(damageSourceDebuffId) as DotDebuffSO;
         if (dot != null)
         {
-            damagePerTick = dot.damagePerTick;
+            percentPerTick = dot.percentPerTick;
             interval = dot.interval;
         }
         else if (!string.IsNullOrEmpty(damageSourceDebuffId))
         {
             Debug.LogWarning($"FireZoneSO({name}): '{damageSourceDebuffId}'를 DotDebuffSO로 못 읽었다 " +
-                             $"— 이 SO의 damage={damage}, tickInterval={tickInterval}로 진행한다.", this);
+                             $"— 이 SO의 fallbackPercentPerTick={fallbackPercentPerTick}%, tickInterval={tickInterval}로 진행한다.", this);
         }
 
         // DotRegistry와 같은 하한. 0이면 매 프레임 때려서 순삭이 된다.
         interval = Mathf.Max(0.05f, interval);
+        percentPerTick = Mathf.Max(0.01f, percentPerTick);
 
         if (!loggedNumbers)
         {
             loggedNumbers = true;
-            Debug.Log($"FireZoneSO({name}): 틱 피해 {damagePerTick} / {interval}초 간격 (출처 {damageSourceDebuffId}), " +
+            Debug.Log($"FireZoneSO({name}): 틱 피해 대상 최대체력 {percentPerTick:F2}% / {interval}초 간격 (출처 {damageSourceDebuffId}), " +
                       $"발동={(onlyWhileFlameEmpowered ? "화염족이 불에 닿은 동안만" : "항상")}");
         }
     }
@@ -103,7 +113,7 @@ public class FireZoneSO : AttackSkillDataSO
     {
         if (owner == null || owner.IsDead) return;
 
-        ResolveNumbers(out int damagePerTick, out float interval);
+        ResolveNumbers(out float percentPerTick, out float interval);
 
         // 이 SO는 Resources.Load로 모든 적이 공유하는 애셋이다(EnemyStatLoader.ResolveSkills).
         // 이펙트 핸들을 필드에 두면 나중에 시전한 적이 앞선 적의 핸들을 덮어써서
@@ -164,7 +174,9 @@ public class FireZoneSO : AttackSkillDataSO
                         if (!hit.Add(tile.OccupantObject)) continue;   // 같은 영웅을 두 번 때리지 않는다
 
                         if (tile.OccupantObject.GetComponentInParent<IDamageAble>() is IDamageAble dmg)
-                            dmg.TakeDamage(damagePerTick);
+                            // 비율 피해라 피해값이 대상마다 다르다 — 여기서 그 영웅의 최대 체력으로 환산한다.
+                            // 점화(DotRegistry)와 같은 식을 쓰므로 불 칸과 오라의 체감이 어긋나지 않는다.
+                            dmg.TakeDamage(DotRegistry.PercentDamage(tile.OccupantObject, percentPerTick));
                     }
                 }
                 await UniTask.Yield(token);

@@ -59,7 +59,7 @@ public partial class Tile : MonoBehaviour
     // 이 칸에 걸린 기믹. 길찾기·배치와는 무관하고 올라선 유닛에게만 영향을 준다.
     public GimmickType Gimmick => State.Gimmick;
 
-    // 불 칸인가. 지나갈 수도, 아군을 놓을 수도 있지만 올라서 있으면 계속 아프다.
+    // 불 칸인가. 지나갈 수도, 아군을 놓을 수도 있다.
     public bool IsFire => Gimmick == GimmickType.Fire;
 
     // 이 칸을 지나갈 수 있는지.(현재는 물적도 일반 땅 밟을 수 있게 오픈된 형태)

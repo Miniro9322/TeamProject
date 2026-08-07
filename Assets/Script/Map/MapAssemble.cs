@@ -22,6 +22,7 @@ public class MapAssemble : MonoBehaviour
     [SerializeField] private HeroCombineManager combineManager;
 
     private List<PathTrail> pathTrails;
+    private List<EnemyLanes> laneModules;
     private PlaceGhost ghost;
     private HeroSkillCastController skillCast;
 
@@ -91,7 +92,11 @@ public class MapAssemble : MonoBehaviour
             mapGame.Rule.ChangeToDay += trail.PlayLoop;
             mapGame.Rule.ChangeToNight += trail.PlayOnce;
         }
-        
+
+        laneModules = ModuleLanes();
+        mapGame.Rule.ChangeToDay += OnDayChanged;
+        OnDayChanged(); // 첫 날짜도 시작하자마자 바로 맞춘다 — 이벤트가 처음 울릴 때까지 기다리지 않는다
+
 
         mapGame.Rule.ChangeToNight += view.ClearMode;
         mapGame.Rule.ChangeToNight += skillCast.ClearSelection;
@@ -108,6 +113,10 @@ public class MapAssemble : MonoBehaviour
     {
         ghost.ClearGhosts();
         mapGame.Rule.ChangeToNight -= view.ClearMode;
+        if (laneModules != null)
+        {
+            mapGame.Rule.ChangeToDay -= OnDayChanged;
+        }
         if (skillCast != null)
         {
             mapGame.Rule.ChangeToNight -= skillCast.ClearSelection;
@@ -142,11 +151,36 @@ public class MapAssemble : MonoBehaviour
         foreach (ModuleLogic logic in registry.AllModules.Values)
         {
             PathTrail trail = logic.GetComponent<PathTrail>();
-            if (trail != null) 
-            { 
-                trails.Add(trail); 
+            if (trail != null)
+            {
+                trails.Add(trail);
             }
         }
         return trails;
+    }
+
+    // 레지스트리에 등록된 모듈들의 EnemyLanes 목록.
+    private List<EnemyLanes> ModuleLanes()
+    {
+        List<EnemyLanes> lanes = new();
+        foreach (ModuleLogic logic in registry.AllModules.Values)
+        {
+            EnemyLanes found = logic.GetComponent<EnemyLanes>();
+            if (found != null)
+            {
+                lanes.Add(found);
+            }
+        }
+        return lanes;
+    }
+
+    // 날짜가 바뀔 때마다 모든 모듈의 레인을 그 날짜로 다시 계산한다.
+    private void OnDayChanged()
+    {
+        int day = mapGame.Rule.DayCount;
+        for (int i = 0; i < laneModules.Count; i++)
+        {
+            laneModules[i].RefreshForDay(day);
+        }
     }
 }

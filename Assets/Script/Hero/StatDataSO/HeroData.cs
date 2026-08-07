@@ -6,4 +6,8 @@ public class HeroData : ScriptableObject
     public int UnitId;
     public int Tier;
     public string HeroName;
+    public int HeroType;
+    public Sprite Icon;
+    public GameObject HeroPrefab;
+    public MergeKey MergeKey => new MergeKey(UnitId, Tier);
 }

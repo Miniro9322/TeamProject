@@ -6,7 +6,6 @@ public class BuildModePanel : MonoBehaviour
 {
     [SerializeField] private GameObject heroPanel;
     [SerializeField] private GameObject rosterPanel;
-    [SerializeField] private GameObject InfoPanel;
     [SerializeField] private MapView view;
     [SerializeField] private MapGame game;
     [SerializeField] private Key closeKey = Key.Escape;
@@ -94,7 +93,6 @@ public class BuildModePanel : MonoBehaviour
             view.ClearMode();
         else
             view.SetRemove();
-        InfoPanel.SetActive(false);
     }
 
     public void OnReplaceButton()
@@ -103,12 +101,10 @@ public class BuildModePanel : MonoBehaviour
             view.ClearMode();
         else
             view.SetReplace();
-        InfoPanel.SetActive(false);
     }
 
     public void OnOffButton()
     {
-        InfoPanel.SetActive(false);
         heroPanel.SetActive(false);
         view.ClearMode();
     }

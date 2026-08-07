@@ -18,11 +18,23 @@ public class FogController : MonoBehaviour
     [SerializeField, Range(0f, 8f)] private float edgeCells = 1.5f;
 
     private const int MaxAreas = 8;
+    private const float FullyOpenAmount = 1f;
 
     private static readonly int AreasId = Shader.PropertyToID("_FogAreas");
     private static readonly int OpensId = Shader.PropertyToID("_FogOpens");
     private static readonly int CountId = Shader.PropertyToID("_FogCount");
     private static readonly int MarginId = Shader.PropertyToID("_EdgeMargin");
+
+    [Serializable]
+    private struct StaticOpenArea
+    {
+        public Transform center;
+        public Vector2 halfSize;
+    }
+
+    [Header("Static Open Areas")]
+    [Tooltip("ModuleLogic이 아니지만 처음부터 항상 열려 있어야 하는 구역(예: 본진 마을). 수동 배선 전용.")]
+    [SerializeField] private List<StaticOpenArea> staticOpenAreas = new();
 
     private readonly Vector4[] _areas = new Vector4[MaxAreas];
     private readonly float[] _opens = new float[MaxAreas];
@@ -34,6 +46,7 @@ public class FogController : MonoBehaviour
     private void Start()
     {
         BuildAreas();
+        RegisterStaticAreas();
         ApplyEdgeMargin();
         ApplyAreas();
         BindModules();
@@ -75,6 +88,28 @@ public class FogController : MonoBehaviour
             _revealed[_count] = false;
 
             _modules.Add(module);
+            _count++;
+        }
+    }
+
+    // 인스펙터에 연결된 상시 오픈 구역을 안개 데이터에 등록한다.
+    private void RegisterStaticAreas()
+    {
+        foreach (StaticOpenArea area in staticOpenAreas)
+        {
+            if (_count >= MaxAreas)
+            {
+                break;
+            }
+            if (area.center == null)
+            {
+                continue;
+            }
+
+            Vector3 position = area.center.position;
+            _areas[_count] = new Vector4(position.x, position.z, area.halfSize.x, area.halfSize.y);
+            _opens[_count] = FullyOpenAmount;
+            _revealed[_count] = true;
             _count++;
         }
     }
@@ -123,7 +158,7 @@ public class FogController : MonoBehaviour
 
     private void RevealUnlocked()
     {
-        for (int i = 0; i < _count; i++)
+        for (int i = 0; i < _modules.Count; i++)
         {
             if (_modules[i].IsUnlocked)
             {
@@ -144,7 +179,7 @@ public class FogController : MonoBehaviour
     // 개방된 모듈마다 한 번만 구멍을 연다. 이미 열린 뒤의 상태 변화(낮↔밤)는 무시.
     private void ModuleChanged(ModuleState state)
     {
-        for (int index = 0; index < _count; index++)
+        for (int index = 0; index < _modules.Count; index++)
         {
             if (_revealed[index])
             {

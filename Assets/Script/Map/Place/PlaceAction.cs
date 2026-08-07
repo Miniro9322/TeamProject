@@ -76,37 +76,21 @@ public class PlaceAction
         // 슬롯과 덮는 자리를 한 번에 구한다(미리보기와 같은 계산).
         if (!finder.TryResolveSlot(out Placeable slot, out PlaceData data)) return;
 
-        Placeable pendingCreateSlot = palette.PendingCreateSlot;   // "생성" 버튼으로 열린 배치면 아직 로스터 엔트리가 없다
         HeroRosterEntry entry = palette.CurrentRuntimeEntry;   // 배치 전에 미리 캡처(성공 후 모드가 바뀔 수 있음)
         if (IsEntryPlaced(entry)) return;
         if (IsAreaBlocked(data)) return;
         if (IsNightTime()) { Debug.Log("밤에는 배치할 수 없습니다."); return; } // 테스트용
-        if (pendingCreateSlot != null && !view.CheckCanBuild(pendingCreateSlot.label)) { Debug.Log("자원이 부족합니다."); return; }
         if (!placer.TryPlace(data, slot, out GameObject placedUnit)) return;
-
-        // 실제 생성(비용 차감·로스터 등록)은 배치가 성공한 지금 한다 — 취소하면 아무것도 소모되지 않는다.
-        if (pendingCreateSlot != null)
-        {
-            entry = CreateHeroEntry(pendingCreateSlot);
-        }
 
         MarkRosterPlaced(entry, placedUnit);
         view.Select(tile);
         palette.ClearMode();   // 개체 하나뿐이니 배치 즉시 Place 모드 종료(연속 배치 방지)
     }
 
-    private HeroRosterEntry CreateHeroEntry(Placeable slot)
-    {
-        Hero heroPrefab = slot.prefab.GetComponent<Hero>();
-        view.citizenManager.UseCitizenForHero(heroPrefab.CitizenAmount);
-        view.resourcesManager.ProductChanged(heroPrefab.Cost);
-        return heroRoster.Add(slot);
-    }
-
     // 영웅은 개체가 하나뿐이라 이미 판에 올라간 엔트리를 또 놓을 수 없다.
     private bool IsEntryPlaced(HeroRosterEntry entry)
     {
-        if (entry == null) return false;   // 건물·자원 슬롯은 로스터 엔트리가 없다
+        if (entry == null) return false;
         return entry.State == HeroRosterState.Placed;
     }
 

@@ -25,8 +25,8 @@ public static class AttackDamageUtil
                 ctx.hero.NotifyHit((e as Component)?.gameObject, (int)baseDamage, false);
                 ApplyTargetDebuffs(e as IUnit, data.buffList, ctx.buffManager, data);
                 ApplyHealOptions(data, ctx.self.position, ctx.hero.Heal, AllyQuery, baseDamage, ctx.sc[StatType.ATK]);
+                ctx.hero.SpawnEffect(data.hitEffect, (e as Component).transform.position, Quaternion.identity, data.hitEffectLifetime);
             }
-            ctx.hero.SpawnEffect(data.hitEffect, ctx.target.position, Quaternion.identity, data.hitEffectLifetime);
             return;
         }
 
@@ -38,12 +38,12 @@ public static class AttackDamageUtil
             {
                 ApplyTargetDebuffs(go.GetComponentInParent<IUnit>(), data.buffList, ctx.buffManager, data);
                 ApplyHealOptions(data, ctx.self.position, ctx.hero.Heal, AllyQuery, baseDamage, ctx.sc[StatType.ATK]);
+                ctx.hero.SpawnEffect(data.hitEffect, go.transform.position, Quaternion.identity, data.hitEffectLifetime);
             }
             // hits[0]은 체인 시작 타겟(캐스터→시작 타겟 구간은 빔 비주얼 등 별도 이펙트가 표현) —
             // 튕긴 대상들 사이(hits[i]→hits[i+1])만 아크로 잇는다.
             for (int i = 0; i < hits.Count - 1; i++)
                 ctx.hero.SpawnChainArc(data.chainEffectPrefab, hits[i].transform.position, hits[i + 1].transform.position, data.chainEffectLifetime);
-            ctx.hero.SpawnEffect(data.hitEffect, ctx.target.position, Quaternion.identity, data.hitEffectLifetime);
             return;
         }
 
@@ -76,7 +76,7 @@ public static class AttackDamageUtil
             return;
         }
 
-        RangeShape aoeShape = data.areaShape == AreaShape.Square ? RangeShape.Square : RangeShape.Diamond;
+        RangeShape aoeShape = ResolveAoeShape(data);
 
         if (data.attackType == AttackType.Area && data.targetMode == TargetMode.SameTarget)
         {
@@ -89,8 +89,8 @@ public static class AttackDamageUtil
                     ctx.hero.NotifyHit(go, (int)baseDamage, false);
                     ApplyTargetDebuffs(e as IUnit, data.buffList, ctx.buffManager, data);
                     ApplyHealOptions(data, ctx.self.position, ctx.hero.Heal, AllyQuery, baseDamage, ctx.sc[StatType.ATK]);
+                    ctx.hero.SpawnEffect(data.hitEffect, go.transform.position, Quaternion.identity, data.hitEffectLifetime);
                 }
-                ctx.hero.SpawnEffect(data.hitEffect, ctx.self.position, Quaternion.identity, data.hitEffectLifetime);
                 if (i < data.attackCount - 1)
                     await UniTask.Delay(TimeSpan.FromSeconds(data.shotInterval), cancellationToken: ct);
             }
@@ -108,10 +108,16 @@ public static class AttackDamageUtil
                 ctx.hero.NotifyHit(hit, (int)baseDamage, false);
                 ApplyTargetDebuffs(e as IUnit, data.buffList, ctx.buffManager, data);
                 ApplyHealOptions(data, ctx.self.position, ctx.hero.Heal, AllyQuery, baseDamage, ctx.sc[StatType.ATK]);
+                ctx.hero.SpawnEffect(data.hitEffect, hit.transform.position, Quaternion.identity, data.hitEffectLifetime);
             }
-            ctx.hero.SpawnEffect(data.hitEffect, go.transform.position, Quaternion.identity, data.hitEffectLifetime);
         }, data.shotInterval, ct);
     }
+
+    // Area 공격의 AOE 판정 모양 — Square만 실제 사각형, 그 외(Diamond/Line/Chain 오분류 방지용 기본값)는
+    // 전부 Diamond로 취급한다. ApplyInstantDamage의 자기중심/다중센터 AOE 분기와 ContinuousBeamStrategy의
+    // SelfArea 종료 판정(주변에 적이 남아있는지 체크)이 서로 다른 모양을 쓰면 안 되므로 한 곳에 모은다.
+    public static RangeShape ResolveAoeShape(AttackDataSO data) =>
+        data.areaShape == AreaShape.Square ? RangeShape.Square : RangeShape.Diamond;
 
     // Healer 전용 — TakeDamage 대신 Heal을 적용한다. 힐은 "적중"이 아니므로 onHit 훅을 부르지 않는다.
     public static UniTask ApplyInstantHeal(AttackDataSO data, AttackContext ctx, CancellationToken ct)
@@ -129,11 +135,13 @@ public static class AttackDamageUtil
             return UniTask.CompletedTask;
         }
 
-        RangeShape aoeShape = data.areaShape == AreaShape.Square ? RangeShape.Square : RangeShape.Diamond;
+        RangeShape aoeShape = ResolveAoeShape(data);
         foreach (GameObject go in ctx.hero.GetObjectsInRange(ctx.self.position, data.areaRange, aoeShape, RangeQueryAffinity.Ally))
             if (go.GetComponent<Hero>() is Hero areaAlly)
+            {
                 areaAlly.Heal(healAmount);
-        ctx.hero.SpawnEffect(data.hitEffect, ctx.self.position, Quaternion.identity, data.hitEffectLifetime);
+                ctx.hero.SpawnEffect(data.hitEffect, areaAlly.transform.position, Quaternion.identity, data.hitEffectLifetime);
+            }
 
         return UniTask.CompletedTask;
     }
