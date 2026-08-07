@@ -11,6 +11,7 @@ public class HeroRosterIcon : MonoBehaviour, IPointerClickHandler
     [SerializeField] private Image icon;
     [SerializeField] private Button button;
     [SerializeField] private Image placedIcon;
+    [SerializeField] private TextMeshProUGUI tierText;
 
     private const float DoubleClickWindow = 0.3f; // PlaceAction.DoubleClickWindow와 동일한 값
 
@@ -30,6 +31,7 @@ public class HeroRosterIcon : MonoBehaviour, IPointerClickHandler
         Color c = placedIcon.color;
         c.a = alpha;
         placedIcon.color = c;
+        tierText.text = entry.PlacedUnit.GetComponent<Hero>().Tier.ToString();
     }
 
     // 첫 클릭은 곧바로 실행하지 않고 잠깐 기다린다. 그 안에 두 번째 클릭이 오면 단일 클릭 동작은
