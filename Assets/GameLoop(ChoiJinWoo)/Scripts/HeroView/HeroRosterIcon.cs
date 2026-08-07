@@ -10,6 +10,7 @@ public class HeroRosterIcon : MonoBehaviour, IPointerClickHandler
 {
     [SerializeField] private Image icon;
     [SerializeField] private Button button;
+    [SerializeField] private Image placedIcon;
 
     private const float DoubleClickWindow = 0.3f; // PlaceAction.DoubleClickWindow와 동일한 값
 
@@ -25,6 +26,10 @@ public class HeroRosterIcon : MonoBehaviour, IPointerClickHandler
         this.onDoubleClick = onDoubleClick;
 
         icon.sprite = entry.State == HeroRosterState.Placed ? entry.Slot.placedIcon : entry.Slot.icon;
+        float alpha = entry.State == HeroRosterState.Placed ? 1f : 0f;
+        Color c = placedIcon.color;
+        c.a = alpha;
+        placedIcon.color = c;
     }
 
     // 첫 클릭은 곧바로 실행하지 않고 잠깐 기다린다. 그 안에 두 번째 클릭이 오면 단일 클릭 동작은
