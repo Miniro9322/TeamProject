@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+ using System.Collections.Generic;
 using UnityEngine;
 
 public class MapBoard : MonoBehaviour
@@ -9,6 +9,7 @@ public class MapBoard : MonoBehaviour
     private readonly Dictionary<GameObject, Tile> _enemyCell = new(); // 적→현재 칸(직전 칸과 비교해 이동 감지)
 
     [SerializeField] private Grid _grid; // 좌표계의 단일 소스. 셀 크기·원점·Swizzle을 모두 쥔다.
+    private Vector2Int _coordOffset; // raw Grid 좌표 → 베이크된 Tile.Coord로 정규화하는 상수 오프셋(모듈마다 다름)
     private Bounds _worldBounds;
     private RectInt _playRect;
     private float _floorY; // 클릭 판정에서 타일 기둥이 내려가는 바닥(보드 기준 높이).
@@ -48,6 +49,7 @@ public class MapBoard : MonoBehaviour
 
         // 1) 타일마다 렌더 캐시 + 격자 등록. 논리 좌표는 각 타일의 State.Col/Row를 신뢰한다(베이크가 새김).
         bool hasBounds = false;
+        bool hasOffset = false;
         foreach (Tile tile in tiles)
         {
             tile.SetBoard(this); // 소유 보드 도장 — 이후 모든 소비자는 tile.Board로 자기 모듈 보드를 찾는다
@@ -59,6 +61,16 @@ public class MapBoard : MonoBehaviour
             tile.SetTop(bound.max.y); // 윗면 높이만 Core에 캐시(렌더러/색은 Core가 모른다)
 
             Vector2Int coord = tile.Coord;
+
+            // Grid의 raw 셀 좌표는 베이크된 Tile.Coord와 모듈마다 다른 상수만큼 어긋난다(베이크가
+            // 모듈별로 (0,0)부터 시작하도록 정규화하기 때문) — 그 오프셋을 타일 하나로 구해 캐시한다.
+            if (!hasOffset)
+            {
+                Vector3Int rawCell = _grid.WorldToCell(tile.transform.position);
+                _coordOffset = new Vector2Int(rawCell.x, rawCell.y) - coord;
+                hasOffset = true;
+            }
+
             // 같은 칸에 타일이 겹치면(바닥 위에 고지 큐브를 쌓은 경우) 더 높은 쪽을 대표로 삼는다.
             if (!_cells.TryGetValue(coord, out Tile existing) || tile.WorldTop.y > existing.WorldTop.y)
                 _cells[coord] = tile;
@@ -317,24 +329,25 @@ public class MapBoard : MonoBehaviour
 
      
 
-    // 월드 위치가 어느 칸인지. 변환은 Grid가 하므로 타일에 새겨진 좌표와 항상 같은 기준이다.
+    // 월드 위치가 어느 칸인지. Grid의 raw 좌표를 _coordOffset으로 베이크된 Tile.Coord 기준으로 정규화한다.
     public Vector2Int WorldToCell(Vector3 world)
     {
         Vector3Int cell = _grid.WorldToCell(world);
-        return new Vector2Int(cell.x, cell.y);
+        return new Vector2Int(cell.x, cell.y) - _coordOffset;
     }
 
     // 월드 지점이 칸 안 어디인지까지 소수점으로. 칸 모서리가 정수, 한가운데가 x.5다.
     public Vector2 WorldToCellPoint(Vector3 world)
     {
         Vector3 cell = _grid.LocalToCellInterpolated(_grid.WorldToLocal(world));
-        return new Vector2(cell.x, cell.y);
+        return new Vector2(cell.x, cell.y) - _coordOffset;
     }
 
-    // 소수점 칸 좌표가 가리키는 월드 지점. 높이는 쓰는 쪽에서 갈아 끼운다.
+    // 소수점 칸 좌표(베이크 기준)가 가리키는 월드 지점. 높이는 쓰는 쪽에서 갈아 끼운다.
     public Vector3 CellPointToWorld(Vector2 point)
     {
-        return _grid.LocalToWorld(_grid.CellToLocalInterpolated(new Vector3(point.x, point.y, 0f)));
+        Vector2 rawPoint = point + _coordOffset;
+        return _grid.LocalToWorld(_grid.CellToLocalInterpolated(new Vector3(rawPoint.x, rawPoint.y, 0f)));
     }
 
     public List<Tile> GetTiles(Vector2Int origin, int range, bool square = false)
