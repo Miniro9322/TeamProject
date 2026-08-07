@@ -90,7 +90,7 @@ public class PlaceAction
     // 영웅은 개체가 하나뿐이라 이미 판에 올라간 엔트리를 또 놓을 수 없다.
     private bool IsEntryPlaced(HeroRosterEntry entry)
     {
-        if (entry == null) return false;   // 건물·자원 슬롯은 로스터 엔트리가 없다
+        if (entry == null) return false;
         return entry.State == HeroRosterState.Placed;
     }
 

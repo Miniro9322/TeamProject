@@ -6,7 +6,6 @@ public class BuildModePanel : MonoBehaviour
 {
     [SerializeField] private GameObject heroPanel;
     [SerializeField] private GameObject rosterPanel;
-    [SerializeField] private GameObject InfoPanel;
     [SerializeField] private MapView view;
     [SerializeField] private MapGame game;
     [SerializeField] private Key closeKey = Key.Escape;
@@ -36,7 +35,12 @@ public class BuildModePanel : MonoBehaviour
         if (keyboard == null) return;
         if (!keyboard[closeKey].wasPressedThisFrame) return;
 
-        if (!view.IsOff)
+        // 영웅을 집은 상태면 재배치 모드는 유지하고 집은 것만 취소한다.
+        if (view.IsHolding)
+        {
+            view.CancelHold();
+        }
+        else if (!view.IsOff)
         {
             view.ClearMode();
         }
@@ -89,7 +93,6 @@ public class BuildModePanel : MonoBehaviour
             view.ClearMode();
         else
             view.SetRemove();
-        InfoPanel.SetActive(false);
     }
 
     public void OnReplaceButton()
@@ -98,12 +101,10 @@ public class BuildModePanel : MonoBehaviour
             view.ClearMode();
         else
             view.SetReplace();
-        InfoPanel.SetActive(false);
     }
 
     public void OnOffButton()
     {
-        InfoPanel.SetActive(false);
         heroPanel.SetActive(false);
         view.ClearMode();
     }

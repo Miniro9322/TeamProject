@@ -9,11 +9,13 @@ public class CitizenManager : MonoBehaviour
     [SerializeField] private int currentCitizen;
     [SerializeField] private List<BaseUpgradeData> maxCitizenUpgrades;
     private int usedCitizen;
+    private int heroUsedCitizen;
 
     public int MaxCitizen => maxCitizen;
     public int CurrentCitizen => currentCitizen;
-    public int UsedCitizen => usedCitizen;
-    public int CanUseCitizen => currentCitizen - usedCitizen;
+    public int UsedCitizen => usedCitizen + heroUsedCitizen;
+    public int HeroUsedCitizen => heroUsedCitizen;
+    public int CanUseCitizen => currentCitizen - UsedCitizen;
 
     public event Action CitizenChanged;
 
@@ -47,9 +49,9 @@ public class CitizenManager : MonoBehaviour
         UpdateCitizen();
     }
 
-    public void UseCitizen(int amount)
+    public void UseCitizenForHero(int amount)
     {
-        usedCitizen += amount;
+        heroUsedCitizen += amount;
         UpdateCitizen();
     }
 

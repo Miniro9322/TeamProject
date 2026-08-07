@@ -2,7 +2,7 @@ using System;
 
 // 맵 배치가 사라지면서(§기반시설 UI) GameObject/Transform이 필요 없어져 일반 클래스로 전환했다.
 // IPlaceAble의 Board/OnBreak/OnResur는 실사용 없는 죽은 구현이었다(Hero만 실제로 씀) - 같이 제거.
-public class ProductionFacility
+public class ProductionFacility : IUpgradableOccupant
 {
     private readonly ProductionValue basicValue;
     private readonly ProductionEconomyConfig economyConfig;
@@ -22,9 +22,16 @@ public class ProductionFacility
 
     // 건설 비용 미리보기/체크용 — 인스턴스 없이도 PreviewConstructCost로 같은 계산을 쓸 수 있다.
     public (ProductionType Type, int Amount)[] GetConstructCost() =>
-        ApplyDiscount(basicValue.ConstructProduct, ConstructCostDiscount);
+        basicValue.ConstructProduct.ApplyDiscount(ConstructCostDiscount);
 
     public event Action OnWorkerChanged;
+
+    // House도 같은 이름의 이벤트를 갖지 않아도 되도록, 인터페이스 쪼는 기존 OnWorkerChanged에 얹는다.
+    event Action IUpgradableOccupant.Changed
+    {
+        add => OnWorkerChanged += value;
+        remove => OnWorkerChanged -= value;
+    }
 
     public ProductionValue BasicValue => basicValue;
 
@@ -37,8 +44,15 @@ public class ProductionFacility
     public int ProductAmount => productAmount;
     private (ProductionType Type, int Amount)[] upgradeCostCopy = Array.Empty<(ProductionType, int)>();
     private (ProductionType Type, int Amount)[] totalUpgradeSpent = Array.Empty<(ProductionType, int)>();
+    private (ProductionType Type, int Amount)[] constructCostPaid = Array.Empty<(ProductionType, int)>();
     public (ProductionType Type, int Amount)[] UpgradeCostCopy => upgradeCostCopy;
     public int UpgradeCount => upgradeCount;
+
+    public string NextUpgradeInfo => nextUpgradeInfo;
+
+    public int MaxUpgrade => maxUpgrade;
+
+    private string nextUpgradeInfo = "자원 생산량 증가";
 
     public ProductionFacility(
         ProductionValue basicValue,
@@ -61,15 +75,7 @@ public class ProductionFacility
         ProductionValue basicValue, ProductionEconomyConfig economyConfig, UpgradeState upgradeState)
     {
         float discount = upgradeState.GetTotalEffect(economyConfig.ConstructCostUpgrades);
-        return ApplyDiscount(basicValue.ConstructProduct, discount);
-    }
-
-    private static (ProductionType Type, int Amount)[] ApplyDiscount((ProductionType Type, int Amount)[] cost, float discount)
-    {
-        var result = new (ProductionType, int)[cost.Length];
-        for (int i = 0; i < cost.Length; i++)
-            result[i] = (cost[i].Type, UnityEngine.Mathf.RoundToInt(cost[i].Amount * (1f - discount)));
-        return result;
+        return basicValue.ConstructProduct.ApplyDiscount(discount);
     }
 
     public void Init()
@@ -77,14 +83,15 @@ public class ProductionFacility
         productAmount = basicValue.DefaultAmount + amountUpgrade * 10 + ProductAmountBonus;
         maxWorker = basicValue.DefaultMaxWorker + citizenUpgrade;
         workerAmount = 0;
-        upgradeCostCopy = ApplyDiscount(BasicValue.UpgradeCost, UpgradeCostDiscount);
+        upgradeCostCopy = BasicValue.UpgradeCost.ApplyDiscount(UpgradeCostDiscount);
         totalUpgradeSpent = new (ProductionType, int)[upgradeCostCopy.Length];
         for (int i = 0; i < totalUpgradeSpent.Length; i++)
         {
             totalUpgradeSpent[i] = (upgradeCostCopy[i].Type, 0);
         }
 
-        resourcesManager.ProductChanged(GetConstructCost());
+        constructCostPaid = GetConstructCost();
+        resourcesManager.ProductChanged(constructCostPaid);
         facilityManager.AddFacility(this);
     }
 
@@ -105,7 +112,7 @@ public class ProductionFacility
         ReleaseAllWorkers();
         facilityManager.RemoveFacility(this);
 
-        var construct = basicValue.ConstructProduct;
+        var construct = constructCostPaid;
         var refund = new (ProductionType Type, int Amount)[construct.Length + totalUpgradeSpent.Length];
         for (int i = 0; i < construct.Length; i++)
         {
@@ -159,15 +166,22 @@ public class ProductionFacility
         {
             UnityEngine.Debug.Log("특수 자원 생산 시작");
         }
-        else if(upgradeCount % 2 == 0)
+        else if(upgradeCount % 2 == 1)
         {
             amountUpgrade++;
             productAmount += amountUpgrade * 10;
+            nextUpgradeInfo = "시민 배치 수 증가";
         }
         else
         {
             citizenUpgrade++;
             maxWorker = basicValue.DefaultMaxWorker + citizenUpgrade;
+            nextUpgradeInfo = "자원 생산량 증가";
+        }
+
+        if(upgradeCount == maxUpgrade)
+        {
+            nextUpgradeInfo = "최대 업그레이드";
         }
 
         resourcesManager.ProductChanged(upgradeCostCopy);
@@ -178,7 +192,7 @@ public class ProductionFacility
             totalUpgradeSpent[i] = (totalUpgradeSpent[i].Type, totalUpgradeSpent[i].Amount + upgradeCostCopy[i].Amount);
         }
 
-        var baseCost = ApplyDiscount(basicValue.UpgradeCost, UpgradeCostDiscount);
+        var baseCost = basicValue.UpgradeCost.ApplyDiscount(UpgradeCostDiscount);
         for (int i = 0; i < upgradeCostCopy.Length; i++)
         {
             upgradeCostCopy[i] = (baseCost[i].Type, baseCost[i].Amount * (upgradeCount + 1));

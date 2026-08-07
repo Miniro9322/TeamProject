@@ -11,9 +11,14 @@ public class BuildingPanel : MonoBehaviour, IClosablePanel
     [SerializeField] private TextMeshProUGUI perProductText;
     [SerializeField] private List<CostAmountView> upgradeCostRows; // 최대 개수만큼 미리 배치, 남는 칸은 자동으로 숨김
     [SerializeField] private TextMeshProUGUI FacilityLevelText;
+    [SerializeField] private TextMeshProUGUI NextLevelInfoText;
     [SerializeField] private Button upgradeButton;
+    [SerializeField] private Button demolishButton; // House는 철거를 지원하지 않아 비활성화한다
+    [SerializeField] private GameObject workerButtonsContainer; // +/- 인력 버튼을 감싸는 오브젝트 - House에는 없는 개념이라 통째로 숨김
     [SerializeField] private RegionDetailPanel parentPanel; // 이 패널을 여는 쪽 - 그 안의 슬롯 버튼 클릭은 "바깥 클릭"이 아니다
     private ProductionFacility facility;
+    private House house;
+    private IUpgradableOccupant Occupant => facility != null ? (IUpgradableOccupant)facility : house;
     private RegionFacilitySlots region;
     private int slotIndex;
     private UiPanelStack panelStack;
@@ -71,14 +76,27 @@ public class BuildingPanel : MonoBehaviour, IClosablePanel
 
     private void UpdatePanel()
     {
-        if (workerText == null || perProductText == null || FacilityLevelText == null) return;
-        workerText.text = $"{facility.WorkerAmount}/{facility.MaxWorker}";
-        upgradeButton.interactable = facility.CheckCanUpgrade();
+        var occupant = Occupant;
+        if (occupant == null || FacilityLevelText == null) return;
 
-        if (productIcon != null) productIcon.sprite = resourceIconSet.GetIcon(facility.ProductionType);
-        perProductText.text = $"{facility.ProductAmount * facility.WorkerAmount}/day";
+        // 인력/생산량은 ProductionFacility에만 있는 개념이라, House를 보는 중이면 숨긴다.
+        bool isFacility = facility != null;
+        if (workerText != null) workerText.gameObject.SetActive(isFacility);
+        if (productIcon != null) productIcon.gameObject.SetActive(isFacility);
+        if (perProductText != null) perProductText.gameObject.SetActive(isFacility);
+        if (workerButtonsContainer != null) workerButtonsContainer.SetActive(isFacility);
+        if (demolishButton != null) demolishButton.gameObject.SetActive(isFacility);
 
-        var costs = facility.UpgradeCostCopy;
+        if (isFacility)
+        {
+            if (workerText != null) workerText.text = $"{facility.WorkerAmount}/{facility.MaxWorker}";
+            if (productIcon != null) productIcon.sprite = resourceIconSet.GetIcon(facility.ProductionType);
+            if (perProductText != null) perProductText.text = $"{facility.ProductAmount * facility.WorkerAmount}/day";
+        }
+
+        upgradeButton.interactable = occupant.CheckCanUpgrade();
+
+        var costs = occupant.UpgradeCostCopy;
         for (int i = 0; i < upgradeCostRows.Count; i++)
         {
             if (i < costs.Length)
@@ -91,40 +109,51 @@ public class BuildingPanel : MonoBehaviour, IClosablePanel
             }
         }
 
-        FacilityLevelText.text = $"Lv. {facility.UpgradeCount}";
+        FacilityLevelText.text = $"Lv. {occupant.UpgradeCount}";
+        if (NextLevelInfoText != null) NextLevelInfoText.text = $"Lv. {(occupant.UpgradeCount != occupant.MaxUpgrade ? occupant.UpgradeCount : "Max")}" +
+                $"{(occupant.UpgradeCount != occupant.MaxUpgrade ? $"→ Lv. {occupant.UpgradeCount + 1}" : string.Empty)}\n{occupant.NextUpgradeInfo}";
     }
 
-    public void InitFacilityInfo(ProductionFacility facility, RegionFacilitySlots region, int slotIndex)
+    // ProductionFacility/House 어느 쪽이든 이 하나로 받는다 - 둘 다 IUpgradableOccupant라
+    // 레벨/강화 UI 쪼는 공통으로 그리고, 인력 UI 쪼만 facility일 때 추가로 채운다.
+    public void InitOccupant(object occupant, RegionFacilitySlots region, int slotIndex)
     {
-        // 이미 열려있던 채로 다른 칸을 골랐을 수 있으니, 이전 시설 구독부터 정리한다.
-        if (this.facility != null) this.facility.OnWorkerChanged -= UpdatePanel;
+        // 이미 열려있던 채로 다른 칸을 골랐을 수 있으니, 이전 점유물 구독부터 정리한다.
+        UnsubscribeOccupant();
 
-        this.facility = facility;
+        facility = occupant as ProductionFacility;
+        house = occupant as House;
         this.region = region;
         this.slotIndex = slotIndex;
-        facility.OnWorkerChanged += UpdatePanel;
+
+        var current = Occupant;
+        if (current != null) current.Changed += UpdatePanel;
         UpdatePanel();
+    }
+
+    private void UnsubscribeOccupant()
+    {
+        var current = Occupant;
+        if (current != null) current.Changed -= UpdatePanel;
     }
 
     private void OnDisable()
     {
         panelStack.Remove(this);
 
-        if(facility != null)
-        {
-            facility.OnWorkerChanged -= UpdatePanel;
-            facility = null;
-        }
+        UnsubscribeOccupant();
+        facility = null;
+        house = null;
     }
 
     public void OnUpgrade()
     {
-        facility.Upgrade();
+        Occupant?.Upgrade();
     }
 
     public void OnDemolish()
     {
-        if (region == null) return;
+        if (region == null || facility == null) return; // House는 철거 버튼 자체를 비활성화해뒀지만, 방어적으로 한 번 더 막는다
 
         constructor.Demolish(region, slotIndex);
         Close();

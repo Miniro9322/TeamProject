@@ -50,7 +50,7 @@ public class HeroSetPanel : MonoBehaviour
         if (!view.IsOff || !CanAffordFixedCost()) return;
         if (!createManager.TryRollHero(kind, out HeroData picked)) return; // 비용은 결과가 나온 뒤에 낸다.
 
-        game.CitizenManager.UseCitizen(citizenCost);
+        game.CitizenManager.UseCitizenForHero(citizenCost);
         view.resourcesManager.ProductChanged(resourceCost.ToNegatedCostArray());
 
         Placeable slot = new Placeable

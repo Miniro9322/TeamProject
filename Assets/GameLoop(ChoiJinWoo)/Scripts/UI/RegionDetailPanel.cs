@@ -16,7 +16,7 @@ public class RegionDetailPanel : MonoBehaviour, IClosablePanel
     [SerializeField] private RegionOverviewPanel overviewPanel; // 지역 노드 버튼 클릭은 "바깥 클릭"이 아니다
 
     private RegionFacilitySlots region;
-    private ProductionFacility openFacility;
+    private IUpgradableOccupant openOccupant;
     private UiPanelStack panelStack;
     private ClickOutsideCloser outsideCloser;
 
@@ -76,11 +76,7 @@ public class RegionDetailPanel : MonoBehaviour, IClosablePanel
         // 다른 지역으로 옮겨가는 거라, 이전 지역 슬롯에 물려있던 팝업은 정리한다.
         buildChoicePanel.Close();
         buildingPanel.gameObject.SetActive(false);
-        if (openFacility != null)
-        {
-            openFacility.OnWorkerChanged -= Refresh;
-            openFacility = null;
-        }
+        UnsubscribeOpenOccupant();
 
         region = target;
         region.OnSlotsChanged += Refresh;
@@ -97,15 +93,20 @@ public class RegionDetailPanel : MonoBehaviour, IClosablePanel
         buildingPanel.gameObject.SetActive(false);
     }
 
+    private void UnsubscribeOpenOccupant()
+    {
+        if (openOccupant != null)
+        {
+            openOccupant.Changed -= Refresh;
+            openOccupant = null;
+        }
+    }
+
     private void OnDisable()
     {
         panelStack.Remove(this);
 
-        if (openFacility != null)
-        {
-            openFacility.OnWorkerChanged -= Refresh;
-            openFacility = null;
-        }
+        UnsubscribeOpenOccupant();
 
         if (region != null)
         {
@@ -146,6 +147,10 @@ public class RegionDetailPanel : MonoBehaviour, IClosablePanel
                 level = $"Lv.{facility.UpgradeCount}";
                 workers = $"{facility.WorkerAmount}/{facility.MaxWorker}";
             }
+            else if (slot.Occupant is House house)
+            {
+                level = $"Lv.{house.UpgradeCount}";
+            }
             slotViews[i].ShowBuilt(slot.Icon, slot.Label, level, workers);
         }
     }
@@ -158,25 +163,21 @@ public class RegionDetailPanel : MonoBehaviour, IClosablePanel
         if (slot.IsEmpty)
         {
             buildingPanel.gameObject.SetActive(false); // 지어진 칸용 패널이 열려있었다면 정리
-            if (openFacility != null)
-            {
-                openFacility.OnWorkerChanged -= Refresh;
-                openFacility = null;
-            }
+            UnsubscribeOpenOccupant();
 
             buildChoicePanel.Open(region, index);
             return;
         }
 
-        if (slot.Occupant is not ProductionFacility facility) return;
+        if (slot.Occupant is not IUpgradableOccupant occupant) return;
 
         buildChoicePanel.Close(); // 빈 칸용 패널이 열려있었다면 정리
 
-        if (openFacility != null) openFacility.OnWorkerChanged -= Refresh;
-        openFacility = facility;
-        openFacility.OnWorkerChanged += Refresh;
+        UnsubscribeOpenOccupant();
+        openOccupant = occupant;
+        openOccupant.Changed += Refresh;
 
         buildingPanel.gameObject.SetActive(true);
-        buildingPanel.InitFacilityInfo(facility, region, index);
+        buildingPanel.InitOccupant(slot.Occupant, region, index);
     }
 }
