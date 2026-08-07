@@ -9,7 +9,6 @@ public class MapView : MonoBehaviour
 
     // MapCommand가 조립할 때 넣어준다
     public PointerPick pointerPick;
-    public RangeInfo rangeInfo;
     public CitizenManager citizenManager;
     public ResourcesManager resourcesManager;
 
@@ -91,14 +90,6 @@ public class MapView : MonoBehaviour
     public Tile Selected { get { return tileSelect.Selected; } }
 
     public event Action OnOffMode;
-
-    public bool TryRange(
-        GameObject unit,
-        out int range,
-        out RangeShape shape)
-    {
-        return rangeInfo.TryGet(unit, out range, out shape);
-    }
 
     // ---- 모드 전환(UI 버튼이 부른다) ----
 

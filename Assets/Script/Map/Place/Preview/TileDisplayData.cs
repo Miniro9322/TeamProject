@@ -1,0 +1,52 @@
+using UnityEngine;
+
+// 이번 프레임에 뭘 보여줘야 하는지 담아 지난 프레임과 비교하는 값 묶음. 계산도 표시도 하지 않는다.
+public readonly struct TileDisplayData
+{
+    public readonly HoverMode Mode;
+    public readonly MapBoard Board;
+    public readonly Vector2Int Origin;
+    public readonly GameObject Unit;
+    public readonly bool CanPlace;
+    public readonly int RangeVersion;
+    public readonly Hero SkillCaster;
+    public readonly HeroActiveSkill Skill;
+    public readonly Tile SkillOrigin;
+
+    public TileDisplayData(
+        HoverMode mode,
+        MapBoard board,
+        Vector2Int origin,
+        GameObject unit,
+        bool canPlace,
+        int rangeVersion,
+        Hero skillCaster,
+        HeroActiveSkill skill,
+        Tile skillOrigin)
+    {
+        Mode = mode;
+        Board = board;
+        Origin = origin;
+        Unit = unit;
+        CanPlace = canPlace;
+        RangeVersion = rangeVersion;
+        SkillCaster = skillCaster;
+        Skill = skill;
+        SkillOrigin = skillOrigin;
+    }
+
+    public bool SameAs(TileDisplayData other)
+    {
+        return Mode == other.Mode
+            && Board == other.Board
+            && Origin == other.Origin
+            && Unit == other.Unit
+            && CanPlace == other.CanPlace
+            && RangeVersion == other.RangeVersion
+            && SkillCaster == other.SkillCaster
+            && Skill == other.Skill
+            && SkillOrigin == other.SkillOrigin;
+    }
+}
+
+public enum HoverMode { Blocked, Placing, Held, Range }

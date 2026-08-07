@@ -46,10 +46,9 @@ public class MapAssemble : MonoBehaviour
 
         if (tilePaintView != null)
         {
-            tilePaintView.skillCast = skillCast;
-            tilePaintView.finder = finder;
-            tilePaintView.rangeStore = rangeStore;
-            tilePaintView.hoverPlace = hoverPlace;
+            PlaceHoverFinder hoverFinder = new PlaceHoverFinder(view, finder, hoverPlace);
+            SkillTargetFinder skillFinder = new SkillTargetFinder(skillCast, view);
+            tilePaintView.sync = new TilePaintSync(hoverFinder, skillFinder, rangeCalc, rangeStore, tilePaintView.Painter);
         }
 
         rangeInput.pointerPick = pointerPick;
@@ -58,7 +57,6 @@ public class MapAssemble : MonoBehaviour
 
         view.pointerPick = pointerPick;
         view.replace = replace;
-        view.rangeInfo = rangeInfo;
         view.citizenManager = mapGame.CitizenManager;
         view.resourcesManager = mapGame.ResourcesManager;
 

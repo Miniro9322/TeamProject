@@ -63,6 +63,49 @@ public static class ThemeIO
         return theme;
     }
 
+    // 뽑기(모듈 전체 재추출)까지 안 가고 프리팹 하나만 즉시 등록한다 — 아직 맵에 안 쓴 프리팹도 바로 붓으로 쓰게 한다.
+    public static void RegisterPrefab(TileTheme theme, MapBrush brush, GameObject prefab)
+    {
+        TileTheme.Slot slot = EnsureSlot(theme, brush);
+        AppendPrefab(slot, prefab);
+
+        EditorUtility.SetDirty(theme);
+        AssetDatabase.SaveAssets();
+    }
+
+    private static TileTheme.Slot EnsureSlot(TileTheme theme, MapBrush brush)
+    {
+        for (int i = 0; i < theme.Slots.Length; i++)
+        {
+            if (theme.Slots[i].Brush == brush)
+            {
+                return theme.Slots[i];
+            }
+        }
+
+        return AppendSlot(theme, brush);
+    }
+
+    private static TileTheme.Slot AppendSlot(TileTheme theme, MapBrush brush)
+    {
+        var slot = new TileTheme.Slot();
+        slot.Brush = brush;
+        slot.Prefabs = new GameObject[0];
+
+        var slots = new List<TileTheme.Slot>(theme.Slots);
+        slots.Add(slot);
+        theme.Slots = slots.ToArray();
+
+        return slot;
+    }
+
+    private static void AppendPrefab(TileTheme.Slot slot, GameObject prefab)
+    {
+        var prefabs = new List<GameObject>(slot.Prefabs);
+        prefabs.Add(prefab);
+        slot.Prefabs = prefabs.ToArray();
+    }
+
     /// <summary>
     /// 이 모듈이 지금 쓰고 있는 프리팹을 붓별로 모아 테마로 만든다.
     /// 프리팹 링크가 없는 타일(복제로 만든 오브젝트)은 원본이 없어 건너뛴다.

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 // 마우스를 누르고 있는 동안에만 사거리 보관소가 차 있게 한다.
@@ -29,18 +30,27 @@ public class RangeInput : MonoBehaviour
     // 누른 자리의 유닛이 닿는 칸을 보관소에 채운다.
     private void KeepRange()
     {
-        rangeStore.KeepRange(rangeCalc.GetRange(pointerPick.UnderPointer()));
+        if (rangeCalc.TryGetRange(pointerPick.UnderPointer(), out List<Tile> range))
+        {
+            rangeStore.KeepRange(range);
+            return;
+        }
+
+        rangeStore.ClearRange();
     }
 
     // 손을 떼면 보관소를 비운다.
     // UI 위에서 떼면 뗌 신호가 오지 않으므로 눌림 상태를 직접 본다.
     private void DropRange()
     {
-        if (input.LeftHolding)
+        if (IsInputReleased())
         {
-            return;
+            rangeStore.ClearRange();
         }
+    }
 
-        rangeStore.ClearRange();
+    private bool IsInputReleased()
+    {
+        return input.LeftHolding == false;
     }
 }

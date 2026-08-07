@@ -7,14 +7,19 @@ public class RangeTileData
 
     public IReadOnlyList<Tile> Tiles => tiles;
 
+    // 내용이 바뀔 때마다 올라간다 — TilePaintView가 다시 그릴지 판단하는 값.
+    public int Version { get; private set; }
+
     public void KeepRange(List<Tile> range)
     {
         tiles.Clear();
         tiles.AddRange(range);
+        Version++;
     }
 
     public void ClearRange()
     {
         tiles.Clear();
+        Version++;
     }
 }

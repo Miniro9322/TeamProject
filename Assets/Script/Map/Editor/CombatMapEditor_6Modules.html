@@ -881,6 +881,8 @@ html&gt;body{padding:0}&lt;/style&gt;
       &lt;button type=&quot;button&quot; class=&quot;btn&quot; data-module=&quot;B&quot; aria-pressed=&quot;false&quot;&gt;Module B&lt;/button&gt;
       &lt;button type=&quot;button&quot; class=&quot;btn&quot; data-module=&quot;C&quot; aria-pressed=&quot;false&quot;&gt;Module C&lt;/button&gt;
       &lt;button type=&quot;button&quot; class=&quot;btn&quot; data-module=&quot;D&quot; aria-pressed=&quot;false&quot;&gt;Module D&lt;/button&gt;
+      &lt;button type=&quot;button&quot; class=&quot;btn&quot; data-module=&quot;E&quot; aria-pressed=&quot;false&quot;&gt;Module E&lt;/button&gt;
+      &lt;button type=&quot;button&quot; class=&quot;btn&quot; data-module=&quot;F&quot; aria-pressed=&quot;false&quot;&gt;Module F&lt;/button&gt;
     &lt;/div&gt;
 
     &lt;label class=&quot;form-label&quot; for=&quot;combat-brush&quot;&gt;
@@ -1068,8 +1070,26 @@ html&gt;body{padding:0}&lt;/style&gt;
         &quot;GGHGHGHGHGHGHG&quot;,
         &quot;GGHGGGHGGGHGGG&quot;,
         &quot;CGHGGGHGGGHGGG&quot;
+      ],
+      E: [
+        &quot;GGGGGGGGGGGGGG&quot;,
+        &quot;GGGGGGGGGGGGGG&quot;,
+        &quot;GGGGGGGGGGGGGG&quot;,
+        &quot;GGGGGGGGGGGGGG&quot;,
+        &quot;GGGGGGGGGGGGGG&quot;,
+        &quot;GGGGGGGGGGGGGG&quot;
+      ],
+      F: [
+        &quot;GGGGGGGGGGGGGG&quot;,
+        &quot;GGGGGGGGGGGGGG&quot;,
+        &quot;GGGGGGGGGGGGGG&quot;,
+        &quot;GGGGGGGGGGGGGG&quot;,
+        &quot;GGGGGGGGGGGGGG&quot;,
+        &quot;GGGGGGGGGGGGGG&quot;
       ]
     };
+
+    const moduleNames = [&quot;A&quot;, &quot;B&quot;, &quot;C&quot;, &quot;D&quot;, &quot;E&quot;, &quot;F&quot;];
 
     let activeModule = &quot;A&quot;;
     let drawing = false;
@@ -1101,12 +1121,9 @@ html&gt;body{padding:0}&lt;/style&gt;
       return map;
     }
 
-    const maps = {
-      A: makeMap(patterns.A),
-      B: makeMap(patterns.B),
-      C: makeMap(patterns.C),
-      D: makeMap(patterns.D)
-    };
+    const maps = Object.fromEntries(
+      moduleNames.map((name) =&gt; [name, makeMap(patterns[name])])
+    );
 
     function cellKey(x, y) {
       return x + &quot;,&quot; + y;
@@ -1377,17 +1394,19 @@ html&gt;body{padding:0}&lt;/style&gt;
     }
 
     function getData() {
+      const savedMaps = {};
+
+      moduleNames.forEach((name) =&gt; {
+        savedMaps[name] = layoutText(name).split(&quot;\n&quot;);
+      });
+
       return {
-        version: 1,
+        version: 2,
         width: 14,
         height: 6,
+        moduleCount: moduleNames.length,
         order: &quot;Row 6 to Row 1&quot;,
-        maps: {
-          A: layoutText(&quot;A&quot;).split(&quot;\n&quot;),
-          B: layoutText(&quot;B&quot;).split(&quot;\n&quot;),
-          C: layoutText(&quot;C&quot;).split(&quot;\n&quot;),
-          D: layoutText(&quot;D&quot;).split(&quot;\n&quot;)
-        }
+        maps: savedMaps
       };
     }
 
@@ -1396,11 +1415,21 @@ html&gt;body{padding:0}&lt;/style&gt;
         return false;
       }
 
-      const names = [&quot;A&quot;, &quot;B&quot;, &quot;C&quot;, &quot;D&quot;];
+      const legacyRequired = [&quot;A&quot;, &quot;B&quot;, &quot;C&quot;, &quot;D&quot;];
       const codes = new Set([&quot;G&quot;, &quot;H&quot;, &quot;E&quot;, &quot;S&quot;, &quot;I&quot;, &quot;O&quot;, &quot;C&quot;]);
 
-      for (const name of names) {
+      for (const name of legacyRequired) {
+        if (!data.maps[name]) {
+          return false;
+        }
+      }
+
+      for (const name of moduleNames) {
         const lines = data.maps[name];
+
+        if (!lines) {
+          continue;
+        }
 
         if (!Array.isArray(lines) || lines.length !== 6) {
           return false;
@@ -1423,12 +1452,12 @@ html&gt;body{padding:0}&lt;/style&gt;
     }
 
     function applyData(data) {
-      const names = [&quot;A&quot;, &quot;B&quot;, &quot;C&quot;, &quot;D&quot;];
+      moduleNames.forEach((name) =&gt; {
+        const source = data.maps[name] || patterns[name];
 
-      names.forEach((name) =&gt; {
         for (let y = 1; y &lt; rows - 1; y += 1) {
           for (let x = 1; x &lt; cols - 1; x += 1) {
-            const code = data.maps[name][y - 1][x - 1];
+            const code = source[y - 1][x - 1];
             maps[name][y][x] = codeType[code];
           }
         }
@@ -1467,7 +1496,7 @@ html&gt;body{padding:0}&lt;/style&gt;
       window.setTimeout(() =&gt; {
         URL.revokeObjectURL(url);
       }, 0);
-      cellLabel.textContent = &quot;A~D 설계를 JSON으로 저장했습니다&quot;;
+      cellLabel.textContent = &quot;A~F 설계를 JSON으로 저장했습니다&quot;;
     });
 
     load.addEventListener(&quot;change&quot;, async () =&gt; {
@@ -1486,8 +1515,11 @@ html&gt;body{padding:0}&lt;/style&gt;
           return;
         }
 
+        const legacyFile = !data.maps.E || !data.maps.F;
         applyData(data);
-        cellLabel.textContent = &quot;A~D 설계를 불러왔습니다&quot;;
+        cellLabel.textContent = legacyFile
+          ? &quot;구버전 A~D 설계를 불러왔습니다 · E/F는 기본 맵으로 생성했습니다&quot;
+          : &quot;A~F 설계를 불러왔습니다&quot;;
         updateMap();
       }
       catch (error) {

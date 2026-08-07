@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using UnityEngine;
 
 // 타일 위에 선 유닛이 닿는 칸들을 계산해 돌려준다. 보관하거나 표시하지는 않는다.
 public class RangeCalc
@@ -10,28 +11,34 @@ public class RangeCalc
         this.rangeInfo = rangeInfo;
     }
 
-    // 그리드 밖이거나 사거리를 가진 유닛이 없으면 빈 목록.
-    public List<Tile> GetRange(Tile unitTile)
+    public bool TryGetRange(Tile unitTile, out List<Tile> range)
     {
-        if (unitTile == null)
+        range = new List<Tile>();
+
+        if (HasTile(unitTile))
         {
-            return new List<Tile>();
+            return TryGetRangeAtCenter(unitTile.OccupantObject, unitTile, out range);
         }
 
-        bool hasRange = rangeInfo.TryGet(
-            unitTile.OccupantObject,
-            out int range,
-            out RangeShape shape);
+        return false;
+    }
 
-        if (!hasRange)
+    // 아직 타일에 놓이지 않은 유닛(배치 프리뷰)도 중심 타일을 따로 받아 계산한다.
+    public bool TryGetRangeAtCenter(GameObject unit, Tile center, out List<Tile> range)
+    {
+        range = new List<Tile>();
+
+        if (rangeInfo.TryGet(unit, out int reach, out RangeShape shape))
         {
-            return new List<Tile>();
+            range = TileShapeQuery.GetTiles(center.Board, center.Coord, reach, shape);
+            return true;
         }
 
-        return TileShapeQuery.GetTiles(
-            unitTile.Board,
-            unitTile.Coord,
-            range,
-            shape);
+        return false;
+    }
+
+    private static bool HasTile(Tile tile)
+    {
+        return tile != null;
     }
 }

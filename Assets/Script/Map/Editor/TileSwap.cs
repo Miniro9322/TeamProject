@@ -57,7 +57,9 @@ public static class TileSwap
         {
             if (top.State.Terrain == TerrainType.High)
             {
-                return top; // 이미 고지 — 판을 겹쳐 쌓지 않는다
+                Tile made = Replace(top, prefab, terrain, cell);
+                Scale(made.transform, cell * StepRatio, true);
+                return made; // 같은 고지 외관만 교체하고 한 단 높이는 유지한다
             }
 
             return Raise(top, prefab, cell);
