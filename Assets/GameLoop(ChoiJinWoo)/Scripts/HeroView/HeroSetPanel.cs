@@ -10,6 +10,7 @@ public class HeroSetPanel : MonoBehaviour
     [SerializeField] private HeroCreateManager createManager;
     [SerializeField] private HeroCreateIcon meleeIcon;
     [SerializeField] private HeroCreateIcon rangedIcon;
+    [SerializeField] private GameObject rosterPanel;
 
     [Header("생성 1회당 고정 소모 비용")]
     [SerializeField] private int citizenCost = 2;
@@ -62,6 +63,7 @@ public class HeroSetPanel : MonoBehaviour
             kind = kind,
         };
         game.HeroRoster.Add(slot);
+        if (!rosterPanel.activeSelf) rosterPanel.SetActive(true);
     }
 
     private bool CanAffordFixedCost()
