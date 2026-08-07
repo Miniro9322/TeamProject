@@ -9,6 +9,7 @@ public class MapBoard : MonoBehaviour
     private readonly Dictionary<GameObject, Tile> _enemyCell = new(); // 적→현재 칸(직전 칸과 비교해 이동 감지)
 
     [SerializeField] private Grid _grid; // 좌표계의 단일 소스. 셀 크기·원점·Swizzle을 모두 쥔다.
+    [SerializeField] private Vector2Int _bakedOffset; // TilePosBaker가 구울 때 계산해 저장한 모듈 min값. 런타임은 이걸 그대로 쓴다(재계산 안 함).
     private Vector2Int _coordOffset; // raw Grid 좌표 → 베이크된 Tile.Coord로 정규화하는 상수 오프셋(모듈마다 다름)
     private Bounds _worldBounds;
     private RectInt _playRect;
@@ -47,11 +48,13 @@ public class MapBoard : MonoBehaviour
         var tiles = new List<Tile>();
         tiles.AddRange(_grid.GetComponentsInChildren<Tile>(true));
 
+        _coordOffset = _bakedOffset;
+
         // 1) 타일마다 렌더 캐시 + 격자 등록. 논리 좌표는 각 타일의 State.Col/Row를 신뢰한다(베이크가 새김).
         bool hasBounds = false;
-        bool hasOffset = false;
-        foreach (Tile tile in tiles)
+        for (int i = 0; i < tiles.Count; i++)
         {
+            Tile tile = tiles[i];
             tile.SetBoard(this); // 소유 보드 도장 — 이후 모든 소비자는 tile.Board로 자기 모듈 보드를 찾는다
             tile.State.ImportFlags();
 
@@ -62,15 +65,6 @@ public class MapBoard : MonoBehaviour
 
             Vector2Int coord = tile.Coord;
 
-            // Grid의 raw 셀 좌표는 베이크된 Tile.Coord와 모듈마다 다른 상수만큼 어긋난다(베이크가
-            // 모듈별로 (0,0)부터 시작하도록 정규화하기 때문) — 그 오프셋을 타일 하나로 구해 캐시한다.
-            if (!hasOffset)
-            {
-                Vector3Int rawCell = _grid.WorldToCell(tile.transform.position);
-                _coordOffset = new Vector2Int(rawCell.x, rawCell.y) - coord;
-                hasOffset = true;
-            }
-
             // 같은 칸에 타일이 겹치면(바닥 위에 고지 큐브를 쌓은 경우) 더 높은 쪽을 대표로 삼는다.
             if (!_cells.TryGetValue(coord, out Tile existing) || tile.WorldTop.y > existing.WorldTop.y)
                 _cells[coord] = tile;
@@ -80,7 +74,6 @@ public class MapBoard : MonoBehaviour
 
             if (!hasBounds) { _worldBounds = bound; hasBounds = true; }
             else _worldBounds.Encapsulate(bound);
-            
         }
 
         // 2) 안쪽 칸 범위: 장식(Special)을 뺀 타일들의 바운딩 박스. 외곽 한 줄이 장식이라 그만큼 좁다.
@@ -89,6 +82,12 @@ public class MapBoard : MonoBehaviour
 
         // 3) 이웃 잇기. 길찾기가 좌표를 더해 격자를 뒤지지 않고 타일이 들고 있는 이웃을 바로 읽게 한다.
         TileLink.LinkNeighbors(_cells);
+    }
+
+    // TilePosBaker 전용 창구: 구울 때 계산한 모듈 min값을 받아 저장한다. 런타임 코드는 호출하지 않는다.
+    public void SetBakedOffset(Vector2Int offset)
+    {
+        _bakedOffset = offset;
     }
 
     // 클릭 판정용 기둥의 바닥. 가장 낮은 타일 윗면보다 한 칸 더 내려간 높이라 어떤 타일도 두께를 가진다.

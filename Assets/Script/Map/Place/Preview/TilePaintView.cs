@@ -1,7 +1,9 @@
 using UnityEngine;
 using System.Collections.Generic;
 
-/// <summary>타일 표시를 전담하며 매 프레임 지우고 다시 그린다.</summary>
+// 타일 표시를 전담하며 매 프레임 지우고 다시 그린다.
+// 이번 프레임 배치 자리 계산을 여기서 한 번만 하고 hoverPlace에 남긴다 — MapCommand는 그 결과만 읽는다.
+[DefaultExecutionOrder(-100)]
 public class TilePaintView : MonoBehaviour
 {
     [SerializeField] private MapView game;            // 호버·배치 상태(읽기 전용)
@@ -12,6 +14,7 @@ public class TilePaintView : MonoBehaviour
     public HeroSkillCastController skillCast;
     public PlaceFinder finder;
     public RangeTileData rangeStore;
+    public HoverPlaceData hoverPlace;
 
     private readonly List<Tile> cellPainted = new();
 
@@ -35,6 +38,7 @@ public class TilePaintView : MonoBehaviour
     {
         if (game.InputBlocked)
         {
+            hoverPlace.Clear();
             return;
         }
 
@@ -50,28 +54,33 @@ public class TilePaintView : MonoBehaviour
             return;
         }
 
+        hoverPlace.Clear();
         PaintUnitRange();
     }
 
-    // 배치하려는 것이 놓일 자리를 칠한다.
+    // 배치하려는 것이 놓일 자리를 칠한다. 이번 프레임 결과는 hoverPlace에도 남긴다.
     private void PaintPlacePreview()
     {
         if (!finder.TryResolveSlot(out Placeable slot, out PlaceData data))
         {
+            hoverPlace.Clear();
             return;
         }
 
+        hoverPlace.Keep(data);
         PaintPreview(data, slot.prefab);
     }
 
-    // 집어 든 유닛이 놓일 자리를 칠한다.
+    // 집어 든 유닛이 놓일 자리를 칠한다. 이번 프레임 결과는 hoverPlace에도 남긴다.
     private void PaintHeldPreview()
     {
         if (!finder.TryResolve(game.HeldKind, game.HeldSize, out PlaceData data))
         {
+            hoverPlace.Clear();
             return;
         }
 
+        hoverPlace.Keep(data);
         PaintPreview(data, game.HeldUnit);
     }
 

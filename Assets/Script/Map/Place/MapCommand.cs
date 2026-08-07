@@ -17,6 +17,7 @@ public class MapCommand : MonoBehaviour
     public PlaceAction action;
     public PlaceGhost ghost;
     public PlaceFinder finder;
+    public HoverPlaceData hoverPlace;
     public Dictionary<PlaceMode, Action<Tile>> dispatch;
 
     private void OnEnable()
@@ -42,6 +43,7 @@ public class MapCommand : MonoBehaviour
     }
 
     // 배치 모드면 미리보기를 커서 자리에 세우고, 아니면 감춘다.
+    // 자리 계산은 TilePaintView가 이미 이번 프레임에 끝내고 hoverPlace에 남겼다 — 여긴 그 결과만 읽는다.
     private void FollowGhost()
     {
         if (!IsPlacing())
@@ -51,13 +53,13 @@ public class MapCommand : MonoBehaviour
         }
 
         // 프리팹 없는 슬롯은 미리보기를 만들 수 없다(배치를 시도하면 UnitPlacer가 알린다).
-        if (!finder.TryResolveSlot(out Placeable slot, out PlaceData data) || slot.prefab == null)
+        if (!hoverPlace.HasData || !palette.TryCurrentSlot(out Placeable slot) || slot.prefab == null)
         {
             ghost.HideGhost();
             return;
         }
 
-        ghost.ShowGhost(slot.prefab, data);
+        ghost.ShowGhost(slot.prefab, hoverPlace.Data);
     }
 
     private bool IsPlacing()
@@ -153,6 +155,7 @@ public class MapCommand : MonoBehaviour
     }
 
     // 집은 유닛 프리뷰가 목표 자리 한가운데를 따라가게 한다.
+    // 자리 계산은 TilePaintView가 이미 이번 프레임에 끝내고 hoverPlace에 남겼다 — 여긴 그 결과만 읽는다.
     private void FollowHeld()
     {
         if (palette.Mode != PlaceMode.Replace)
@@ -165,9 +168,9 @@ public class MapCommand : MonoBehaviour
             return;
         }
 
-        if (TryHeldData(out PlaceData data))
+        if (hoverPlace.HasData)
         {
-            replace.MoveHeldTo(data);
+            replace.MoveHeldTo(hoverPlace.Data);
         }
     }
 
