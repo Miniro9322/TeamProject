@@ -13,6 +13,7 @@ public class BuildingPanel : MonoBehaviour, IClosablePanel
     [SerializeField] private TextMeshProUGUI FacilityLevelText;
     [SerializeField] private TextMeshProUGUI NextLevelInfoText;
     [SerializeField] private Button upgradeButton;
+    [SerializeField] private Button demolishButton; // House는 철거를 지원하지 않아 비활성화한다
     [SerializeField] private GameObject workerButtonsContainer; // +/- 인력 버튼을 감싸는 오브젝트 - House에는 없는 개념이라 통째로 숨김
     [SerializeField] private RegionDetailPanel parentPanel; // 이 패널을 여는 쪽 - 그 안의 슬롯 버튼 클릭은 "바깥 클릭"이 아니다
     private ProductionFacility facility;
@@ -84,6 +85,7 @@ public class BuildingPanel : MonoBehaviour, IClosablePanel
         if (productIcon != null) productIcon.gameObject.SetActive(isFacility);
         if (perProductText != null) perProductText.gameObject.SetActive(isFacility);
         if (workerButtonsContainer != null) workerButtonsContainer.SetActive(isFacility);
+        if (demolishButton != null) demolishButton.gameObject.SetActive(isFacility);
 
         if (isFacility)
         {
@@ -151,7 +153,7 @@ public class BuildingPanel : MonoBehaviour, IClosablePanel
 
     public void OnDemolish()
     {
-        if (region == null) return;
+        if (region == null || facility == null) return; // House는 철거 버튼 자체를 비활성화해뒀지만, 방어적으로 한 번 더 막는다
 
         constructor.Demolish(region, slotIndex);
         Close();
