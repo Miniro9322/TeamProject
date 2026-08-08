@@ -27,11 +27,11 @@ public class AttackDataSOEditor : Editor
         Group("타격 형태", ref sPattern, "attackType", "attackPer", "attackCount",
             "targetMode", "targetCount", "shotInterval");
 
-        if (isArea)
-            Group("범위 공격", ref sArea, "areaShape", "areaRange",
-                shape == AreaShape.Line ? "lineLength" : null);
+        Group("범위 공격", ref sArea, "areaShape",
+            isArea ? "areaRange" : null,
+            isArea && shape == AreaShape.Line ? "lineLength" : null);
 
-        if (isArea && shape == AreaShape.Chain)
+        if (shape == AreaShape.Chain)
             Group("체인", ref sChain, "chainRange", "chainCount", "chainFalloff",
                 "chainEffectPrefab", "chainEffectLifetime");
 
