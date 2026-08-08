@@ -26,12 +26,13 @@ public class HeroRosterIcon : MonoBehaviour, IPointerClickHandler
         this.onClick = onClick;
         this.onDoubleClick = onDoubleClick;
 
-        icon.sprite = entry.State == HeroRosterState.Placed ? entry.Slot.placedIcon : entry.Slot.icon;
+        icon.sprite = entry.Icon;
+        tierText.text = entry.Tier.ToString();
         float alpha = entry.State == HeroRosterState.Placed ? 1f : 0f;
         Color c = placedIcon.color;
         c.a = alpha;
         placedIcon.color = c;
-        tierText.text = entry.PlacedUnit.GetComponent<Hero>().Tier.ToString();
+
     }
 
     // 첫 클릭은 곧바로 실행하지 않고 잠깐 기다린다. 그 안에 두 번째 클릭이 오면 단일 클릭 동작은

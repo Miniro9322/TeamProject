@@ -45,10 +45,9 @@ public class UnitPlacer
     // 유닛에게 자기가 놓인 모듈 보드를 알려준다.
     private static void BindBoard(GameObject unit, MapBoard board)
     {
-        IPlaceAble placeable = unit.GetComponent<IPlaceAble>();
-        if (placeable != null)
+        if (unit.TryGetComponent(out Hero hero))
         {
-            placeable.SetBoard(board);
+            hero.SetBoard(board);
         }
     }
 
