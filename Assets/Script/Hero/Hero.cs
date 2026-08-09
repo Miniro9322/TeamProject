@@ -10,14 +10,6 @@ public enum RangeQueryAffinity { Enemy, TargetableEnemy, Ally }
 
 public class Hero : MonoBehaviour, IDamageAble, IUnit
 {
-    //[Header("유닛 생성 비용")]
-    //[SerializeField] private int citizenAmount = 2;
-    //[SerializeField] private List<ResourceCost> cost;
-    //[SerializeField] private List<BaseUpgradeData> costUpgrades;
-
-    //[SerializeField] private List<HeroUpgradeData> upgradeDatas;
-    //[SerializeField] private List<ResourceCost> statUpgradeCost;
-    // [SerializeField] private List<BaseUpgradeData> statUpgradeCostUpgrades;
     [SerializeField] private List<BaseUpgradeData> statUpgrades;
     [SerializeField] private HeroData heroData;
     public int Tier => heroData.Tier;
@@ -25,39 +17,10 @@ public class Hero : MonoBehaviour, IDamageAble, IUnit
     public string HeroName => heroData.HeroName;
     public MergeKey MergeKey => heroData.MergeKey;
 
-    private int skillLevel = 0;
-    private int statLevel = 0;
-    public int SkillLevel => skillLevel;
-    public int StatLevel => statLevel;
+    // 티어 단위로 공유되는 업그레이드 레벨(개체별로 갖지 않음) — HeroTierUpgradeState 참고.
+    public int Level => tierUpgradeState.GetLevel(Tier);
 
     private UpgradeState UpgradeStateOrFallback => upgradeState ?? new UpgradeState();
-
-    //public (ProductionType Type, int Amount)[] Cost
-    //{
-    //    get
-    //    {
-    //        float discount = UpgradeStateOrFallback.GetTotalEffect(costUpgrades);
-    //        var temp = new (ProductionType, int)[cost.Count];
-    //        for (int i = 0; i < cost.Count; i++)
-    //            temp[i] = (cost[i].Type, -Mathf.RoundToInt(cost[i].Amount * (1f - discount)));
-    //        return temp;
-    //    }
-    //}
-
-    //public (ProductionType Type, int Amount)[] StatUpgradeCost
-    //{
-    //    get
-    //    {
-    //        float discount = UpgradeStateOrFallback.GetTotalEffect(statUpgradeCostUpgrades);
-    //        var temp = new (ProductionType, int)[statUpgradeCost.Count];
-    //        for (int i = 0; i < statUpgradeCost.Count; i++)
-    //        {
-    //            int baseAmount = statUpgradeCost[i].Amount + statUpgradeCost[i].Amount * statLevel;
-    //            temp[i] = (statUpgradeCost[i].Type, -Mathf.RoundToInt(baseAmount * (1f - discount)));
-    //        }
-    //        return temp;
-    //    }
-    //}
 
     [Header("유닛 정보")]
     [SerializeField] private List<AttackDataSO> basePattern;
@@ -256,16 +219,16 @@ public class Hero : MonoBehaviour, IDamageAble, IUnit
     protected BuffManager buffManager;
     public BuffManager Buffs => buffManager;
     private UpgradeState upgradeState;
-
-    // public int CitizenAmount => citizenAmount;
+    private HeroTierUpgradeState tierUpgradeState;
 
     [Inject]
-    private void Construct(GameManager gameManager, BuffManager buffManager, ResourcesManager resourcesManager, UpgradeState upgradeState)
+    private void Construct(GameManager gameManager, BuffManager buffManager, ResourcesManager resourcesManager, UpgradeState upgradeState, HeroTierUpgradeState tierUpgradeState)
     {
         this.gameManager = gameManager;
         this.buffManager = buffManager;
         this.resourcesManager = resourcesManager;
         this.upgradeState = upgradeState;
+        this.tierUpgradeState = tierUpgradeState;
     }
 
     public void Die()
@@ -337,6 +300,8 @@ public class Hero : MonoBehaviour, IDamageAble, IUnit
     {
         SetCurrentTile();
         ApplyStatUpgradeBonus();
+        ApplyTierLevelBonus();
+        tierUpgradeState.LevelChanged += OnTierLevelChanged;
         if (gameManager != null)
         {
             gameManager.ChangeToDay += Resurrection;
@@ -364,6 +329,23 @@ public class Hero : MonoBehaviour, IDamageAble, IUnit
         sc.AddModifier(StatType.DEF, new Modifier(ModifierType.Flat, bonus, 0f, StatLayer.Equip, this));
     }
 
+    private static readonly object TierLevelBonusSource = new object();
+
+    private void ApplyTierLevelBonus()
+    {
+        sc.RemoveModifier(TierLevelBonusSource);
+        int extraLevels = tierUpgradeState.GetLevel(Tier);
+        if (extraLevels <= 0) return;
+
+        foreach (var gain in tierUpgradeState.GetStatGains(Tier))
+            sc.AddModifier(gain.statType, new Modifier(gain.modifierType, gain.amountPerLevel * extraLevels, 0f, StatLayer.Equip, TierLevelBonusSource));
+    }
+
+    private void OnTierLevelChanged(int changedTier)
+    {
+        if (changedTier == Tier) ApplyTierLevelBonus();
+    }
+
     protected virtual void OnDestroy()
     {
         if (gameManager != null)
@@ -371,6 +353,7 @@ public class Hero : MonoBehaviour, IDamageAble, IUnit
             gameManager.ChangeToDay -= Resurrection;
             gameManager.ChangeToDay -= ResetSkillCooldown;
         }
+        tierUpgradeState.LevelChanged -= OnTierLevelChanged;
         skillCts?.Cancel();
         skillCts?.Dispose();
         skillCts = null;
@@ -605,47 +588,4 @@ public class Hero : MonoBehaviour, IDamageAble, IUnit
 
     public void ExchangeAttackDatas(List<AttackDataSO> datas) => basePattern = datas;
 
-    //public void SkillUpgrade()
-    //{
-    //    if (skillLevel >= upgradeDatas.Count) return;
-    //    if (resourcesManager.CheckResources(upgradeDatas[skillLevel].Cost))
-    //    {
-    //        resourcesManager.ProductChanged(upgradeDatas[skillLevel].Cost);
-    //        upgradeDatas[skillLevel++].Upgrade(this);
-    //    }
-    //}
-
-    //public void StatUpgrade()
-    //{
-    //    if (resourcesManager.CheckResources(StatUpgradeCost))
-    //    {
-    //        resourcesManager.ProductChanged(StatUpgradeCost);
-    //        statLevel++;
-    //        ApplyStatUpgradeModifiers();
-    //    }
-    //}
-
-
-    private void ApplyStatUpgradeModifiers()
-    {
-        Modifier mod = new Modifier(ModifierType.Additive, 0.1f, 0f, StatLayer.Equip, this);
-        sc.AddModifier(StatType.HP, mod);
-        mod = new Modifier(ModifierType.Additive, 0.05f, 0f, StatLayer.Equip, this);
-        sc.AddModifier(StatType.ATK, mod);
-        mod = new Modifier(ModifierType.Flat, 1f, 0f, StatLayer.Equip, this);
-        sc.AddModifier(StatType.DEF, mod);
-    }
-
-    // 로스터 제거 전에 저장해둔 강화 진행도를, 재배치로 새로 생성된 인스턴스에 되돌려 적용한다.
-    // 비용 검사 없이 이미 치른 강화를 그대로 재현하는 것이므로 SkillUpgrade/StatUpgrade를 거치지 않는다.
-    public void RestoreUpgradeState(int savedSkillLevel, int savedStatLevel)
-    {
-        //for (int i = 0; i < savedSkillLevel && i < upgradeDatas.Count; i++)
-        //    upgradeDatas[i].Upgrade(this);
-        //skillLevel = savedSkillLevel;
-
-        //for (int i = 0; i < savedStatLevel; i++)
-        //    ApplyStatUpgradeModifiers();
-        //statLevel = savedStatLevel;
-    }
 }
