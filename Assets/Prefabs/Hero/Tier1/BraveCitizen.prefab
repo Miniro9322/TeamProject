@@ -12949,47 +12949,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6deb4eeb61823d14e85febf5c0cf9d3c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SwordMan
-  citizenAmount: 2
-  cost:
-  - Type: 0
-    Amount: 30
-  - Type: 2
-    Amount: 20
-  - Type: 3
-    Amount: 30
-  - Type: 4
-    Amount: 30
-  costUpgrades:
-  - {fileID: 11400000, guid: e06a86098db530f4084708555433e321, type: 2}
-  - {fileID: 11400000, guid: 4a34aabb6d5e1fc4394e6c321d35969a, type: 2}
-  - {fileID: 11400000, guid: a797476802101c248bc6f4d14cda8a76, type: 2}
-  - {fileID: 11400000, guid: 319a68eaa38fba140998c4902f0ca409, type: 2}
-  - {fileID: 11400000, guid: be1333e8b5f9bdf46b5101ca5176204a, type: 2}
-  statUpgradeCost:
-  - Type: 0
-    Amount: 10
-  - Type: 2
-    Amount: 10
-  - Type: 3
-    Amount: 10
-  - Type: 4
-    Amount: 10
-  statUpgradeCostUpgrades:
-  - {fileID: 11400000, guid: 47055b3a1f5c68244a1c75f40a998b33, type: 2}
-  - {fileID: 11400000, guid: 66fbb3934b60ac84bbe4b50106a53f92, type: 2}
-  - {fileID: 11400000, guid: 566d35772d5540846b9ad2b656e7ff73, type: 2}
-  - {fileID: 11400000, guid: 1ed8b17e3e930be4092ea94b0b7ca6d5, type: 2}
-  - {fileID: 11400000, guid: 478127b61da881940b4145e81862f335, type: 2}
   statUpgrades:
   - {fileID: 11400000, guid: 024d160f71f942b4189efd44499389c5, type: 2}
   - {fileID: 11400000, guid: 3f6746566778e5b4f88705adc3c9a1e9, type: 2}
   - {fileID: 11400000, guid: a6dd79d2802a80d4b9cdf7db50f64a4e, type: 2}
   - {fileID: 11400000, guid: 29fcb58731e9de84ba10d989c8f256f9, type: 2}
   - {fileID: 11400000, guid: f8f02fa9135171e4db10c07135224a3b, type: 2}
-  upgradeDatas:
-  - {fileID: 11400000, guid: 06facc2a30c566440a917c4538152a67, type: 2}
-  - {fileID: 11400000, guid: db5ad37a712523b4ca6c2daa5732842c, type: 2}
-  - {fileID: 11400000, guid: d61887bcd01d0db45a6e6bc5ffe275cc, type: 2}
   heroData: {fileID: 11400000, guid: 58e256a83ba2bfa4db347a7dd9bf4cb2, type: 2}
   basePattern:
   - {fileID: 11400000, guid: aa275c68b853f4c428d81b053548c3ec, type: 2}
@@ -12997,7 +12962,8 @@ MonoBehaviour:
   animEvents: {fileID: 6241445073555916122}
   statData: {fileID: 11400000, guid: 7b41ee83b1ea5574f8002684d4e2c81f, type: 2}
   board: {fileID: 0}
-  auraZonePrefabs: []
+  auraZonePrefabs:
+  - {fileID: 4269708727165565049, guid: 1f16ca8ef79bd1f439f0f092769ff279, type: 3}
   occupantKind: 1
 --- !u!1 &5299033108214222058
 GameObject:
