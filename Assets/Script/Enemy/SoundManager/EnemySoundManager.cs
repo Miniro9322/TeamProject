@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Audio;
-using UnityEngine.UI;
 
 public class EnemySoundManager : MonoBehaviour
 {
@@ -11,28 +10,17 @@ public class EnemySoundManager : MonoBehaviour
     [SerializeField] private AudioSource bgmSource;
     [SerializeField] private AudioSource systemSource;
 
-    [SerializeField] private Slider masterSlider;
-    [SerializeField] private Slider bgmSlider;
-    [SerializeField] private Slider sfxSlider;
-    [SerializeField] private Slider systemSlider;
-
+    // 볼륨 값은 SettingUI(설정창)가 믹서에 직접 쓴다. 여기선 값을 읽기만 하고 절대 쓰지 않는다.
     [SerializeField] private AudioMixer mixer;
     [SerializeField] private string masterParam = "MasterVolume";
     [SerializeField] private string sfxParam = "SfxVolume";
     [SerializeField] private string bgmParam = "BgmVolume";
     [SerializeField] private string systemParam = "System";
 
-
-    [Range(0f, 1f)] public float masterVolume = 1f;
-    [Range(0f, 1f)] public float sfxVolume = 1f;
-    [Range(0f, 1f)] public float bgmVolume = 1f;
-    [Range(0f, 1f)] public float systemVolume = 1f;
-
-
-    private const string PrefMaster = "vol_master";
-    private const string PrefSfx = "vol_sfx";
-    private const string PrefBgm = "vol_bgm";
-    private const string PrefSystem = "vol_system";
+    // 각 소스를 어느 믹서 그룹으로 내보낼지. 비워두면 아래 이름으로 믹서에서 찾아 붙인다.
+    [SerializeField] private AudioMixerGroup sfxGroup;
+    [SerializeField] private AudioMixerGroup bgmGroup;
+    [SerializeField] private AudioMixerGroup systemGroup;
 
     // 같은 키 효과음이 너무 짧은 간격으로 중복 재생되는 것만 막는 스로틀.
     // 상태를 SoundDatabase(SO 에셋)에 저장하면 에디터 세션 간에 값이 남아 소리가 안 나므로,
@@ -47,41 +35,46 @@ public class EnemySoundManager : MonoBehaviour
         if (sfxSource != null) sfxSource.playOnAwake = false;
         if (bgmSource != null) { bgmSource.playOnAwake = false; bgmSource.loop = true; }
 
-        // 저장된 볼륨 복원 (없으면 인스펙터 기본값 사용)
-        masterVolume = PlayerPrefs.GetFloat(PrefMaster, masterVolume);
-        sfxVolume = PlayerPrefs.GetFloat(PrefSfx, sfxVolume);
-        bgmVolume = PlayerPrefs.GetFloat(PrefBgm, bgmVolume);
-        systemVolume = PlayerPrefs.GetFloat(PrefSystem, systemVolume);
-        ApplyMixer();
-    }
-    void Start()
-    {
-        if (masterSlider != null) masterSlider.value = masterVolume;
-        if (sfxSlider != null)    sfxSlider.value = sfxVolume;
-        if (bgmSlider != null)    bgmSlider.value = bgmVolume;
-        if (systemSlider != null) systemSlider.value = systemVolume;
+        RouteToMixer();
     }
 
-    private void ApplyMixer()
+    // 소스를 믹서 그룹에 연결한다. 연결돼 있어야 설정창에서 바꾼 믹서 볼륨이 실제 출력에 반영된다.
+    private void RouteToMixer()
     {
-        if (mixer == null) return;
-        mixer.SetFloat(masterParam, LinearToDb(masterVolume));
-        mixer.SetFloat(sfxParam, LinearToDb(sfxVolume));
-        mixer.SetFloat(bgmParam, LinearToDb(bgmVolume));
-        mixer.SetFloat(systemParam, LinearToDb(systemVolume));
+        if (sfxSource != null) sfxSource.outputAudioMixerGroup = ResolveGroup(sfxGroup, "SFX");
+        if (bgmSource != null) bgmSource.outputAudioMixerGroup = ResolveGroup(bgmGroup, "BGM");
+        if (systemSource != null) systemSource.outputAudioMixerGroup = ResolveGroup(systemGroup, "System");
     }
 
-    // 슬라이더 초기값 표시용 (설정창 열 때 호출)
-    public float GetMasterVolume() => masterVolume;
-    public float GetSfxVolume() => sfxVolume;
-    public float GetBgmVolume() => bgmVolume;
-    public float GetSystemVolume() => systemVolume;
-
-    // 선형 0~1 → 데시벨 변환 (믹서는 dB로 동작)
-    private static float LinearToDb(float v)
+    private AudioMixerGroup ResolveGroup(AudioMixerGroup assigned, string groupName)
     {
-        if (v <= 0.0001f) return -80f;
-        return Mathf.Log10(v) * 20f;
+        if (assigned != null) return assigned;
+        if (mixer == null) return null;
+
+        // FindMatchingGroups는 경로 부분 일치라 이름이 정확히 같은 그룹을 우선 고른다
+        var groups = mixer.FindMatchingGroups(groupName);
+        foreach (var g in groups)
+            if (g.name == groupName) return g;
+        return groups.Length > 0 ? groups[0] : null;
+    }
+
+    // 현재 믹서에 설정된 볼륨(0~1) 조회용. 출력 감쇠는 믹서가 하므로 재생 코드에서 곱하지 않는다.
+    public float GetMasterVolume() => GetMixerVolume(masterParam);
+    public float GetSfxVolume() => GetMixerVolume(sfxParam);
+    public float GetBgmVolume() => GetMixerVolume(bgmParam);
+    public float GetSystemVolume() => GetMixerVolume(systemParam);
+
+    private float GetMixerVolume(string param)
+    {
+        if (mixer == null || !mixer.GetFloat(param, out float db)) return 1f;
+        return DbToLinear(db);
+    }
+
+    // 데시벨 → 선형 0~1 변환 (믹서는 dB로 동작)
+    private static float DbToLinear(float db)
+    {
+        if (db <= -80f) return 0f;
+        return Mathf.Pow(10f, db / 20f);
     }
 
     // 효과음 재생 (중복 재생 허용)
@@ -111,8 +104,7 @@ public class EnemySoundManager : MonoBehaviour
 
         var src = Instance.bgmSource;
         if (src.isPlaying && src.clip == e.clip) return;
-
-        // 카테고리(BGM) 볼륨은 믹서가 담당. 여기선 클립별 상대 볼륨만 적용
+        
         src.clip = e.clip;
         src.volume = e.volume;
         src.loop = e.loop;
@@ -123,30 +115,5 @@ public class EnemySoundManager : MonoBehaviour
     {
         if (Instance == null || Instance.bgmSource == null) return;
         Instance.bgmSource.Stop();
-    }
-    public void SetMasterVolume(float v)
-    {
-        masterVolume = Mathf.Clamp01(v);
-        if (mixer != null) mixer.SetFloat(masterParam, LinearToDb(masterVolume));
-        PlayerPrefs.SetFloat(PrefMaster, masterVolume);
-    }
-
-    public void SetSfxVolume(float v)
-    {
-        sfxVolume = Mathf.Clamp01(v);
-        if (mixer != null) mixer.SetFloat(sfxParam, LinearToDb(sfxVolume));
-        PlayerPrefs.SetFloat(PrefSfx, sfxVolume);
-    }
-    public void SetBgmVolume(float v)
-    {
-        bgmVolume = Mathf.Clamp01(v);
-        if (mixer != null) mixer.SetFloat(bgmParam, LinearToDb(bgmVolume));
-        PlayerPrefs.SetFloat(PrefBgm, bgmVolume);
-    }
-    public void SetSystemVolume(float v)
-    {
-        systemVolume = Mathf.Clamp01(v);
-        if(mixer!=null) mixer.SetFloat(systemParam, LinearToDb(systemVolume));
-        PlayerPrefs.SetFloat(PrefSystem, systemVolume);
     }
 }
