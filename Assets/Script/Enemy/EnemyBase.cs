@@ -364,13 +364,10 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
     {
         if (IsDead || duration <= 0f) return;
         if (IsSpawnInvincible) return;
-        // IStunAble.Stun은 DebuffSO를 지나지 않는 직접 경로라(영웅 공격·넘패드1 테스트) 면역을 여기서 막아야 한다.
         if (IsImmuneTo(DebuffType.Stun))
         {
-            DebuffDebug.Log($"{name} 기절 면역 — Class={Class}", this);
             return;
         }
-
         bool wasStunned = IsStunned;
         _debuffTracker.Apply(DebuffType.Stun, duration);
         if (!wasStunned) InterruptActiveSkills();
@@ -433,7 +430,12 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
     // Stun bool 파라미터가 있으면 그걸로(Stun 스테이트가 연출 담당), 없으면 애니를 얼려서 "굳음"으로 대체.
     private void StunTick()
     {
-        bool stunned = IsStunned;
+        // 죽으면 스턴 연출을 끌고 가지 않는다(_debuffEffects.Tick의 IsDead와 같은 취지 — 사망이 연출을 이긴다).
+        // 안 그러면 Stun bool이 켜진 채 남아 Animator가 Stun 스테이트에서 못 나오고, Die 전이가 스턴이
+        // 풀릴 때까지 밀린다 — 스턴 시간만큼 멈춰 서 있다가 죽는다. 스턴이 5초 넘게 남았으면
+        // WaitForDeathAnim의 타임아웃이 먼저 터져 사망 애니 없이 사라진다.
+        // Stun 파라미터가 없는 적도 같은 이유로 막아야 한다(그쪽은 animator.speed가 0으로 얼어붙는다).
+        bool stunned = IsStunned && !IsDead;
         if (_stunAnimActive == stunned) return;
         _stunAnimActive = stunned;
         if (animator == null) return;
@@ -815,8 +817,12 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
     public virtual void Die()
     {
         if (IsDead) return;
-        if (animator != null) animator.speed = 1f; // 애니메이터 없는 적에서 여기서 터지면 IsDead도 못 세우고 영영 안 죽는다
         IsDead = true;
+        // 스턴 연출을 바로 내린다 — 다음 Update까지 기다리면 그 한 프레임 동안 Stun bool이 켜진 채로
+        // Die 트리거가 걸려, 컨트롤러 전이 순서에 따라 사망 애니가 밀릴 수 있다.
+        // IsDead를 먼저 세웠으므로 StunTick이 "스턴 아님"으로 보고 bool을 내린다(폴백 경로는 speed를 1로 돌린다).
+        StunTick();
+        if (animator != null) animator.speed = 1f; // 공격 배속 등 남은 속도 조작까지 원복
         _move.Stop();
         if (Board != null) Board.RemoveEnemy(gameObject);
         if (skillCts == null) { SendDieEvent(); Despawn(); return; }
