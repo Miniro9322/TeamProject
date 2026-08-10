@@ -57,6 +57,7 @@ public class HeroCreateManager : MonoBehaviour
 
         int stageIndex = Mathf.Clamp(extraUnlockedRegions, 0, probabilityByStage.Count - 1);
         List<int> weights = probabilityByStage[stageIndex].tierWeights;
+
         if (weights.Count == 0) return false;
 
         int tier = WeightedPickTier(weights);

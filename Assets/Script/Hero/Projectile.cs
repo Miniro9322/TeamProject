@@ -143,7 +143,7 @@ public class Projectile : MonoBehaviour
     {
         RangeShape aoeShape = cfg.areaShape == AreaShape.Square ? RangeShape.Square : RangeShape.Diamond;
 
-        if (cfg.attackType == AttackType.Area && cfg.areaShape == AreaShape.Chain)
+        if (cfg.areaShape == AreaShape.Chain)
         {
             List<GameObject> hits = ChainResolver.Resolve(target.gameObject, damage, cfg.chainRange, cfg.chainCount, cfg.chainFalloff,
                 (p, r, s) => cfg.hero.GetObjectsInRange(p, r, s, RangeQueryAffinity.TargetableEnemy), cfg.hero.NotifyHit);

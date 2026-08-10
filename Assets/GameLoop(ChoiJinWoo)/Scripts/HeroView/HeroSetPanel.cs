@@ -58,11 +58,9 @@ public class HeroSetPanel : MonoBehaviour
         {
             label = picked.HeroName,
             prefab = picked.HeroPrefab,
-            icon = picked.Icon,
-            placedIcon = picked.Icon,
             kind = kind,
         };
-        game.HeroRoster.Add(slot);
+        game.HeroRoster.Add(slot, picked);
         if (!rosterPanel.activeSelf) rosterPanel.SetActive(true);
     }
 

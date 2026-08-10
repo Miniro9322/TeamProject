@@ -76,11 +76,9 @@ public class HeroCombineManager : MonoBehaviour
         {
             label = nextTierPrefab.name,
             prefab = nextTierPrefab,
-            icon = nextTierData.Icon,
-            placedIcon = nextTierData.Icon,
             kind = nextTierPrefab.GetComponent<Hero>().OccupantKind,
         };
-        game.HeroRoster.Add(newSlot);
+        game.HeroRoster.Add(newSlot, nextTierData);
 
         return true;
     }
