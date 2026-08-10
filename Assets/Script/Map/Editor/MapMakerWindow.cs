@@ -60,6 +60,8 @@ public class MapMakerWindow : EditorWindow
     private List<TileTheme> _themes;
     private TileTheme _theme;
     private GameObject _pick;
+    private GameObject _newPrefab;
+    private readonly Dictionary<MapBrush, GameObject> _lastPicks = new();
     private int _themeModule = -1;
     private readonly HashSet<Vector2Int> _swapped = new();
     private int _strokeGroup;
@@ -537,8 +539,8 @@ public class MapMakerWindow : EditorWindow
         }
     }
 
-    // 고른 프리팹이 지금 붓·테마의 목록에 없으면 첫 번째로 돌린다 —
-    // 붓을 바꿨는데 이전 붓의 프리팹이 남아 있으면 엉뚱한 실물이 깔린다.
+    // 고른 프리팹이 지금 붓·테마의 목록에 없으면(붓을 바꿨거나 딴 테마로 옮겼다) 이 붓에서
+    // 마지막으로 골랐던 프리팹으로 되돌린다. 그마저 없으면 첫 번째로 돌린다.
     private void SyncPick()
     {
         if (_theme == null)
@@ -549,10 +551,22 @@ public class MapMakerWindow : EditorWindow
 
         if (_pick != null && _theme.Has(_brush, _pick))
         {
+            _lastPicks[_brush] = _pick;
             return;
         }
 
-        _pick = _theme.First(_brush);
+        _pick = RecallPick(_brush);
+    }
+
+    private GameObject RecallPick(MapBrush brush)
+    {
+        GameObject last;
+        if (_lastPicks.TryGetValue(brush, out last) && _theme.Has(brush, last))
+        {
+            return last;
+        }
+
+        return _theme.First(brush);
     }
 
     private void Extract(Grid module)
@@ -1638,6 +1652,38 @@ public class MapMakerWindow : EditorWindow
         }
 
         _pick = ThemeBar.DrawPicks(_theme, _brush, _pick, position.width - 24f);
+
+        if (_theme != null)
+        {
+            DrawNewPrefabDrop();
+        }
+    }
+
+    // 뽑기(모듈 전체 재추출)까지 안 가고 프리팹 하나만 즉시 등록한다 — 아직 맵에 안 쓴 프리팹도 바로 붓으로 쓰게 한다.
+    private void DrawNewPrefabDrop()
+    {
+        using (new EditorGUILayout.HorizontalScope())
+        {
+            GUILayout.Label("새 프리팹", EditorStyles.miniLabel, GUILayout.Width(56));
+            _newPrefab = (GameObject)EditorGUILayout.ObjectField(
+                _newPrefab, typeof(GameObject), false, GUILayout.Width(160));
+        }
+
+        if (_newPrefab != null)
+        {
+            RegisterDroppedPrefab();
+        }
+    }
+
+    private void RegisterDroppedPrefab()
+    {
+        if (!_theme.Has(_brush, _newPrefab))
+        {
+            ThemeIO.RegisterPrefab(_theme, _brush, _newPrefab);
+        }
+
+        _pick = _newPrefab;
+        _newPrefab = null;
     }
 
     private static int ValidLanes(IReadOnlyList<LaneData> lanes)

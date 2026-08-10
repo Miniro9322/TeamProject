@@ -42,12 +42,13 @@ public class MapAssemble : MonoBehaviour
         RangeInfo rangeInfo = new RangeInfo();
         RangeTileData rangeStore = new RangeTileData();
         RangeCalc rangeCalc = new RangeCalc(rangeInfo);
+        HoverPlaceData hoverPlace = new HoverPlaceData();
 
         if (tilePaintView != null)
         {
-            tilePaintView.skillCast = skillCast;
-            tilePaintView.finder = finder;
-            tilePaintView.rangeStore = rangeStore;
+            PlaceHoverFinder hoverFinder = new PlaceHoverFinder(view, finder, hoverPlace);
+            SkillTargetFinder skillFinder = new SkillTargetFinder(skillCast, view);
+            tilePaintView.sync = new TilePaintSync(hoverFinder, skillFinder, rangeCalc, rangeStore, tilePaintView.Painter);
         }
 
         rangeInput.pointerPick = pointerPick;
@@ -56,7 +57,6 @@ public class MapAssemble : MonoBehaviour
 
         view.pointerPick = pointerPick;
         view.replace = replace;
-        view.rangeInfo = rangeInfo;
         view.citizenManager = mapGame.CitizenManager;
         view.resourcesManager = mapGame.ResourcesManager;
 
@@ -80,6 +80,7 @@ public class MapAssemble : MonoBehaviour
         ghost = new PlaceGhost(ghostAlpha);
         command.ghost = ghost;
         command.finder = finder;
+        command.hoverPlace = hoverPlace;
         command.dispatch = new Dictionary<PlaceMode, Action<Tile>>
         {
             { PlaceMode.Off, action.SelectTile },
