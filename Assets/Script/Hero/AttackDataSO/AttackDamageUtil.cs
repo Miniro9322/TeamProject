@@ -19,18 +19,23 @@ public static class AttackDamageUtil
 
         if (data.attackType == AttackType.Area && data.areaShape == AreaShape.Line)
         {
-            foreach (IDamageAble e in ctx.hero.GetEnemiesInLine(ctx.self.position, ctx.target.position, data.lineLength, data.areaRange))
+            for (int i = 0; i < data.attackCount; i++)
             {
-                e.TakeDamage((int)baseDamage);
-                ctx.hero.NotifyHit((e as Component)?.gameObject, (int)baseDamage, false);
-                ApplyTargetDebuffs(e as IUnit, data.buffList, ctx.buffManager, data);
-                ApplyHealOptions(data, ctx.self.position, ctx.hero.Heal, AllyQuery, baseDamage, ctx.sc[StatType.ATK]);
-                ctx.hero.SpawnEffect(data.hitEffect, (e as Component).transform.position, Quaternion.identity, data.hitEffectLifetime);
+                foreach (IDamageAble e in ctx.hero.GetEnemiesInLine(ctx.self.position, ctx.target.position, data.lineLength, data.areaRange))
+                {
+                    e.TakeDamage((int)baseDamage);
+                    ctx.hero.NotifyHit((e as Component)?.gameObject, (int)baseDamage, false);
+                    ApplyTargetDebuffs(e as IUnit, data.buffList, ctx.buffManager, data);
+                    ApplyHealOptions(data, ctx.self.position, ctx.hero.Heal, AllyQuery, baseDamage, ctx.sc[StatType.ATK]);
+                    ctx.hero.SpawnEffect(data.hitEffect, (e as Component).transform.position, Quaternion.identity, data.hitEffectLifetime);
+                }
+                if (i < data.attackCount - 1)
+                    await UniTask.Delay(TimeSpan.FromSeconds(data.shotInterval), cancellationToken: ct);
             }
             return;
         }
 
-        if (data.attackType == AttackType.Area && data.areaShape == AreaShape.Chain)
+        if (data.areaShape == AreaShape.Chain)
         {
             List<GameObject> hits = ChainResolver.Resolve(ctx.target.gameObject, baseDamage, data.chainRange, data.chainCount,
                 data.chainFalloff, TargetableEnemyQuery, ctx.hero.NotifyHit);
@@ -49,13 +54,18 @@ public static class AttackDamageUtil
 
         if (data.attackType == AttackType.Single && data.targetMode == TargetMode.SameTarget)
         {
-            if (ctx.target.GetComponent<IDamageAble>() is IDamageAble d)
+            for (int i = 0; i < data.attackCount; i++)
             {
-                d.TakeDamage((int)baseDamage);
-                ctx.hero.NotifyHit(ctx.target.gameObject, (int)baseDamage, false);
-                ApplyTargetDebuffs(d as IUnit, data.buffList, ctx.buffManager, data);
-                ApplyHealOptions(data, ctx.self.position, ctx.hero.Heal, AllyQuery, baseDamage, ctx.sc[StatType.ATK]);
-                ctx.hero.SpawnEffect(data.hitEffect, ctx.target.position, Quaternion.identity, data.hitEffectLifetime);
+                if (ctx.target.GetComponent<IDamageAble>() is IDamageAble d)
+                {
+                    d.TakeDamage((int)baseDamage);
+                    ctx.hero.NotifyHit(ctx.target.gameObject, (int)baseDamage, false);
+                    ApplyTargetDebuffs(d as IUnit, data.buffList, ctx.buffManager, data);
+                    ApplyHealOptions(data, ctx.self.position, ctx.hero.Heal, AllyQuery, baseDamage, ctx.sc[StatType.ATK]);
+                    ctx.hero.SpawnEffect(data.hitEffect, ctx.target.position, Quaternion.identity, data.hitEffectLifetime);
+                }
+                if (i < data.attackCount - 1)
+                    await UniTask.Delay(TimeSpan.FromSeconds(data.shotInterval), cancellationToken: ct);
             }
             return;
         }
