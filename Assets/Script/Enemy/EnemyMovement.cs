@@ -42,6 +42,14 @@ public class EnemyMovement
     /// Flying이 켜져 있으면 그쪽이 더 넓은 통행권이라 이 값은 무시된다.</summary>
     public bool Swimming { get; set; }
 
+    /// <summary>물속 이동속도 배율(EnemyBase.swimSpeedMultiplier와 같은 값). 경로를 "칸 수 최단"이 아니라
+    /// "가장 빨리 도착하는 길"로 잡는 데 쓴다 — 물이 빠르면 조금 돌더라도 물길을 택한다. 1이면 기존과 같다.</summary>
+    public float SwimSpeedMultiplier { get; set; } = 1f;
+
+    /// <summary>물에 들어가고 나올 때 1회당 손해로 치는 거리(타일 수). 잠수/상승 모션 동안 멈추는 시간을
+    /// 길찾기 비용에 반영한다 — 안 넣으면 한 칸짜리 웅덩이를 들렀다 나오며 오히려 늦게 도착한다.</summary>
+    public float SwimTransitionPenaltyTiles { get; set; }
+
     /// <summary>물 구간 안에 있는 동안 true — 이동 상태를 IsMoving 대신 IsSwim으로 보고한다.
     /// EnemySwim이 매 프레임 갈아끼운다. 통행권(Swimming)과 달리 "지금 물에 들어가 있는가"라 별개 값이다.</summary>
     public bool SwimAnim { get; set; }
@@ -128,7 +136,8 @@ public class EnemyMovement
         {
             Vector3 startW = src.Count > 0 && snapToStart ? src[0] : _tf.position;
             Vector3 goalW = src.Count > 0 ? src[src.Count - 1] : _tf.position;
-            var swimming = SwimPathfinder.BuildWaypoints(board, startW, goalW);
+            var swimming = SwimPathfinder.BuildWaypoints(
+                board, startW, goalW, SwimSpeedMultiplier, SwimTransitionPenaltyTiles);
             if (swimming.Count > 0) src = swimming;
         }
 

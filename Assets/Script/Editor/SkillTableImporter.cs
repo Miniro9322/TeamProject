@@ -95,7 +95,10 @@ public static class SkillTableImporter
                 // 눈의 정령. 수치는 Range(빙결을 뿌릴 반경)와 Cooldown만 쓴다 —
                 // 빙결 자체의 세기·지속시간은 DebuffTable의 Frost_Basic이 들고 있다.
                 case "SpiritofSnow": return typeof(SpiritofSnow);
-                
+                // 내려찍기 스턴. 수치는 Range(스턴을 뿌릴 반경)와 Cooldown만 쓴다 —
+                // 스턴 지속시간은 DebuffTable의 Stun_Basic이 들고 있다.
+                case "StompStun": return typeof(StompStunSO);
+
             }
         }
         return null;
