@@ -7,14 +7,18 @@ public class HeroTierUpgradeState
 {
     private readonly HeroUpgradeConfig config;
     private readonly ResourcesManager resourcesManager;
+    private readonly UpgradeState upgradeState;
     private readonly Dictionary<int, int> levels = new();
 
     public event Action<int> LevelChanged; // 인자: 티어
 
-    public HeroTierUpgradeState(HeroUpgradeConfig config, ResourcesManager resourcesManager)
+    private float CostDiscount => upgradeState.GetTotalEffect(config.UpgradeCostUpgrades);
+
+    public HeroTierUpgradeState(HeroUpgradeConfig config, ResourcesManager resourcesManager, UpgradeState upgradeState)
     {
         this.config = config;
         this.resourcesManager = resourcesManager;
+        this.upgradeState = upgradeState;
     }
 
     public int GetLevel(int tier) => levels.TryGetValue(tier, out int lvl) ? lvl : 0;
@@ -26,7 +30,10 @@ public class HeroTierUpgradeState
     }
 
     public (ProductionType Type, int Amount)[] GetNextLevelCost(int tier)
-        => config.GetEntry(tier)?.GetCostForLevel(GetLevel(tier)) ?? Array.Empty<(ProductionType, int)>();
+        => GetCostForLevel(tier, GetLevel(tier));
+
+    public (ProductionType Type, int Amount)[] GetCostForLevel(int tier, int level)
+        => config.GetEntry(tier)?.GetCostForLevel(level).ApplyDiscount(CostDiscount) ?? Array.Empty<(ProductionType, int)>();
 
     public IReadOnlyList<HeroStatGain> GetStatGains(int tier)
         => (IReadOnlyList<HeroStatGain>)config.GetEntry(tier)?.statGains ?? Array.Empty<HeroStatGain>();

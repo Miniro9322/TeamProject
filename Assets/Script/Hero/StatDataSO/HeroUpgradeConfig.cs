@@ -10,6 +10,9 @@ public class HeroUpgradeConfig : ScriptableObject
     public int maxLevel = 99;
     public List<HeroTierUpgradeEntry> tierEntries;
 
+    [SerializeField] private List<BaseUpgradeData> upgradeCostUpgrades;
+    public IReadOnlyList<BaseUpgradeData> UpgradeCostUpgrades => upgradeCostUpgrades;
+
     public HeroTierUpgradeEntry GetEntry(int tier) => tierEntries.Find(e => e.tier == tier);
 }
 

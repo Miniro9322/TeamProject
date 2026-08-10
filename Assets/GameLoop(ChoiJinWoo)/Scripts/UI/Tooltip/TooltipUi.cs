@@ -10,7 +10,7 @@ public class TooltipUi : MonoBehaviour
     [SerializeField] private RectTransform panel;
     [SerializeField] private TextMeshProUGUI text;
     [SerializeField] private Canvas canvas; // 화면 좌표 -> 캔버스 로컬 좌표 변환에 필요
-    [SerializeField] private Vector2 offset = new(16f, -16f);
+    [SerializeField] private Vector2 offset = new(16f, 16f);
 
     private RectTransform canvasRect;
 
@@ -27,6 +27,12 @@ public class TooltipUi : MonoBehaviour
         canvasGroup.blocksRaycasts = false;
         canvasGroup.interactable = false;
 
+        // pivot이 인스펙터 설정값(예: 센터)에 따라 달라지면 offset을 줘도 커서가 패널 안쪽에 걸릴 수 있다.
+        // 좌하단(0,0)으로 고정해서 "커서 지점에서 오른쪽 위로 offset만큼 벌어진 자리"가 항상
+        // 패널의 시작 모서리가 되게 하고, 패널 전체가 커서 위쪽으로만 펼쳐지게 한다(화살표 커서는
+        // 보통 tip에서 오른쪽 아래로 향하므로, 위로 띄우면 커서 모양과 안 겹친다).
+        panel.pivot = new Vector2(0f, 0f);
+
         panel.gameObject.SetActive(false);
     }
 
@@ -39,7 +45,7 @@ public class TooltipUi : MonoBehaviour
     {
         if (string.IsNullOrEmpty(message)) return;
 
-        text.text = message;
+        text.text = DataTableManager.StringTable.Get(message);
         panel.gameObject.SetActive(true);
 
         // text.text를 바꿔도 ContentSizeFitter/레이아웃은 다음 갱신 때야 반영되므로, 그 상태로 바로
