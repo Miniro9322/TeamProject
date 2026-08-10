@@ -16,6 +16,13 @@ public static class ThemeIO
     private const string RootPath = "Assets/Map";
     private const string FolderPath = "Assets/Map/Themes";
 
+    // 지문을 대조할 프리팹이 있는 곳. 에셋은 저장소가 달라 없을 수도 있어 있는 폴더만 본다.
+    private static readonly string[] Packs =
+    {
+        "Assets/Imported/KUBIKOS - World/URP Support/Prefabs URP",
+        "Assets/Imported/KUBIKOS - 3D Cube Village And Farm/URP Support/Prefabs URP"
+    };
+
     /// <summary>프로젝트의 모든 테마. 이름순으로 정렬해 탭 순서가 매번 같게 한다.</summary>
     public static List<TileTheme> LoadAll()
     {
@@ -108,28 +115,41 @@ public static class ThemeIO
 
     /// <summary>
     /// 이 모듈이 지금 쓰고 있는 프리팹을 붓별로 모아 테마로 만든다.
-    /// 프리팹 링크가 없는 타일(복제로 만든 오브젝트)은 원본이 없어 건너뛴다.
+    /// 프리팹 링크가 지워진 타일은 지문(모양+색)으로 원본을 되찾는다.
     /// </summary>
     public static TileTheme Extract(Grid module, string label)
     {
         var found = new Dictionary<MapBrush, List<GameObject>>();
+        Dictionary<string, GameObject> index = BuildIndex();
         int linked = 0;
-        int loose = 0;
+        int traced = 0;
+        int lost = 0;
 
         GameObject source = ModuleScan.SourcePrefab(module);
         string modulePath = source != null ? AssetDatabase.GetAssetPath(source) : string.Empty;
 
-        foreach (Tile tile in ModuleScan.CollectTiles(module))
+        List<Tile> tiles = ModuleScan.CollectTiles(module);
+        for (int i = 0; i < tiles.Count; i++)
         {
+            Tile tile = tiles[i];
+            MapBrush brush = BrushOf(tile.State.Terrain);
+
             GameObject prefab = Origin(tile.gameObject, modulePath);
-            if (prefab == null)
+            if (prefab != null)
             {
-                loose++;
+                linked++;
+                Collect(found, brush, prefab);
                 continue;
             }
 
-            linked++;
-            Collect(found, BrushOf(tile.State.Terrain), prefab);
+            if (TryTrace(index, tile.gameObject, out GameObject same))
+            {
+                traced++;
+                Collect(found, brush, same);
+                continue;
+            }
+
+            lost++;
         }
 
         Transform decor = DecorPlace.Find(module);
@@ -155,8 +175,84 @@ public static class ThemeIO
         }
 
         Save(theme, label);
-        Report(theme, linked, loose);
+        Report(theme, linked, traced, lost);
         return theme;
+    }
+
+    // 모양+색으로 원본 프리팹을 찾는 표. 링크가 지워진 타일을 되찾는 마지막 수단이다.
+    private static Dictionary<string, GameObject> BuildIndex()
+    {
+        var found = new Dictionary<string, GameObject>();
+        var twice = new HashSet<string>();
+
+        for (int i = 0; i < Packs.Length; i++)
+        {
+            if (!AssetDatabase.IsValidFolder(Packs[i]))
+            {
+                continue;
+            }
+
+            string[] guids = AssetDatabase.FindAssets("t:Prefab", new[] { Packs[i] });
+            for (int n = 0; n < guids.Length; n++)
+            {
+                Index(found, twice, AssetDatabase.GUIDToAssetPath(guids[n]));
+            }
+        }
+
+        return found;
+    }
+
+    // 같은 지문을 두 프리팹이 나눠 쓰면 어느 쪽인지 알 수 없다 — 표에서 아예 뺀다.
+    // 찍고 나서 엉뚱한 것이 나오는 것보다 안 나오는 편이 낫다.
+    private static void Index(Dictionary<string, GameObject> found, HashSet<string> twice, string path)
+    {
+        var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+        if (prefab == null || !TryFinger(prefab, out string finger) || twice.Contains(finger))
+        {
+            return;
+        }
+
+        if (found.ContainsKey(finger))
+        {
+            found.Remove(finger);
+            twice.Add(finger);
+            return;
+        }
+
+        found[finger] = prefab;
+    }
+
+    // 지워진 링크 대신 지문으로 원본을 찾는다.
+    private static bool TryTrace(Dictionary<string, GameObject> index, GameObject made, out GameObject prefab)
+    {
+        prefab = null;
+        if (!TryFinger(made, out string finger))
+        {
+            return false;
+        }
+
+        return index.TryGetValue(finger, out prefab);
+    }
+
+    // 이 오브젝트의 지문 — 메시 이름과 머티리얼 이름을 붙인 것.
+    private static bool TryFinger(GameObject made, out string finger)
+    {
+        finger = string.Empty;
+
+        MeshFilter mesh = made.GetComponentInChildren<MeshFilter>(true);
+        if (mesh == null || mesh.sharedMesh == null)
+        {
+            return false;
+        }
+
+        Renderer paint = mesh.GetComponent<Renderer>();
+        if (paint == null || paint.sharedMaterial == null)
+        {
+            return false;
+        }
+
+        finger = mesh.sharedMesh.name + "|" + paint.sharedMaterial.name;
+        return true;
     }
 
     // 모은 목록을 붓 순서대로 슬롯 배열로 만든다. 비어 있는 붓은 슬롯을 만들지 않는다.
@@ -254,8 +350,8 @@ public static class ThemeIO
         AssetDatabase.CreateFolder(RootPath, "Themes");
     }
 
-    // 뽑은 결과를 알린다. 링크 없는 타일이 많으면 그 모듈은 뽑을 원본이 거의 없다는 뜻이다.
-    private static void Report(TileTheme theme, int linked, int loose)
+    // 뽑은 결과를 알린다. 못 찾은 타일이 많으면 그 모듈은 되짚을 원본이 거의 없다는 뜻이다.
+    private static void Report(TileTheme theme, int linked, int traced, int lost)
     {
         int kinds = 0;
         foreach (TileTheme.Slot slot in theme.Slots)
@@ -265,12 +361,12 @@ public static class ThemeIO
 
         if (kinds == 0)
         {
-            Debug.LogWarning("[Map Maker] 뽑을 프리팹이 없습니다 — 이 모듈의 타일은 프리팹 링크가 없습니다" +
-                $" (링크 없는 타일 {loose}개). 다른 모듈에서 뽑은 테마를 쓰거나 교체로 프리팹을 깔아 주세요.", theme);
+            Debug.LogWarning("[Map Maker] 뽑을 프리팹이 없습니다 — 링크도 없고 지문으로도 못 찾았습니다" +
+                $" (못 찾은 타일 {lost}개). 다른 모듈에서 뽑은 테마를 쓰거나 교체로 프리팹을 깔아 주세요.", theme);
             return;
         }
 
         Debug.Log($"[Map Maker] 테마를 뽑았습니다 — 프리팹 {kinds}종 " +
-            $"(링크 있는 타일 {linked}개, 링크 없는 타일 {loose}개) · {AssetDatabase.GetAssetPath(theme)}", theme);
+            $"(링크로 {linked}개, 지문으로 {traced}개, 못 찾음 {lost}개) · {AssetDatabase.GetAssetPath(theme)}", theme);
     }
 }
