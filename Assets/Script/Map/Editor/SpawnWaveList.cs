@@ -3,7 +3,13 @@ using UnityEditor;
 using UnityEngine;
 
 /// <summary>
-/// 적 탭. 스폰 순서대로 카드를 늘어놓고, 고른 카드의 스탯을 오른쪽에 편다.
+/// 적 탭. 기본/증원/보스를 구역별로 나눠 카드로 늘어놓고, 고른 카드의 스탯을 보여준다.
+///
+/// 카드 목록과 상세는 따로 부른다(인스펙터와 하이어라키가 별개 판이듯) — 상세를 카드와 같은
+/// 스크롤 안에 두면 카드가 몇 장만 있어도 스크롤을 끝까지 내리거나 올려야 상세가 보인다.
+/// 호출하는 쪽(MapMakerWindow)이 카드는 스크롤 영역 안에서, 상세는 그 밖에서 그린다.
+///
+/// 기본/증원/보스를 한 줄에 섞지 않는다 — 스폰 규칙(스케일 유무)이 서로 달라 섞으면 "왜 여기 낀 거지"가 생긴다.
 /// 지역·라운드는 모듈에 저장된 값이 아니다 — 어느 지역인지는 WaveSpawner 인스펙터에만 있어서
 /// 사람이 여기서 직접 골라 훑어보는 값이다.
 /// </summary>
@@ -12,44 +18,59 @@ public static class SpawnWaveList
     private const int Card = 92;
     private const int Thumb = 64;
 
-    /// <summary>탭 전체. 고른 카드를 돌려준다(안 골랐으면 받은 것 그대로).</summary>
-    public static SpawnWaveReadout.Entry Draw(
-        int region, int round, List<SpawnWaveReadout.Entry> entries, SpawnWaveReadout.Entry chosen)
+    /// <summary>
+    /// 카드 목록만 그린다. 고른 웨이브 행을 돌려준다(안 골랐으면 받은 것 그대로).
+    /// 고른 상태는 Entry가 아니라 WaveTable.Data로 주고받는다 — Entry는 이 창이 그려질 때마다
+    /// 새로 찍히므로 그걸로 들고 있으면 다음 프레임에 "다른 객체"가 되어 선택이 매번 풀린다.
+    /// </summary>
+    public static WaveTable.Data DrawCards(SpawnWaveReadout.Groups groups, WaveTable.Data chosenWave)
+    {
+        if (groups.Total == 0)
+        {
+            GUILayout.Label($"지역 {groups.Region} · {groups.Round}라운드에 웨이브 데이터가 없습니다.",
+                EditorStyles.wordWrappedMiniLabel);
+            return chosenWave;
+        }
+
+        SpawnWaveReadout.Entry picked = groups.Find(chosenWave);
+
+        picked = DrawSection("기본", groups.Base, picked);
+        picked = DrawSection("증원 — 다른 지역 해금 시 이 지역이 보냄 · 스케일 없음", groups.Reinforce, picked);
+        picked = DrawSection("보스 라운드 — 10라운드마다 겹쳐 등장 · 스케일 없음", groups.Boss, picked);
+
+        if (picked == null)
+        {
+            return null;
+        }
+
+        return picked.Wave;
+    }
+
+    /// <summary>고른 카드의 스탯. 목록이 비어 있으면 아무것도 그리지 않는다.</summary>
+    public static void DrawDetail(SpawnWaveReadout.Groups groups, WaveTable.Data chosenWave)
+    {
+        if (groups.Total == 0)
+        {
+            return;
+        }
+
+        SpawnWaveReadout.Entry entry = groups.Find(chosenWave) ?? groups.First;
+        DrawDetail(entry);
+    }
+
+    // 구역 하나 — 이름표 한 줄 + 카드를 가로로 늘어놓는다. 목록이 비어 있으면 아예 안 그린다.
+    private static SpawnWaveReadout.Entry DrawSection(
+        string title, List<SpawnWaveReadout.Entry> entries, SpawnWaveReadout.Entry chosen)
     {
         if (entries.Count == 0)
         {
-            GUILayout.Label($"지역 {region} · {round}라운드에 웨이브 데이터가 없습니다.",
-                EditorStyles.wordWrappedMiniLabel);
             return chosen;
         }
 
-        SpawnWaveReadout.Entry picked = ValidChoice(entries, chosen);
-
-        using (new EditorGUILayout.HorizontalScope())
-        {
-            picked = DrawCards(entries, picked);
-            DrawDetail(picked ?? entries[0]);
-        }
-
-        return picked;
-    }
-
-    // 지역·라운드를 바꿔서 고른 카드가 새 목록에 없으면 고른 상태를 버린다.
-    private static SpawnWaveReadout.Entry ValidChoice(List<SpawnWaveReadout.Entry> entries, SpawnWaveReadout.Entry chosen)
-    {
-        if (chosen == null || entries.Contains(chosen))
-        {
-            return chosen;
-        }
-
-        return null;
-    }
-
-    private static SpawnWaveReadout.Entry DrawCards(List<SpawnWaveReadout.Entry> entries, SpawnWaveReadout.Entry chosen)
-    {
+        GUILayout.Label(title, EditorStyles.miniBoldLabel);
         SpawnWaveReadout.Entry picked = chosen;
 
-        using (new EditorGUILayout.VerticalScope(GUILayout.Width(Card + 8)))
+        using (new EditorGUILayout.HorizontalScope())
         {
             for (int i = 0; i < entries.Count; i++)
             {
@@ -58,6 +79,8 @@ public static class SpawnWaveList
                     picked = entries[i];
                 }
             }
+
+            GUILayout.FlexibleSpace();
         }
 
         return picked;

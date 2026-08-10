@@ -65,7 +65,8 @@ public class MapMakerWindow : EditorWindow
     // 적 탭에서 훑어볼 지역·라운드. 모듈은 자기가 어느 지역인지 모르므로 직접 고른다.
     private int _waveRegion = 1;
     private int _waveRound = 1;
-    private SpawnWaveReadout.Entry _waveEntry;
+    // 고른 웨이브 행. Entry가 아니라 WaveTable.Data로 들고 있어야 다음 프레임에도 선택이 유지된다.
+    private WaveTable.Data _waveChosen;
     private readonly Dictionary<MapBrush, GameObject> _lastPicks = new();
     private int _themeModule = -1;
     private readonly HashSet<Vector2Int> _swapped = new();
@@ -249,14 +250,14 @@ public class MapMakerWindow : EditorWindow
         }
 
         List<string> problems = TileAuthorRule.FindProblems(cells, lanes, tiles.Count, _day);
-        List<SpawnWaveReadout.Entry> waveEntries = SpawnWaveReadout.Collect(_waveRegion, _waveRound);
+        SpawnWaveReadout.Groups waveGroups = SpawnWaveReadout.Collect(_waveRegion, _waveRound);
 
         int overrideCount = overrides?.Count ?? 0;
         DrawActionPreview(module, cells);
         DrawStatusBar(cells, view, lanes, problems.Count, overrideCount);
         DrawMarkerLegend(overrideCount);
         DrawBrushNote();
-        DrawShelf(module, lanes, routes, problems, waveEntries);
+        DrawShelf(module, lanes, routes, problems, waveGroups);
     }
 
     /// <summary>
@@ -1519,7 +1520,7 @@ public class MapMakerWindow : EditorWindow
     /// 탭 이름에 수를 붙인다: 탭을 열지 않아도 상태가 보이고, 문제가 0인 것과 아직 안 본 것이 구분된다.
     /// </summary>
     private void DrawShelf(Grid module, IReadOnlyList<LaneData> lanes, RouteConfig routes,
-        List<string> problems, List<SpawnWaveReadout.Entry> waveEntries)
+        List<string> problems, SpawnWaveReadout.Groups waveGroups)
     {
         int picks = _theme != null ? _theme.For(_brush).Length : 0;
 
@@ -1533,7 +1534,7 @@ public class MapMakerWindow : EditorWindow
             ShelfButton(ShelfTab.Prefab, $"프리팹 {picks}");
             ShelfButton(ShelfTab.Lane, $"경로 {ValidLanes(lanes)}/{lanes.Count}");
             ShelfButton(ShelfTab.Problem, $"문제 {problems.Count}");
-            ShelfButton(ShelfTab.Wave, $"적 {waveEntries.Count}종");
+            ShelfButton(ShelfTab.Wave, $"적 {waveGroups.Total}종");
 
             GUILayout.FlexibleSpace();
             bool open = GUILayout.Toggle(
@@ -1566,7 +1567,7 @@ public class MapMakerWindow : EditorWindow
                     break;
 
                 case ShelfTab.Wave:
-                    DrawWaveShelf(waveEntries);
+                    DrawWaveShelf(waveGroups);
                     break;
 
                 default:
@@ -1574,10 +1575,17 @@ public class MapMakerWindow : EditorWindow
                     break;
             }
         }
+
+        // 상세는 스크롤 밖에 고정한다 — 인스펙터처럼, 카드 목록을 아무리 내려도 자리를 지켜야 한다.
+        // 스크롤 안에 같이 두면 카드 몇 장만 있어도 상세를 보려고 끝까지 내려야 하는 문제가 생긴다.
+        if (_shelf == ShelfTab.Wave)
+        {
+            SpawnWaveList.DrawDetail(waveGroups, _waveChosen);
+        }
     }
 
     // 적 탭. 지역·라운드를 직접 고른다 — 모듈은 자기가 어느 지역인지 모른다(WaveSpawner 인스펙터에만 있다).
-    private void DrawWaveShelf(List<SpawnWaveReadout.Entry> entries)
+    private void DrawWaveShelf(SpawnWaveReadout.Groups groups)
     {
         using (new EditorGUILayout.HorizontalScope())
         {
@@ -1588,7 +1596,7 @@ public class MapMakerWindow : EditorWindow
             GUILayout.FlexibleSpace();
         }
 
-        _waveEntry = SpawnWaveList.Draw(_waveRegion, _waveRound, entries, _waveEntry);
+        _waveChosen = SpawnWaveList.DrawCards(groups, _waveChosen);
     }
 
     // 선반 위 손잡이. 위아래로 끌면 선반 높이가 늘거나 줄어 격자와 자리를 나눠 갖는다.
