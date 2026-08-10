@@ -5,11 +5,13 @@ public class UnitRemover
 {
     private readonly PlacedUnitData _unitList;
     private readonly HeroRoster _heroRoster;
+    private readonly ZoneEffectApplier _zoneEffectApplier;
 
-    public UnitRemover(PlacedUnitData unitList, HeroRoster heroRoster)
+    public UnitRemover(PlacedUnitData unitList, HeroRoster heroRoster, ZoneEffectApplier zoneEffectApplier)
     {
         _unitList = unitList;
         _heroRoster = heroRoster;
+        _zoneEffectApplier = zoneEffectApplier;
     }
 
     // 한 칸의 유닛을 치운다. 칸이 없으면 false.
@@ -33,6 +35,12 @@ public class UnitRemover
 
         AreaPlace.Remove(area);
         _unitList.Remove(unit);
+
+        if (unit.TryGetComponent(out Hero hero))
+        {
+            _zoneEffectApplier.ExitZone(hero);
+        }
+
         DestroyOrReturnToPool(unit);
         return unit;
     }
@@ -42,8 +50,15 @@ public class UnitRemover
     {
         for (int i = 0; i < _unitList.Count; i++)
         {
+            GameObject unit = _unitList.UnitAt(i);
             AreaPlace.Remove(_unitList.AreaAt(i));
-            Object.Destroy(_unitList.UnitAt(i));
+
+            if (unit.TryGetComponent(out Hero hero))
+            {
+                _zoneEffectApplier.ExitZone(hero);
+            }
+
+            Object.Destroy(unit);
         }
 
         _unitList.Clear();

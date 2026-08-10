@@ -20,11 +20,13 @@ public class MapAssemble : MonoBehaviour
     [SerializeField] private TilePaintView tilePaintView;
     [SerializeField] private RangeInput rangeInput;
     [SerializeField] private HeroCombineManager combineManager;
+    [SerializeField] private DesertZone desertZone;
 
     private List<PathTrail> pathTrails;
     private List<EnemyLanes> laneModules;
     private PlaceGhost ghost;
     private HeroSkillCastController skillCast;
+    private ZoneEffectApplier zoneEffectApplier;
 
     private void Start()
     {
@@ -32,7 +34,10 @@ public class MapAssemble : MonoBehaviour
 
         PointerPick pointerPick = new PointerPick(boards);
         PlaceFinder finder = new PlaceFinder(pointerPick, palette, placeYOffset);
-        UnitReplace replace = new UnitReplace(mapGame.Units);
+
+        zoneEffectApplier = new ZoneEffectApplier(desertZone);
+        mapGame.Placer.zoneEffectApplier = zoneEffectApplier;
+        UnitReplace replace = new UnitReplace(mapGame.Units, zoneEffectApplier);
 
         DayNightBuildRule dayNightRule = new DayNightBuildRule();
         dayNightRule.rule = mapGame.Rule;
@@ -64,7 +69,7 @@ public class MapAssemble : MonoBehaviour
         action.palette = palette;
         action.finder = finder;
         action.placer = mapGame.Placer;
-        action.remover = new UnitRemover(mapGame.Units, mapGame.HeroRoster);
+        action.remover = new UnitRemover(mapGame.Units, mapGame.HeroRoster, zoneEffectApplier);
         action.replace = replace;
         action.dayNightRule = dayNightRule;
         action.view = view;
@@ -98,6 +103,8 @@ public class MapAssemble : MonoBehaviour
         mapGame.Rule.ChangeToDay += OnDayChanged;
         OnDayChanged(); // 첫 날짜도 시작하자마자 바로 맞춘다 — 이벤트가 처음 울릴 때까지 기다리지 않는다
 
+        mapGame.Rule.ChangeToDay += zoneEffectApplier.OnDayChanged;
+
 
         mapGame.Rule.ChangeToNight += view.ClearMode;
         mapGame.Rule.ChangeToNight += skillCast.ClearSelection;
@@ -114,6 +121,7 @@ public class MapAssemble : MonoBehaviour
     {
         ghost.ClearGhosts();
         mapGame.Rule.ChangeToNight -= view.ClearMode;
+        mapGame.Rule.ChangeToDay -= zoneEffectApplier.OnDayChanged;
         if (laneModules != null)
         {
             mapGame.Rule.ChangeToDay -= OnDayChanged;

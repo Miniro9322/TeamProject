@@ -9,6 +9,8 @@ public class UnitPlacer
     // MapGame이 주입 완료 후 넣어준다.
     public PlacedUnitData unitList;
     public IObjectResolver resolver;
+    // MapAssemble이 조립 후 넣어준다.
+    public ZoneEffectApplier zoneEffectApplier;
 
     // 슬롯을 자리에 놓는다. 못 놓으면 false.
     public bool TryPlace(PlaceData data, Placeable slot, out GameObject placedUnit)
@@ -24,8 +26,18 @@ public class UnitPlacer
         BindBoard(unit, data.Area.Board);
         AreaPlace.Place(data, unit, slot.kind);
         unitList.Add(unit, data.Area);
+        ApplyZoneEffect(unit, data.Area);
         placedUnit = unit;
         return true;
+    }
+
+    // 놓인 유닛이 지대 안이면 지대 효과를 건다.
+    private void ApplyZoneEffect(GameObject unit, PlacementArea area)
+    {
+        if (unit.TryGetComponent(out Hero hero))
+        {
+            zoneEffectApplier.EnterZone(hero, area);
+        }
     }
 
     // 슬롯의 프리팹으로 영웅 오브젝트를 만든다.
