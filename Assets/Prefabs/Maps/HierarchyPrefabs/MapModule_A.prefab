@@ -1330,7 +1330,55 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 943c902c563f2ce4883cf1719d6a053e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RouteConfig
-  routes: []
+  routes:
+  - spawn: {x: 14, y: 4}
+    day: 0
+    nodes:
+    - col: 12
+      row: 6
+      waitTime: 0
+    - col: 8
+      row: 3
+      waitTime: 0
+    - col: 10
+      row: 1
+      waitTime: 0
+    - col: 13
+      row: 5
+      waitTime: 0
+    - col: 8
+      row: 6
+      waitTime: 0
+    - col: 3
+      row: 3
+      waitTime: 0
+  - spawn: {x: 14, y: 3}
+    day: 0
+    nodes:
+    - col: 9
+      row: 1
+      waitTime: 0
+    - col: 8
+      row: 4
+      waitTime: 0
+    - col: 11
+      row: 6
+      waitTime: 0
+    - col: 13
+      row: 4
+      waitTime: 0
+    - col: 8
+      row: 1
+      waitTime: 0
+    - col: 7
+      row: 4
+      waitTime: 0
+    - col: 4
+      row: 4
+      waitTime: 0
+    - col: 1
+      row: 3
+      waitTime: 0
 --- !u!1 &5797045934160216438
 GameObject:
   m_ObjectHideFlags: 0
