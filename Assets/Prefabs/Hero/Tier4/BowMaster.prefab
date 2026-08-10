@@ -634,7 +634,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &4779207743545411311
 Transform:
   m_ObjectHideFlags: 0
@@ -1828,7 +1828,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &6934918386554303398
 Transform:
   m_ObjectHideFlags: 0
@@ -2446,7 +2446,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &8851837702676375651
 Transform:
   m_ObjectHideFlags: 0
@@ -3385,7 +3385,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &8131489913779277299
 Transform:
   m_ObjectHideFlags: 0
@@ -6105,7 +6105,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &3959216200006115427
 Transform:
   m_ObjectHideFlags: 0
@@ -6449,7 +6449,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &4365865456414977086
 Transform:
   m_ObjectHideFlags: 0
@@ -6462,8 +6462,7 @@ Transform:
   m_LocalPosition: {x: -0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 1517930423594004449}
+  m_Children: []
   m_Father: {fileID: 1059216374838550061}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!137 &8766136321650012442
@@ -7234,7 +7233,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &9067448906844526692
 Transform:
   m_ObjectHideFlags: 0
@@ -7476,7 +7475,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &1762248557857041935
 Transform:
   m_ObjectHideFlags: 0
@@ -8874,7 +8873,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &2569715135642469841
 Transform:
   m_ObjectHideFlags: 0
@@ -9544,11 +9543,11 @@ Transform:
   m_GameObject: {fileID: 3855838586964153445}
   serializedVersion: 2
   m_LocalRotation: {x: 0.000000021073408, y: 0.00000011920919, z: -0.00000010536704, w: 1}
-  m_LocalPosition: {x: 0, y: -0.0109990705, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0.031000145}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 4365865456414977086}
+  m_Father: {fileID: 2829067634900045742}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &3920040138432786394
 GameObject:
@@ -12260,7 +12259,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &5536509242551499211
 Transform:
   m_ObjectHideFlags: 0
@@ -12353,7 +12352,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &2829067634900045742
 Transform:
   m_ObjectHideFlags: 0
@@ -12366,7 +12365,8 @@ Transform:
   m_LocalPosition: {x: -0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 1517930423594004449}
   m_Father: {fileID: 1059216374838550061}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!137 &1442238432522302264
@@ -15964,7 +15964,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &6171901210743867607
 Transform:
   m_ObjectHideFlags: 0
@@ -16364,7 +16364,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &9045880006202871144
 Transform:
   m_ObjectHideFlags: 0
@@ -20580,7 +20580,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &7556028857189249330
 Transform:
   m_ObjectHideFlags: 0
@@ -20804,7 +20804,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &4786252601522833338
 Transform:
   m_ObjectHideFlags: 0
@@ -22553,7 +22553,6 @@ GameObject:
   m_Component:
   - component: {fileID: 8960899001449437281}
   - component: {fileID: 4332685919364535766}
-  - component: {fileID: 6683023602017724312}
   m_Layer: 0
   m_Name: BowMaster
   m_TagString: Untagged
@@ -22589,49 +22588,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 56167c7aa72d6c94999f63ae622c6a05, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Archer
-  citizenAmount: 2
-  cost:
-  - Type: 0
-    Amount: 30
-  - Type: 2
-    Amount: 30
-  - Type: 3
-    Amount: 40
-  - Type: 4
-    Amount: 20
-  costUpgrades:
-  - {fileID: 11400000, guid: e06a86098db530f4084708555433e321, type: 2}
-  - {fileID: 11400000, guid: 4a34aabb6d5e1fc4394e6c321d35969a, type: 2}
-  - {fileID: 11400000, guid: a797476802101c248bc6f4d14cda8a76, type: 2}
-  - {fileID: 11400000, guid: 319a68eaa38fba140998c4902f0ca409, type: 2}
-  - {fileID: 11400000, guid: be1333e8b5f9bdf46b5101ca5176204a, type: 2}
-  statUpgradeCost:
-  - Type: 0
-    Amount: 10
-  - Type: 2
-    Amount: 10
-  - Type: 3
-    Amount: 10
-  - Type: 4
-    Amount: 10
-  statUpgradeCostUpgrades:
-  - {fileID: 11400000, guid: 47055b3a1f5c68244a1c75f40a998b33, type: 2}
-  - {fileID: 11400000, guid: 66fbb3934b60ac84bbe4b50106a53f92, type: 2}
-  - {fileID: 11400000, guid: 566d35772d5540846b9ad2b656e7ff73, type: 2}
-  - {fileID: 11400000, guid: 1ed8b17e3e930be4092ea94b0b7ca6d5, type: 2}
-  - {fileID: 11400000, guid: 478127b61da881940b4145e81862f335, type: 2}
   statUpgrades:
   - {fileID: 11400000, guid: 024d160f71f942b4189efd44499389c5, type: 2}
   - {fileID: 11400000, guid: 3f6746566778e5b4f88705adc3c9a1e9, type: 2}
   - {fileID: 11400000, guid: a6dd79d2802a80d4b9cdf7db50f64a4e, type: 2}
   - {fileID: 11400000, guid: 29fcb58731e9de84ba10d989c8f256f9, type: 2}
   - {fileID: 11400000, guid: f8f02fa9135171e4db10c07135224a3b, type: 2}
-  upgradeDatas:
-  - {fileID: 11400000, guid: ba950b713d499c9458a10b1ea69cf9a9, type: 2}
-  - {fileID: 11400000, guid: cc4316d74848d014d8053de37b7be01e, type: 2}
-  - {fileID: 11400000, guid: abc317361cd77324b88c35103d8cfb1f, type: 2}
-  heroData: {fileID: 11400000, guid: 673cb9c287e3f0c4a91ff288035ce8c4, type: 2}
-  basePattern: []
+  heroData: {fileID: 0}
+  basePattern:
+  - {fileID: 11400000, guid: a17338591fbe42e4e9e0971a1f166103, type: 2}
   anim: {fileID: 4378586045599540503}
   animEvents: {fileID: 7722490271011846444}
   statData: {fileID: 11400000, guid: 8d6fa0f0a36921a4eac423cbec1169ad, type: 2}
@@ -22641,28 +22606,6 @@ MonoBehaviour:
   bowAnim: {fileID: 5443066929859240409}
   arrowAnim: {fileID: 8610688408873876571}
   muzzle: {fileID: 1517930423594004449}
---- !u!114 &6683023602017724312
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 9004755700449656008}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 70884c9239b802249a37f85d89918ccc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::AttackStanceSkill
-  targetScope: 0
-  buffList: []
-  groundZonePrefab: {fileID: 0}
-  instantDamagePer: 0
-  instantHitEffect: {fileID: 0}
-  instantHitEffectLifetime: 1
-  cooldown: 10
-  duration: 10
-  blocksBasicAttack: 0
-  stanceAttackData: {fileID: 11400000, guid: de2e600cf7378044abcddad0dc67bb50, type: 2}
 --- !u!1 &9019854544271929726
 GameObject:
   m_ObjectHideFlags: 0
