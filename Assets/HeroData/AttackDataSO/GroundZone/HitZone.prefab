@@ -50,8 +50,10 @@ MonoBehaviour:
   tickInterval: 0.5
   damagePer: 0.5
   healPer: 0
-  duration: 0
-  debuffs: []
+  duration: 999
+  targetDebuffs: []
   hitEffect: {fileID: 1714524745656972, guid: 2e33bbd89680b744a8f2b0727a31b0ca, type: 3}
   hitEffectLifetime: 0.5
   visualRadius: 0
+  selfEffect: {fileID: 682795210580693780, guid: e4cbb931123af1946a15d483802ff40b, type: 3}
+  selfEffectVisualRadius: 0

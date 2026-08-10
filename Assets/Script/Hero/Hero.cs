@@ -229,6 +229,8 @@ public class Hero : MonoBehaviour, IDamageAble, IUnit, IStunAble, IDebuffCarrier
         if (!wasStunned) stateMachine.ChangeState(stunState);
     }
 
+    private readonly EnemyDebuffEffects debuffEffects = new();
+
 
     private GameManager gameManager;
     private ResourcesManager resourcesManager;
@@ -252,6 +254,7 @@ public class Hero : MonoBehaviour, IDamageAble, IUnit, IStunAble, IDebuffCarrier
         isDead = true;
         anim.SetBool(HeroAnimHash.idle, false);
         stateMachine.ChangeState(deathState);
+        debuffEffects.Reset();
         skillCts?.Cancel();
         skillCts?.Dispose();
         skillCts = null;
@@ -291,6 +294,10 @@ public class Hero : MonoBehaviour, IDamageAble, IUnit, IStunAble, IDebuffCarrier
 
         traits = GetComponents<HeroTrait>();
         activeSkill = GetComponent<HeroActiveSkill>();
+
+        GameObject stunEffectPrefab = Resources.Load<GameObject>("EnemyEffectPrefab/Stun");
+        var debuffEffectSet = Resources.Load<DebuffEffectSetSO>("EnemyEffectPrefab/DebuffEffectSet");
+        debuffEffects.Setup(debuffEffectSet, transform, transform, transform, stunEffectPrefab);
 
         EnsureClickCollider();
     }
@@ -371,6 +378,7 @@ public class Hero : MonoBehaviour, IDamageAble, IUnit, IStunAble, IDebuffCarrier
             gameManager.ChangeToDay -= ResetSkillCooldown;
         }
         tierUpgradeState.LevelChanged -= OnTierLevelChanged;
+        debuffEffects.Reset();
         skillCts?.Cancel();
         skillCts?.Dispose();
         skillCts = null;
@@ -478,6 +486,8 @@ public class Hero : MonoBehaviour, IDamageAble, IUnit, IStunAble, IDebuffCarrier
 
         for (int i = 0; i < traits.Length; i++)
             traits[i]?.OnPassiveTick(Time.deltaTime);
+
+        debuffEffects.Tick(debuffTracker, isDead);
     }
 
     protected virtual void AcquireTargetFromTiles()
