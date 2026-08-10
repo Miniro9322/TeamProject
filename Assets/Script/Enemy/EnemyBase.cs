@@ -24,6 +24,12 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
     [SerializeField] private float swimTimeout = 3f;
     [Tooltip("물속(헤엄 중) 이동속도 배율. IsSwim일 때만 사용 — 1이면 지상과 같다.")]
     [SerializeField, Min(1f)] private float swimSpeedMultiplier = 1.5f;
+    [Tooltip("물에 들어가고 나올 때 1회당 손해로 칠 거리(타일 수). 잠수/상승 모션 동안 제자리에 멈추는 시간을 길찾기 비용에 반영한다.\n" +
+             "물길로 새는 최소 길이 = 2×이 값 ÷ (1 − 1/속도배율). 예: 0.7 / 배율 1.5 → 물이 약 4칸 이상 이어져야 그쪽으로 돈다.\n" +
+             "0이면 한 칸짜리 웅덩이도 들렀다 나온다(잠수·상승에 멈추는 시간 때문에 실제로는 더 늦게 도착할 수 있다).")]
+    [SerializeField, Min(0f)] private float swimTransitionPenaltyTiles = 0.7f;
+    [Tooltip("진단용. 켜면 스폰할 때마다 물길 경로 비용을 Console에 찍는다. 물길을 왜 안 타는지 볼 때만 켜고 평소엔 끈다.")]
+    [SerializeField] private bool logSwimPath;
     [Tooltip("솟아오르며 영웅에게 거는 스턴 시간(초). 0이면 스턴을 걸지 않는다. Hero가 IStunAble을 구현하기 전까진 효과 없음.")]
     [SerializeField] private float burrowEmergeStun = 2f;
     [Tooltip("적 머리 위 체력바. 없는 프리팹이면 비워두면 된다(체력바 로직 전체가 no-op).")]
@@ -265,6 +271,11 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
     {
         _move.Flying = IsFly; // 공중 특성이면 지형 무시(본진으로 직선). Map/길찾기는 건드리지 않음
         _move.Swimming = IsSwim; // 수영 특성이면 헤엄 칸까지 열어 경로 재탐색(공중이면 무시된다)
+        // 물에서 빠른 만큼 물길을 싸게 쳐서, 칸 수 최단이 아니라 "가장 빨리 도착하는 길"로 경로를 잡는다.
+        // 실제 이동에 쓰는 배율(CurrentMoveSpeed)과 같은 값을 넘겨야 경로와 실제 속도가 어긋나지 않는다.
+        _move.SwimSpeedMultiplier = swimSpeedMultiplier;
+        _move.SwimTransitionPenaltyTiles = swimTransitionPenaltyTiles;
+        SwimPathfinder.LogPathCost = logSwimPath; // 바로 다음 줄에서 경로를 만들므로 이 값이 그대로 쓰인다
         _move.EnterMap(board, waypoints, snapToStart, MoveSpeed, enemyKey);
     }
 
@@ -321,10 +332,7 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
         // 불 칸 점화는 Map 쪽 FireReceiver가 타일 진입/이탈로 걸어 준다(적·영웅 공용) —
         // 여기서 위치를 폴링하던 EnemyFireTile은 그것과 중복이라 걷어냈다.
         // 화염족 처리(ImmuneDebuffs로 막고 OnDebuffBlocked가 재생·오라 창을 여는 것)는 누가 걸든 그대로 동작한다.
-        StunTick();                     // 스턴 만료를 감지해 Animator bool을 끈다
-        // 임시 테스트 — 넘패드1 기절 / 2 속박 / 3 침묵. 적마다 Update가 돌므로 화면의 모든 적이 동시에 걸린다.
-        // Keyboard.current는 키보드가 없는 환경에서 null이라 반드시 확인해야 한다.
-        // 확인이 끝나면 이 블록을 통째로 지운다.
+        StunTick();
         if (Keyboard.current != null)
         {
             if (Keyboard.current.numpad1Key.wasPressedThisFrame) Stun(3f);
@@ -332,6 +340,7 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
             if (Keyboard.current.numpad2Key.wasPressedThisFrame) ApplyDebuff(DebuffLoader.Get("Root_Basic"));
             // 침묵: 걸어오면서 평타는 하지만 스킬을 하나도 안 써야 정상.
             if (Keyboard.current.numpad3Key.wasPressedThisFrame) ApplyDebuff(DebuffLoader.Get("Silence_Basic"));
+            if (Keyboard.current.numpad4Key.wasPressedThisFrame) ApplyDebuff(DebuffLoader.Get("Ignite_Basic"));
         }
     }
 
@@ -355,13 +364,10 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
     {
         if (IsDead || duration <= 0f) return;
         if (IsSpawnInvincible) return;
-        // IStunAble.Stun은 DebuffSO를 지나지 않는 직접 경로라(영웅 공격·넘패드1 테스트) 면역을 여기서 막아야 한다.
         if (IsImmuneTo(DebuffType.Stun))
         {
-            DebuffDebug.Log($"{name} 기절 면역 — Class={Class}", this);
             return;
         }
-
         bool wasStunned = IsStunned;
         _debuffTracker.Apply(DebuffType.Stun, duration);
         if (!wasStunned) InterruptActiveSkills();
@@ -424,7 +430,12 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
     // Stun bool 파라미터가 있으면 그걸로(Stun 스테이트가 연출 담당), 없으면 애니를 얼려서 "굳음"으로 대체.
     private void StunTick()
     {
-        bool stunned = IsStunned;
+        // 죽으면 스턴 연출을 끌고 가지 않는다(_debuffEffects.Tick의 IsDead와 같은 취지 — 사망이 연출을 이긴다).
+        // 안 그러면 Stun bool이 켜진 채 남아 Animator가 Stun 스테이트에서 못 나오고, Die 전이가 스턴이
+        // 풀릴 때까지 밀린다 — 스턴 시간만큼 멈춰 서 있다가 죽는다. 스턴이 5초 넘게 남았으면
+        // WaitForDeathAnim의 타임아웃이 먼저 터져 사망 애니 없이 사라진다.
+        // Stun 파라미터가 없는 적도 같은 이유로 막아야 한다(그쪽은 animator.speed가 0으로 얼어붙는다).
+        bool stunned = IsStunned && !IsDead;
         if (_stunAnimActive == stunned) return;
         _stunAnimActive = stunned;
         if (animator == null) return;
@@ -534,9 +545,7 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
         if (!Board.TryGetCell(Board.WorldToCell(transform.position), out Tile tile)) return;
         if (tile.OccupantObject == null) return;
         if (tile.OccupantObject.GetComponentInParent<Hero>() is not Hero hero || hero.IsDead) return;
-
         hero.TakeDamage(AttackPower);
-
         if (burrowEmergeStun > 0f) (hero as IStunAble)?.Stun(burrowEmergeStun);
     }
     
@@ -808,8 +817,12 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
     public virtual void Die()
     {
         if (IsDead) return;
-        if (animator != null) animator.speed = 1f; // 애니메이터 없는 적에서 여기서 터지면 IsDead도 못 세우고 영영 안 죽는다
         IsDead = true;
+        // 스턴 연출을 바로 내린다 — 다음 Update까지 기다리면 그 한 프레임 동안 Stun bool이 켜진 채로
+        // Die 트리거가 걸려, 컨트롤러 전이 순서에 따라 사망 애니가 밀릴 수 있다.
+        // IsDead를 먼저 세웠으므로 StunTick이 "스턴 아님"으로 보고 bool을 내린다(폴백 경로는 speed를 1로 돌린다).
+        StunTick();
+        if (animator != null) animator.speed = 1f; // 공격 배속 등 남은 속도 조작까지 원복
         _move.Stop();
         if (Board != null) Board.RemoveEnemy(gameObject);
         if (skillCts == null) { SendDieEvent(); Despawn(); return; }

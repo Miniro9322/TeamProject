@@ -8,56 +8,19 @@ using VContainer;
 
 public enum RangeQueryAffinity { Enemy, TargetableEnemy, Ally }
 
-public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
+public class Hero : MonoBehaviour, IDamageAble, IUnit
 {
-    [Header("유닛 생성 비용")]
-    [SerializeField] private int citizenAmount = 2;
-    [SerializeField] private List<ResourceCost> cost;
-    [SerializeField] private List<BaseUpgradeData> costUpgrades;
-
-    [SerializeField] private List<ResourceCost> statUpgradeCost;
-    [SerializeField] private List<BaseUpgradeData> statUpgradeCostUpgrades;
     [SerializeField] private List<BaseUpgradeData> statUpgrades;
-    [SerializeField] private List<HeroUpgradeData> upgradeDatas;
     [SerializeField] private HeroData heroData;
     public int Tier => heroData.Tier;
     public int UnitId => heroData.UnitId;
     public string HeroName => heroData.HeroName;
     public MergeKey MergeKey => heroData.MergeKey;
 
-    private int skillLevel = 0;
-    private int statLevel = 0;
-    public int SkillLevel => skillLevel;
-    public int StatLevel => statLevel;
+    // 티어 단위로 공유되는 업그레이드 레벨(개체별로 갖지 않음) — HeroTierUpgradeState 참고.
+    public int Level => tierUpgradeState.GetLevel(Tier);
 
     private UpgradeState UpgradeStateOrFallback => upgradeState ?? new UpgradeState();
-
-    public (ProductionType Type, int Amount)[] Cost
-    {
-        get
-        {
-            float discount = UpgradeStateOrFallback.GetTotalEffect(costUpgrades);
-            var temp = new (ProductionType, int)[cost.Count];
-            for (int i = 0; i < cost.Count; i++)
-                temp[i] = (cost[i].Type, -Mathf.RoundToInt(cost[i].Amount * (1f - discount)));
-            return temp;
-        }
-    }
-
-    public (ProductionType Type, int Amount)[] StatUpgradeCost
-    {
-        get
-        {
-            float discount = UpgradeStateOrFallback.GetTotalEffect(statUpgradeCostUpgrades);
-            var temp = new (ProductionType, int)[statUpgradeCost.Count];
-            for (int i = 0; i < statUpgradeCost.Count; i++)
-            {
-                int baseAmount = statUpgradeCost[i].Amount + statUpgradeCost[i].Amount * statLevel;
-                temp[i] = (statUpgradeCost[i].Type, -Mathf.RoundToInt(baseAmount * (1f - discount)));
-            }
-            return temp;
-        }
-    }
 
     [Header("유닛 정보")]
     [SerializeField] private List<AttackDataSO> basePattern;
@@ -236,7 +199,7 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
             go = pool.Get();
         go.transform.position = pos;
         if (go.TryGetComponent(out GroundZoneEffect zone))
-            zone.Init(board, this, released => pool.Release(released));
+            zone.Init(Board, this, released => pool.Release(released));
     }
 
     private StatContainer sc = new();
@@ -256,16 +219,16 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
     protected BuffManager buffManager;
     public BuffManager Buffs => buffManager;
     private UpgradeState upgradeState;
-
-    public int CitizenAmount => citizenAmount;
+    private HeroTierUpgradeState tierUpgradeState;
 
     [Inject]
-    private void Construct(GameManager gameManager, BuffManager buffManager, ResourcesManager resourcesManager, UpgradeState upgradeState)
+    private void Construct(GameManager gameManager, BuffManager buffManager, ResourcesManager resourcesManager, UpgradeState upgradeState, HeroTierUpgradeState tierUpgradeState)
     {
         this.gameManager = gameManager;
         this.buffManager = buffManager;
         this.resourcesManager = resourcesManager;
         this.upgradeState = upgradeState;
+        this.tierUpgradeState = tierUpgradeState;
     }
 
     public void Die()
@@ -273,7 +236,6 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
         isDead = true;
         anim.SetBool(HeroAnimHash.idle, false);
         stateMachine.ChangeState(deathState);
-        OnBreak?.Invoke();
         skillCts?.Cancel();
         skillCts?.Dispose();
         skillCts = null;
@@ -295,9 +257,6 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
 
     [SerializeField] protected OccupantKind occupantKind;
     public OccupantKind OccupantKind => occupantKind;
-
-    public event Action OnBreak;
-    public event Action OnResur;
 
     protected virtual void Awake()
     {
@@ -341,6 +300,8 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
     {
         SetCurrentTile();
         ApplyStatUpgradeBonus();
+        ApplyTierLevelBonus();
+        tierUpgradeState.LevelChanged += OnTierLevelChanged;
         if (gameManager != null)
         {
             gameManager.ChangeToDay += Resurrection;
@@ -368,6 +329,23 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
         sc.AddModifier(StatType.DEF, new Modifier(ModifierType.Flat, bonus, 0f, StatLayer.Equip, this));
     }
 
+    private static readonly object TierLevelBonusSource = new object();
+
+    private void ApplyTierLevelBonus()
+    {
+        sc.RemoveModifier(TierLevelBonusSource);
+        int extraLevels = tierUpgradeState.GetLevel(Tier);
+        if (extraLevels <= 0) return;
+
+        foreach (var gain in tierUpgradeState.GetStatGains(Tier))
+            sc.AddModifier(gain.statType, new Modifier(gain.modifierType, gain.amountPerLevel * extraLevels, 0f, StatLayer.Equip, TierLevelBonusSource));
+    }
+
+    private void OnTierLevelChanged(int changedTier)
+    {
+        if (changedTier == Tier) ApplyTierLevelBonus();
+    }
+
     protected virtual void OnDestroy()
     {
         if (gameManager != null)
@@ -375,6 +353,7 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
             gameManager.ChangeToDay -= Resurrection;
             gameManager.ChangeToDay -= ResetSkillCooldown;
         }
+        tierUpgradeState.LevelChanged -= OnTierLevelChanged;
         skillCts?.Cancel();
         skillCts?.Dispose();
         skillCts = null;
@@ -437,17 +416,17 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
     // ---- 액티브 스킬 (HeroSkillCastController가 플레이어 클릭을 받아 호출) ----
     public bool TryUseActiveSkill(Tile targetTile)
     {
-        if (activeSkill == null || isDead || targetTile == null || targetTile.Board != board)
+        if (activeSkill == null || isDead || targetTile == null || targetTile.Board != Board)
             return false;
         if (!IsSkillReady)
             return false;
 
         if (activeSkill.targetScope == SkillTargetScope.Self)
         {
-            Vector2Int casterCell = board.WorldToCell(transform.position);
+            Vector2Int casterCell = Board.WorldToCell(transform.position);
             if (targetTile.Coord != casterCell) return false;
         }
-        // AnywhereOnBoard: 위에서 이미 targetTile.Board == board를 확인했으므로 거리 제한 없이 통과.
+        // AnywhereOnBoard: 위에서 이미 targetTile.Board == Board를 확인했으므로 거리 제한 없이 통과.
 
         skillCooldownRemaining = activeSkill.cooldown;
 
@@ -489,7 +468,7 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
         GameObject nearest = null;
         float nearestSqrDist = float.MaxValue;
 
-        foreach (Tile tile in TileShapeQuery.GetTiles(board, origin, Range, RangeShape))
+        foreach (Tile tile in TileShapeQuery.GetTiles(Board, origin, Range, RangeShape))
         {
             foreach (GameObject enemy in tile.Enemies)
             {
@@ -526,13 +505,13 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
     // HashSet 하나로만 중복 제거하면(순서 미보장) 멀티샷 대상 선정이 매 프레임 흔들릴 수 있다.
     public List<GameObject> GetObjectsInRange(Vector3 originWorld, int range, RangeShape shape, RangeQueryAffinity affinity = RangeQueryAffinity.Enemy)
     {
-        Vector2Int originCell = board.WorldToCell(originWorld);
+        Vector2Int originCell = Board.WorldToCell(originWorld);
         var found = new List<GameObject>();
         var seen = new HashSet<GameObject>();
 
         if (affinity == RangeQueryAffinity.Ally)
         {
-            foreach (Tile tile in TileShapeQuery.GetTiles(board, originCell, range, shape))
+            foreach (Tile tile in TileShapeQuery.GetTiles(Board, originCell, range, shape))
             {
                 GameObject occupant = tile.OccupantObject;
                 if (occupant != null && occupant.GetComponent<Hero>() is Hero ally && !ally.IsDead && seen.Add(occupant))
@@ -541,7 +520,7 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
             return found;
         }
 
-        foreach (Tile tile in TileShapeQuery.GetTiles(board, originCell, range, shape))
+        foreach (Tile tile in TileShapeQuery.GetTiles(Board, originCell, range, shape))
             foreach (GameObject enemy in tile.Enemies)
                 if (enemy != null && (affinity == RangeQueryAffinity.Enemy || IsTargetable(enemy)) && seen.Add(enemy))
                     found.Add(enemy);
@@ -551,17 +530,17 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
 
     public List<IDamageAble> GetEnemiesInLine(Vector3 originWorld, Vector3 towardWorld, int length, int width = 0)
     {
-        Vector2Int originCell = board.WorldToCell(originWorld);
-        Vector2Int dir = GridCalculator.CardinalToward(originCell, board.WorldToCell(towardWorld));
+        Vector2Int originCell = Board.WorldToCell(originWorld);
+        Vector2Int dir = GridCalculator.CardinalToward(originCell, Board.WorldToCell(towardWorld));
 
         var found = new HashSet<IDamageAble>();
 
-        if (board.TryGetCell(originCell, out Tile originTile))
+        if (Board.TryGetCell(originCell, out Tile originTile))
             foreach (GameObject enemy in originTile.Enemies)
                 if (enemy != null && enemy.GetComponentInParent<IDamageAble>() is IDamageAble d)
                     found.Add(d);
 
-        foreach (Tile tile in TileShapeQuery.GetLineTiles(board, originCell, dir, length, width))
+        foreach (Tile tile in TileShapeQuery.GetLineTiles(Board, originCell, dir, length, width))
             foreach (GameObject enemy in tile.Enemies)
                 if (enemy != null && enemy.GetComponentInParent<IDamageAble>() is IDamageAble d)
                     found.Add(d);
@@ -570,19 +549,19 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
     }
 
     public Vector2Int GetCardinalDirection(Vector3 originWorld, Vector3 towardWorld)
-        => GridCalculator.CardinalToward(board.WorldToCell(originWorld), board.WorldToCell(towardWorld));
+        => GridCalculator.CardinalToward(Board.WorldToCell(originWorld), Board.WorldToCell(towardWorld));
 
     public Vector3 GetLineEndPoint(Vector3 originWorld, Vector2Int direction, int length)
     {
-        Vector2Int originCell = board.WorldToCell(originWorld);
-        List<Tile> line = TileShapeQuery.GetLineTiles(board, originCell, direction, length);
+        Vector2Int originCell = Board.WorldToCell(originWorld);
+        List<Tile> line = TileShapeQuery.GetLineTiles(Board, originCell, direction, length);
         if (line.Count > 0) return line[line.Count - 1].WorldTop;
         return originWorld + new Vector3(direction.x, 0, direction.y) * length;
     }
 
     protected virtual void CheckTargetStillInRange()
     {
-        foreach (Tile tile in TileShapeQuery.GetTiles(board, origin, Range, RangeShape))
+        foreach (Tile tile in TileShapeQuery.GetTiles(Board, origin, Range, RangeShape))
             foreach (GameObject enemy in tile.Enemies)
                 if (enemy == target)
                     return;
@@ -597,59 +576,16 @@ public class Hero : MonoBehaviour, IDamageAble, IPlaceAble, IUnit
     {
         currentHp = sc[StatType.HP];
         isDead = false;
-        OnResur?.Invoke();
         SpawnAuraZones();
     }
 
     public void SetCurrentTile()
     {
-        origin = board.WorldToCell(transform.position);
-        if (board.TryGetCell(origin, out Tile current))
+        origin = Board.WorldToCell(transform.position);
+        if (Board.TryGetCell(origin, out Tile current))
             currentTile = current;
     }
 
     public void ExchangeAttackDatas(List<AttackDataSO> datas) => basePattern = datas;
 
-    public void SkillUpgrade()
-    {
-        if (skillLevel >= upgradeDatas.Count) return;
-        if (resourcesManager.CheckResources(upgradeDatas[skillLevel].Cost))
-        {
-            resourcesManager.ProductChanged(upgradeDatas[skillLevel].Cost);
-            upgradeDatas[skillLevel++].Upgrade(this);
-        }
-    }
-
-    public void StatUpgrade()
-    {
-        if (resourcesManager.CheckResources(StatUpgradeCost))
-        {
-            resourcesManager.ProductChanged(StatUpgradeCost);
-            statLevel++;
-            ApplyStatUpgradeModifiers();
-        }
-    }
-
-    private void ApplyStatUpgradeModifiers()
-    {
-        Modifier mod = new Modifier(ModifierType.Additive, 0.1f, 0f, StatLayer.Equip, this);
-        sc.AddModifier(StatType.HP, mod);
-        mod = new Modifier(ModifierType.Additive, 0.05f, 0f, StatLayer.Equip, this);
-        sc.AddModifier(StatType.ATK, mod);
-        mod = new Modifier(ModifierType.Flat, 1f, 0f, StatLayer.Equip, this);
-        sc.AddModifier(StatType.DEF, mod);
-    }
-
-    // 로스터 제거 전에 저장해둔 강화 진행도를, 재배치로 새로 생성된 인스턴스에 되돌려 적용한다.
-    // 비용 검사 없이 이미 치른 강화를 그대로 재현하는 것이므로 SkillUpgrade/StatUpgrade를 거치지 않는다.
-    public void RestoreUpgradeState(int savedSkillLevel, int savedStatLevel)
-    {
-        for (int i = 0; i < savedSkillLevel && i < upgradeDatas.Count; i++)
-            upgradeDatas[i].Upgrade(this);
-        skillLevel = savedSkillLevel;
-
-        for (int i = 0; i < savedStatLevel; i++)
-            ApplyStatUpgradeModifiers();
-        statLevel = savedStatLevel;
-    }
 }

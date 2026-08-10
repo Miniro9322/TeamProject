@@ -7,7 +7,5 @@ public class Placeable
 {
     public string label = "유닛";
     public GameObject prefab;
-    public Sprite icon;
-    public Sprite placedIcon;
     public OccupantKind kind = OccupantKind.MeleeHero;
 }
