@@ -49,12 +49,17 @@ public class ZoneEffectApplier
 
     private void ApplyDesertZone(Hero hero, PlacementArea area)
     {
-        DesertZone zone = area.Board.GetComponent<DesertZone>();
-        if (Exists(zone))
+        if (IsDesertBoard(area.Board))
         {
             desertHeroCells[hero] = area.Origin;
-            ApplyDesertEffectForHero(hero, area.Board, area.Origin, zone);
+            ApplyDesertEffectForHero(hero, area.Board, area.Origin, desertZone);
         }
+    }
+
+    // 이 보드가 생성자에서 받은 사막 보드와 같은지 확인
+    private bool IsDesertBoard(MapBoard board)
+    {
+        return board == desertBoard;
     }
 
     private void RefreshDesertHeroes()
