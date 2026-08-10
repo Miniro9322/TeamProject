@@ -35,7 +35,9 @@ public class MapAssemble : MonoBehaviour
         PointerPick pointerPick = new PointerPick(boards);
         PlaceFinder finder = new PlaceFinder(pointerPick, palette, placeYOffset);
 
-        zoneEffectApplier = new ZoneEffectApplier(desertZone);
+        MapBoard desertBoard = desertZone.GetComponent<MapBoard>();
+        WindShelterData shelterData = new WindShelterCalc().BuildData(desertBoard.Cells);
+        zoneEffectApplier = new ZoneEffectApplier(desertZone, desertBoard, shelterData);
         mapGame.Placer.zoneEffectApplier = zoneEffectApplier;
         UnitReplace replace = new UnitReplace(mapGame.Units, zoneEffectApplier);
 
