@@ -80,6 +80,13 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
     public bool IsRegeneration => (Dataattribute & EnemyAttribute.Regeneration) != 0 || FlameIgniteRegen;
     public bool IsBurrow => (Dataattribute & EnemyAttribute.Burrow) != 0; // 잠행: 숨어 이동, 저지 시 솟아올라 공격
     public bool IsSwim => (Dataattribute & EnemyAttribute.Swim) != 0; // 수영: 헤엄 칸(PassType.Swim)을 지나갈 수 있음
+
+    /// <summary>이 적이 따를 저작 경로의 종류. None이면 저작 경로를 쓰지 않고 맵 레인을 그대로 따른다.
+    /// 우선순위는 EnemyMovement.EnterMap의 if(Flying) else if(Swimming)과 같게 둔다 —
+    /// 공중이 통행권이 더 넓으므로 둘 다 가진 적은 공중으로 본다.</summary>
+    public EnemyRouteKind RouteKind =>
+        IsFly ? EnemyRouteKind.Air :
+        IsSwim ? EnemyRouteKind.Swim : EnemyRouteKind.None;
     // 화염족: 점화를 튕겨내며 그만큼 재생을 얻고, 화염 오라(FlameAuraSkillId)를 특성으로 갖는다.
     public bool IsFlame => (Dataattribute & EnemyAttribute.Flame) != 0;
     // 화염족이 점화를 튕겨낸 뒤 재생이 유지되는 만료 시각(_shieldExpiry와 같은 방식 — 코루틴 없이 지연 만료라 풀링 안전).
@@ -267,10 +274,14 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
         skillCts?.Dispose();
         skillCts = null;
     }
-    public void EnterMap(MapBoard board, IReadOnlyList<Vector3> waypoints = null, bool snapToStart = true)
+    /// <summary>authored=true면 받은 웨이포인트가 사람이 그린 경로라는 뜻 —
+    /// 공중·수영 자동 재탐색을 건너뛰고 그대로 따른다(그린 의도가 자동 계산에 지면 저작이 무의미하다).</summary>
+    public void EnterMap(MapBoard board, IReadOnlyList<Vector3> waypoints = null, bool snapToStart = true,
+        bool authored = false)
     {
         _move.Flying = IsFly; // 공중 특성이면 지형 무시(본진으로 직선). Map/길찾기는 건드리지 않음
         _move.Swimming = IsSwim; // 수영 특성이면 헤엄 칸까지 열어 경로 재탐색(공중이면 무시된다)
+        _move.Authored = authored;
         // 물에서 빠른 만큼 물길을 싸게 쳐서, 칸 수 최단이 아니라 "가장 빨리 도착하는 길"로 경로를 잡는다.
         // 실제 이동에 쓰는 배율(CurrentMoveSpeed)과 같은 값을 넘겨야 경로와 실제 속도가 어긋나지 않는다.
         _move.SwimSpeedMultiplier = swimSpeedMultiplier;

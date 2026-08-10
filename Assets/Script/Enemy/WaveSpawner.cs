@@ -32,6 +32,9 @@ public class WaveSpawner : MonoBehaviour
     [SerializeField] private int minActivePortals = 1;
     [Tooltip("이번 라운드에 활성화할 포탈(레인) 최대 개수.")]
     [SerializeField] private int maxActivePortals = 3;
+    [Tooltip("공중·수영 적이 따라갈 저작 경로(Tools/Enemy/Enemy Route Maker로 그린다). " +
+             "이 board의 모듈에 맞는 에셋을 꽂는다. 비워 두면 지금까지처럼 자동 길찾기로만 움직인다.")]
+    [SerializeField] private EnemyRouteSet enemyRoutes;
 
     // 스폰 타일별 전체 경로(날짜가 바뀌기 전까지 캐시). GetPaths가 스폰당 1경로를 준다.
     private IReadOnlyList<IReadOnlyList<Vector3>> _allPaths;
@@ -46,6 +49,17 @@ public class WaveSpawner : MonoBehaviour
     // 활성 포탈의 스폰 번호. _activePaths와 같은 순서라야 그 포탈의 갈래를 고를 수 있다.
     private readonly List<int> _activeSpawns = new();
     private readonly List<int> _spawnBuffer = new();
+    // 스폰 번호 → 스폰 타일. EnemyLanes가 레인을 담는 순서(ApplyLanes)와 같게 만든다 —
+    // 그래야 _activeSpawns의 번호로 그 포탈의 좌표를 짚어 저작 경로를 찾을 수 있다.
+    private readonly List<Tile> _spawnTiles = new();
+    // 저작 경로가 있는 활성 포탈 후보(GC 회피).
+    private readonly List<int> _routedPortals = new();
+    private readonly List<EnemyRouteSet.Entry> _entryBuffer = new();
+    // 진단 로그가 좌표 목록을 찍을 때 쓰는 버퍼. 두 목록을 한 문장에 같이 넣으므로 따로 둔다.
+    private readonly List<Vector2Int> _spawnCoordBuffer = new();
+    private readonly List<Vector2Int> _spawnCoordBuffer2 = new();
+    // "저작 경로가 없다" 경고를 라운드마다 종류별 한 번만 남긴다 — 매 스폰마다 찍으면 콘솔이 잠긴다.
+    private readonly HashSet<EnemyRouteKind> _warnedKinds = new();
     /// <summary>이번 라운드에 켜진 포탈(레인)들의 경로. 각 경로 [0]이 포탈 위치.</summary>
     public IReadOnlyList<IReadOnlyList<Vector3>> ActivePaths => _activePaths;
 
@@ -92,6 +106,23 @@ public class WaveSpawner : MonoBehaviour
             _hookedLaneChanges = true;
         }
         _allPaths = enemyLanes.GetPaths(0f);
+        RebuildSpawnTiles();
+    }
+
+    // 스폰 번호로 스폰 타일을 짚을 표를 만든다. EnemyLanes.ApplyLanes가 레인을 훑는 순서대로
+    // 처음 보는 Start를 쌓으면 그쪽 spawnLanes 번호와 그대로 짝이 맞는다.
+    private void RebuildSpawnTiles()
+    {
+        _spawnTiles.Clear();
+        if (enemyLanes == null) return;
+
+        IReadOnlyList<LaneData> lanes = enemyLanes.Lanes;
+        for (int i = 0; i < lanes.Count; i++)
+        {
+            Tile start = lanes[i].Start;
+            if (start == null) continue;
+            if (!_spawnTiles.Contains(start)) _spawnTiles.Add(start);
+        }
     }
 
     // EnemyLanes가 레인을 다시 구울 때(날짜 변경 등) 호출된다. 캐시를 비우고 그 자리에서 새 경로로 다시 채운다.
@@ -119,6 +150,7 @@ public class WaveSpawner : MonoBehaviour
         EnsurePaths();
         _activePaths.Clear();
         _activeSpawns.Clear();
+        _warnedKinds.Clear(); // 포탈 구성이 바뀌었으니 저작 누락 경고를 이 라운드에 다시 낼 수 있게 한다
 
         _laneBuffer.Clear();
         _spawnBuffer.Clear();
@@ -151,6 +183,7 @@ public class WaveSpawner : MonoBehaviour
         EnsurePaths();
         _activePaths.Clear();
         _activeSpawns.Clear();
+        _warnedKinds.Clear(); // 포탈 구성이 바뀌었으니 저작 누락 경고를 이 라운드에 다시 낼 수 있게 한다
 
         IReadOnlyList<Vector3> corner = null;
         int best = -1;
@@ -171,11 +204,129 @@ public class WaveSpawner : MonoBehaviour
     // 레인 정보 없이 켠 폴백 경로라 스폰 번호가 없다는 표시.
     private const int NoSpawn = -1;
 
-    // 활성 포탈 중 하나를 랜덤으로 고르고, 그 포탈의 갈래 중 하나를 준다. 활성 집합이 비면 단일 경로 폴백.
-    private IReadOnlyList<Vector3> NextSpawnPath()
+    /// <summary>이 적이 따라갈 경로. authored=true면 사람이 그린 경로라 적이 재탐색하지 않는다.
+    ///
+    /// 공중·수영 적은 그 종류의 저작 경로가 있는 포탈에서만 나온다 — 여러 곳에 그려 뒀으면 그중 랜덤.
+    /// 활성 포탈에 그 종류 경로가 하나도 없으면 경고를 남기고 기존 자동 경로로 돌아간다
+    /// (웨이브가 비어 라운드가 깨지는 것보다 낫다).</summary>
+    private IReadOnlyList<Vector3> NextSpawnPath(EnemyRouteKind kind, out bool authored)
     {
+        authored = false;
+
+        // 저작 경로를 못 쓴 이유를 전부 남긴다. 조용히 폴백하면 "기능이 안 되는 것"과 구분이 안 된다.
+        if (kind == EnemyRouteKind.None)
+        {
+            // 지상 적 — 저작 경로 대상이 아니다(맵 레인을 그대로 쓴다).
+        }
+        else if (enemyRoutes == null)
+        {
+            Warn(kind, "WaveSpawner의 enemyRoutes가 비어 있습니다 — 인스펙터에 EnemyRouteSet을 꽂아 주세요.");
+        }
+        else if (board == null)
+        {
+            Warn(kind, "board가 주입되지 않아 저작 경로를 해석할 수 없습니다.");
+        }
+        else
+        {
+            IReadOnlyList<Vector3> drawn = AuthoredPath(kind);
+            if (drawn != null)
+            {
+                authored = true;
+                return drawn;
+            }
+        }
+
         if (_activePaths.Count == 0) return waypoints;
         return BranchPath(UnityEngine.Random.Range(0, _activePaths.Count));
+    }
+
+    // 종류별로 한 번만 남긴다 — 매 스폰마다 찍으면 콘솔이 잠긴다. 라운드가 바뀌면 다시 낸다.
+    private void Warn(EnemyRouteKind kind, string reason)
+    {
+        if (!_warnedKinds.Add(kind)) return;
+        Debug.LogWarning($"[{name}] {KindWord(kind)} 적이 저작 경로를 쓰지 못했습니다 — {reason} " +
+            "자동 길찾기로 대신 움직입니다.", this);
+    }
+
+    // 이 종류의 저작 경로가 있는 활성 포탈 중 하나를 랜덤으로 골라 웨이포인트를 만든다.
+    // 쓸 경로가 없으면 null — 호출부가 기존 자동 경로로 폴백한다.
+    private IReadOnlyList<Vector3> AuthoredPath(EnemyRouteKind kind)
+    {
+        _routedPortals.Clear();
+
+        for (int i = 0; i < _activeSpawns.Count; i++)
+        {
+            int spawn = _activeSpawns[i];
+            if (spawn < 0 || spawn >= _spawnTiles.Count) continue; // 레인 정보 없이 켠 폴백 포탈(NoSpawn)
+            if (enemyRoutes.Has(kind, _spawnTiles[spawn].Coord)) _routedPortals.Add(spawn);
+        }
+
+        if (_routedPortals.Count == 0)
+        {
+            // 활성 포탈 좌표와 에셋에 그려진 좌표를 나란히 찍는다 — 둘이 아예 안 겹치면
+            // 다른 모듈에 그린 것이다(좌표는 모듈 로컬 0-base라 모듈이 다르면 같은 숫자가 다른 칸을 뜻한다).
+            enemyRoutes.SpawnsOf(kind, _spawnCoordBuffer);
+            Warn(kind, $"활성 포탈 {ActivePortalWord()}에 그려진 경로가 없습니다 " +
+                       $"(에셋에 그려진 {KindWord(kind)} 스폰: {CoordWord(_spawnCoordBuffer)}).");
+            return null;
+        }
+
+        int pick = _routedPortals[UnityEngine.Random.Range(0, _routedPortals.Count)];
+        Vector2Int coord = _spawnTiles[pick].Coord;
+
+        // 같은 스폰에 여러 벌 그렸으면 갈래로 보고 랜덤 — 기존 BranchPath와 같은 취급이다.
+        enemyRoutes.Collect(kind, coord, _entryBuffer);
+        if (_entryBuffer.Count == 0) return null;
+
+        EnemyRouteSet.Entry entry = _entryBuffer[UnityEngine.Random.Range(0, _entryBuffer.Count)];
+        List<Vector3> points = EnemyRoutePath.Build(board, entry);
+
+        if (points.Count == 0)
+        {
+            if (_warnedKinds.Add(kind))
+                Debug.LogWarning($"[{name}] {KindWord(kind)} 저작 경로가 본진까지 이어지지 않습니다 " +
+                    $"(스폰 {coord}) — 자동 길찾기로 대신 움직입니다.", this);
+            return null;
+        }
+
+        return points;
+    }
+
+    private static string KindWord(EnemyRouteKind kind)
+    {
+        if (kind == EnemyRouteKind.Air) return "공중";
+        if (kind == EnemyRouteKind.Swim) return "수영";
+        return "지상";
+    }
+
+    // 이번 라운드에 켜진 포탈의 좌표. 스폰 표가 비었으면 그 사실을 알린다(레인이 아직 안 구워진 경우).
+    private string ActivePortalWord()
+    {
+        if (_spawnTiles.Count == 0) return "(스폰 표가 비어 있음 — 레인이 구워지지 않았습니다)";
+
+        _spawnCoordBuffer2.Clear();
+        for (int i = 0; i < _activeSpawns.Count; i++)
+        {
+            int spawn = _activeSpawns[i];
+            if (spawn < 0 || spawn >= _spawnTiles.Count) continue;
+            _spawnCoordBuffer2.Add(_spawnTiles[spawn].Coord);
+        }
+
+        return CoordWord(_spawnCoordBuffer2);
+    }
+
+    private static string CoordWord(List<Vector2Int> coords)
+    {
+        if (coords.Count == 0) return "없음";
+
+        var text = new System.Text.StringBuilder();
+        for (int i = 0; i < coords.Count; i++)
+        {
+            if (i > 0) text.Append(", ");
+            text.Append('(').Append(coords[i].x).Append(',').Append(coords[i].y).Append(')');
+        }
+
+        return text.ToString();
     }
 
     // 이 포탈에서 갈라지는 길 중 하나. 갈래가 하나뿐이거나 막혀 있으면 대표 경로 그대로.
@@ -264,7 +415,9 @@ public class WaveSpawner : MonoBehaviour
             if (go.TryGetComponent(out EnemyBase enemy))
             {
                 enemy.SetOwner(this);
-                enemy.EnterMap(board, NextSpawnPath()); // 활성 포탈 중 랜덤 경로 배분
+                // 공중·수영은 저작 경로가 있는 포탈에서만, 나머지는 활성 포탈 중 랜덤.
+                IReadOnlyList<Vector3> path = NextSpawnPath(enemy.RouteKind, out bool authored);
+                enemy.EnterMap(board, path, true, authored);
             }
 
             if (i < count - 1 && wave.Delay > 0f)
