@@ -72,6 +72,8 @@ public class AttackDataSO : ScriptableObject
     // 이 공격이 재생하는 애니메이션 클립의 기본 길이(초). 0이면 배속을 걸지 않는다(안전 폴백).
     public float clipLength = 0f;
     public List<BuffEffect> buffList;
+    [Tooltip("이 공격에 맞은 대상에게 걸리는 디버프 — 적 디버프 시스템(DebuffSO)을 그대로 재사용한다")]
+    public List<TargetDebuffRef> targetDebuffs;
     [Tooltip("GroundZoneEffect 컴포넌트가 붙은 프리팹 — null이면 이 공격은 장판을 깔지 않음")]
     public GameObject groundZonePrefab;
 
@@ -117,6 +119,15 @@ public struct BuffEffect
     public ModifierType modifierType;
     public float value;
     public float duration;
-    public bool isTargetToOther;
     public int maxStacks;
+}
+
+[System.Serializable]
+public struct TargetDebuffRef
+{
+    public DebuffSO debuff;
+    [Tooltip("0이면 debuff 자체 duration을 사용")]
+    public float durationOverride;
+    [Tooltip("0 이하면 1(배율 없음)로 취급")]
+    public float scale;
 }

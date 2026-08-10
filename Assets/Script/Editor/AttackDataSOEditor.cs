@@ -47,7 +47,7 @@ public class AttackDataSOEditor : Editor
         Group("이펙트", ref sFx, "attackEffect", "attackEffectLifetime", "hitEffect", "hitEffectLifetime");
         // projectilePrefab은 조건부로 숨기지 않는다 — 근접/원거리 구분이 데이터에 없어
         // (IAttackExecutor 주입이 유일한 권위) 숨길 조건을 만들 근거가 없다.
-        Group("버프 / 장판 / 투사체", ref sMisc, "buffList", "groundZonePrefab", "projectilePrefab");
+        Group("버프 / 장판 / 투사체", ref sMisc, "buffList", "targetDebuffs", "groundZonePrefab", "projectilePrefab");
         Group("아군 힐 / 피흡", ref sHeal, "lifestealPercent", "allyHealAmount",
             "allyHealRange", "allyHealRangeShape");
 

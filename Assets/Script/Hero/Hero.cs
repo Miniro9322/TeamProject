@@ -8,7 +8,7 @@ using VContainer;
 
 public enum RangeQueryAffinity { Enemy, TargetableEnemy, Ally }
 
-public class Hero : MonoBehaviour, IDamageAble, IUnit
+public class Hero : MonoBehaviour, IDamageAble, IUnit, IStunAble, IDebuffCarrier
 {
     [SerializeField] private List<BaseUpgradeData> statUpgrades;
     [SerializeField] private HeroData heroData;
@@ -50,6 +50,8 @@ public class Hero : MonoBehaviour, IDamageAble, IUnit
     public HeroAttackState AttackState => attackState;
     protected HeroDeathState deathState;
     public HeroDeathState DeathState => deathState;
+    protected HeroStunState stunState;
+    public HeroStunState StunState => stunState;
 
     [SerializeField] private Animator anim;
     [SerializeField] private HeroAnimEvents animEvents;
@@ -213,6 +215,22 @@ public class Hero : MonoBehaviour, IDamageAble, IUnit
     private bool isDead;
     public bool IsDead => isDead;
 
+    private readonly DebuffTracker debuffTracker = new();
+    public DebuffTracker Debuffs => debuffTracker;
+    public DebuffType ImmuneDebuffs => DebuffType.None;
+
+    public bool IsStunned => debuffTracker.Has(DebuffType.Stun);
+
+    public void Stun(float duration)
+    {
+        if (isDead || duration <= 0f) return;
+        bool wasStunned = IsStunned;
+        debuffTracker.Apply(DebuffType.Stun, duration);
+        if (!wasStunned) stateMachine.ChangeState(stunState);
+    }
+
+    private readonly EnemyDebuffEffects debuffEffects = new();
+
 
     private GameManager gameManager;
     private ResourcesManager resourcesManager;
@@ -236,6 +254,7 @@ public class Hero : MonoBehaviour, IDamageAble, IUnit
         isDead = true;
         anim.SetBool(HeroAnimHash.idle, false);
         stateMachine.ChangeState(deathState);
+        debuffEffects.Reset();
         skillCts?.Cancel();
         skillCts?.Dispose();
         skillCts = null;
@@ -263,6 +282,7 @@ public class Hero : MonoBehaviour, IDamageAble, IUnit
         stateMachine = new HeroStateMachine();
         idleState = new HeroIdleState(this, stateMachine);
         deathState = new HeroDeathState(this, stateMachine);
+        stunState = new HeroStunState(this, stateMachine);
         stateMachine.Initialize(idleState);
 
         sc.AddStat(StatType.HP, statData.maxHp);
@@ -274,6 +294,10 @@ public class Hero : MonoBehaviour, IDamageAble, IUnit
 
         traits = GetComponents<HeroTrait>();
         activeSkill = GetComponent<HeroActiveSkill>();
+
+        GameObject stunEffectPrefab = Resources.Load<GameObject>("EnemyEffectPrefab/Stun");
+        var debuffEffectSet = Resources.Load<DebuffEffectSetSO>("EnemyEffectPrefab/DebuffEffectSet");
+        debuffEffects.Setup(debuffEffectSet, transform, transform, transform, stunEffectPrefab);
 
         EnsureClickCollider();
     }
@@ -354,6 +378,7 @@ public class Hero : MonoBehaviour, IDamageAble, IUnit
             gameManager.ChangeToDay -= ResetSkillCooldown;
         }
         tierUpgradeState.LevelChanged -= OnTierLevelChanged;
+        debuffEffects.Reset();
         skillCts?.Cancel();
         skillCts?.Dispose();
         skillCts = null;
@@ -451,16 +476,18 @@ public class Hero : MonoBehaviour, IDamageAble, IUnit
 
     protected virtual void Update()
     {
+        if (target != null)
+            CheckTargetStillInRange();
+        if (target == null)
+            AcquireTargetFromTiles();
+
         stateMachine.CurrentState.Update();
         if (skillCooldownRemaining > 0f) skillCooldownRemaining -= Time.deltaTime;
 
         for (int i = 0; i < traits.Length; i++)
             traits[i]?.OnPassiveTick(Time.deltaTime);
 
-        if (target != null)
-            CheckTargetStillInRange();
-        if (target == null)
-            AcquireTargetFromTiles();
+        debuffEffects.Tick(debuffTracker, isDead);
     }
 
     protected virtual void AcquireTargetFromTiles()
@@ -493,7 +520,7 @@ public class Hero : MonoBehaviour, IDamageAble, IUnit
     {
         if (enemy == null) return false;
         var eb = enemy.GetComponent<EnemyBase>();
-        return eb != null && (eb.Attribute & (CurrentAttackData?.unattackableTarget ?? EnemyAttribute.None)) == 0;
+        return eb != null && !eb.IsDead && (eb.Attribute & (CurrentAttackData?.unattackableTarget ?? EnemyAttribute.None)) == 0;
     }
 
     // Enemy = 필터 없음(AOE 스플래시용 — 의도적으로 unattackableTarget을 타지 않음).
@@ -561,6 +588,13 @@ public class Hero : MonoBehaviour, IDamageAble, IUnit
 
     protected virtual void CheckTargetStillInRange()
     {
+        if (!IsTargetable(target))
+        {
+            target = null;
+            context.target = null;
+            return;
+        }
+
         foreach (Tile tile in TileShapeQuery.GetTiles(Board, origin, Range, RangeShape))
             foreach (GameObject enemy in tile.Enemies)
                 if (enemy == target)

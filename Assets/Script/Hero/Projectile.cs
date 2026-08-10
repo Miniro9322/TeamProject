@@ -11,7 +11,7 @@ public struct ProjectileAoEConfig
     public int chainRange;
     public int chainCount;
     public float chainFalloff;
-    public List<BuffEffect> buffList;
+    public List<TargetDebuffRef> targetDebuffs;
     public BuffManager buffManager;
     public object source; // 보통 발사한 AttackDataSO 인스턴스
     public GameObject groundZonePrefab;
@@ -33,7 +33,7 @@ public struct ProjectileAoEConfig
         chainCount = data.chainCount,
         chainFalloff = data.chainFalloff,
         casterPos = casterPos,
-        buffList = data.buffList,
+        targetDebuffs = data.targetDebuffs,
         buffManager = buffManager,
         source = data,
         groundZonePrefab = data.groundZonePrefab,
@@ -149,7 +149,7 @@ public class Projectile : MonoBehaviour
                 (p, r, s) => cfg.hero.GetObjectsInRange(p, r, s, RangeQueryAffinity.TargetableEnemy), cfg.hero.NotifyHit);
             foreach (GameObject go in hits)
             {
-                AttackDamageUtil.ApplyTargetDebuffs(go.GetComponentInParent<IUnit>(), cfg.buffList, cfg.buffManager, cfg.source);
+                AttackDamageUtil.ApplyTargetDebuffs(go.transform, cfg.targetDebuffs, cfg.buffManager, cfg.source);
                 ApplyHealOptions(damage);
                 SpawnHitEffect(go.transform.position);
             }
@@ -161,7 +161,7 @@ public class Projectile : MonoBehaviour
                 if (go.GetComponentInParent<IDamageAble>() is not IDamageAble enemy) continue;
                 enemy.TakeDamage((int)damage);
                 cfg.hero.NotifyHit(go, (int)damage, false);
-                AttackDamageUtil.ApplyTargetDebuffs(enemy as IUnit, cfg.buffList, cfg.buffManager, cfg.source);
+                AttackDamageUtil.ApplyTargetDebuffs(go.transform, cfg.targetDebuffs, cfg.buffManager, cfg.source);
                 ApplyHealOptions(damage);
                 SpawnHitEffect(go.transform.position);
             }
@@ -170,7 +170,7 @@ public class Projectile : MonoBehaviour
         {
             damageable.TakeDamage((int)damage);
             cfg.hero.NotifyHit(target.gameObject, (int)damage, false);
-            AttackDamageUtil.ApplyTargetDebuffs(target.GetComponentInParent<IUnit>(), cfg.buffList, cfg.buffManager, cfg.source);
+            AttackDamageUtil.ApplyTargetDebuffs(target, cfg.targetDebuffs, cfg.buffManager, cfg.source);
             ApplyHealOptions(damage);
             SpawnHitEffect(target.position);
         }

@@ -6,15 +6,6 @@ using UnityEngine;
 
 public enum GroundZoneMode { Damage, Heal }
 
-[System.Serializable]
-public struct ZoneDebuffEffect
-{
-    public StatType statType;
-    public ModifierType modifierType;
-    public float value;
-    public int maxStacks;
-}
-
 // 장판 프리팹에 직접 붙는 컴포넌트. 예전엔 GroundZoneDataSO(데이터)+GroundZoneRunner(정적 tick 루프)+
 // landEffect(별도 참조 프리팹)로 3분할돼 있었지만, 장판은 원래도 "스폰되는 자기 완결 오브젝트"라 프리팹
 // 자신이 비주얼이자 틱 로직 주체가 되는 게 더 자연스럽다. Init 직후 스스로 tick을 돌다가 duration이
@@ -23,8 +14,6 @@ public struct ZoneDebuffEffect
 [DisallowMultipleComponent]
 public class GroundZoneEffect : MonoBehaviour
 {
-    private const float DebuffGraceInterval = 0.15f; // 다음 틱까지 갱신 못 받으면(영역 이탈) 곧 만료되도록
-
     public GroundZoneMode mode = GroundZoneMode.Damage;
     public RangeShape shape = RangeShape.Diamond;
     public int radius = 1;
@@ -35,16 +24,21 @@ public class GroundZoneEffect : MonoBehaviour
     public float healPer = 0f;
     [Tooltip("0 이하 = 오라(소유자가 죽을 때까지 유지). 공격/스킬 트리거형 장판은 반드시 양수로 설정.")]
     public float duration = 3f;
-    public List<ZoneDebuffEffect> debuffs = new();
+    public List<TargetDebuffRef> targetDebuffs = new();
     public GameObject hitEffect;
     public float hitEffectLifetime = 0.5f;
     [Tooltip("이 프리팹의 파티클/데칼이 기본 크기(localScale=1)로 나타내는 반경(타일 수). radius/이값만큼 자기 자신을 스케일한다. 0이면 스케일하지 않음.")]
     public float visualRadius = 0f;
+    [Tooltip("장판이 살아있는 동안 자기 위치에 한 번 스폰해 유지하는 이펙트(범위 표시용). null이면 안 스폰.")]
+    public GameObject selfEffect;
+    [Tooltip("selfEffect가 기본 크기(localScale=1)로 나타내는 반경(타일 수). radius/이값만큼 스케일한다. 0이면 스케일하지 않음.")]
+    public float selfEffectVisualRadius = 0f;
 
     private MapBoard board;
     private Hero owner;
     private Action<GameObject> release;
     private CancellationTokenSource cts;
+    private GameObject selfEffectInstance;
 
     // Hero.SpawnGroundZone이 풀에서 꺼낸 직후 호출한다.
     public void Init(MapBoard board, Hero owner, Action<GameObject> release)
@@ -53,6 +47,7 @@ public class GroundZoneEffect : MonoBehaviour
         this.owner = owner;
         this.release = release;
         ApplyVisualScale();
+        SpawnSelfEffect();
         if (duration > 0f) FitParticlesToDuration(duration);
     }
 
@@ -87,6 +82,8 @@ public class GroundZoneEffect : MonoBehaviour
         catch (OperationCanceledException) { }
         finally
         {
+            if (duration <= 0f && selfEffectInstance != null)
+                owner.DespawnEffect(selfEffect, selfEffectInstance);
             release?.Invoke(gameObject);
         }
     }
@@ -116,14 +113,19 @@ public class GroundZoneEffect : MonoBehaviour
                 SpawnHitEffect(go.transform.position);
             }
 
-            if (debuffs.Count > 0 && go.GetComponentInParent<IUnit>() is IUnit unit)
-                foreach (ZoneDebuffEffect debuff in debuffs)
-                    owner.Buffs.ApplyStackingModifier(unit, debuff.statType, debuff.modifierType,
-                        debuff.value, tickInterval + DebuffGraceInterval, debuff.maxStacks, this);
+            AttackDamageUtil.ApplyTargetDebuffs(go.transform, targetDebuffs, owner.Buffs, this);
         }
     }
 
     private void SpawnHitEffect(Vector3 pos) => owner.SpawnEffect(hitEffect, pos, Quaternion.identity, hitEffectLifetime);
+
+    private void SpawnSelfEffect()
+    {
+        if (selfEffect == null) return;
+        selfEffectInstance = owner.SpawnEffect(selfEffect, transform.position, selfEffect.transform.rotation, duration > 0f ? duration : 0f);
+        if (selfEffectInstance != null && selfEffectVisualRadius > 0f)
+            selfEffectInstance.transform.localScale = Vector3.one * (radius / selfEffectVisualRadius);
+    }
 
     private void ApplyVisualScale()
     {
