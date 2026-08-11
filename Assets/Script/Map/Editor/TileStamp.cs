@@ -78,12 +78,10 @@ public static class TileStamp
                 }
                 break;
             case MapBrush.Fire:
-                // 끄면 기믹 없음으로 돌아온다 — 기믹도 칸마다 하나만 걸린다.
-                tile.State.Gimmick = GimmickType.None;
-                if (on)
-                {
-                    tile.State.Gimmick = GimmickType.Fire;
-                }
+                StampGimmick(tile, GimmickType.Fire, on);
+                break;
+            case MapBrush.Campfire:
+                StampGimmick(tile, GimmickType.Campfire, on);
                 break;
             default:
                 throw new System.ArgumentOutOfRangeException(
@@ -91,6 +89,21 @@ public static class TileStamp
         }
 
         EditorUtility.SetDirty(tile);
+    }
+
+    // 지정한 기믹을 켜거나 같은 기믹일 때만 끈다.
+    private static void StampGimmick(Tile tile, GimmickType gimmick, bool on)
+    {
+        if (on)
+        {
+            tile.State.Gimmick = gimmick;
+            return;
+        }
+
+        if (tile.State.Gimmick == gimmick)
+        {
+            tile.State.Gimmick = GimmickType.None;
+        }
     }
 
     /// <summary>
@@ -124,5 +137,6 @@ public enum MapBrush
     Build,
     Decor,
     Swim,
-    Fire
+    Fire,
+    Campfire
 }

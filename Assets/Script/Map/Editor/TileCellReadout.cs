@@ -28,6 +28,11 @@ public static class TileCellReadout
             parts.Add("불");
         }
 
+        if (tile.IsCampfire)
+        {
+            parts.Add("모닥불");
+        }
+
         parts.Add(AllowWord(tile));
         return $"({tile.Coord.x}, {tile.Coord.y})  {string.Join(" · ", parts)}";
     }

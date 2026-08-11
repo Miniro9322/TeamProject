@@ -631,6 +631,7 @@ public class MapMakerWindow : EditorWindow
             GUILayout.Space(6);
             GUILayout.Label("기믹", EditorStyles.miniBoldLabel);
             BrushRow(MapBrush.Fire, "불", MapMakerPalette.Fire, TileTally.CountGimmick(cells, GimmickType.Fire));
+            BrushRow(MapBrush.Campfire, "모닥불", MapMakerPalette.Campfire, TileTally.CountGimmick(cells, GimmickType.Campfire));
 
             GUILayout.Space(6);
             GUILayout.Label("표식", EditorStyles.miniBoldLabel);
@@ -1120,6 +1121,14 @@ public class MapMakerWindow : EditorWindow
             return;
         }
 
+        // 격자 밖 클릭·드래그는 여기서 처리할 일이 아니다 — 먼저 삼키면(Use) 이벤트 타입이 Used로
+        // 바뀌어서 이 뒤에 그려지는 선반 손잡이·오른쪽 배치 버튼이 같은 클릭을 영영 못 받는다.
+        bool inside = area.Contains(input.mousePosition);
+        if ((input.type == EventType.MouseDown || input.type == EventType.MouseDrag) && !inside)
+        {
+            return;
+        }
+
         // 이벤트를 먼저 삼킨다 — 찍은 뒤에는 프레임을 접으므로 이 줄로 돌아오지 않는다.
         if (input.type == EventType.MouseDown)
         {
@@ -1455,6 +1464,7 @@ public class MapMakerWindow : EditorWindow
             case MapBrush.Build: return "생산";
             case MapBrush.Swim: return "헤엄";
             case MapBrush.Fire: return "불";
+            case MapBrush.Campfire: return "모닥불";
             default: return "읽기만";
         }
     }
@@ -1611,10 +1621,13 @@ public class MapMakerWindow : EditorWindow
     }
 
     // 선반 위 손잡이. 위아래로 끌면 선반 높이가 늘거나 줄어 격자와 자리를 나눠 갖는다.
+    // 잡는 자리(9px)를 보이는 줄(5px)보다 넉넉히 둔다 — 줄 두께 그대로 잡는 판정은 마우스가 1px만 벗어나도 놓친다.
     private void DrawGrip()
     {
-        Rect handle = GUILayoutUtility.GetRect(0f, 5f, GUILayout.ExpandWidth(true));
-        EditorGUI.DrawRect(handle, new Color(0f, 0f, 0f, 0.35f));
+        const float band = 9f;
+        Rect handle = GUILayoutUtility.GetRect(0f, band, GUILayout.ExpandWidth(true));
+        var bar = new Rect(handle.x, handle.y + (band - 5f) / 2f, handle.width, 5f);
+        EditorGUI.DrawRect(bar, new Color(0f, 0f, 0f, 0.35f));
         EditorGUIUtility.AddCursorRect(handle, MouseCursor.ResizeVertical);
 
         Event input = Event.current;

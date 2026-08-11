@@ -231,6 +231,11 @@ public class TileGridView
             DrawFire(rect, cellPixels, lit);
         }
 
+        if (tile.IsCampfire)
+        {
+            DrawCampfire(rect, cellPixels, lit);
+        }
+
         if (tile.IsEnemySpawn)
         {
             DrawSpawn(rect, spawnLit);
@@ -277,6 +282,19 @@ public class TileGridView
 
         float band = Mathf.Max(2f, cellPixels * 0.22f);
         EditorGUI.DrawRect(new Rect(rect.xMax - band, rect.y, band, rect.height), color);
+    }
+
+    // 모닥불 칸 위쪽 띠. 불의 오른쪽 띠와 겹치지 않아 두 기믹을 바로 구분할 수 있다.
+    private static void DrawCampfire(Rect rect, int cellPixels, bool lit)
+    {
+        Color color = MapMakerPalette.Campfire;
+        if (!lit)
+        {
+            color = MapMakerPalette.Dim(color);
+        }
+
+        float band = Mathf.Max(2f, cellPixels * 0.22f);
+        EditorGUI.DrawRect(new Rect(rect.x, rect.y, rect.width, band), color);
     }
 
     /// <summary>
@@ -346,6 +364,7 @@ public class TileGridView
             case MapBrush.Spawn: return tile.IsEnemySpawn;
             case MapBrush.Swim: return tile.State.Pass == PassType.Swim;
             case MapBrush.Fire: return tile.IsFire;
+            case MapBrush.Campfire: return tile.IsCampfire;
             default: return TileFlagQuery.IsOn(tile, _brush);
         }
     }
