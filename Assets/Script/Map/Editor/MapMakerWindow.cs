@@ -181,6 +181,7 @@ public class MapMakerWindow : EditorWindow
 
         List<Tile> tiles = ModuleScan.CollectTiles(module);
         Dictionary<Vector2Int, Tile> cells = ModuleScan.MapCells(tiles, out _, out _);
+        CampfireData campfireData = BuildCampfire(module, cells);
 
         if (cells.Count == 0)
         {
@@ -228,7 +229,7 @@ public class MapMakerWindow : EditorWindow
                 DrawTerrainPanel(module, cells);
             }
 
-            DrawGridArea(view, cells, lanes, overrides);
+            DrawGridArea(view, cells, lanes, overrides, campfireData);
 
             if (roomForBoth)
             {
@@ -632,6 +633,7 @@ public class MapMakerWindow : EditorWindow
             GUILayout.Label("기믹", EditorStyles.miniBoldLabel);
             BrushRow(MapBrush.Fire, "불", MapMakerPalette.Fire, TileTally.CountGimmick(cells, GimmickType.Fire));
             BrushRow(MapBrush.Campfire, "모닥불", MapMakerPalette.Campfire, TileTally.CountGimmick(cells, GimmickType.Campfire));
+            DrawCampfireRange(module);
 
             GUILayout.Space(6);
             GUILayout.Label("표식", EditorStyles.miniBoldLabel);
@@ -748,7 +750,8 @@ public class MapMakerWindow : EditorWindow
 
     private void DrawGridArea(TileGridView view, Dictionary<Vector2Int, Tile> cells,
         IReadOnlyList<LaneData> lanes,
-        HashSet<Vector2Int> overrides)
+        HashSet<Vector2Int> overrides,
+        CampfireData campfireData)
     {
         // 프레임을 접을 때 짝이 맞게 풀리도록 스크롤 판을 scope로 연다 — 입력 처리가 이 안에서 프레임을 접는다.
         using (new EditorGUILayout.VerticalScope())
@@ -760,8 +763,43 @@ public class MapMakerWindow : EditorWindow
             HandleHover(area, view);
             HandleStroke(area, view, cells);
             view.Draw(area, _cellPixels, lanes, RouteIndex(lanes), RouteNodes(),
-                _hover, overrides, _showInert);
+                _hover, overrides, _showInert, campfireData);
         }
+    }
+
+    // 현재 모듈의 실제 IceZone 값으로 에디터 보호 영역을 계산합니다.
+    private static CampfireData BuildCampfire(
+        Grid module,
+        IReadOnlyDictionary<Vector2Int, Tile> cells)
+    {
+        IceZone iceZone = module.GetComponentInParent<IceZone>(true);
+        if (iceZone == null)
+        {
+            return null;
+        }
+
+        return new CampfireCalc().BuildData(cells, iceZone.CampfireRange);
+    }
+
+    // 별도 에디터 값 없이 IceZone의 실제 직렬화 범위를 편집합니다.
+    private static void DrawCampfireRange(Grid module)
+    {
+        IceZone iceZone = module.GetComponentInParent<IceZone>(true);
+        if (iceZone == null)
+        {
+            return;
+        }
+
+        int range = EditorGUILayout.IntField("보호 범위", iceZone.CampfireRange);
+        range = Mathf.Max(0, range);
+        if (range == iceZone.CampfireRange)
+        {
+            return;
+        }
+
+        Undo.RecordObject(iceZone, "Change Campfire Range");
+        iceZone.SetRange(range);
+        EditorUtility.SetDirty(iceZone);
     }
 
     // 지금 고른 경로의 번호. 고른 것이 없거나 그 레인이 사라졌으면 -1이다.

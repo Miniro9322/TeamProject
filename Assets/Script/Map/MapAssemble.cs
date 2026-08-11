@@ -31,6 +31,7 @@ public class MapAssemble : MonoBehaviour
     private void Start()
     {
         List<MapBoard> boards = ModuleBoards();
+        BuildCampfires(boards);
 
         PointerPick pointerPick = new PointerPick(boards);
         PlaceFinder finder = new PlaceFinder(pointerPick, palette, placeYOffset);
@@ -155,6 +156,22 @@ public class MapAssemble : MonoBehaviour
             boards.Add(logic.GetComponent<MapBoard>());
         }
         return boards;
+    }
+
+    // 모든 얼음 보드의 고정 모닥불 보호 영역을 시작할 때 한 번 만듭니다.
+    private static void BuildCampfires(List<MapBoard> boards)
+    {
+        CampfireCalc calc = new();
+        for (int index = 0; index < boards.Count; index++)
+        {
+            MapBoard board = boards[index];
+            IceZone iceZone = board.GetComponent<IceZone>();
+            if (iceZone != null)
+            {
+                CampfireData data = calc.BuildData(board.Cells, iceZone.CampfireRange);
+                iceZone.SetCampfire(data);
+            }
+        }
     }
     private List<PathTrail> ModuleTrails()
     {
