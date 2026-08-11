@@ -135,6 +135,39 @@ public static class DotRegistry
             if (entries[i].Target == target) RemoveAt(i);
     }
 
+    // 대상에게 걸린 특정 종류의 지속 피해만 제거한다.
+    public static void Remove(IDamageAble target, DebuffType type)
+    {
+        if (!CanRemove(target, type))
+        {
+            return;
+        }
+
+        for (int entryIndex = entries.Count - 1; entryIndex >= 0; entryIndex--)
+        {
+            if (!IsMatch(entries[entryIndex], target, type))
+            {
+                continue;
+            }
+
+            RemoveAt(entryIndex);
+        }
+
+        SyncLedgerlessEffects();
+    }
+
+    // 지속 피해 제거에 필요한 값이 유효한지 확인한다.
+    private static bool CanRemove(IDamageAble target, DebuffType type)
+    {
+        return target != null && type != DebuffType.None;
+    }
+
+    // 지속 피해 항목이 제거 대상과 종류에 모두 맞는지 확인한다.
+    private static bool IsMatch(Entry entry, IDamageAble target, DebuffType type)
+    {
+        return entry.Target == target && entry.Type == type;
+    }
+
     internal static void Tick()
     {
         // 역순 순회 — 틱 도중 제거해도 인덱스가 밀리지 않게(BuffManager.Tick과 같은 패턴).

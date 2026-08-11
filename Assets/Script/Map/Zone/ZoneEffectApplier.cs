@@ -7,7 +7,11 @@ public class ZoneEffectApplier
     private readonly MapBoard desertBoard;
     private readonly WindShelterData shelterData;
     private readonly Dictionary<Hero, Tile> tileByHero = new();
+    private readonly Dictionary<Hero, IceZone> iceByHero = new();
+    private readonly Dictionary<IceZone, object[]> iceSources = new();
+    private readonly object[] desertSources;
 
+    // 사막 정보와 효과 출처를 보관한다.
     public ZoneEffectApplier(
         DesertZone desertZone,
         MapBoard desertBoard,
@@ -16,137 +20,172 @@ public class ZoneEffectApplier
         this.desertZone = desertZone;
         this.desertBoard = desertBoard;
         this.shelterData = shelterData;
+        desertSources = CreateSources(desertZone.Debuffs);
     }
 
-    // 영웅이 새 칸에 들어왔을 때, 얼음/사막 지대 효과를 걸어준다.
+    // 영웅이 새 칸에 들어오면 해당 지대의 디버프를 적용한다.
     public void EnterZone(Hero hero, PlacementArea area)
     {
-        ApplyIceZone(hero, area.Board);
-        ApplyDesertZone(hero, area);
+        ApplyIce(hero, area.Board);
+        ApplyDesert(hero, area);
     }
 
-    // 영웅이 지대를 벗어났을 때 걸려있던 효과를 없앤다.
+    // 영웅이 지대를 벗어나면 해당 지대가 건 디버프만 제거한다.
     public void ExitZone(Hero hero)
     {
-        hero.SC.RemoveModifier(this);
+        RemoveIce(hero);
+        RemoveEffects(hero, desertZone.Debuffs, desertSources);
         tileByHero.Remove(hero);
         Debug.Log($"[Zone] {hero.name} 지대 이탈 - 효과 제거");
     }
 
-    // 하루가 바뀌면 바람 방향을 새로 뽑고, 사막에 있는 영웅들 효과를 다시 계산한다.
+    // 하루가 바뀌면 바람과 사막 디버프를 다시 계산한다.
     public void OnDayChanged()
     {
         Vector2Int wind = RandomDirection();
         desertZone.SetWindDirection(wind);
-        RefreshDesertHeroes(wind);
-        ReportWindDirection();
+        RefreshDesert(wind);
+        ReportWind();
     }
 
-    // 지금 바람이 어느 방향으로 부는지 로그로 알려준다.
-    public void ReportWindDirection()
+    // 현재 바람 방향을 로그로 출력한다.
+    public void ReportWind()
     {
         Vector2Int wind = desertZone.WindDirection;
         string directionText = WindDirectionText.ReadDirection(wind);
         Debug.Log($"[Zone] 현재 바람={directionText} 벡터={wind}");
     }
 
-    // 얼음 지대 위라면 그 효과를 영웅에게 건다.
-    private void ApplyIceZone(Hero hero, MapBoard board)
+    // 얼음 지대라면 설정된 디버프를 적용한다.
+    private void ApplyIce(Hero hero, MapBoard board)
     {
         IceZone iceZone = board.GetComponent<IceZone>();
-        if (iceZone != null)
+        if (iceZone == null)
         {
-            ApplyEffects(hero, iceZone.Effects);
-            Debug.Log($"[Zone] {hero.name} 얼음 지대 진입 - 효과 {iceZone.Effects.Length}개 적용");
+            return;
         }
+
+        EnsureSources(iceZone);
+        object[] sources = GetSources(iceZone);
+        iceByHero[hero] = iceZone;
+        ApplyEffects(hero, iceZone.Debuffs, sources);
+        Debug.Log($"[Zone] {hero.name} 얼음 지대 진입 - 효과 {iceZone.Debuffs.Length}개 적용");
     }
 
-    // 사막 지대 위라면 위치를 기억해두고 바람 효과를 계산한다.
-    private void ApplyDesertZone(Hero hero, PlacementArea area)
+    // 사막 지대라면 위치를 저장하고 바람 노출을 계산한다.
+    private void ApplyDesert(Hero hero, PlacementArea area)
     {
-        if (area.Board == desertBoard)
+        if (area.Board != desertBoard)
         {
-            Tile tile = area.Board.Cells[area.Origin];
-            tileByHero[hero] = tile;
-            ApplyDesertEffect(hero, tile, desertZone.WindDirection);
+            return;
         }
+
+        Tile tile = area.Board.Cells[area.Origin];
+        tileByHero[hero] = tile;
+        ApplyWind(hero, tile, desertZone.WindDirection);
     }
 
-    // 사막에 있는 모든 영웅의 효과를 새 바람 방향 기준으로 다시 계산한다.
-    private void RefreshDesertHeroes(Vector2Int wind)
+    // 사막에 있는 영웅들의 디버프를 새 바람 기준으로 갱신한다.
+    private void RefreshDesert(Vector2Int wind)
     {
         foreach (KeyValuePair<Hero, Tile> heroTile in tileByHero)
         {
-            ApplyDesertEffect(heroTile.Key, heroTile.Value, wind);
+            ApplyWind(heroTile.Key, heroTile.Value, wind);
         }
     }
 
-    // 기존 사막 효과를 지우고, 바람에 노출됐으면 다시 걸고 로그를 남긴다.
-    private void ApplyDesertEffect(Hero hero, Tile tile, Vector2Int wind)
+    // 기존 사막 디버프를 지우고 노출 상태에 맞게 다시 적용한다.
+    private void ApplyWind(Hero hero, Tile tile, Vector2Int wind)
     {
-        hero.SC.RemoveModifier(this);
-        ApplyIfUnsheltered(hero, tile, wind);
-        LogShelterState(hero, tile, wind);
+        RemoveEffects(hero, desertZone.Debuffs, desertSources);
+        ApplyExposed(hero, tile, wind);
+        LogShelter(hero, tile, wind);
     }
 
-    // 바람을 막아줄 게 없으면 사막 효과를 건다.
-    private void ApplyIfUnsheltered(Hero hero, Tile tile, Vector2Int wind)
+    // 바람에 노출된 영웅에게 사막 디버프를 적용한다.
+    private void ApplyExposed(Hero hero, Tile tile, Vector2Int wind)
     {
         if (IsUnsheltered(tile, wind))
         {
-            ApplyEffects(hero, desertZone.Effects);
+            ApplyEffects(hero, desertZone.Debuffs, desertSources);
         }
     }
 
-    // 지금 이 영웅이 바람을 맞고 있는지 로그로 남긴다.
-    private void LogShelterState(Hero hero, Tile tile, Vector2Int wind)
+    // 영웅의 현재 사막 노출 상태를 로그로 출력한다.
+    private void LogShelter(Hero hero, Tile tile, Vector2Int wind)
     {
         Debug.Log($"[Zone] {hero.name} 사막 지대 - 바람({wind}) 기준 노출={IsUnsheltered(tile, wind)}");
     }
 
-    // 사막 지대 안이라도 바람 반대쪽에 High 타일이 있으면 가려져서 노출 안 됨.
+    // 타일이 현재 바람을 막지 못하는지 확인한다.
     private bool IsUnsheltered(Tile tile, Vector2Int wind)
     {
         WindShelter tileShelter = shelterData.ReadShelter(tile);
         return WindShelterQuery.IsSheltered(tileShelter, wind) == false;
     }
 
-    // 효과 목록을 하나씩 이 영웅에게 적용한다.
-    private void ApplyEffects(Hero hero, ZoneStatEffect[] effects)
+    // 디버프 목록을 영웅에게 차례대로 적용한다.
+    private static void ApplyEffects(Hero hero, DebuffSO[] debuffs, object[] sources)
     {
-        foreach (ZoneStatEffect zoneEffect in effects)
+        for (int effectIndex = 0; effectIndex < debuffs.Length; effectIndex++)
         {
-            ApplyEffect(hero, zoneEffect);
+            DebuffSO debuff = debuffs[effectIndex];
+            DebuffApply.To(hero, debuff, hero.Buffs, durationOverride: float.PositiveInfinity, source: sources[effectIndex]);
         }
     }
 
-    // 스탯 값을 적용 전/후로 재서 로그까지 남긴다.
-    private void ApplyEffect(Hero hero, ZoneStatEffect zoneEffect)
+    // 특정 지대가 영웅에게 건 디버프만 제거한다.
+    private static void RemoveEffects(Hero hero, DebuffSO[] debuffs, object[] sources)
     {
-        float beforeValue = hero.SC.GetValue(zoneEffect.statType);
-        AddZoneModifier(hero.SC, zoneEffect);
-        float afterValue = hero.SC.GetValue(zoneEffect.statType);
-        LogEffectApplied(hero, zoneEffect.statType, beforeValue, afterValue);
+        for (int effectIndex = 0; effectIndex < debuffs.Length; effectIndex++)
+        {
+            DotRegistry.Remove(hero, debuffs[effectIndex].type);
+            hero.Buffs.RemoveBuffs(hero, sources[effectIndex]);
+            DebuffEffectView.Remove(hero, debuffs[effectIndex].type, sources[effectIndex]);
+        }
     }
 
-    // 지대 효과 하나를 실제로 스탯에 건다.
-    private void AddZoneModifier(StatContainer statContainer, ZoneStatEffect zoneEffect)
+    // 영웅에게 적용된 얼음 지대 디버프를 제거한다.
+    private void RemoveIce(Hero hero)
     {
-        Modifier statModifier = new Modifier(
-            ModifierType.Additive,
-            zoneEffect.percentAmount / 100f,
-            this);
-        statContainer.AddModifier(zoneEffect.statType, statModifier);
+        if (!iceByHero.TryGetValue(hero, out IceZone iceZone))
+        {
+            return;
+        }
+
+        RemoveEffects(hero, iceZone.Debuffs, GetSources(iceZone));
+        iceByHero.Remove(hero);
     }
 
-    // 이 스탯이 얼마에서 얼마로 바뀌었는지 로그로 남긴다.
-    private void LogEffectApplied(Hero hero, StatType statType, float beforeValue, float afterValue)
+    // 얼음 지대의 독립 출처 목록이 없으면 만든다.
+    private void EnsureSources(IceZone iceZone)
     {
-        Debug.Log($"[Zone] {hero.name} {statType} {beforeValue} → {afterValue}");
+        if (!iceSources.ContainsKey(iceZone))
+        {
+            iceSources[iceZone] = CreateSources(iceZone.Debuffs);
+        }
     }
 
-    // 네 방향 중 하나를 무작위로 골라 돌려준다.
-    private Vector2Int RandomDirection()
+    // 얼음 지대의 독립 출처 목록을 가져온다.
+    private object[] GetSources(IceZone iceZone)
+    {
+        return iceSources[iceZone];
+    }
+
+    // 디버프마다 독립적인 적용 출처를 만든다.
+    private static object[] CreateSources(DebuffSO[] debuffs)
+    {
+        object[] sources = new object[debuffs.Length];
+        for (int sourceIndex = 0; sourceIndex < sources.Length; sourceIndex++)
+        {
+            sources[sourceIndex] = new object();
+        }
+
+        return sources;
+    }
+
+    // 네 방향 중 하나를 무작위로 골라 반환한다.
+    private static Vector2Int RandomDirection()
     {
         int directionIndex = Random.Range(0, GridCalculator.Directions.Length);
         return GridCalculator.Directions[directionIndex];

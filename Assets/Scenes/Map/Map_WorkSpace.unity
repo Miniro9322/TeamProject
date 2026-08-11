@@ -72120,9 +72120,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1a3621eed781a03429dd67d80f91ca86, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::IceZone
-  effects:
-  - statType: 4
-    percentAmount: -20
+  debuffs:
+  - {fileID: 11400000, guid: d550a705675a3a44d9560379ce518eed, type: 2}
 --- !u!1001 &1663440893
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -85322,9 +85321,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e313b63b1af2b61479cbc37ca8bae4a8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DesertZone
-  effects:
-  - statType: 1
-    percentAmount: -20
+  debuffs:
+  - {fileID: 11400000, guid: b370de2b5c8010149ab165f5d3bf75e2, type: 2}
   windDirection: {x: 1, y: 0}
 --- !u!1001 &1978534299
 PrefabInstance:
