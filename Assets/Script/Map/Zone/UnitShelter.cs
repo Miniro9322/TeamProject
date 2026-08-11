@@ -5,10 +5,10 @@ using UnityEngine;
 // 밤에 읽은 유닛 좌표로 방향별 유닛 가림막을 조회합니다.
 public class UnitShelter
 {
-    private readonly Dictionary<int, int> rowMin = new();
-    private readonly Dictionary<int, int> rowMax = new();
-    private readonly Dictionary<int, int> colMin = new();
-    private readonly Dictionary<int, int> colMax = new();
+    private readonly Dictionary<int, int> rowLeft = new();
+    private readonly Dictionary<int, int> rowRight = new();
+    private readonly Dictionary<int, int> colBottom = new();
+    private readonly Dictionary<int, int> colTop = new();
 
     // 동적으로 배치된 유닛 좌표를 한 번 읽어 행·열 끝값을 저장합니다.
     public UnitShelter(IReadOnlyList<Vector2Int> units)
@@ -21,25 +21,49 @@ public class UnitShelter
     {
         if (wind == GridCalculator.Right)
         {
-            return HasLower(rowMin, target.y, target.x);
+            return HasLower(rowLeft, target.y, target.x);
         }
 
         if (wind == GridCalculator.Left)
         {
-            return HasHigher(rowMax, target.y, target.x);
+            return HasHigher(rowRight, target.y, target.x);
         }
 
         if (wind == GridCalculator.Up)
         {
-            return HasLower(colMin, target.x, target.y);
+            return HasLower(colBottom, target.x, target.y);
         }
 
         if (wind == GridCalculator.Down)
         {
-            return HasHigher(colMax, target.x, target.y);
+            return HasHigher(colTop, target.x, target.y);
         }
 
         throw new ArgumentOutOfRangeException(nameof(wind));
+    }
+
+    // 이 행에서 가장 서쪽 유닛 X를 꺼내온다.
+    public bool TryGetRowLeft(int row, out int x)
+    {
+        return rowLeft.TryGetValue(row, out x);
+    }
+
+    // 이 행에서 가장 동쪽 유닛 X를 꺼내온다.
+    public bool TryGetRowRight(int row, out int x)
+    {
+        return rowRight.TryGetValue(row, out x);
+    }
+
+    // 이 열에서 가장 남쪽 유닛 Y를 꺼내온다.
+    public bool TryGetColBottom(int col, out int y)
+    {
+        return colBottom.TryGetValue(col, out y);
+    }
+
+    // 이 열에서 가장 북쪽 유닛 Y를 꺼내온다.
+    public bool TryGetColTop(int col, out int y)
+    {
+        return colTop.TryGetValue(col, out y);
     }
 
     // 유닛 수가 매번 달라지는 좌표 목록을 한 번 순회해 끝값을 모읍니다.
@@ -47,10 +71,10 @@ public class UnitShelter
     {
         foreach (Vector2Int unit in units)
         {
-            KeepMin(rowMin, unit.y, unit.x);
-            KeepMax(rowMax, unit.y, unit.x);
-            KeepMin(colMin, unit.x, unit.y);
-            KeepMax(colMax, unit.x, unit.y);
+            KeepMin(rowLeft, unit.y, unit.x);
+            KeepMax(rowRight, unit.y, unit.x);
+            KeepMin(colBottom, unit.x, unit.y);
+            KeepMax(colTop, unit.x, unit.y);
         }
     }
 

@@ -9,6 +9,7 @@ public class ZoneEffectApplier : IDisposable
     private readonly WindShelterData shelterData;
     private readonly PlacedUnitData unitList;
     private readonly WindPreview preview;
+    private readonly DesertLineEffect lineEffect;
     private readonly Dictionary<Hero, IceZone> iceByHero = new();
     private readonly Dictionary<IceZone, object[]> iceSources = new();
     private readonly object[] desertSources;
@@ -19,13 +20,15 @@ public class ZoneEffectApplier : IDisposable
         MapBoard desertBoard,
         WindShelterData shelterData,
         PlacedUnitData unitList,
-        WindPreview preview)
+        WindPreview preview,
+        DesertLineEffect lineEffect)
     {
         this.desertZone = desertZone;
         this.desertBoard = desertBoard;
         this.shelterData = shelterData;
         this.unitList = unitList;
         this.preview = preview;
+        this.lineEffect = lineEffect;
         desertSources = CreateSources(desertZone.Debuffs);
     }
 
@@ -47,6 +50,7 @@ public class ZoneEffectApplier : IDisposable
     public void OnDayChanged()
     {
         RemoveDesert();
+        lineEffect.Hide();
         Vector2Int wind = WindPicker.Next(desertZone.WindDirection);
         desertZone.SetWindDirection(wind);
         preview.Show(wind);
@@ -73,6 +77,7 @@ public class ZoneEffectApplier : IDisposable
     public void Dispose()
     {
         preview.Dispose();
+        lineEffect.Hide();
     }
 
     // 얼음 지대라면 설정된 디버프를 적용합니다.
@@ -149,6 +154,7 @@ public class ZoneEffectApplier : IDisposable
     private void ApplyNight(DesertUnits units, Vector2Int wind)
     {
         UnitShelter unitShelter = new(units.Cells);
+        lineEffect.Show(wind, unitShelter);
         for (int unitIndex = 0; unitIndex < units.Heroes.Count; unitIndex++)
         {
             Hero hero = units.Heroes[unitIndex];

@@ -23,6 +23,7 @@ public class WindShelterCalc
         CollectTiles(cells, data);
         CollectHighs();
         ResolveGrounds(data);
+        data.KeepLines(rowLeft, rowRight, colBottom, colTop);
         return data;
     }
 
