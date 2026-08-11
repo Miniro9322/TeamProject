@@ -10927,7 +10927,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &61415523711532753
 Transform:
   m_ObjectHideFlags: 0
@@ -11667,7 +11667,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &6369486120491881217
 Transform:
   m_ObjectHideFlags: 0
@@ -17374,13 +17374,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6deb4eeb61823d14e85febf5c0cf9d3c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SwordMan
-  citizenAmount: 2
-  cost: []
-  costUpgrades: []
-  statUpgradeCost: []
-  statUpgradeCostUpgrades: []
   statUpgrades: []
-  upgradeDatas: []
   heroData: {fileID: 11400000, guid: add039ed4d6b27b458dd408b851acb7d, type: 2}
   basePattern:
   - {fileID: 11400000, guid: 3fadf56df25194c49b78b2c3dfe70c7c, type: 2}
