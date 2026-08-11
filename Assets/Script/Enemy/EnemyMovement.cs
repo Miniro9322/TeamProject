@@ -42,6 +42,11 @@ public class EnemyMovement
     /// Flying이 켜져 있으면 그쪽이 더 넓은 통행권이라 이 값은 무시된다.</summary>
     public bool Swimming { get; set; }
 
+    /// <summary>받은 웨이포인트가 사람이 그린 경로인가(EnemyRouteSet). true면 공중·수영 자동 재탐색을
+    /// 건너뛰고 그대로 따른다 — 그린 의도가 자동 계산에 지면 저작이 무의미하다.
+    /// 저작이 없어 폴백으로 들어온 경우엔 false라 지금까지의 동작이 그대로 유지된다.</summary>
+    public bool Authored { get; set; }
+
     /// <summary>물속 이동속도 배율(EnemyBase.swimSpeedMultiplier와 같은 값). 경로를 "칸 수 최단"이 아니라
     /// "가장 빨리 도착하는 길"로 잡는 데 쓴다 — 물이 빠르면 조금 돌더라도 물길을 택한다. 1이면 기존과 같다.</summary>
     public float SwimSpeedMultiplier { get; set; } = 1f;
@@ -124,21 +129,26 @@ public class EnemyMovement
         // 웨이포인트는 타일 윗면 기준(offset 0)으로 받는다.
         IReadOnlyList<Vector3> src = waypoints ?? board.GetWaypoints(0f);
 
-        if (Flying && src.Count > 0)
+        // 사람이 그린 경로(EnemyRouteSet)를 받았으면 다시 찾지 않는다 — 아래 두 분기가 그대로 덮어써 버린다.
+        // 저작이 없어 폴백으로 온 경우엔 Authored가 false라 지금까지의 재탐색이 그대로 돈다.
+        if (!Authored)
         {
-            Vector3 startW = snapToStart ? src[0] : _tf.position;
-            var flying = FlyingPathfinder.BuildWaypoints(board, startW, src[src.Count - 1],0.5f);
-            if (flying.Count > 0) src = flying;
-        }
-        // 공중이 아니면서 수영이면 물 칸까지 열고 다시 찾는다. Flying은 통행권이 더 넓으니 그쪽이 우선.
-        // src가 비어 있어도(= 물이 걷는 길을 완전히 막은 맵) 현재 위치에서 찾아야 하므로 Count로 막지 않는다.
-        else if (Swimming)
-        {
-            Vector3 startW = src.Count > 0 && snapToStart ? src[0] : _tf.position;
-            Vector3 goalW = src.Count > 0 ? src[src.Count - 1] : _tf.position;
-            var swimming = SwimPathfinder.BuildWaypoints(
-                board, startW, goalW, SwimSpeedMultiplier, SwimTransitionPenaltyTiles);
-            if (swimming.Count > 0) src = swimming;
+            if (Flying && src.Count > 0)
+            {
+                Vector3 startW = snapToStart ? src[0] : _tf.position;
+                var flying = FlyingPathfinder.BuildWaypoints(board, startW, src[src.Count - 1], 0.5f);
+                if (flying.Count > 0) src = flying;
+            }
+            // 공중이 아니면서 수영이면 물 칸까지 열고 다시 찾는다. Flying은 통행권이 더 넓으니 그쪽이 우선.
+            // src가 비어 있어도(= 물이 걷는 길을 완전히 막은 맵) 현재 위치에서 찾아야 하므로 Count로 막지 않는다.
+            else if (Swimming)
+            {
+                Vector3 startW = src.Count > 0 && snapToStart ? src[0] : _tf.position;
+                Vector3 goalW = src.Count > 0 ? src[src.Count - 1] : _tf.position;
+                var swimming = SwimPathfinder.BuildWaypoints(
+                    board, startW, goalW, SwimSpeedMultiplier, SwimTransitionPenaltyTiles);
+                if (swimming.Count > 0) src = swimming;
+            }
         }
 
         foreach (Vector3 p in src) _path.Add(p);
