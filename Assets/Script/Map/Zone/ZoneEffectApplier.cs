@@ -56,7 +56,7 @@ public class ZoneEffectApplier
         IceZone iceZone = board.GetComponent<IceZone>();
         if (iceZone != null)
         {
-            ApplyEffects(hero.SC, iceZone.Effects);
+            ApplyEffects(hero, iceZone.Effects);
             Debug.Log($"[Zone] {hero.name} 얼음 지대 진입 - 효과 {iceZone.Effects.Length}개 적용");
         }
     }
@@ -94,7 +94,7 @@ public class ZoneEffectApplier
     {
         if (IsUnsheltered(tile, wind))
         {
-            ApplyEffects(hero.SC, desertZone.Effects);
+            ApplyEffects(hero, desertZone.Effects);
         }
     }
 
@@ -111,17 +111,38 @@ public class ZoneEffectApplier
         return WindShelterQuery.IsSheltered(tileShelter, wind) == false;
     }
 
-    // 효과 목록을 하나씩 스탯에 실제로 적용한다.
-    private void ApplyEffects(StatContainer statContainer, ZoneStatEffect[] effects)
+    // 효과 목록을 하나씩 이 영웅에게 적용한다.
+    private void ApplyEffects(Hero hero, ZoneStatEffect[] effects)
     {
         foreach (ZoneStatEffect zoneEffect in effects)
         {
-            Modifier statModifier = new Modifier(
-                ModifierType.Additive,
-                zoneEffect.percentAmount / 100f,
-                this);
-            statContainer.AddModifier(zoneEffect.statType, statModifier);
+            ApplyEffect(hero, zoneEffect);
         }
+    }
+
+    // 스탯 값을 적용 전/후로 재서 로그까지 남긴다.
+    private void ApplyEffect(Hero hero, ZoneStatEffect zoneEffect)
+    {
+        float beforeValue = hero.SC.GetValue(zoneEffect.statType);
+        AddZoneModifier(hero.SC, zoneEffect);
+        float afterValue = hero.SC.GetValue(zoneEffect.statType);
+        LogEffectApplied(hero, zoneEffect.statType, beforeValue, afterValue);
+    }
+
+    // 지대 효과 하나를 실제로 스탯에 건다.
+    private void AddZoneModifier(StatContainer statContainer, ZoneStatEffect zoneEffect)
+    {
+        Modifier statModifier = new Modifier(
+            ModifierType.Additive,
+            zoneEffect.percentAmount / 100f,
+            this);
+        statContainer.AddModifier(zoneEffect.statType, statModifier);
+    }
+
+    // 이 스탯이 얼마에서 얼마로 바뀌었는지 로그로 남긴다.
+    private void LogEffectApplied(Hero hero, StatType statType, float beforeValue, float afterValue)
+    {
+        Debug.Log($"[Zone] {hero.name} {statType} {beforeValue} → {afterValue}");
     }
 
     // 네 방향 중 하나를 무작위로 골라 돌려준다.

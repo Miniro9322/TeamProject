@@ -15112,7 +15112,7 @@ MonoBehaviour:
   tilePaintView: {fileID: 1235437630}
   rangeInput: {fileID: 314587633}
   combineManager: {fileID: 611590645}
-  desertZone: {fileID: 0}
+  desertZone: {fileID: 1978292681}
 --- !u!114 &314587633
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -34345,7 +34345,7 @@ MonoBehaviour:
   minPitch: 45
   maxPitch: 90
   minDistance: 20
-  maxDistance: 40
+  maxDistance: 25
   fillH: 0.6
   fillV: 0.8
   smoothTime: 0.12
@@ -72122,8 +72122,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::IceZone
   effects:
   - statType: 4
-    modifierType: 1
-    amount: -0.2
+    percentAmount: -20
 --- !u!1001 &1663440893
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -85325,8 +85324,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DesertZone
   effects:
   - statType: 1
-    modifierType: 1
-    amount: -0.2
+    percentAmount: -20
   windDirection: {x: 1, y: 0}
 --- !u!1001 &1978534299
 PrefabInstance:
