@@ -20,6 +20,24 @@ public class HeroCheatSpawnUI : MonoBehaviour
         ClearList();
     }
 
+    private void Start()
+    {
+        game.Rule.ChangeToNight += CloseOnNight;
+    }
+
+    private void OnDestroy()
+    {
+        game.Rule.ChangeToNight -= CloseOnNight;
+    }
+
+    private void CloseOnNight()
+    {
+        if (gameObject.activeSelf)
+        {
+            gameObject.SetActive(false);
+        }
+    }
+
     // 별도 버튼의 OnClick에 연결해서 이 치트 패널을 열고 닫는다.
     public void ToggleVisible()
     {
