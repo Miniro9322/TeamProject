@@ -6,6 +6,7 @@ public class GameLifeTimeScope : LifetimeScope
 {
     [SerializeField] private ResourcesManager resourcesManagerPrefab;
     [SerializeField] private CitizenManager citizenManagerPrefab;
+    [SerializeField] private CitizenWanderManager citizenWanderManagerPrefab;
     [SerializeField] private UiManager UiManagerPrefab;
     [SerializeField] private EnviromentManager EnviromentManagerPrefab;
     [SerializeField] private GameManager GameManagerPrefab;
@@ -14,6 +15,8 @@ public class GameLifeTimeScope : LifetimeScope
     [SerializeField] private ResourceIconSet resourceIconSet;
     [SerializeField] private HeroUpgradeConfig heroUpgradeConfig;
     [SerializeField] private Light sunLight;
+    [SerializeField] private Transform citizenHubPoint;
+    [SerializeField] private Transform[] citizenHomePoints; // 밤에 귀가할 목적지 후보들(여러 개면 시민마다 랜덤 선택)
 
     protected override void Configure(IContainerBuilder builder)
     {
@@ -28,6 +31,7 @@ public class GameLifeTimeScope : LifetimeScope
         
         builder.RegisterComponentInNewPrefab(resourcesManagerPrefab, Lifetime.Singleton).AsSelf();
         builder.RegisterComponentInNewPrefab(citizenManagerPrefab, Lifetime.Singleton).AsSelf();
+        builder.RegisterComponentInNewPrefab(citizenWanderManagerPrefab, Lifetime.Singleton).AsSelf();
         builder.RegisterComponentInNewPrefab(UiManagerPrefab, Lifetime.Singleton).AsSelf();
         builder.RegisterComponentInNewPrefab(EnviromentManagerPrefab, Lifetime.Singleton).AsSelf();
         builder.RegisterComponentInNewPrefab(GameManagerPrefab, Lifetime.Singleton).AsSelf();
@@ -51,6 +55,16 @@ public class GameLifeTimeScope : LifetimeScope
                 toggle.SetSunLight(sunLight);
             });
         }
+
+        // RegisterComponentInNewPrefab도 다른 컴포넌트가 생성자 의존성으로 요구하지 않으면 생성되지 않으므로
+        // 여기서 강제로 Resolve해 항상 만들어지게 하고, 씬의 Hub Transform을 곧바로 주입한다.
+        builder.RegisterBuildCallback(resolver =>
+        {
+            var wanderManager = resolver.Resolve<CitizenWanderManager>();
+            if (citizenHubPoint != null)
+                wanderManager.SetHubPoint(citizenHubPoint);
+            wanderManager.SetHomePoints(citizenHomePoints);
+        });
 
         builder.RegisterComponentInHierarchy<TopBar>();
         builder.RegisterComponentInHierarchy<DayNightButton>();
