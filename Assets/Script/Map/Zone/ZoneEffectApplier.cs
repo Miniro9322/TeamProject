@@ -26,7 +26,7 @@ public class ZoneEffectApplier
     // 영웅이 새 칸에 들어오면 해당 지대의 디버프를 적용한다.
     public void EnterZone(Hero hero, PlacementArea area)
     {
-        ApplyIce(hero, area.Board);
+        ApplyIce(hero, area);
         ApplyDesert(hero, area);
     }
 
@@ -57,9 +57,9 @@ public class ZoneEffectApplier
     }
 
     // 얼음 지대라면 설정된 디버프를 적용한다.
-    private void ApplyIce(Hero hero, MapBoard board)
+    private void ApplyIce(Hero hero, PlacementArea area)
     {
-        IceZone iceZone = board.GetComponent<IceZone>();
+        IceZone iceZone = area.Board.GetComponent<IceZone>();
         if (iceZone == null)
         {
             return;
@@ -68,6 +68,24 @@ public class ZoneEffectApplier
         EnsureSources(iceZone);
         object[] sources = GetSources(iceZone);
         iceByHero[hero] = iceZone;
+        RefreshIce(hero, area, iceZone, sources);
+    }
+
+    // 기존 얼음 효과를 정리하고 현재 보호 상태에 맞춰 다시 결정합니다.
+    private static void RefreshIce(
+        Hero hero,
+        PlacementArea area,
+        IceZone iceZone,
+        object[] sources)
+    {
+        RemoveEffects(hero, iceZone.Debuffs, sources);
+        bool protectedCell = CampfireQuery.HasProtected(iceZone.CampfireData, area.Cells);
+        if (protectedCell)
+        {
+            Debug.Log($"[Zone] {hero.name} 모닥불 보호 - 얼음 효과 면역");
+            return;
+        }
+
         ApplyEffects(hero, iceZone.Debuffs, sources);
         Debug.Log($"[Zone] {hero.name} 얼음 지대 진입 - 효과 {iceZone.Debuffs.Length}개 적용");
     }

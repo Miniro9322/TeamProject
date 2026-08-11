@@ -111,10 +111,26 @@ public class TileGridView
         Color color = MapMakerPalette.Campfire;
         color.a = 0.7f;
         const float line = 2f;
-        EditorGUI.DrawRect(new Rect(rect.x, rect.y, rect.width, line), color);
-        EditorGUI.DrawRect(new Rect(rect.x, rect.yMax - line, rect.width, line), color);
-        EditorGUI.DrawRect(new Rect(rect.x, rect.y, line, rect.height), color);
-        EditorGUI.DrawRect(new Rect(rect.xMax - line, rect.y, line, rect.height), color);
+
+        if (!CampfireQuery.IsProtected(data, coord + Vector2Int.up))
+        {
+            EditorGUI.DrawRect(new Rect(rect.x, rect.y, rect.width, line), color);
+        }
+
+        if (!CampfireQuery.IsProtected(data, coord + Vector2Int.down))
+        {
+            EditorGUI.DrawRect(new Rect(rect.x, rect.yMax - line, rect.width, line), color);
+        }
+
+        if (!CampfireQuery.IsProtected(data, coord + Vector2Int.left))
+        {
+            EditorGUI.DrawRect(new Rect(rect.x, rect.y, line, rect.height), color);
+        }
+
+        if (!CampfireQuery.IsProtected(data, coord + Vector2Int.right))
+        {
+            EditorGUI.DrawRect(new Rect(rect.xMax - line, rect.y, line, rect.height), color);
+        }
     }
 
     // 고른 경로의 출발 칸. 고른 것이 없으면 (-1,-1)이라 어느 칸과도 같지 않다.
