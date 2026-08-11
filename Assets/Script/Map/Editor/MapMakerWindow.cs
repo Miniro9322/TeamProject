@@ -669,6 +669,7 @@ public class MapMakerWindow : EditorWindow
             GUILayout.Space(6);
             GUILayout.Label("■ 켜짐   □ 켜졌지만\n     지금은 효과 없음", EditorStyles.miniLabel);
             GUILayout.Label("켜진 붓을 다시 누르면 꺼집니다", EditorStyles.wordWrappedMiniLabel);
+            GUILayout.Label("붓 고른 뒤 타일 클릭 = 켜기/끄기 뒤집기", EditorStyles.wordWrappedMiniLabel);
         }
     }
 
@@ -1136,7 +1137,8 @@ public class MapMakerWindow : EditorWindow
             _swapped.Clear(); // 새 붓질 — 이번에 교체한 칸 기록을 비운다
             _strokeCell = new Vector2Int(int.MinValue, int.MinValue); // 새 붓질 — 마지막 칸 기록을 비운다
             _strokeGroup = TileStamp.BeginStroke();
-            StampAt(input.mousePosition, area, view, cells, input.alt);
+            // 클릭 한 번(끌지 않음)은 지금 상태를 뒤집는다 — 켜진 칸을 누르면 바로 꺼진다.
+            StampAt(input.mousePosition, area, view, cells, input.alt, true);
             _rangeAnchor = coord; // 다음 Shift+클릭이 여기부터 구간을 잡도록 기준으로 남긴다
             return;
         }
@@ -1145,10 +1147,11 @@ public class MapMakerWindow : EditorWindow
         {
             input.Use();
 
-            // 점 찍기는 누른 칸 하나만 받는다 — 끌고 지나간 칸까지 쌓이면 그리기와 다를 것이 없어진다.
+            // 끌기는 지나간 칸 전부를 한 방향으로 맞춘다 — 칸마다 뒤집으면 여러 칸을 같은 값으로
+            // 칠하려 할 때 이미 켜진 칸만 꺼져버려 얼룩덜룩해진다.
             if (_tool != MapTool.Route || _routeMode == RouteMode.Draw)
             {
-                StampAt(input.mousePosition, area, view, cells, input.alt);
+                StampAt(input.mousePosition, area, view, cells, input.alt, false);
             }
 
             return;
@@ -1163,7 +1166,7 @@ public class MapMakerWindow : EditorWindow
     }
 
     private void StampAt(Vector2 mouse, Rect area, TileGridView view, Dictionary<Vector2Int, Tile> cells,
-        bool turnOff)
+        bool turnOff, bool toggle)
     {
         Vector2Int coord = view.CoordAt(mouse, area, _cellPixels);
         bool exists = cells.TryGetValue(coord, out Tile tile);
@@ -1178,7 +1181,7 @@ public class MapMakerWindow : EditorWindow
         }
 
         _strokeCell = coord;
-        ApplyToCell(coord, tile, cells, turnOff);
+        ApplyToCell(coord, tile, cells, turnOff, toggle);
         Relayout(); // 경로가 바로 다시 계산돼 보이도록. 찍으면서 예고줄·붓이 바뀌므로 프레임을 접는다
     }
 
@@ -1202,7 +1205,8 @@ public class MapMakerWindow : EditorWindow
                 var coord = new Vector2Int(x, y);
                 if (cells.TryGetValue(coord, out Tile tile))
                 {
-                    ApplyToCell(coord, tile, cells, turnOff);
+                    // 구간 채우기도 끌기와 같은 이유로 한 방향으로 맞춘다(칸별 뒤집기 아님).
+                    ApplyToCell(coord, tile, cells, turnOff, false);
                 }
             }
         }
@@ -1212,7 +1216,8 @@ public class MapMakerWindow : EditorWindow
     }
 
     // 칸 하나에 지금 도구를 적용한다. 한 칸 클릭과 구간 적용이 이 한 곳을 같이 쓴다.
-    private void ApplyToCell(Vector2Int coord, Tile tile, Dictionary<Vector2Int, Tile> cells, bool turnOff)
+    // toggle=true(단일 클릭)면 지금 켜진 붓 값을 그대로 뒤집는다 — Alt를 누르면 여전히 무조건 끈다.
+    private void ApplyToCell(Vector2Int coord, Tile tile, Dictionary<Vector2Int, Tile> cells, bool turnOff, bool toggle)
     {
         _hover = coord;
 
@@ -1245,7 +1250,13 @@ public class MapMakerWindow : EditorWindow
                     break; // 장식은 기록할 지형 값이 없다 — 예고줄이 교체로 얹으라고 말한다
                 }
 
-                TileStamp.Stamp(tile, _brush, !turnOff);
+                bool on = !turnOff;
+                if (toggle && !turnOff)
+                {
+                    on = !TileFlagQuery.IsOn(tile, _brush); // 지형 붓은 항상 꺼짐으로 읽혀 그대로 켜진다
+                }
+
+                TileStamp.Stamp(tile, _brush, on);
                 break;
         }
     }
