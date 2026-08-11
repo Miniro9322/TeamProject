@@ -10,15 +10,15 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 412860ab14a7daf4dbfe0d34aa3084d1, type: 3}
-  m_Name: NinjaStatData
+  m_Name: SamuraiStatData
   m_EditorClassIdentifier: Assembly-CSharp::StatDataSO
-  maxHp: 1300
-  attackPower: 250
-  defence: 0
+  maxHp: 1800
+  attackPower: 300
+  defence: 5
   maxSp: 100
-  attackSpeed: 2.5
+  attackSpeed: 1.5
   spRecover: 5
-  blockCount: 1
+  blockCount: 2
   coolDownPer: 0
   criticalPer: 0.1
   criticalDmg: 2

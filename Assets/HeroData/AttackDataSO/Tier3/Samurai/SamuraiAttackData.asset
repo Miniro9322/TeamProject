@@ -10,12 +10,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3e63ecebd4cd6e044a8a127ea3df05bc, type: 3}
-  m_Name: MercenaryAttackData
+  m_Name: SamuraiAttackData
   m_EditorClassIdentifier: Assembly-CSharp::AttackDataSO
   range: 1
-  rangeShape: 1
+  rangeShape: 0
   unattackableTarget: 3
-  attackType: 1
+  attackType: 0
   attackPer: 1
   attackCount: 1
   targetMode: 0
@@ -24,7 +24,7 @@ MonoBehaviour:
   areaShape: 0
   areaRange: 0
   lineLength: 2
-  areaCenterOnTarget: 1
+  areaCenterOnTarget: 0
   chainRange: 2
   chainCount: 3
   chainFalloff: 0.8
@@ -48,7 +48,7 @@ MonoBehaviour:
   groundZonePrefab: {fileID: 0}
   attackEffect: {fileID: 0}
   attackEffectLifetime: 1
-  hitEffect: {fileID: 0}
+  hitEffect: {fileID: 8393927888780647174, guid: 0777bc22e9e6ace47a89e97740ea56e9, type: 3}
   hitEffectLifetime: 1
   lifestealPercent: 0
   allyHealAmount: 0
