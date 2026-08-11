@@ -21,9 +21,10 @@ MonoBehaviour:
   targetMode: 0
   targetCount: 1
   shotInterval: 0.1
-  areaShape: 1
-  areaRange: 1
+  areaShape: 0
+  areaRange: 0
   lineLength: 2
+  areaCenterOnTarget: 1
   chainRange: 2
   chainCount: 3
   chainFalloff: 0.8
@@ -43,6 +44,7 @@ MonoBehaviour:
   projectilePrefab: {fileID: 0}
   clipLength: 0
   buffList: []
+  targetDebuffs: []
   groundZonePrefab: {fileID: 0}
   attackEffect: {fileID: 0}
   attackEffectLifetime: 1

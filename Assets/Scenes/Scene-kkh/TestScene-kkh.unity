@@ -20,7 +20,7 @@ RenderSettings:
   m_FogDensity: 0.01
   m_LinearFogStart: 0
   m_LinearFogEnd: 300
-  m_AmbientSkyColor: {r: 0.05, g: 0.05, b: 0.1, a: 1}
+  m_AmbientSkyColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
   m_AmbientEquatorColor: {r: 0.114, g: 0.125, b: 0.133, a: 1}
   m_AmbientGroundColor: {r: 0.047, g: 0.043, b: 0.035, a: 1}
   m_AmbientIntensity: 1
@@ -30685,7 +30685,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CameraInput
   rotateSensitivity: 0.098
   zoomStep: 0.1
-  dragSpeed: 0.5
+  dragSpeed: 1
   keySpeed: 20
 --- !u!114 &755029710
 MonoBehaviour:
@@ -30699,16 +30699,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 006a2b67724c46f43b10621fbe7eafd5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CameraRig
-  focus: {x: 44, y: -22.9, z: 20.4}
+  focus: {x: 44, y: 2, z: 8.6}
   yaw: 0
   pitch: 65
-  distance: 60
+  distance: 20
   perspective: 1
-  fieldOfView: 30
+  fieldOfView: 46
   minPitch: 60
   maxPitch: 90
-  minDistance: 40
-  maxDistance: 90
+  minDistance: 5
+  maxDistance: 40
   fillH: 0.6
   fillV: 0.8
   smoothTime: 0.141
@@ -30797,9 +30797,9 @@ Camera:
     height: 1
   near clip plane: 0.1
   far clip plane: 1000
-  field of view: 30
+  field of view: 46
   orthographic: 0
-  orthographic size: 16.076952
+  orthographic size: 8.489496
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -30824,7 +30824,7 @@ Transform:
   m_GameObject: {fileID: 755029708}
   serializedVersion: 2
   m_LocalRotation: {x: 0.53729963, y: 0, z: 0, w: 0.8433914}
-  m_LocalPosition: {x: 44, y: 31.478468, z: -4.9570923}
+  m_LocalPosition: {x: 44, y: 20.126156, z: 0.14763641}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -55204,8 +55204,8 @@ Light:
   m_Enabled: 1
   serializedVersion: 12
   m_Type: 1
-  m_Color: {r: 0.1, g: 0.1, b: 0.3, a: 1}
-  m_Intensity: 0.05
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Intensity: 1
   m_Range: 10
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
@@ -56959,7 +56959,7 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1349114898}
-  m_LocalRotation: {x: 0, y: 0, z: 1, w: -0.00000004371139}
+  m_LocalRotation: {x: 0, y: 0, z: -0.00000008742278, w: -1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -64908,6 +64908,12 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 7b24cda69c861a246a1d580c74ef91bd, type: 2}
   - {fileID: 11400000, guid: f7dde1f31c17a1d48a5c6068ebcb513b, type: 2}
   - {fileID: 11400000, guid: a0dd6c087f0002741a3982c0439cbd22, type: 2}
+  - {fileID: 11400000, guid: 12e86eddef2a93041b70d501c5c27141, type: 2}
+  - {fileID: 11400000, guid: 7e5a6bc672a329c4eb2e29b424203bf6, type: 2}
+  - {fileID: 11400000, guid: e481bb205ad7dee458dc79a8ed7a8ecc, type: 2}
+  - {fileID: 11400000, guid: a0225bd2367ce15499ac2c05ca0308bb, type: 2}
+  - {fileID: 11400000, guid: 3de0833354acfc9409662c8300b21272, type: 2}
+  - {fileID: 11400000, guid: e2d101c9289376740b860ad7574185be, type: 2}
   game: {fileID: 314587623}
 --- !u!1001 &1512294256
 PrefabInstance:

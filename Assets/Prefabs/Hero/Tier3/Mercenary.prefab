@@ -7803,12 +7803,13 @@ MonoBehaviour:
   - {fileID: 11400000, guid: f8f02fa9135171e4db10c07135224a3b, type: 2}
   heroData: {fileID: 11400000, guid: a0dd6c087f0002741a3982c0439cbd22, type: 2}
   basePattern:
-  - {fileID: 11400000, guid: aeca238c8426f154f9319d101970f65f, type: 2}
+  - {fileID: 11400000, guid: 6be460852e437174fadd620a8fb41226, type: 2}
   anim: {fileID: 7638390345114475594}
   animEvents: {fileID: 962424670496171388}
   statData: {fileID: 11400000, guid: c1b26d8a18f965e46b5f7053d1531779, type: 2}
   board: {fileID: 0}
-  auraZonePrefabs: []
+  auraZonePrefabs:
+  - {fileID: 4269708727165565049, guid: 77bd59b7e864c7c4eac22a61d971159f, type: 3}
   occupantKind: 1
 --- !u!1 &2766463481628903502
 GameObject:

@@ -46,6 +46,8 @@ public class AttackDataSO : ScriptableObject
     public AreaShape areaShape = AreaShape.Diamond;
     public int areaRange = 1;
     public int lineLength = 2;
+    [Tooltip("Area+SameTarget일 때 AOE 중심을 자기 위치가 아니라 락온된 타겟 위치로 사용한다 (원거리 스킬의 타겟 중심 스플래시용)")]
+    public bool areaCenterOnTarget = false;
 
     [Header("체인 공격")]
     public int chainRange = 2;

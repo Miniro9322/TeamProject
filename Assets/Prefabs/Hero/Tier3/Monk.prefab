@@ -17338,7 +17338,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8355756397094962037}
   - component: {fileID: 6911199585839229387}
-  - component: {fileID: 3786972390004154430}
+  - component: {fileID: -1351956387275645886}
   m_Layer: 0
   m_Name: Monk
   m_TagString: Untagged
@@ -17375,16 +17375,16 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SwordMan
   statUpgrades: []
-  heroData: {fileID: 0}
+  heroData: {fileID: 11400000, guid: 12e86eddef2a93041b70d501c5c27141, type: 2}
   basePattern:
-  - {fileID: 11400000, guid: 3fadf56df25194c49b78b2c3dfe70c7c, type: 2}
+  - {fileID: 11400000, guid: c88b5d03e472c3748a34c7767c97cb84, type: 2}
   anim: {fileID: 1585343957921750248}
   animEvents: {fileID: 6231468561908436456}
-  statData: {fileID: 11400000, guid: c8cd6d373afd3644a87b3159843a4163, type: 2}
+  statData: {fileID: 11400000, guid: 76b97051c259cac4a97839d77df204de, type: 2}
   board: {fileID: 0}
   auraZonePrefabs: []
   occupantKind: 1
---- !u!114 &3786972390004154430
+--- !u!114 &-1351956387275645886
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -17393,11 +17393,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 6909807917171716251}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 71f4ec0063568874f8d0c94daeb655ad, type: 3}
+  m_Script: {fileID: 11500000, guid: e9e0f46a658cce344a48ef3b3f507a9a, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::NthHitHeavyTrait
-  everyN: 3
-  heavyAttackData: {fileID: 11400000, guid: f08e7da738a78b244afcba668f8a30d3, type: 2}
+  m_EditorClassIdentifier: Assembly-CSharp::ChanceHeavyTrait
+  chance: 0.2
+  heavyAttackData: {fileID: 11400000, guid: 8dbf8cefcee075d4399cb8b4d9da3421, type: 2}
 --- !u!1 &6933129877120242434
 GameObject:
   m_ObjectHideFlags: 0

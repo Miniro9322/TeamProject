@@ -44,7 +44,7 @@ public class ContinuousBeamStrategy : IAttackDeliveryStrategy
         if (isBeam && data.beamEffectPrefab != null)
         {
             foreach (GameObject t in ResolveBeamTargets(hero, data, ctx))
-                beamSlots.Add((t, hero.SpawnPersistentEffect(data.beamEffectPrefab, ctx.muzzle.position, Quaternion.identity)));
+                beamSlots.Add((t, hero.SpawnPersistentEffect(data.beamEffectPrefab, ctx.MuzzleOrSelf.position, Quaternion.identity)));
         }
 
         // SelfArea 전용 — 캐스터→타겟 라인이 아니라 캐스터 위치에 붙는 단일 이펙트(회전 이펙트 등)이므로
@@ -110,7 +110,7 @@ public class ContinuousBeamStrategy : IAttackDeliveryStrategy
         {
             if (hero.Target == null) return false;
             foreach (var (_, beamGo) in slots)
-                Hero.UpdateLinkEndpoints(beamGo, ctx.muzzle.position, hero.Target.transform.position);
+                Hero.UpdateLinkEndpoints(beamGo, ctx.MuzzleOrSelf.position, AttackDamageUtil.EffectPosition(hero.Target));
             for (int i = 0; i < slots.Count; i++)
                 await AttackDamageUtil.ApplyInstantDamage(data, hero.Context, ct);
             return true;
@@ -144,13 +144,13 @@ public class ContinuousBeamStrategy : IAttackDeliveryStrategy
                 for (int i = 0; i < need; i++)
                 {
                     GameObject t = pool[i % pool.Count];
-                    slots.Add((t, hero.SpawnPersistentEffect(data.beamEffectPrefab, ctx.muzzle.position, Quaternion.identity)));
+                    slots.Add((t, hero.SpawnPersistentEffect(data.beamEffectPrefab, ctx.MuzzleOrSelf.position, Quaternion.identity)));
                 }
         }
         if (slots.Count == 0) return false;
 
         foreach (var (target, beamGo) in slots)
-            Hero.UpdateLinkEndpoints(beamGo, ctx.muzzle.position, target.transform.position);
+            Hero.UpdateLinkEndpoints(beamGo, ctx.MuzzleOrSelf.position, AttackDamageUtil.EffectPosition(target));
         foreach (var (target, _) in slots)
         {
             AttackContext slotCtx = hero.Context;
@@ -212,7 +212,7 @@ public class ContinuousBeamStrategy : IAttackDeliveryStrategy
     private void FireOneProjectile(Hero hero, AttackDataSO data, AttackContext ctx, IObjectPool<Projectile> pool, GameObject target, int damage)
     {
         Projectile arrow = pool.Get();
-        arrow.transform.SetPositionAndRotation(ctx.muzzle.position, ctx.muzzle.rotation);
+        arrow.transform.SetPositionAndRotation(ctx.MuzzleOrSelf.position, ctx.MuzzleOrSelf.rotation);
 
         arrow.Launch(target.transform, damage, pool,
             ProjectileAoEConfig.From(data, hero, ctx.sc, ctx.buffManager, ctx.self.position));

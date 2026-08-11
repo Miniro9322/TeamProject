@@ -22553,7 +22553,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8960899001449437281}
   - component: {fileID: 4332685919364535766}
-  - component: {fileID: 6683023602017724312}
+  - component: {fileID: 867226740883954496}
   m_Layer: 0
   m_Name: Archer
   m_TagString: Untagged
@@ -22607,7 +22607,7 @@ MonoBehaviour:
   bowAnim: {fileID: 5443066929859240409}
   arrowAnim: {fileID: 8610688408873876571}
   muzzle: {fileID: 1517930423594004449}
---- !u!114 &6683023602017724312
+--- !u!114 &867226740883954496
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -22616,19 +22616,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 9004755700449656008}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 70884c9239b802249a37f85d89918ccc, type: 3}
+  m_Script: {fileID: 11500000, guid: e9e0f46a658cce344a48ef3b3f507a9a, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::AttackStanceSkill
-  targetScope: 0
-  buffList: []
-  groundZonePrefab: {fileID: 0}
-  instantDamagePer: 0
-  instantHitEffect: {fileID: 0}
-  instantHitEffectLifetime: 1
-  cooldown: 10
-  duration: 10
-  blocksBasicAttack: 0
-  stanceAttackData: {fileID: 11400000, guid: 28a82311209eb284c979c83b67a09cbf, type: 2}
+  m_EditorClassIdentifier: Assembly-CSharp::ChanceHeavyTrait
+  chance: 0.3
+  heavyAttackData: {fileID: 11400000, guid: 28a82311209eb284c979c83b67a09cbf, type: 2}
 --- !u!1 &9019854544271929726
 GameObject:
   m_ObjectHideFlags: 0
