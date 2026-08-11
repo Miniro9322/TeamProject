@@ -3,19 +3,21 @@ using UnityEngine;
 
 public static class WindShelterQuery
 {
-    public static bool IsSheltered(WindShelter shelter, Vector2Int windDirection)
+    // 이 바람 방향으로 막혀 있는지 확인한다.
+    public static bool IsSheltered(WindShelter shelter, Vector2Int wind)
     {
-        WindShelter currentShelter = ResolveDirection(windDirection);
+        WindShelter currentShelter = ResolveDirection(wind);
         return (shelter & currentShelter) == currentShelter;
     }
 
-    private static WindShelter ResolveDirection(Vector2Int windDirection)
+    // 바람 벡터를 그 방향을 막는 데 필요한 값으로 바꾼다.
+    private static WindShelter ResolveDirection(Vector2Int wind)
     {
-        if (windDirection == GridCalculator.Down) return WindShelter.FromNorth;
-        if (windDirection == GridCalculator.Up) return WindShelter.FromSouth;
-        if (windDirection == GridCalculator.Right) return WindShelter.FromWest;
-        if (windDirection == GridCalculator.Left) return WindShelter.FromEast;
+        if (wind == GridCalculator.Down) return WindShelter.FromNorth;
+        if (wind == GridCalculator.Up) return WindShelter.FromSouth;
+        if (wind == GridCalculator.Right) return WindShelter.FromWest;
+        if (wind == GridCalculator.Left) return WindShelter.FromEast;
 
-        throw new ArgumentOutOfRangeException(nameof(windDirection));
+        throw new ArgumentOutOfRangeException(nameof(wind));
     }
 }

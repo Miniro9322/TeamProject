@@ -6,45 +6,49 @@ public class WindShelterCalc
 {
     private readonly List<Tile> highTiles = new();
     private readonly List<Tile> groundTiles = new();
-    private readonly Dictionary<int, int> leftHighByRow = new();
-    private readonly Dictionary<int, int> rightHighByRow = new();
-    private readonly Dictionary<int, int> bottomHighByColumn = new();
-    private readonly Dictionary<int, int> topHighByColumn = new();
+    private readonly Dictionary<int, int> rowLeft = new();
+    private readonly Dictionary<int, int> rowRight = new();
+    private readonly Dictionary<int, int> colBottom = new();
+    private readonly Dictionary<int, int> colTop = new();
 
-    private int minimumColumn = int.MaxValue;
-    private int maximumColumn = int.MinValue;
-    private int minimumRow = int.MaxValue;
-    private int maximumRow = int.MinValue;
+    private int minCol = int.MaxValue;
+    private int maxCol = int.MinValue;
+    private int minRow = int.MaxValue;
+    private int maxRow = int.MinValue;
 
+    // 사막판 전체를 훑어서, 타일별로 바람이 막히는 방향 정보를 만들어 돌려준다.
     public WindShelterData BuildData(IReadOnlyDictionary<Vector2Int, Tile> cells)
     {
-        WindShelterData resultData = new();
-        CollectTiles(cells, resultData);
+        WindShelterData data = new();
+        CollectTiles(cells, data);
         CollectHighs();
-        ResolveGrounds(resultData);
-        return resultData;
+        ResolveGrounds(data);
+        return data;
     }
 
+    // 모든 타일을 일단 "안 막힘"으로 채우고, 맵 크기와 타일 종류를 기록한다.
     private void CollectTiles(
         IReadOnlyDictionary<Vector2Int, Tile> cells,
-        WindShelterData resultData)
+        WindShelterData data)
     {
         foreach (Tile tile in cells.Values)
         {
-            resultData.KeepShelter(tile, WindShelter.NoShelter);
+            data.KeepShelter(tile, WindShelter.NoShelter);
             KeepBounds(tile.Coord);
             KeepTileType(tile);
         }
     }
 
+    // 지금까지 본 타일 중 가장 바깥쪽 좌표(맵 경계)를 갱신한다.
     private void KeepBounds(Vector2Int cell)
     {
-        minimumColumn = Mathf.Min(minimumColumn, cell.x);
-        maximumColumn = Mathf.Max(maximumColumn, cell.x);
-        minimumRow = Mathf.Min(minimumRow, cell.y);
-        maximumRow = Mathf.Max(maximumRow, cell.y);
+        minCol = Mathf.Min(minCol, cell.x);
+        maxCol = Mathf.Max(maxCol, cell.x);
+        minRow = Mathf.Min(minRow, cell.y);
+        maxRow = Mathf.Max(maxRow, cell.y);
     }
 
+    // 타일을 고지/평지 목록에 나눠 담는다.
     private void KeepTileType(Tile tile)
     {
         if (tile.Terrain == TerrainType.High)
@@ -58,6 +62,7 @@ public class WindShelterCalc
         }
     }
 
+    // 맵 안쪽에 있는 고지 타일만 골라서 위치를 기록한다.
     private void CollectHighs()
     {
         for (int highIndex = 0; highIndex < highTiles.Count; highIndex++)
@@ -70,22 +75,25 @@ public class WindShelterCalc
         }
     }
 
+    // 이 좌표가 맵 가장자리가 아니라 안쪽인지 확인한다.
     private bool IsInnerCell(Vector2Int cell)
     {
-        return cell.x > minimumColumn
-            && cell.x < maximumColumn
-            && cell.y > minimumRow
-            && cell.y < maximumRow;
+        return cell.x > minCol
+            && cell.x < maxCol
+            && cell.y > minRow
+            && cell.y < maxRow;
     }
 
+    // 이 고지 타일의 좌표를 상하좌우 기준별로 기록해둔다.
     private void KeepHigh(Vector2Int cell)
     {
-        KeepMinimum(leftHighByRow, cell.y, cell.x);
-        KeepMaximum(rightHighByRow, cell.y, cell.x);
-        KeepMinimum(bottomHighByColumn, cell.x, cell.y);
-        KeepMaximum(topHighByColumn, cell.x, cell.y);
+        KeepMinimum(rowLeft, cell.y, cell.x);
+        KeepMaximum(rowRight, cell.y, cell.x);
+        KeepMinimum(colBottom, cell.x, cell.y);
+        KeepMaximum(colTop, cell.x, cell.y);
     }
 
+    // 같은 줄에서 가장 작은 위치 값을 저장한다.
     private static void KeepMinimum(Dictionary<int, int> values, int line, int position)
     {
         if (!values.TryGetValue(line, out int current) || position < current)
@@ -94,6 +102,7 @@ public class WindShelterCalc
         }
     }
 
+    // 같은 줄에서 가장 큰 위치 값을 저장한다.
     private static void KeepMaximum(Dictionary<int, int> values, int line, int position)
     {
         if (!values.TryGetValue(line, out int current) || position > current)
@@ -102,36 +111,38 @@ public class WindShelterCalc
         }
     }
 
-    private void ResolveGrounds(WindShelterData resultData)
+    // 모든 평지 타일에 대해 바람 막힘 여부를 계산해서 채운다.
+    private void ResolveGrounds(WindShelterData data)
     {
         for (int groundIndex = 0; groundIndex < groundTiles.Count; groundIndex++)
         {
             Tile groundTile = groundTiles[groundIndex];
             WindShelter shelter = ResolveShelter(groundTile.Coord);
-            resultData.KeepShelter(groundTile, shelter);
+            data.KeepShelter(groundTile, shelter);
         }
     }
 
+    // 이 타일이 동서남북 중 어느 방향에서 오는 바람을 막고 있는지 계산한다.
     private WindShelter ResolveShelter(Vector2Int cell)
     {
         WindShelter shelter = WindShelter.NoShelter;
 
-        if (HasLowerHigh(leftHighByRow, cell.y, cell.x))
+        if (HasLowerHigh(rowLeft, cell.y, cell.x))
         {
             shelter |= WindShelter.FromWest;
         }
 
-        if (HasHigherHigh(rightHighByRow, cell.y, cell.x))
+        if (HasHigherHigh(rowRight, cell.y, cell.x))
         {
             shelter |= WindShelter.FromEast;
         }
 
-        if (HasLowerHigh(bottomHighByColumn, cell.x, cell.y))
+        if (HasLowerHigh(colBottom, cell.x, cell.y))
         {
             shelter |= WindShelter.FromSouth;
         }
 
-        if (HasHigherHigh(topHighByColumn, cell.x, cell.y))
+        if (HasHigherHigh(colTop, cell.x, cell.y))
         {
             shelter |= WindShelter.FromNorth;
         }
@@ -139,11 +150,13 @@ public class WindShelterCalc
         return shelter;
     }
 
+    // 같은 줄에서 더 작은 위치에 고지가 있는지 확인한다.
     private static bool HasLowerHigh(Dictionary<int, int> values, int line, int position)
     {
         return values.TryGetValue(line, out int highPosition) && highPosition < position;
     }
 
+    // 같은 줄에서 더 큰 위치에 고지가 있는지 확인한다.
     private static bool HasHigherHigh(Dictionary<int, int> values, int line, int position)
     {
         return values.TryGetValue(line, out int highPosition) && highPosition > position;

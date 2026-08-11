@@ -10,6 +10,7 @@ public class DesertZone : MonoBehaviour
     public ZoneStatEffect[] Effects => effects;
     public Vector2Int WindDirection => windDirection;
 
+    // 바람 방향을 새 값으로 바꿔 저장한다.
     public void SetWindDirection(Vector2Int direction)
     {
         windDirection = direction;
