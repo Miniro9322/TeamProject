@@ -23,7 +23,6 @@ public class WindShelterCalc
         CollectTiles(cells, data);
         CollectHighs();
         ResolveGrounds(data);
-        ResolveHighs(data);
         return data;
     }
 
@@ -123,38 +122,27 @@ public class WindShelterCalc
         }
     }
 
-    // 모든 고지 타일도 자신부터 뒤쪽 보호선에 포함해 계산한다.
-    private void ResolveHighs(WindShelterData data)
-    {
-        for (int highIndex = 0; highIndex < highTiles.Count; highIndex++)
-        {
-            Tile highTile = highTiles[highIndex];
-            WindShelter shelter = ResolveShelter(highTile.Coord);
-            data.KeepShelter(highTile, shelter);
-        }
-    }
-
     // 이 타일이 동서남북 중 어느 방향에서 오는 바람을 막고 있는지 계산한다.
     private WindShelter ResolveShelter(Vector2Int cell)
     {
         WindShelter shelter = WindShelter.NoShelter;
 
-        if (HasMinHigh(rowLeft, cell.y, cell.x))
+        if (HasLowerHigh(rowLeft, cell.y, cell.x))
         {
             shelter |= WindShelter.FromWest;
         }
 
-        if (HasMaxHigh(rowRight, cell.y, cell.x))
+        if (HasHigherHigh(rowRight, cell.y, cell.x))
         {
             shelter |= WindShelter.FromEast;
         }
 
-        if (HasMinHigh(colBottom, cell.x, cell.y))
+        if (HasLowerHigh(colBottom, cell.x, cell.y))
         {
             shelter |= WindShelter.FromSouth;
         }
 
-        if (HasMaxHigh(colTop, cell.x, cell.y))
+        if (HasHigherHigh(colTop, cell.x, cell.y))
         {
             shelter |= WindShelter.FromNorth;
         }
@@ -162,15 +150,15 @@ public class WindShelterCalc
         return shelter;
     }
 
-    // 같은 줄에서 현재 위치보다 작거나 같은 고지가 있는지 확인한다.
-    private static bool HasMinHigh(Dictionary<int, int> values, int line, int position)
+    // 같은 줄에서 더 작은 위치에 고지가 있는지 확인한다.
+    private static bool HasLowerHigh(Dictionary<int, int> values, int line, int position)
     {
-        return values.TryGetValue(line, out int highPosition) && highPosition <= position;
+        return values.TryGetValue(line, out int highPosition) && highPosition < position;
     }
 
-    // 같은 줄에서 현재 위치보다 크거나 같은 고지가 있는지 확인한다.
-    private static bool HasMaxHigh(Dictionary<int, int> values, int line, int position)
+    // 같은 줄에서 더 큰 위치에 고지가 있는지 확인한다.
+    private static bool HasHigherHigh(Dictionary<int, int> values, int line, int position)
     {
-        return values.TryGetValue(line, out int highPosition) && highPosition >= position;
+        return values.TryGetValue(line, out int highPosition) && highPosition > position;
     }
 }

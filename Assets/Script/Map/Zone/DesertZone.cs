@@ -7,8 +7,15 @@ public class DesertZone : MonoBehaviour
 
     [SerializeField] private Vector2Int windDirection = GridCalculator.Right;
 
+    [SerializeField, Min(0.1f)] private float arrowSize = 0.75f;
+    [SerializeField, Min(0f)] private float arrowHeight = 0.08f;
+    [SerializeField] private Color arrowColor = Color.yellow;
+
     public DebuffSO[] Debuffs => debuffs;
     public Vector2Int WindDirection => windDirection;
+    public float ArrowSize => arrowSize;
+    public float ArrowHeight => arrowHeight;
+    public Color ArrowColor => arrowColor;
 
     // 바람 방향을 새 값으로 바꿔 저장한다.
     public void SetWindDirection(Vector2Int direction)

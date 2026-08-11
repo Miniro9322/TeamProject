@@ -38,12 +38,24 @@ public class MapAssemble : MonoBehaviour
 
         MapBoard desertBoard = desertZone.GetComponent<MapBoard>();
         WindShelterData shelterData = new WindShelterCalc().BuildData(desertBoard.Cells);
-        zoneEffectApplier = new ZoneEffectApplier(desertZone, desertBoard, shelterData);
-        mapGame.Placer.zoneEffectApplier = zoneEffectApplier;
-        UnitReplace replace = new UnitReplace(mapGame.Units, zoneEffectApplier);
+        WindPreview windPreview = new WindPreview(
+            desertBoard,
+            desertZone.transform,
+            desertZone.ArrowSize,
+            desertZone.ArrowHeight,
+            desertZone.ArrowColor);
+        zoneEffectApplier = new ZoneEffectApplier(
+            desertZone,
+            desertBoard,
+            shelterData,
+            mapGame.Units,
+            windPreview);
 
         DayNightBuildRule dayNightRule = new DayNightBuildRule();
         dayNightRule.rule = mapGame.Rule;
+
+        mapGame.Placer.zoneEffectApplier = zoneEffectApplier;
+        UnitReplace replace = new UnitReplace(mapGame.Units, zoneEffectApplier);
 
         skillCast = new HeroSkillCastController { dayNightRule = dayNightRule };
 
@@ -107,9 +119,11 @@ public class MapAssemble : MonoBehaviour
         OnDayChanged(); // 첫 날짜도 시작하자마자 바로 맞춘다 — 이벤트가 처음 울릴 때까지 기다리지 않는다
 
         mapGame.Rule.ChangeToDay += zoneEffectApplier.OnDayChanged;
+        zoneEffectApplier.OnDayChanged();
 
 
         mapGame.Rule.ChangeToNight += view.ClearMode;
+        mapGame.Rule.ChangeToNight += zoneEffectApplier.OnNightChanged;
         mapGame.Rule.ChangeToNight += skillCast.ClearSelection;
 
         // 확장 이벤트: 5일마다 GameManager가 쏘고, 밤이 되면 선택을 무른다.
@@ -124,7 +138,9 @@ public class MapAssemble : MonoBehaviour
     {
         ghost.ClearGhosts();
         mapGame.Rule.ChangeToNight -= view.ClearMode;
+        mapGame.Rule.ChangeToNight -= zoneEffectApplier.OnNightChanged;
         mapGame.Rule.ChangeToDay -= zoneEffectApplier.OnDayChanged;
+        zoneEffectApplier.Dispose();
         if (laneModules != null)
         {
             mapGame.Rule.ChangeToDay -= OnDayChanged;
