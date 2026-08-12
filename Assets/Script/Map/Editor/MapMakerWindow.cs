@@ -35,7 +35,8 @@ public class MapMakerWindow : EditorWindow
     {
         Prefab,
         Lane,
-        Problem
+        Problem,
+        Wave
     }
 
     private Grid[] _modules = System.Array.Empty<Grid>();
@@ -61,6 +62,11 @@ public class MapMakerWindow : EditorWindow
     private TileTheme _theme;
     private GameObject _pick;
     private GameObject _newPrefab;
+    // 적 탭에서 훑어볼 지역·라운드. 모듈은 자기가 어느 지역인지 모르므로 직접 고른다.
+    private int _waveRegion = 1;
+    private int _waveRound = 1;
+    // 고른 웨이브 행. Entry가 아니라 WaveTable.Data로 들고 있어야 다음 프레임에도 선택이 유지된다.
+    private WaveTable.Data _waveChosen;
     private readonly Dictionary<MapBrush, GameObject> _lastPicks = new();
     private int _themeModule = -1;
     private readonly HashSet<Vector2Int> _swapped = new();
@@ -175,6 +181,7 @@ public class MapMakerWindow : EditorWindow
 
         List<Tile> tiles = ModuleScan.CollectTiles(module);
         Dictionary<Vector2Int, Tile> cells = ModuleScan.MapCells(tiles, out _, out _);
+        CampfireData campfireData = BuildCampfire(module, cells);
 
         if (cells.Count == 0)
         {
@@ -222,7 +229,7 @@ public class MapMakerWindow : EditorWindow
                 DrawTerrainPanel(module, cells);
             }
 
-            DrawGridArea(view, cells, lanes, overrides);
+            DrawGridArea(view, cells, lanes, overrides, campfireData);
 
             if (roomForBoth)
             {
@@ -244,13 +251,14 @@ public class MapMakerWindow : EditorWindow
         }
 
         List<string> problems = TileAuthorRule.FindProblems(cells, lanes, tiles.Count, _day);
+        SpawnWaveReadout.Groups waveGroups = SpawnWaveReadout.Collect(_waveRegion, _waveRound);
 
         int overrideCount = overrides?.Count ?? 0;
         DrawActionPreview(module, cells);
         DrawStatusBar(cells, view, lanes, problems.Count, overrideCount);
         DrawMarkerLegend(overrideCount);
         DrawBrushNote();
-        DrawShelf(module, lanes, routes, problems);
+        DrawShelf(module, lanes, routes, problems, waveGroups);
     }
 
     /// <summary>
@@ -624,6 +632,8 @@ public class MapMakerWindow : EditorWindow
             GUILayout.Space(6);
             GUILayout.Label("기믹", EditorStyles.miniBoldLabel);
             BrushRow(MapBrush.Fire, "불", MapMakerPalette.Fire, TileTally.CountGimmick(cells, GimmickType.Fire));
+            BrushRow(MapBrush.Campfire, "모닥불", MapMakerPalette.Campfire, TileTally.CountGimmick(cells, GimmickType.Campfire));
+            DrawCampfireRange(module);
 
             GUILayout.Space(6);
             GUILayout.Label("표식", EditorStyles.miniBoldLabel);
@@ -662,6 +672,7 @@ public class MapMakerWindow : EditorWindow
             GUILayout.Space(6);
             GUILayout.Label("■ 켜짐   □ 켜졌지만\n     지금은 효과 없음", EditorStyles.miniLabel);
             GUILayout.Label("켜진 붓을 다시 누르면 꺼집니다", EditorStyles.wordWrappedMiniLabel);
+            GUILayout.Label("붓 고른 뒤 타일 클릭 = 켜기/끄기 뒤집기", EditorStyles.wordWrappedMiniLabel);
         }
     }
 
@@ -739,7 +750,8 @@ public class MapMakerWindow : EditorWindow
 
     private void DrawGridArea(TileGridView view, Dictionary<Vector2Int, Tile> cells,
         IReadOnlyList<LaneData> lanes,
-        HashSet<Vector2Int> overrides)
+        HashSet<Vector2Int> overrides,
+        CampfireData campfireData)
     {
         // 프레임을 접을 때 짝이 맞게 풀리도록 스크롤 판을 scope로 연다 — 입력 처리가 이 안에서 프레임을 접는다.
         using (new EditorGUILayout.VerticalScope())
@@ -751,8 +763,43 @@ public class MapMakerWindow : EditorWindow
             HandleHover(area, view);
             HandleStroke(area, view, cells);
             view.Draw(area, _cellPixels, lanes, RouteIndex(lanes), RouteNodes(),
-                _hover, overrides, _showInert);
+                _hover, overrides, _showInert, campfireData);
         }
+    }
+
+    // 현재 모듈의 실제 IceZone 값으로 에디터 보호 영역을 계산합니다.
+    private static CampfireData BuildCampfire(
+        Grid module,
+        IReadOnlyDictionary<Vector2Int, Tile> cells)
+    {
+        IceZone iceZone = module.GetComponentInParent<IceZone>(true);
+        if (iceZone == null)
+        {
+            return null;
+        }
+
+        return new CampfireCalc().BuildData(cells, iceZone.CampfireRange);
+    }
+
+    // 별도 에디터 값 없이 IceZone의 실제 직렬화 범위를 편집합니다.
+    private static void DrawCampfireRange(Grid module)
+    {
+        IceZone iceZone = module.GetComponentInParent<IceZone>(true);
+        if (iceZone == null)
+        {
+            return;
+        }
+
+        int range = EditorGUILayout.IntField("보호 범위", iceZone.CampfireRange);
+        range = Mathf.Max(0, range);
+        if (range == iceZone.CampfireRange)
+        {
+            return;
+        }
+
+        Undo.RecordObject(iceZone, "Change Campfire Range");
+        iceZone.SetRange(range);
+        EditorUtility.SetDirty(iceZone);
     }
 
     // 지금 고른 경로의 번호. 고른 것이 없거나 그 레인이 사라졌으면 -1이다.
@@ -1112,6 +1159,14 @@ public class MapMakerWindow : EditorWindow
             return;
         }
 
+        // 격자 밖 클릭·드래그는 여기서 처리할 일이 아니다 — 먼저 삼키면(Use) 이벤트 타입이 Used로
+        // 바뀌어서 이 뒤에 그려지는 선반 손잡이·오른쪽 배치 버튼이 같은 클릭을 영영 못 받는다.
+        bool inside = area.Contains(input.mousePosition);
+        if ((input.type == EventType.MouseDown || input.type == EventType.MouseDrag) && !inside)
+        {
+            return;
+        }
+
         // 이벤트를 먼저 삼킨다 — 찍은 뒤에는 프레임을 접으므로 이 줄로 돌아오지 않는다.
         if (input.type == EventType.MouseDown)
         {
@@ -1129,7 +1184,8 @@ public class MapMakerWindow : EditorWindow
             _swapped.Clear(); // 새 붓질 — 이번에 교체한 칸 기록을 비운다
             _strokeCell = new Vector2Int(int.MinValue, int.MinValue); // 새 붓질 — 마지막 칸 기록을 비운다
             _strokeGroup = TileStamp.BeginStroke();
-            StampAt(input.mousePosition, area, view, cells, input.alt);
+            // 클릭 한 번(끌지 않음)은 지금 상태를 뒤집는다 — 켜진 칸을 누르면 바로 꺼진다.
+            StampAt(input.mousePosition, area, view, cells, input.alt, true);
             _rangeAnchor = coord; // 다음 Shift+클릭이 여기부터 구간을 잡도록 기준으로 남긴다
             return;
         }
@@ -1138,10 +1194,11 @@ public class MapMakerWindow : EditorWindow
         {
             input.Use();
 
-            // 점 찍기는 누른 칸 하나만 받는다 — 끌고 지나간 칸까지 쌓이면 그리기와 다를 것이 없어진다.
+            // 끌기는 지나간 칸 전부를 한 방향으로 맞춘다 — 칸마다 뒤집으면 여러 칸을 같은 값으로
+            // 칠하려 할 때 이미 켜진 칸만 꺼져버려 얼룩덜룩해진다.
             if (_tool != MapTool.Route || _routeMode == RouteMode.Draw)
             {
-                StampAt(input.mousePosition, area, view, cells, input.alt);
+                StampAt(input.mousePosition, area, view, cells, input.alt, false);
             }
 
             return;
@@ -1156,7 +1213,7 @@ public class MapMakerWindow : EditorWindow
     }
 
     private void StampAt(Vector2 mouse, Rect area, TileGridView view, Dictionary<Vector2Int, Tile> cells,
-        bool turnOff)
+        bool turnOff, bool toggle)
     {
         Vector2Int coord = view.CoordAt(mouse, area, _cellPixels);
         bool exists = cells.TryGetValue(coord, out Tile tile);
@@ -1171,7 +1228,7 @@ public class MapMakerWindow : EditorWindow
         }
 
         _strokeCell = coord;
-        ApplyToCell(coord, tile, cells, turnOff);
+        ApplyToCell(coord, tile, cells, turnOff, toggle);
         Relayout(); // 경로가 바로 다시 계산돼 보이도록. 찍으면서 예고줄·붓이 바뀌므로 프레임을 접는다
     }
 
@@ -1195,7 +1252,8 @@ public class MapMakerWindow : EditorWindow
                 var coord = new Vector2Int(x, y);
                 if (cells.TryGetValue(coord, out Tile tile))
                 {
-                    ApplyToCell(coord, tile, cells, turnOff);
+                    // 구간 채우기도 끌기와 같은 이유로 한 방향으로 맞춘다(칸별 뒤집기 아님).
+                    ApplyToCell(coord, tile, cells, turnOff, false);
                 }
             }
         }
@@ -1205,7 +1263,8 @@ public class MapMakerWindow : EditorWindow
     }
 
     // 칸 하나에 지금 도구를 적용한다. 한 칸 클릭과 구간 적용이 이 한 곳을 같이 쓴다.
-    private void ApplyToCell(Vector2Int coord, Tile tile, Dictionary<Vector2Int, Tile> cells, bool turnOff)
+    // toggle=true(단일 클릭)면 지금 켜진 붓 값을 그대로 뒤집는다 — Alt를 누르면 여전히 무조건 끈다.
+    private void ApplyToCell(Vector2Int coord, Tile tile, Dictionary<Vector2Int, Tile> cells, bool turnOff, bool toggle)
     {
         _hover = coord;
 
@@ -1238,8 +1297,44 @@ public class MapMakerWindow : EditorWindow
                     break; // 장식은 기록할 지형 값이 없다 — 예고줄이 교체로 얹으라고 말한다
                 }
 
-                TileStamp.Stamp(tile, _brush, !turnOff);
+                bool on = !turnOff;
+                if (toggle && !turnOff)
+                {
+                    on = !TileFlagQuery.IsOn(tile, _brush); // 지형 붓은 항상 꺼짐으로 읽혀 그대로 켜진다
+                }
+
+                bool hadCampfire = tile.State.Gimmick == GimmickType.Campfire;
+                TileStamp.Stamp(tile, _brush, on);
+
+                if (_brush == MapBrush.Campfire)
+                {
+                    ApplyCampfireDecor(tile, on, hadCampfire);
+                }
+
                 break;
+        }
+    }
+
+    // 모닥불 기믹을 찍고 끌 때 FireTorch_CampFire 장식도 같이 얹고 걷는다 — 데이터와 겉모습이 갈리지 않게.
+    // 걷을 땐 그 칸 제일 위 장식 하나만 지운다 — 같은 칸에 다른 장식을 더 얹었다면 그게 지워질 수 있다.
+    private void ApplyCampfireDecor(Tile tile, bool on, bool hadCampfire)
+    {
+        if (_theme == null || _theme.CampfirePrefab == null)
+        {
+            return;
+        }
+
+        Grid module = _modules[_moduleIndex];
+
+        if (on && !hadCampfire)
+        {
+            DecorPlace.Add(module, tile, _theme.CampfirePrefab);
+            return;
+        }
+
+        if (!on && hadCampfire)
+        {
+            DecorPlace.Remove(module, tile);
         }
     }
 
@@ -1437,6 +1532,7 @@ public class MapMakerWindow : EditorWindow
             case MapBrush.Build: return "생산";
             case MapBrush.Swim: return "헤엄";
             case MapBrush.Fire: return "불";
+            case MapBrush.Campfire: return "모닥불";
             default: return "읽기만";
         }
     }
@@ -1513,7 +1609,7 @@ public class MapMakerWindow : EditorWindow
     /// 탭 이름에 수를 붙인다: 탭을 열지 않아도 상태가 보이고, 문제가 0인 것과 아직 안 본 것이 구분된다.
     /// </summary>
     private void DrawShelf(Grid module, IReadOnlyList<LaneData> lanes, RouteConfig routes,
-        List<string> problems)
+        List<string> problems, SpawnWaveReadout.Groups waveGroups)
     {
         int picks = _theme != null ? _theme.For(_brush).Length : 0;
 
@@ -1527,6 +1623,7 @@ public class MapMakerWindow : EditorWindow
             ShelfButton(ShelfTab.Prefab, $"프리팹 {picks}");
             ShelfButton(ShelfTab.Lane, $"경로 {ValidLanes(lanes)}/{lanes.Count}");
             ShelfButton(ShelfTab.Problem, $"문제 {problems.Count}");
+            ShelfButton(ShelfTab.Wave, $"적 {waveGroups.Total}종");
 
             GUILayout.FlexibleSpace();
             bool open = GUILayout.Toggle(
@@ -1558,18 +1655,47 @@ public class MapMakerWindow : EditorWindow
                     DrawProblems(problems);
                     break;
 
+                case ShelfTab.Wave:
+                    DrawWaveShelf(waveGroups);
+                    break;
+
                 default:
                     DrawPrefabShelf(module);
                     break;
             }
         }
+
+        // 상세는 스크롤 밖에 고정한다 — 인스펙터처럼, 카드 목록을 아무리 내려도 자리를 지켜야 한다.
+        // 스크롤 안에 같이 두면 카드 몇 장만 있어도 상세를 보려고 끝까지 내려야 하는 문제가 생긴다.
+        if (_shelf == ShelfTab.Wave)
+        {
+            SpawnWaveList.DrawDetail(waveGroups, _waveChosen);
+        }
+    }
+
+    // 적 탭. 지역·라운드를 직접 고른다 — 모듈은 자기가 어느 지역인지 모른다(WaveSpawner 인스펙터에만 있다).
+    private void DrawWaveShelf(SpawnWaveReadout.Groups groups)
+    {
+        using (new EditorGUILayout.HorizontalScope())
+        {
+            GUILayout.Label("지역", GUILayout.Width(28));
+            _waveRegion = Mathf.Max(1, EditorGUILayout.IntField(_waveRegion, GUILayout.Width(30)));
+            GUILayout.Label("라운드", GUILayout.Width(40));
+            _waveRound = Mathf.Max(1, EditorGUILayout.IntField(_waveRound, GUILayout.Width(30)));
+            GUILayout.FlexibleSpace();
+        }
+
+        _waveChosen = SpawnWaveList.DrawCards(groups, _waveChosen);
     }
 
     // 선반 위 손잡이. 위아래로 끌면 선반 높이가 늘거나 줄어 격자와 자리를 나눠 갖는다.
+    // 잡는 자리(9px)를 보이는 줄(5px)보다 넉넉히 둔다 — 줄 두께 그대로 잡는 판정은 마우스가 1px만 벗어나도 놓친다.
     private void DrawGrip()
     {
-        Rect handle = GUILayoutUtility.GetRect(0f, 5f, GUILayout.ExpandWidth(true));
-        EditorGUI.DrawRect(handle, new Color(0f, 0f, 0f, 0.35f));
+        const float band = 9f;
+        Rect handle = GUILayoutUtility.GetRect(0f, band, GUILayout.ExpandWidth(true));
+        var bar = new Rect(handle.x, handle.y + (band - 5f) / 2f, handle.width, 5f);
+        EditorGUI.DrawRect(bar, new Color(0f, 0f, 0f, 0.35f));
         EditorGUIUtility.AddCursorRect(handle, MouseCursor.ResizeVertical);
 
         Event input = Event.current;

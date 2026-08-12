@@ -16,7 +16,8 @@ public enum PassType
 public enum GimmickType
 {
     None, // 아무 일도 없는 평범한 칸(기본)
-    Fire  // 올라선 유닛이 지속피해를 받는다
+    Fire, // 올라선 유닛이 지속피해를 받는다
+    Campfire // 추위 디버프를 막는 고정 모닥불 타일
 
     //차후 추가될 효과를 갱신한다.
 

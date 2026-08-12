@@ -66,7 +66,7 @@ public abstract class DebuffSO : ScriptableObject
         // 그래서 여기서 DebuffEffectView에 직접 알려 준다. 지속 피해는 DotRegistry가 자기 장부로
         // 이미 밀어 주므로 제외한다 — 둘 다 기록하면 시계가 둘이 되어, 대상이 죽어 DoT가 일찍 끊겨도
         // 이 쪽 만료 시각까지 이펙트가 남는다.
-        if (ctx.ledger == null && !DrivesOwnEffectView) DebuffEffectView.Track(ctx.host, type, dur);
+        if (ctx.ledger == null && !DrivesOwnEffectView) DebuffEffectView.Track(ctx.host, type, dur, ctx.source);
 
         DebuffDebug.Log($"{name}({type}) 걸림 — {dur}초, scale={scale:F2}, 대상={(ctx.targetObject != null ? ctx.targetObject.name : "?")}," +
             $" 장부={(ctx.ledger != null ? "기록됨" : "없음")}", ctx.targetObject);

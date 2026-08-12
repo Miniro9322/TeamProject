@@ -62,7 +62,7 @@ public class TileGridView
     /// </summary>
     public void Draw(Rect area, int cellPixels, IReadOnlyList<LaneData> lanes, int chosen,
         IReadOnlyList<RouteNode> nodes, Vector2Int hover,
-        HashSet<Vector2Int> overrides, bool showInert)
+        HashSet<Vector2Int> overrides, bool showInert, CampfireData campfireData)
     {
         Vector2Int focus = FocusSpawn(lanes, chosen);
         HashSet<Vector2Int> route = RouteCells(lanes, chosen);
@@ -80,6 +80,7 @@ public class TileGridView
 
                 Rect rect = CellRect(area, cellPixels, col, row);
                 DrawCell(rect, tile, cellPixels, SpawnLit(focus, coord), RouteLit(route, coord));
+                DrawCampfireRange(rect, coord, campfireData);
 
                 // 붓과 무관한 상시 표식이라 DrawCell(붓에 따라 죽는 층) 위에 얹는다.
                 if (overrides != null && overrides.Contains(coord))
@@ -97,6 +98,39 @@ public class TileGridView
         DrawLanes(area, cellPixels, lanes, chosen, nodes);
         DrawHover(area, cellPixels, hover);
         DrawAxisLabels(area, cellPixels);
+    }
+
+    // 실제 공용 계산 결과에 포함된 타일에 모닥불 보호 테두리를 표시합니다.
+    private static void DrawCampfireRange(Rect rect, Vector2Int coord, CampfireData data)
+    {
+        if (!CampfireQuery.IsProtected(data, coord))
+        {
+            return;
+        }
+
+        Color color = MapMakerPalette.Campfire;
+        color.a = 0.7f;
+        const float line = 2f;
+
+        if (!CampfireQuery.IsProtected(data, coord + Vector2Int.up))
+        {
+            EditorGUI.DrawRect(new Rect(rect.x, rect.y, rect.width, line), color);
+        }
+
+        if (!CampfireQuery.IsProtected(data, coord + Vector2Int.down))
+        {
+            EditorGUI.DrawRect(new Rect(rect.x, rect.yMax - line, rect.width, line), color);
+        }
+
+        if (!CampfireQuery.IsProtected(data, coord + Vector2Int.left))
+        {
+            EditorGUI.DrawRect(new Rect(rect.x, rect.y, line, rect.height), color);
+        }
+
+        if (!CampfireQuery.IsProtected(data, coord + Vector2Int.right))
+        {
+            EditorGUI.DrawRect(new Rect(rect.xMax - line, rect.y, line, rect.height), color);
+        }
     }
 
     // 고른 경로의 출발 칸. 고른 것이 없으면 (-1,-1)이라 어느 칸과도 같지 않다.
@@ -231,6 +265,11 @@ public class TileGridView
             DrawFire(rect, cellPixels, lit);
         }
 
+        if (tile.IsCampfire)
+        {
+            DrawCampfire(rect, cellPixels, lit);
+        }
+
         if (tile.IsEnemySpawn)
         {
             DrawSpawn(rect, spawnLit);
@@ -277,6 +316,19 @@ public class TileGridView
 
         float band = Mathf.Max(2f, cellPixels * 0.22f);
         EditorGUI.DrawRect(new Rect(rect.xMax - band, rect.y, band, rect.height), color);
+    }
+
+    // 모닥불 칸 위쪽 띠. 불의 오른쪽 띠와 겹치지 않아 두 기믹을 바로 구분할 수 있다.
+    private static void DrawCampfire(Rect rect, int cellPixels, bool lit)
+    {
+        Color color = MapMakerPalette.Campfire;
+        if (!lit)
+        {
+            color = MapMakerPalette.Dim(color);
+        }
+
+        float band = Mathf.Max(2f, cellPixels * 0.22f);
+        EditorGUI.DrawRect(new Rect(rect.x, rect.y, rect.width, band), color);
     }
 
     /// <summary>
@@ -346,6 +398,7 @@ public class TileGridView
             case MapBrush.Spawn: return tile.IsEnemySpawn;
             case MapBrush.Swim: return tile.State.Pass == PassType.Swim;
             case MapBrush.Fire: return tile.IsFire;
+            case MapBrush.Campfire: return tile.IsCampfire;
             default: return TileFlagQuery.IsOn(tile, _brush);
         }
     }

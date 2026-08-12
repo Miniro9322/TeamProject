@@ -41,6 +41,7 @@ public static class DebuffEffectView
         public Component Host;
         public DebuffType Type;
         public float Expiry;
+        public object Source;
     }
 
     private static readonly List<Entry> tracked = new();
@@ -63,7 +64,7 @@ public static class DebuffEffectView
     /// 장부 없는 대상에 지속 피해가 아닌 디버프가 걸렸음을 알린다(DebuffSO.Apply가 부른다).
     /// 같은 대상·같은 종류가 이미 있으면 더 늦은 만료 시각이 이긴다 — 겹쳐 들어와도 이펙트는 하나다.
     /// </summary>
-    public static void Track(Component host, DebuffType type, float duration)
+    public static void Track(Component host, DebuffType type, float duration, object source = null)
     {
         if (host == null || type == DebuffType.None || duration <= 0f) return;
         if (!EnsureSet()) return;   // 이펙트 에셋이 없으면 기록해봐야 그릴 것이 없다
@@ -75,14 +76,27 @@ public static class DebuffEffectView
         float expiry = Time.time + duration;
         for (int i = 0; i < tracked.Count; i++)
         {
-            if (tracked[i].Host != host || tracked[i].Type != type) continue;
+            if (tracked[i].Host != host || tracked[i].Type != type || tracked[i].Source != source) continue;
             if (tracked[i].Expiry >= expiry) return;   // 이미 더 늦게 끝난다
             Entry longer = tracked[i];
             longer.Expiry = expiry;
             tracked[i] = longer;
             return;
         }
-        tracked.Add(new Entry { Host = host, Type = type, Expiry = expiry });
+        tracked.Add(new Entry { Host = host, Type = type, Expiry = expiry, Source = source });
+    }
+
+    // 대상에게 특정 출처가 표시한 디버프 효과를 제거한다.
+    public static void Remove(Component host, DebuffType type, object source)
+    {
+        for (int entryIndex = tracked.Count - 1; entryIndex >= 0; entryIndex--)
+        {
+            Entry entry = tracked[entryIndex];
+            if (entry.Host == host && entry.Type == type && entry.Source == source)
+            {
+                tracked.RemoveAt(entryIndex);
+            }
+        }
     }
 
     /// <summary>

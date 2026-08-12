@@ -33,18 +33,7 @@ public class ExpandEvent : MonoBehaviour
             return;
         }
 
-        module.Unlock(); //모듈 상태를 Preparing으로 전환. (UI에서만 호출)
-
-        // 위치 이동 방식은 일단 보류 — 모듈은 원래 위치에 그대로 두고 해금만 한다.
-        // module.gameObject.transform.position = regionPoint[expandCount].position;
-        //
-        // // 이동한 위치를 반영: 보드부터 다시 지어야 WorldBounds가 새 위치를 가리킨다(Fog는 실시간이라 안 해도 되지만, 카메라 제한은 캐시라 필요).
-        // MapBoard board = module.GetComponent<MapBoard>();
-        // board.Build();
-        //
-        // fogController.RefreshArea(module); // 이동한 위치로 안개 영역 재계산
-        // if (cameraRig != null) cameraRig.RebuildLimit(); // 이동한 위치로 카메라 팬 제한 재계산
-        // expandCount++;
+        module.Unlock(); //모듈 상태를 Preparing으로 전환.
 
         _choices.Clear();
     }

@@ -98,6 +98,11 @@ public static class TileActionPreview
             return FireWord(turnOff);
         }
 
+        if (brush == MapBrush.Campfire)
+        {
+            return CampfireWord(turnOff);
+        }
+
         if (IsPlaceBrush(brush))
         {
             return PlaceWord(tile, brush, turnOff);
@@ -292,6 +297,17 @@ public static class TileActionPreview
         }
 
         return "불 켜기 — 올라선 아군·적이 모두 지속피해를 받습니다";
+    }
+
+    // 모닥불 붓. 지금 단계에서는 고정 보호 타일로 저장하는 의미만 안내한다.
+    private static string CampfireWord(bool turnOff)
+    {
+        if (turnOff)
+        {
+            return "모닥불 끄기";
+        }
+
+        return "모닥불 켜기 — 추위 보호용 고정 타일로 저장합니다";
     }
 
     private static bool IsPlaceBrush(MapBrush brush)

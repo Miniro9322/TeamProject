@@ -62,6 +62,9 @@ public partial class Tile : MonoBehaviour
     // 불 칸인가. 지나갈 수도, 아군을 놓을 수도 있다.
     public bool IsFire => Gimmick == GimmickType.Fire;
 
+    // 추위 디버프를 막는 고정 모닥불 칸인가.
+    public bool IsCampfire => Gimmick == GimmickType.Campfire;
+
     // 이 칸을 지나갈 수 있는지.(현재는 물적도 일반 땅 밟을 수 있게 오픈된 형태)
     public bool CanPass(PassType way)
     {

@@ -75,6 +75,9 @@ public static class MapMakerPalette
     /// <summary>불 칸 표식 — 헤엄과 같은 이유로 띠로만 갈리며, 물과 정반대 색으로 둔다.</summary>
     public static readonly Color Fire = new(0.949f, 0.412f, 0.188f);
 
+    /// <summary>모닥불 칸 표식 — 불의 주황색과 구분되는 따뜻한 노란색.</summary>
+    public static readonly Color Campfire = new(1.000f, 0.765f, 0.235f);
+
     /// <summary>칸 글자(P·G·H·B) — 지형색 위에서 읽히도록 거의 흰색으로 둔다.</summary>
     public static readonly Color Letter = new(0.945f, 0.945f, 0.945f);
 

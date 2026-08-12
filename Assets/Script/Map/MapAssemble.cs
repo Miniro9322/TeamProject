@@ -20,22 +20,48 @@ public class MapAssemble : MonoBehaviour
     [SerializeField] private TilePaintView tilePaintView;
     [SerializeField] private RangeInput rangeInput;
     [SerializeField] private HeroCombineManager combineManager;
+    [SerializeField] private DesertZone desertZone;
 
     private List<PathTrail> pathTrails;
     private List<EnemyLanes> laneModules;
     private PlaceGhost ghost;
     private HeroSkillCastController skillCast;
+    private ZoneEffectApplier zoneEffectApplier;
 
     private void Start()
     {
         List<MapBoard> boards = ModuleBoards();
+        BuildCampfires(boards);
 
         PointerPick pointerPick = new PointerPick(boards);
         PlaceFinder finder = new PlaceFinder(pointerPick, palette, placeYOffset);
-        UnitReplace replace = new UnitReplace(mapGame.Units);
+
+        MapBoard desertBoard = desertZone.GetComponent<MapBoard>();
+        WindShelterData shelterData = new WindShelterCalc().BuildData(desertBoard.Cells);
+        WindPreview windPreview = new WindPreview(
+            desertBoard,
+            desertZone.transform,
+            desertZone.ArrowSize,
+            desertZone.ArrowHeight,
+            desertZone.ArrowColor);
+        DesertLineEffect lineEffect = new DesertLineEffect(
+            desertBoard,
+            shelterData,
+            Resources.Load<GameObject>("ZoneEffectPrefab/DesertStrongVFX"),
+            Resources.Load<GameObject>("ZoneEffectPrefab/DesertWeakVFX"));
+        zoneEffectApplier = new ZoneEffectApplier(
+            desertZone,
+            desertBoard,
+            shelterData,
+            mapGame.Units,
+            windPreview,
+            lineEffect);
 
         DayNightBuildRule dayNightRule = new DayNightBuildRule();
         dayNightRule.rule = mapGame.Rule;
+
+        mapGame.Placer.zoneEffectApplier = zoneEffectApplier;
+        UnitReplace replace = new UnitReplace(mapGame.Units, zoneEffectApplier);
 
         skillCast = new HeroSkillCastController { dayNightRule = dayNightRule };
 
@@ -64,7 +90,7 @@ public class MapAssemble : MonoBehaviour
         action.palette = palette;
         action.finder = finder;
         action.placer = mapGame.Placer;
-        action.remover = new UnitRemover(mapGame.Units, mapGame.HeroRoster);
+        action.remover = new UnitRemover(mapGame.Units, mapGame.HeroRoster, zoneEffectApplier);
         action.replace = replace;
         action.dayNightRule = dayNightRule;
         action.view = view;
@@ -98,8 +124,12 @@ public class MapAssemble : MonoBehaviour
         mapGame.Rule.ChangeToDay += OnDayChanged;
         OnDayChanged(); // 첫 날짜도 시작하자마자 바로 맞춘다 — 이벤트가 처음 울릴 때까지 기다리지 않는다
 
+        mapGame.Rule.ChangeToDay += zoneEffectApplier.OnDayChanged;
+        zoneEffectApplier.OnDayChanged();
+
 
         mapGame.Rule.ChangeToNight += view.ClearMode;
+        mapGame.Rule.ChangeToNight += zoneEffectApplier.OnNightChanged;
         mapGame.Rule.ChangeToNight += skillCast.ClearSelection;
 
         // 확장 이벤트: 5일마다 GameManager가 쏘고, 밤이 되면 선택을 무른다.
@@ -114,6 +144,9 @@ public class MapAssemble : MonoBehaviour
     {
         ghost.ClearGhosts();
         mapGame.Rule.ChangeToNight -= view.ClearMode;
+        mapGame.Rule.ChangeToNight -= zoneEffectApplier.OnNightChanged;
+        mapGame.Rule.ChangeToDay -= zoneEffectApplier.OnDayChanged;
+        zoneEffectApplier.Dispose();
         if (laneModules != null)
         {
             mapGame.Rule.ChangeToDay -= OnDayChanged;
@@ -145,6 +178,22 @@ public class MapAssemble : MonoBehaviour
             boards.Add(logic.GetComponent<MapBoard>());
         }
         return boards;
+    }
+
+    // 모든 얼음 보드의 고정 모닥불 보호 영역을 시작할 때 한 번 만듭니다.
+    private static void BuildCampfires(List<MapBoard> boards)
+    {
+        CampfireCalc calc = new();
+        for (int index = 0; index < boards.Count; index++)
+        {
+            MapBoard board = boards[index];
+            IceZone iceZone = board.GetComponent<IceZone>();
+            if (iceZone != null)
+            {
+                CampfireData data = calc.BuildData(board.Cells, iceZone.CampfireRange);
+                iceZone.SetCampfire(data);
+            }
+        }
     }
     private List<PathTrail> ModuleTrails()
     {

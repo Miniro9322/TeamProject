@@ -91,6 +91,26 @@ public class BuffManager : ITickable
         });
     }
 
+    // 대상에게 특정 출처가 건 효과만 제거한다.
+    public void RemoveBuffs(IUnit target, object source)
+    {
+        for (int buffIndex = activeBuffs.Count - 1; buffIndex >= 0; buffIndex--)
+        {
+            ActiveBuff buff = activeBuffs[buffIndex];
+            if (buff.Target != target || buff.Source != source)
+            {
+                continue;
+            }
+
+            for (int modIndex = 0; modIndex < buff.Modifiers.Count; modIndex++)
+            {
+                target.Stats.RemoveModifier(buff.StatType, buff.Modifiers[modIndex]);
+            }
+
+            activeBuffs.RemoveAt(buffIndex);
+        }
+    }
+
     // StackingMaxEffectTrait처럼 "지금 스택이 최대치에 도달했는가"를 확인해야 하는 트레잇을 위한 조회.
     // 매칭되는 버프가 없으면 0.
     public int GetStacks(IUnit target, object source)
