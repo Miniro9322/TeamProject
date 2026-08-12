@@ -10,6 +10,7 @@ public class TilePaintView : MonoBehaviour
     [Range(0.01f, 0.2f)]
     [SerializeField] private float edgeWidth = 0.06f;
     [SerializeField] private float edgeLift = 0.025f;
+    [SerializeField] private Material campfireEdgeMat;
 
     // MapAssemble이 조립 시점에 넣어준다.
     public TilePaintSync sync;
@@ -18,12 +19,14 @@ public class TilePaintView : MonoBehaviour
 
     private readonly List<Tile> cellPainted = new();
     private PlaceEdgeView edgeView;
+    private CampfireEdgeView campfireEdgeView;
 
     // 외곽선 출력기와 대상 맵 보드를 준비합니다.
     public void SetupEdges(List<MapBoard> boards)
     {
         edgeView = new PlaceEdgeView(transform, edgeMat, edgeWidth, edgeLift);
         edgeView.Setup(boards);
+        campfireEdgeView = new CampfireEdgeView(transform, campfireEdgeMat, edgeWidth, edgeLift);
     }
 
     private void Update()
@@ -35,6 +38,7 @@ public class TilePaintView : MonoBehaviour
 
         bool changed = sync.TryBuildPlan(out List<PaintEntry> plan);
         ShowEdges();
+        ShowCampfireEdges();
 
         if (changed)
         {
@@ -52,10 +56,20 @@ public class TilePaintView : MonoBehaviour
         }
     }
 
+    // 클릭한 모닥불의 범위 외곽선을 표시합니다.
+    private void ShowCampfireEdges()
+    {
+        if (campfireEdgeView != null)
+        {
+            campfireEdgeView.Show(sync.CampfireEdgeTiles, sync.CampfireEdgeVersion);
+        }
+    }
+
     // 생성한 외곽선 출력기를 정리합니다.
     private void OnDestroy()
     {
         edgeView?.Dispose();
+        campfireEdgeView?.Dispose();
     }
 
     private void RestoreCells()
