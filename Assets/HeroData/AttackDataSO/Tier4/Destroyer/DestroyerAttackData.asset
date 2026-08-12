@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3e63ecebd4cd6e044a8a127ea3df05bc, type: 3}
-  m_Name: ThunderMageAttackData
+  m_Name: DestroyerAttackData
   m_EditorClassIdentifier: Assembly-CSharp::AttackDataSO
   range: 3
   rangeShape: 0
@@ -18,28 +18,28 @@ MonoBehaviour:
   attackType: 0
   attackPer: 1
   attackCount: 1
-  targetMode: 0
+  targetMode: 1
   targetCount: 1
-  shotInterval: 0.1
+  shotInterval: 0
   areaShape: 3
   areaRange: 1
   lineLength: 2
   areaCenterOnTarget: 0
   chainRange: 2
-  chainCount: 4
+  chainCount: 5
   chainFalloff: 0.8
-  chainEffectPrefab: {fileID: 2165654375957946359, guid: c4565f6c284d3034faf3040eac3351b5, type: 3}
+  chainEffectPrefab: {fileID: 2165654375957946359, guid: 11ba2dc2376427342b927eea2f251ea8, type: 3}
   chainEffectLifetime: 0.3
-  timingMode: 0
+  timingMode: 1
   continuousDelivery: 0
-  continuousDuration: 1
-  continuousTickInterval: 0.5
-  beamEffectPrefab: {fileID: 0}
+  continuousDuration: 0
+  continuousTickInterval: 0.2
+  beamEffectPrefab: {fileID: 2165654375957946359, guid: 11ba2dc2376427342b927eea2f251ea8, type: 3}
   selectMode: 0
   animTriggers:
-  - Attack1
-  projectilePrefab: {fileID: 6807546537330266764, guid: c3a6d12188c6c3d4c93d0d52f23cd2ab, type: 3}
-  clipLength: 0.53333336
+  - Channeling
+  projectilePrefab: {fileID: 0}
+  clipLength: 0.5
   buffList: []
   targetDebuffs: []
   groundZonePrefab: {fileID: 0}
