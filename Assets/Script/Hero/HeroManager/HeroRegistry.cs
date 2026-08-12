@@ -7,6 +7,8 @@ public class HeroRegistry : MonoBehaviour
 {
     [SerializeField] private List<HeroData> datas;
     [SerializeField] private MapGame game;
+
+    public IReadOnlyList<HeroData> AllHeroDatas => datas;
     private readonly Dictionary<int, List<HeroData>> heroForTierDatas = new();
 
     // HeroRoster.Entries를 MergeKey로 묶어둔 캐시. HeroRoster가 원본, 여긴 조회용 인덱스일 뿐.
