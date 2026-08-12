@@ -17,7 +17,7 @@ public class FogController : MonoBehaviour
     [Tooltip("잠긴 모듈 외곽 밖으로 안개를 더 밀어낼 칸 수. 경계 노이즈가 외곽 타일을 깎아먹는 걸 막는다.")]
     [SerializeField, Range(0f, 8f)] private float edgeCells = 1.5f;
 
-    private const int MaxAreas = 8;
+    private const int MaxAreas = 12;
     private const float FullyOpenAmount = 1f;
 
     private static readonly int AreasId = Shader.PropertyToID("_FogAreas");
@@ -82,7 +82,7 @@ public class FogController : MonoBehaviour
                 _cellSize = board.CellSize;
             }
 
-            _areas[_count] = MeasureCellArea(board);
+            _areas[_count] = ApplyModuleBackground(module, MeasureCellArea(board));
 
             _opens[_count] = 0f;
             _revealed[_count] = false;
@@ -90,6 +90,28 @@ public class FogController : MonoBehaviour
             _modules.Add(module);
             _count++;
         }
+    }
+
+    // 이 모듈 자식 중 FogBackground가 붙은 장식 배경이 있으면 그 Renderer 범위까지 사각형을 넓혀서 합친다
+    // (같은 open 값을 쓰게 되어 그 모듈이 해금될 때 배경도 같이 열린다). 수동 배선이 필요 없다.
+    private static Vector4 ApplyModuleBackground(ModuleLogic module, Vector4 area)
+    {
+        foreach (FogBackground background in module.GetComponentsInChildren<FogBackground>())
+        {
+            Bounds bounds = background.GetComponent<Renderer>().bounds;
+            area = UnionRect(area, new Vector4(bounds.center.x, bounds.center.z, bounds.extents.x, bounds.extents.z));
+        }
+        return area;
+    }
+
+    // 두 사각형(중심XZ, 반크기XZ)을 감싸는 가장 작은 사각형을 만든다.
+    private static Vector4 UnionRect(Vector4 a, Vector4 b)
+    {
+        float minX = Mathf.Min(a.x - a.z, b.x - b.z);
+        float maxX = Mathf.Max(a.x + a.z, b.x + b.z);
+        float minZ = Mathf.Min(a.y - a.w, b.y - b.w);
+        float maxZ = Mathf.Max(a.y + a.w, b.y + b.w);
+        return new Vector4((minX + maxX) * 0.5f, (minZ + maxZ) * 0.5f, (maxX - minX) * 0.5f, (maxZ - minZ) * 0.5f);
     }
 
     // 인스펙터에 연결된 상시 오픈 구역을 안개 데이터에 등록한다.
@@ -152,7 +174,7 @@ public class FogController : MonoBehaviour
         if (index < 0) return;
 
         MapBoard board = module.GetComponent<MapBoard>();
-        _areas[index] = MeasureCellArea(board);
+        _areas[index] = ApplyModuleBackground(module, MeasureCellArea(board));
         ApplyAreas();
     }
 
