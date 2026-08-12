@@ -27,6 +27,7 @@ public class MapAssemble : MonoBehaviour
     private PlaceGhost ghost;
     private HeroSkillCastController skillCast;
     private ZoneEffectApplier zoneEffectApplier;
+    private CampfireLightController campfireLights;
 
     private void Start()
     {
@@ -127,10 +128,13 @@ public class MapAssemble : MonoBehaviour
         mapGame.Rule.ChangeToDay += zoneEffectApplier.OnDayChanged;
         zoneEffectApplier.OnDayChanged();
 
+        mapGame.Rule.ChangeToDay += campfireLights.TurnOff;
+        campfireLights.TurnOff(); // 첫 날도 낮이니 꺼진 채로 시작
 
         mapGame.Rule.ChangeToNight += view.ClearMode;
         mapGame.Rule.ChangeToNight += zoneEffectApplier.OnNightChanged;
         mapGame.Rule.ChangeToNight += skillCast.ClearSelection;
+        mapGame.Rule.ChangeToNight += campfireLights.TurnOn;
 
         // 확장 이벤트: 5일마다 GameManager가 쏘고, 밤이 되면 선택을 무른다.
         // 미배선이면 확장만 꺼지고 나머지 조립은 그대로 돈다.
@@ -147,6 +151,11 @@ public class MapAssemble : MonoBehaviour
         mapGame.Rule.ChangeToNight -= zoneEffectApplier.OnNightChanged;
         mapGame.Rule.ChangeToDay -= zoneEffectApplier.OnDayChanged;
         zoneEffectApplier.Dispose();
+        if (campfireLights != null)
+        {
+            mapGame.Rule.ChangeToNight -= campfireLights.TurnOn;
+            mapGame.Rule.ChangeToDay -= campfireLights.TurnOff;
+        }
         if (laneModules != null)
         {
             mapGame.Rule.ChangeToDay -= OnDayChanged;
@@ -180,10 +189,11 @@ public class MapAssemble : MonoBehaviour
         return boards;
     }
 
-    // 모든 얼음 보드의 고정 모닥불 보호 영역을 시작할 때 한 번 만듭니다.
-    private static void BuildCampfires(List<MapBoard> boards)
+    // 모든 얼음 보드의 고정 모닥불 보호 영역과 그 자리에 놓인 불빛을 시작할 때 한 번 만듭니다.
+    private void BuildCampfires(List<MapBoard> boards)
     {
         CampfireCalc calc = new();
+        campfireLights = new CampfireLightController();
         for (int index = 0; index < boards.Count; index++)
         {
             MapBoard board = boards[index];
@@ -192,6 +202,7 @@ public class MapAssemble : MonoBehaviour
             {
                 CampfireData data = calc.BuildData(board.Cells, iceZone.CampfireRange);
                 iceZone.SetCampfire(data);
+                campfireLights.Collect(board, iceZone.CampfireRange);
             }
         }
     }
