@@ -14,10 +14,16 @@ public static class TileAuthorRule
     /// 본진·특수·빈 타일은 원래 배치 불가라 문제로 보지 않는다.
     /// 스폰 칸도 빼둔다 — 적이 튀어나오는 자리를 비워두는 것은 실수가 아니라 저작 의도다.
     /// 걷기가 아닌 통행 칸(헤엄 등)도 빼둔다 — 유닛이 설 자리가 아니라 비어 있는 것이 정상이다.
+    /// 모닥불 칸도 빼둔다 — TilePlacementRule이 못 놓게 막은 것이지 배치 플래그가 빠진 실수가 아니다.
     /// </summary>
     public static bool IsDeadCell(Tile tile)
     {
         if (tile.IsEnemySpawn)
+        {
+            return false;
+        }
+
+        if (tile.IsCampfire)
         {
             return false;
         }

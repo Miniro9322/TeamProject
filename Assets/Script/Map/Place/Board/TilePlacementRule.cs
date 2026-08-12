@@ -25,6 +25,12 @@ public static class TilePlacementRule
             return false;
         }
 
+        // 모닥불 칸은 고정 장식이라 어떤 점유(영웅·건물·자원)도 놓을 수 없다.
+        if (tile.Gimmick == GimmickType.Campfire)
+        {
+            return false;
+        }
+
         // 걷기가 아닌 통행 칸(헤엄 등)은 아군이 설 자리가 아니다 — 지형이 지상이어도 놓지 못한다.
         if (tile.Pass != PassType.Walk)
         {
