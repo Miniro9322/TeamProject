@@ -31,6 +31,9 @@ public class TileTheme : ScriptableObject
     [Tooltip("붓별 프리팹. 지형 붓과 장식 붓만 뜻이 있다")]
     public Slot[] Slots = Array.Empty<Slot>();
 
+    [Tooltip("모닥불 기믹 칸을 찍고 끌 때 자동으로 얹고 걷는 장식 프리팹(FireTorch_CampFire 등)")]
+    public GameObject CampfirePrefab;
+
     /// <summary>탭에 뜨는 이름.</summary>
     public string Title
     {

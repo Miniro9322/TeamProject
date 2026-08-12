@@ -1303,8 +1303,38 @@ public class MapMakerWindow : EditorWindow
                     on = !TileFlagQuery.IsOn(tile, _brush); // 지형 붓은 항상 꺼짐으로 읽혀 그대로 켜진다
                 }
 
+                bool hadCampfire = tile.State.Gimmick == GimmickType.Campfire;
                 TileStamp.Stamp(tile, _brush, on);
+
+                if (_brush == MapBrush.Campfire)
+                {
+                    ApplyCampfireDecor(tile, on, hadCampfire);
+                }
+
                 break;
+        }
+    }
+
+    // 모닥불 기믹을 찍고 끌 때 FireTorch_CampFire 장식도 같이 얹고 걷는다 — 데이터와 겉모습이 갈리지 않게.
+    // 걷을 땐 그 칸 제일 위 장식 하나만 지운다 — 같은 칸에 다른 장식을 더 얹었다면 그게 지워질 수 있다.
+    private void ApplyCampfireDecor(Tile tile, bool on, bool hadCampfire)
+    {
+        if (_theme == null || _theme.CampfirePrefab == null)
+        {
+            return;
+        }
+
+        Grid module = _modules[_moduleIndex];
+
+        if (on && !hadCampfire)
+        {
+            DecorPlace.Add(module, tile, _theme.CampfirePrefab);
+            return;
+        }
+
+        if (!on && hadCampfire)
+        {
+            DecorPlace.Remove(module, tile);
         }
     }
 

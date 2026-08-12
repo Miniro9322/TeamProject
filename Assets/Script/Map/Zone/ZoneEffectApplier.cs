@@ -130,7 +130,7 @@ public class ZoneEffectApplier : IDisposable
         }
     }
 
-    // 낮이 시작되면 얼음 지대에 서 있는 영웅 전원의 디버프만 걷어냅니다(소속은 유지합니다).
+    // 낮이 시작되면 얼음 지대에 서 있는 영웅 전원의 디버프만 걷어냅니다
     private void RemoveAllIce()
     {
         for (int heroIndex = 0; heroIndex < iceHeroes.Count; heroIndex++)
