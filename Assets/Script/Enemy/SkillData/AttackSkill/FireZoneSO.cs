@@ -55,16 +55,20 @@ public class FireZoneSO : AttackSkillDataSO
     /// 반환하는 것은 고정 피해값이 아니라 <b>대상 최대 체력의 %</b>다 — 점화(DotDebuffSO)와 단위를 맞춘다.
     /// 실제 피해값은 대상마다 다르므로 때리는 자리에서 DotRegistry.PercentDamage로 환산한다.
     /// </summary>
-    private void ResolveNumbers(out float percentPerTick, out float interval)
+    private void ResolveNumbers(out float percentPerTick, out float interval, out float atkPercent)
     {
         percentPerTick = fallbackPercentPerTick;
         interval = tickInterval;
+        atkPercent = 0f;
 
         var dot = DebuffLoader.Get(damageSourceDebuffId) as DotDebuffSO;
         if (dot != null)
         {
             percentPerTick = dot.percentPerTick;
             interval = dot.interval;
+            // 공격력 몫도 같이 가져온다 — 점화에 이 칸을 적었는데 오라만 빠지면
+            // "불 칸과 오라의 체감이 같다"는 이 메서드의 전제가 조용히 깨진다.
+            atkPercent = dot.atkPercent;
         }
         else if (!string.IsNullOrEmpty(damageSourceDebuffId))
         {
@@ -79,7 +83,8 @@ public class FireZoneSO : AttackSkillDataSO
         if (!loggedNumbers)
         {
             loggedNumbers = true;
-            Debug.Log($"FireZoneSO({name}): 틱 피해 대상 최대체력 {percentPerTick:F2}% / {interval}초 간격 (출처 {damageSourceDebuffId}), " +
+            Debug.Log($"FireZoneSO({name}): 틱 피해 대상 최대체력 {percentPerTick:F2}% + 시전자 공격력 {atkPercent:F2}%" +
+                      $" / {interval}초 간격 (출처 {damageSourceDebuffId}), " +
                       $"발동={(onlyWhileFlameEmpowered ? "화염족이 불에 닿은 동안만" : "항상")}");
         }
     }
@@ -113,7 +118,7 @@ public class FireZoneSO : AttackSkillDataSO
     {
         if (owner == null || owner.IsDead) return;
 
-        ResolveNumbers(out float percentPerTick, out float interval);
+        ResolveNumbers(out float percentPerTick, out float interval, out float atkPercent);
 
         // 이 SO는 Resources.Load로 모든 적이 공유하는 애셋이다(EnemyStatLoader.ResolveSkills).
         // 이펙트 핸들을 필드에 두면 나중에 시전한 적이 앞선 적의 핸들을 덮어써서
@@ -174,9 +179,13 @@ public class FireZoneSO : AttackSkillDataSO
                         if (!hit.Add(tile.OccupantObject)) continue;   // 같은 영웅을 두 번 때리지 않는다
 
                         if (tile.OccupantObject.GetComponentInParent<IDamageAble>() is IDamageAble dmg)
-                            // 비율 피해라 피해값이 대상마다 다르다 — 여기서 그 영웅의 최대 체력으로 환산한다.
-                            // 점화(DotRegistry)와 같은 식을 쓰므로 불 칸과 오라의 체감이 어긋나지 않는다.
-                            dmg.TakeDamage(DotRegistry.PercentDamage(tile.OccupantObject, percentPerTick));
+                            // 비율 피해라 피해값이 대상마다 다르다 — 여기서 그 영웅의 최대 체력으로 환산하고,
+                            // 시전자 공격력 몫을 더한다. 점화(DotRegistry)와 같은 식이라 불 칸과 오라의 체감이 어긋나지 않는다.
+                            // 공격력은 매 틱 owner에서 다시 읽는다 — 오라는 시전자가 살아 있는 동안만 도는 것이라
+                            // 지속 피해와 달리 시전자가 사라진 뒤를 걱정할 필요가 없다.
+                            dmg.TakeDamage(DotRegistry.TickDamage(
+                                DotRegistry.MaxHp(tile.OccupantObject.GetComponentInParent<IUnit>()),
+                                percentPerTick, owner.AttackPower * atkPercent * 0.01f));
                     }
                 }
                 await UniTask.Yield(token);

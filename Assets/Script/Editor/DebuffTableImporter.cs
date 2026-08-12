@@ -137,6 +137,8 @@ public static class DebuffTableImporter
             case DotDebuffSO dot:
                 dot.percentPerTick = FirstValue(rows, r => r.PercentPerTick) ?? 0f;
                 dot.interval = FirstValue(rows, r => r.Interval) ?? 1f;
+                // 공격력 몫은 선택 칸이다 — 비우면 0이라 최대 체력 비율 피해만 들어간다(기존 거동).
+                dot.atkPercent = Mathf.Max(0f, FirstValue(rows, r => r.AtkPercent) ?? 0f);
                 if (dot.percentPerTick <= 0f)
                 {
                     Debug.LogWarning($"DebuffTableImporter: '{id}'의 PercentPerTick이 비었거나 0 이하다 (대상 최대 체력의 %, 0.5 = 0.5%)");

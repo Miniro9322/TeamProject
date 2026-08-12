@@ -10,11 +10,13 @@ using UnityEngine;
 /// </summary>
 public static class DebuffApply
 {
+    /// <param name="attackerAtk">건 쪽의 현재 공격력. 지속 피해의 공격력 몫(DotDebuffSO.atkPercent)에만 쓰인다.
+    /// 안 넘기면 0 — 그 몫이 빠지고 최대 체력 비율 피해만 들어간다.</param>
     public static void To(Component target, DebuffSO debuff, BuffManager buffManager, GameManager gameManager = null,
-        float durationOverride = 0f, float scale = 1f, object source = null)
+        float durationOverride = 0f, float scale = 1f, object source = null, float attackerAtk = 0f)
     {
         if (debuff == null || target == null) return;
 
-        debuff.Apply(DebuffContext.For(target, buffManager, gameManager, source ?? debuff), durationOverride, scale);
+        debuff.Apply(DebuffContext.For(target, buffManager, gameManager, source ?? debuff, attackerAtk), durationOverride, scale);
     }
 }

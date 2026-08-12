@@ -30,6 +30,11 @@ public class DebuffTable : DataTable
         // 불어나는 동안 지속 피해만 제자리다. 비율로 두면 표를 안 고쳐도 같이 따라간다.
         public float? PercentPerTick { get; set; }
         public float? Interval { get; set; }
+        // 틱마다 추가로 더할 피해 — 시전자 공격력의 몇 %인가(20 = 공격력의 20%). PercentPerTick과 같은 % 단위다.
+        // 비우면 0 = 최대 체력 비율 피해만 들어간다(기존 거동).
+        // 최대 체력 비율만으로는 "누가 걸었든 같은 독"이라 공격력을 올린 보람이 없어서, 때린 쪽 몫을 여기에 더한다.
+        // 곱할 공격력은 걸리는 순간의 값을 찍어 둔다 — 시전자가 죽거나 풀에 반납돼도 남은 독은 계속 굴러야 하므로.
+        public float? AtkPercent { get; set; }
     }
 
     private readonly Dictionary<string, List<Data>> table = new();
