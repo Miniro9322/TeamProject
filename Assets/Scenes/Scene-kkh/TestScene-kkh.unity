@@ -136,7 +136,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4bf96e634ed476348b60b215034211d6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BuildOptionView
-  icon: {fileID: 1396568686}
+  icon: {fileID: 0}
   nameText: {fileID: 1227261930}
   button: {fileID: 2745271}
 --- !u!114 &2745271 stripped
@@ -410,7 +410,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4bf96e634ed476348b60b215034211d6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BuildOptionView
-  icon: {fileID: 705148780}
+  icon: {fileID: 0}
   nameText: {fileID: 2070070007}
   button: {fileID: 6251226}
 --- !u!1001 &10171616
@@ -14136,6 +14136,7 @@ MonoBehaviour:
   tilePaintView: {fileID: 1235437630}
   rangeInput: {fileID: 314587633}
   combineManager: {fileID: 1508222711}
+  desertZone: {fileID: 0}
 --- !u!114 &314587633
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -15327,6 +15328,7 @@ MonoBehaviour:
   autoInjectGameObjects: []
   resourcesManagerPrefab: {fileID: 4549263094409699224, guid: ca784472de86f0c4484370d0bfbddc37, type: 3}
   citizenManagerPrefab: {fileID: 3371740108421390513, guid: 1177c9fde41933841adab3e780c4b135, type: 3}
+  citizenWanderManagerPrefab: {fileID: 0}
   UiManagerPrefab: {fileID: -4134638076424000530, guid: 3e385b1b4e8959b4bafa91f57614b6ba, type: 3}
   EnviromentManagerPrefab: {fileID: 3058046442922278118, guid: dc7a1595742996c4299a9f573dbd0bbb, type: 3}
   GameManagerPrefab: {fileID: 2650317754315711049, guid: a872fe8395423844096d9274b9a994af, type: 3}
@@ -15334,6 +15336,8 @@ MonoBehaviour:
   resourceIconSet: {fileID: 11400000, guid: 06ab6dd4db3b586449abff101b5431b9, type: 2}
   heroUpgradeConfig: {fileID: 11400000, guid: 1d3d59960c8a0c74aaf82e2d657eb755, type: 2}
   sunLight: {fileID: 1303599631}
+  citizenHubPoint: {fileID: 0}
+  citizenHomePoints: []
 --- !u!4 &347216668
 Transform:
   m_ObjectHideFlags: 0
@@ -22756,17 +22760,6 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 4551181289023404, guid: de483964ab6d2594f93f9991c06b994b, type: 3}
   m_PrefabInstance: {fileID: 547771425}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &552438395 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 170170575138134111, guid: e1db6ef8e65714440a58e4a1c791dcd5, type: 3}
-  m_PrefabInstance: {fileID: 1352876735}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
 --- !u!1001 &557855837
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -23137,17 +23130,6 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 4444016999086382, guid: 0f325be8ac9dbdb4e99137b65b5f3da9, type: 3}
   m_PrefabInstance: {fileID: 567456530}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &569126081 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 170170575138134111, guid: e1db6ef8e65714440a58e4a1c791dcd5, type: 3}
-  m_PrefabInstance: {fileID: 788465743}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
 --- !u!1001 &570583974
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -24322,7 +24304,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4bf96e634ed476348b60b215034211d6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BuildOptionView
-  icon: {fileID: 1364200589}
+  icon: {fileID: 0}
   nameText: {fileID: 101693754}
   button: {fileID: 599816786}
 --- !u!1 &606783054
@@ -28722,17 +28704,6 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 4403861563647624, guid: 08edc2bb85053f44ba930387af9705aa, type: 3}
   m_PrefabInstance: {fileID: 704835776}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &705148780 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 170170575138134111, guid: e1db6ef8e65714440a58e4a1c791dcd5, type: 3}
-  m_PrefabInstance: {fileID: 1355627797}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
 --- !u!1001 &707632625
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -30346,7 +30317,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4bf96e634ed476348b60b215034211d6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BuildOptionView
-  icon: {fileID: 1571903296}
+  icon: {fileID: 0}
   nameText: {fileID: 270973330}
   button: {fileID: 741654359}
 --- !u!1001 &746938276
@@ -58591,17 +58562,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bf38593ed0df2934b8e5109464ea46e5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyArchive
---- !u!114 &1364200589 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 170170575138134111, guid: e1db6ef8e65714440a58e4a1c791dcd5, type: 3}
-  m_PrefabInstance: {fileID: 452403720}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
 --- !u!1001 &1365875032
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -59916,17 +59876,6 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 4444016999086382, guid: 0f325be8ac9dbdb4e99137b65b5f3da9, type: 3}
   m_PrefabInstance: {fileID: 1393600998}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &1396568686 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 170170575138134111, guid: e1db6ef8e65714440a58e4a1c791dcd5, type: 3}
-  m_PrefabInstance: {fileID: 985090872}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
 --- !u!1001 &1401695509
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -65036,7 +64985,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4bf96e634ed476348b60b215034211d6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BuildOptionView
-  icon: {fileID: 552438395}
+  icon: {fileID: 0}
   nameText: {fileID: 935773675}
   button: {fileID: 1516166288}
 --- !u!1001 &1518114307
@@ -67627,17 +67576,6 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 7112418708915378962, guid: 2f3b9abae49122d47a17439f41a141a1, type: 3}
   m_PrefabInstance: {fileID: 1569781092}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &1571903296 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 170170575138134111, guid: e1db6ef8e65714440a58e4a1c791dcd5, type: 3}
-  m_PrefabInstance: {fileID: 1287017094}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
 --- !u!1001 &1572430487
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -78241,7 +78179,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4bf96e634ed476348b60b215034211d6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BuildOptionView
-  icon: {fileID: 569126081}
+  icon: {fileID: 0}
   nameText: {fileID: 1839125691}
   button: {fileID: 1819716976}
 --- !u!1 &1820094771
