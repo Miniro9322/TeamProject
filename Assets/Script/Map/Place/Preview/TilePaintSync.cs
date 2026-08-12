@@ -200,12 +200,13 @@ public class TilePaintSync
     {
         if (CanPlaceHere(data))
         {
-            return painter.rangeColor;
+            return painter.okColor;
         }
 
         return painter.denyColor;
     }
 
+    // 배치 영역 타일을 상태 색상으로 추가합니다.
     private void AddAreaCellEntries(PlacementArea area, Color color)
     {
         for (int i = 0; i < area.Cells.Count; i++)

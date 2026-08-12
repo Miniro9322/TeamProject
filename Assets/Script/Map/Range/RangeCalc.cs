@@ -15,12 +15,31 @@ public class RangeCalc
     {
         range = new List<Tile>();
 
-        if (HasTile(unitTile))
+        if (!HasTile(unitTile))
         {
-            return TryGetRangeAtCenter(unitTile.OccupantObject, unitTile, out range);
+            return false;
         }
 
-        return false;
+        if (unitTile.IsCampfire)
+        {
+            return TryGetCampfireRange(unitTile, out range);
+        }
+
+        return TryGetRangeAtCenter(unitTile.OccupantObject, unitTile, out range);
+    }
+
+    // 모닥불 칸이면 유닛을 찾지 않고, 그 모닥불이 미리 계산해 둔 자기 범위를 그대로 가져온다.
+    private static bool TryGetCampfireRange(Tile campfireTile, out List<Tile> range)
+    {
+        range = new List<Tile>();
+        IceZone iceZone = campfireTile.Board.GetComponent<IceZone>();
+
+        if (iceZone == null)
+        {
+            return false;
+        }
+
+        return iceZone.CampfireData.TryGetRange(campfireTile, out range);
     }
 
     // 아직 타일에 놓이지 않은 유닛(배치 프리뷰)도 중심 타일을 따로 받아 계산한다.

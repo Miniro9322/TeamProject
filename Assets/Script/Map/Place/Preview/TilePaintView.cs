@@ -37,13 +37,14 @@ public class TilePaintView : MonoBehaviour
     {
         for (int i = 0; i < plan.Count; i++)
         {
-            Paint(plan[i].Tile, plan[i].Color);
+            Paint(plan[i]);
         }
     }
 
-    private void Paint(Tile tile, Color color)
+    // 표시 정보를 타일 메시로 출력합니다.
+    private void Paint(PaintEntry entry)
     {
-        painter.SetColor(tile, color);
-        cellPainted.Add(tile);
+        painter.SetColor(entry.Tile, entry.Color);
+        cellPainted.Add(entry.Tile);
     }
 }
