@@ -1,5 +1,8 @@
 using System;
+using System.Runtime.ConstrainedExecution;
 using Cysharp.Threading.Tasks;
+using TMPro;
+
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -13,6 +16,8 @@ public class UiManager : MonoBehaviour
     [SerializeField] private GameObject GamaOverUi;
     [SerializeField] private GameObject GameSpeedUi;
     [SerializeField] private GameObject MenuPanel;
+    [SerializeField] private TextMeshProUGUI dayText;
+    [SerializeField] private TextMeshProUGUI upgradeResourceText;
     [SerializeField] private Key MenuKey = Key.T;
 
     public byte UnlockedHero;
@@ -70,8 +75,10 @@ public class UiManager : MonoBehaviour
         UnlockChanged?.Invoke();
     }
 
-    public void OpenGameOverUI()
+    public void OpenGameOverUI(int daycount, int point)
     {
+        dayText.text = $"Survive Day : {daycount}";
+        upgradeResourceText.text = $"{point}";
         GamaOverUi.SetActive(true);
     }
 
@@ -88,5 +95,13 @@ public class UiManager : MonoBehaviour
 #endif
 
         Application.Quit();
+    }
+
+    public void OpenMenuPanel()
+    {
+        if(MenuPanel.activeSelf == false)
+            MenuPanel.SetActive(true);
+        else
+            MenuPanel.SetActive(false);
     }
 }

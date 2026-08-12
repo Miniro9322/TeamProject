@@ -13,6 +13,12 @@ MonoBehaviour:
   m_Name: HeroUpgradeConfig
   m_EditorClassIdentifier: Assembly-CSharp::HeroUpgradeConfig
   maxLevel: 99
+  upgradeCostUpgrades:
+  - {fileID: 11400000, guid: 47055b3a1f5c68244a1c75f40a998b33, type: 2}
+  - {fileID: 11400000, guid: 66fbb3934b60ac84bbe4b50106a53f92, type: 2}
+  - {fileID: 11400000, guid: 566d35772d5540846b9ad2b656e7ff73, type: 2}
+  - {fileID: 11400000, guid: 1ed8b17e3e930be4092ea94b0b7ca6d5, type: 2}
+  - {fileID: 11400000, guid: 478127b61da881940b4145e81862f335, type: 2}
   tierEntries:
   - tier: 1
     baseCost:
