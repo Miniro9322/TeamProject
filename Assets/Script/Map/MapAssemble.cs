@@ -44,12 +44,18 @@ public class MapAssemble : MonoBehaviour
             desertZone.ArrowSize,
             desertZone.ArrowHeight,
             desertZone.ArrowColor);
+        DesertLineEffect lineEffect = new DesertLineEffect(
+            desertBoard,
+            shelterData,
+            Resources.Load<GameObject>("ZoneEffectPrefab/DesertStrongVFX"),
+            Resources.Load<GameObject>("ZoneEffectPrefab/DesertWeakVFX"));
         zoneEffectApplier = new ZoneEffectApplier(
             desertZone,
             desertBoard,
             shelterData,
             mapGame.Units,
-            windPreview);
+            windPreview,
+            lineEffect);
 
         DayNightBuildRule dayNightRule = new DayNightBuildRule();
         dayNightRule.rule = mapGame.Rule;
