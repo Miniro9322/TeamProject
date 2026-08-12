@@ -10,10 +10,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 883cf583373affc48bd2095fc8a4eb68, type: 3}
-  m_Name: Bleed_Vagabond
+  m_Name: Archer_Poison
   m_EditorClassIdentifier: Assembly-CSharp::DotDebuffSO
-  type: 64
+  type: 16
   duration: 5
-  percentPerTick: 0.3
-  interval: 0.3
+  percentPerTick: 0.1
+  interval: 0.2
   atkPercent: 0
