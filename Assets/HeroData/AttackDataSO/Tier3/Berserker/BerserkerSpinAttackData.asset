@@ -24,6 +24,7 @@ MonoBehaviour:
   areaShape: 1
   areaRange: 1
   lineLength: 2
+  areaCenterOnTarget: 0
   chainRange: 2
   chainCount: 3
   chainFalloff: 0.8
@@ -40,10 +41,11 @@ MonoBehaviour:
   projectilePrefab: {fileID: 0}
   clipLength: 0.53333336
   buffList: []
+  targetDebuffs: []
   groundZonePrefab: {fileID: 0}
-  attackEffect: {fileID: 0}
+  attackEffect: {fileID: 1919708242137258, guid: e60d36cff17a1ce4db49ef54f9e72f61, type: 3}
   attackEffectLifetime: 1
-  hitEffect: {fileID: 0}
+  hitEffect: {fileID: 7733045279645208561, guid: 6cf23a8f866acc942a8e375dbfb1624b, type: 3}
   hitEffectLifetime: 1
   lifestealPercent: 0.2
   allyHealAmount: 0

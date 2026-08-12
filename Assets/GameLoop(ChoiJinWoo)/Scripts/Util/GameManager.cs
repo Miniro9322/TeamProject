@@ -59,7 +59,7 @@ public class GameManager : MonoBehaviour
         day = new DayState(this);
         night = new NightState(this);
         result = new ResultState(this, uiManager);
-        gameover = new GameOverState(this, upgradeState);
+        gameover = new GameOverState(this, upgradeState, UiManager);
         waveSpawner.AllRegionsClear += OnResult;
         fsm.ChangeState(day);
         uiManager.UnlockChanged += UpdateUnlock;
@@ -152,7 +152,6 @@ public class GameManager : MonoBehaviour
         {
             hp = 0;
             fsm.ChangeState(gameover);
-            uiManager.OpenGameOverUI();
         }
     }
 

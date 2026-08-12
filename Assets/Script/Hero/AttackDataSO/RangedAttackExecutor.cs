@@ -77,7 +77,7 @@ public class RangedAttackExecutor : IAttackExecutor
     private void FireArrow(IObjectPool<Projectile> pool, AttackContext ctx, Transform target, int damage, AttackDataSO data)
     {
         Projectile arrow = pool.Get();
-        arrow.transform.SetPositionAndRotation(ctx.muzzle.position, ctx.muzzle.rotation);
+        arrow.transform.SetPositionAndRotation(ctx.MuzzleOrSelf.position, ctx.MuzzleOrSelf.rotation);
 
         if (data.attackType == AttackType.Area && data.areaShape == AreaShape.Line)
         {
@@ -89,7 +89,7 @@ public class RangedAttackExecutor : IAttackExecutor
                 AttackDamageUtil.ApplyTargetDebuffs(e as Component, data.targetDebuffs, ctx.buffManager, data);
                 AttackDamageUtil.ApplyHealOptions(data, ctx.self.position, ctx.hero.Heal,
                     (p, r, s) => ctx.hero.GetObjectsInRange(p, r, s, RangeQueryAffinity.Ally), damage, ctx.sc[StatType.ATK]);
-                ctx.hero.SpawnEffect(data.hitEffect, (e as Component).transform.position, Quaternion.identity, data.hitEffectLifetime);
+                ctx.hero.SpawnEffect(data.hitEffect, AttackDamageUtil.EffectPosition(e as Component), Quaternion.identity, data.hitEffectLifetime);
             }
             if (data.groundZonePrefab != null)
                 ctx.hero.SpawnGroundZone(data.groundZonePrefab, target.position);

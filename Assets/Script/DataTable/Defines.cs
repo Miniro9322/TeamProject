@@ -15,4 +15,5 @@ public static class DataTableIds
     public static readonly string Portal = "PortalTable";
     public static readonly string Debuff = "DebuffTable";
     public static readonly string Hero = "HeroTable";
+    public static readonly string HeroStat = "HeroStatTable";
 }

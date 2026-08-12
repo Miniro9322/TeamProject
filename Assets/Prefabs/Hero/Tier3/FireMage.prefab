@@ -14212,6 +14212,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2505728941066981569}
   - component: {fileID: 8867275619189151521}
+  - component: {fileID: -5421842755970930028}
   m_Layer: 0
   m_Name: FireMage
   m_TagString: Untagged
@@ -14253,16 +14254,30 @@ MonoBehaviour:
   - {fileID: 11400000, guid: a6dd79d2802a80d4b9cdf7db50f64a4e, type: 2}
   - {fileID: 11400000, guid: 29fcb58731e9de84ba10d989c8f256f9, type: 2}
   - {fileID: 11400000, guid: f8f02fa9135171e4db10c07135224a3b, type: 2}
-  heroData: {fileID: 0}
+  heroData: {fileID: 11400000, guid: 7e5a6bc672a329c4eb2e29b424203bf6, type: 2}
   basePattern:
-  - {fileID: 11400000, guid: c53dd6855832d87479859bd709aec13a, type: 2}
+  - {fileID: 11400000, guid: 73532fb6f1d12514aaa380d08a3d7843, type: 2}
   anim: {fileID: 5966798527436522038}
   animEvents: {fileID: 2471352903922337075}
-  statData: {fileID: 11400000, guid: 6614047bf1925954e8d65ccadaedec43, type: 2}
+  statData: {fileID: 11400000, guid: 87d81e0a458ca31418a5e0d9d5bc16ff, type: 2}
   board: {fileID: 0}
   auraZonePrefabs: []
   occupantKind: 2
   muzzle: {fileID: 3165585453254409694}
+--- !u!114 &-5421842755970930028
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5127629013743316858}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 71f4ec0063568874f8d0c94daeb655ad, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NthHitHeavyTrait
+  everyN: 5
+  heavyAttackData: {fileID: 11400000, guid: 762b18c4de5267744a0fe5576aeddb47, type: 2}
 --- !u!1 &5160900259636390969
 GameObject:
   m_ObjectHideFlags: 0

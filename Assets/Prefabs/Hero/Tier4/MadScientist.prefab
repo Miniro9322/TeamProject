@@ -17337,7 +17337,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8355756397094962037}
-  - component: {fileID: 6911199585839229387}
+  - component: {fileID: 5587413683106036412}
   m_Layer: 0
   m_Name: MadScientist
   m_TagString: Untagged
@@ -17361,7 +17361,7 @@ Transform:
   - {fileID: 9086372608877228962}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &6911199585839229387
+--- !u!114 &5587413683106036412
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -17370,19 +17370,19 @@ MonoBehaviour:
   m_GameObject: {fileID: 6909807917171716251}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6deb4eeb61823d14e85febf5c0cf9d3c, type: 3}
+  m_Script: {fileID: 11500000, guid: 0f482275a1b393744b95b4b49ba1417b, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::SwordMan
+  m_EditorClassIdentifier: Assembly-CSharp::Mage
   statUpgrades: []
   heroData: {fileID: 0}
-  basePattern:
-  - {fileID: 11400000, guid: 3fadf56df25194c49b78b2c3dfe70c7c, type: 2}
-  anim: {fileID: 1585343957921750248}
-  animEvents: {fileID: 6231468561908436456}
-  statData: {fileID: 11400000, guid: c8cd6d373afd3644a87b3159843a4163, type: 2}
+  basePattern: []
+  anim: {fileID: 0}
+  animEvents: {fileID: 0}
+  statData: {fileID: 0}
   board: {fileID: 0}
   auraZonePrefabs: []
-  occupantKind: 2
+  occupantKind: 0
+  muzzle: {fileID: 0}
 --- !u!1 &6933129877120242434
 GameObject:
   m_ObjectHideFlags: 0

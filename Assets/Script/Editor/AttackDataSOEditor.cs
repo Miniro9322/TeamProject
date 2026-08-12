@@ -20,6 +20,7 @@ public class AttackDataSOEditor : Editor
         serializedObject.Update();
 
         bool isArea = Prop("attackType").enumValueIndex == (int)AttackType.Area;
+        bool isSameTarget = Prop("targetMode").enumValueIndex == (int)TargetMode.SameTarget;
         var shape = (AreaShape)Prop("areaShape").enumValueIndex;
         bool isContinuous = Prop("timingMode").enumValueIndex == (int)AttackTimingMode.Continuous;
 
@@ -29,7 +30,8 @@ public class AttackDataSOEditor : Editor
 
         Group("범위 공격", ref sArea, "areaShape",
             isArea ? "areaRange" : null,
-            isArea && shape == AreaShape.Line ? "lineLength" : null);
+            isArea && shape == AreaShape.Line ? "lineLength" : null,
+            isArea && isSameTarget ? "areaCenterOnTarget" : null);
 
         if (shape == AreaShape.Chain)
             Group("체인", ref sChain, "chainRange", "chainCount", "chainFalloff",

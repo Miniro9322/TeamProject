@@ -28,7 +28,6 @@ public class HeroUpgradeMenuUI : MonoBehaviour
     [SerializeField] private TextMeshProUGUI upgradeTierText;
     [SerializeField] private TextMeshProUGUI currentLevelText;
 
-    private HeroUpgradeConfig config;
     private HeroTierUpgradeState upgradeState;
     private ResourcesManager resourcesManager;
     private int tier;
@@ -36,9 +35,8 @@ public class HeroUpgradeMenuUI : MonoBehaviour
     private Dictionary<ProductionType, Sprite> resourceIconMap = new();
 
     [Inject]
-    private void Construct(HeroUpgradeConfig config, HeroTierUpgradeState upgradeState, ResourcesManager resourcesManager)
+    private void Construct(HeroTierUpgradeState upgradeState, ResourcesManager resourcesManager)
     {
-        this.config = config;
         this.upgradeState = upgradeState;
         this.resourcesManager = resourcesManager;
     }
@@ -77,7 +75,7 @@ public class HeroUpgradeMenuUI : MonoBehaviour
         banner.sprite = panelImageList[tier - 1];
         upgradeIcon.sprite = upgradeIconList[tier - 1];
         upgradeTierText.text = $"Upgrade Tier {tier}";
-        UpdateResourceInfo(0);
+        UpdateResourceInfo(upgradeState.GetLevel(tier));
         RefreshUpgradeButton();
     }
 
@@ -89,8 +87,7 @@ public class HeroUpgradeMenuUI : MonoBehaviour
 
     public void UpdateResourceInfo(int currentLevel)
     {
-        var entry = config.GetEntry(tier);
-        var costs = entry.GetCostForLevel(currentLevel);
+        var costs = upgradeState.GetCostForLevel(tier, currentLevel);
         currentLevelText.text = $"LV.{currentLevel}";
         //foreach (var resourceInfo in resourceInfoMap.Values)
         //{
