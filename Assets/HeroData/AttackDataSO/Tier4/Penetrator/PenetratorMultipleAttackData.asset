@@ -10,16 +10,16 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3e63ecebd4cd6e044a8a127ea3df05bc, type: 3}
-  m_Name: WarriorJumpAttackData
+  m_Name: PenetratorMultipleAttackData
   m_EditorClassIdentifier: Assembly-CSharp::AttackDataSO
   range: 2
-  rangeShape: 0
+  rangeShape: 2
   unattackableTarget: 3
   attackType: 1
-  attackPer: 3
-  attackCount: 1
+  attackPer: 1.2
+  attackCount: 5
   targetMode: 0
-  targetCount: 1
+  targetCount: 5
   shotInterval: 0.1
   areaShape: 2
   areaRange: 0
@@ -37,18 +37,15 @@ MonoBehaviour:
   beamEffectPrefab: {fileID: 0}
   selectMode: 0
   animTriggers:
-  - JumpAttack
+  - MultipleAttack
   projectilePrefab: {fileID: 0}
   clipLength: 0.6666667
   buffList: []
-  targetDebuffs:
-  - debuff: {fileID: 11400000, guid: 2a428f5995c7dd642b8bdc52ea450e3d, type: 2}
-    durationOverride: 2
-    scale: 1
+  targetDebuffs: []
   groundZonePrefab: {fileID: 0}
-  attackEffect: {fileID: 1011157772751556, guid: ca63c6ac7458764498741e0306f78528, type: 3}
+  attackEffect: {fileID: 1610259402245616, guid: 09a2baab97fbf474f9499bf610686e4d, type: 3}
   attackEffectLifetime: 1
-  hitEffect: {fileID: 1210069404974878, guid: fbab27c98b168764eb295cfff1e9f61f, type: 3}
+  hitEffect: {fileID: 8393927888780647174, guid: 0777bc22e9e6ace47a89e97740ea56e9, type: 3}
   hitEffectLifetime: 1
   lifestealPercent: 0
   allyHealAmount: 0

@@ -10,20 +10,20 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3e63ecebd4cd6e044a8a127ea3df05bc, type: 3}
-  m_Name: WarriorJumpAttackData
+  m_Name: UsurperAttackData
   m_EditorClassIdentifier: Assembly-CSharp::AttackDataSO
-  range: 2
-  rangeShape: 0
+  range: 1
+  rangeShape: 2
   unattackableTarget: 3
   attackType: 1
-  attackPer: 3
+  attackPer: 1
   attackCount: 1
   targetMode: 0
   targetCount: 1
   shotInterval: 0.1
   areaShape: 2
-  areaRange: 0
-  lineLength: 2
+  areaRange: 1
+  lineLength: 5
   areaCenterOnTarget: 0
   chainRange: 2
   chainCount: 3
@@ -37,18 +37,15 @@ MonoBehaviour:
   beamEffectPrefab: {fileID: 0}
   selectMode: 0
   animTriggers:
-  - JumpAttack
+  - Attack2
   projectilePrefab: {fileID: 0}
-  clipLength: 0.6666667
+  clipLength: 0.533333
   buffList: []
-  targetDebuffs:
-  - debuff: {fileID: 11400000, guid: 2a428f5995c7dd642b8bdc52ea450e3d, type: 2}
-    durationOverride: 2
-    scale: 1
+  targetDebuffs: []
   groundZonePrefab: {fileID: 0}
-  attackEffect: {fileID: 1011157772751556, guid: ca63c6ac7458764498741e0306f78528, type: 3}
+  attackEffect: {fileID: 1996079926692674, guid: fb101b1453aec9747a5ed7244075b1a2, type: 3}
   attackEffectLifetime: 1
-  hitEffect: {fileID: 1210069404974878, guid: fbab27c98b168764eb295cfff1e9f61f, type: 3}
+  hitEffect: {fileID: 8334927371036216463, guid: 2a86ceee278190842bf04b086ec332ba, type: 3}
   hitEffectLifetime: 1
   lifestealPercent: 0
   allyHealAmount: 0
