@@ -75,6 +75,7 @@ public class MapAssemble : MonoBehaviour
         {
             PlaceHoverFinder hoverFinder = new PlaceHoverFinder(view, finder, hoverPlace);
             SkillTargetFinder skillFinder = new SkillTargetFinder(skillCast, view);
+            tilePaintView.SetupEdges(boards);
             tilePaintView.sync = new TilePaintSync(hoverFinder, skillFinder, rangeCalc, rangeStore, tilePaintView.Painter);
         }
 

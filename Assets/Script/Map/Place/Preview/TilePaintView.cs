@@ -6,6 +6,10 @@ using System.Collections.Generic;
 public class TilePaintView : MonoBehaviour
 {
     [SerializeField] private TilePainter painter;
+    [SerializeField] private Material edgeMat;
+    [Range(0.01f, 0.2f)]
+    [SerializeField] private float edgeWidth = 0.06f;
+    [SerializeField] private float edgeLift = 0.025f;
 
     // MapAssemble이 조립 시점에 넣어준다.
     public TilePaintSync sync;
@@ -13,14 +17,45 @@ public class TilePaintView : MonoBehaviour
     public TilePainter Painter => painter;
 
     private readonly List<Tile> cellPainted = new();
+    private PlaceEdgeView edgeView;
+
+    // 외곽선 출력기와 대상 맵 보드를 준비합니다.
+    public void SetupEdges(List<MapBoard> boards)
+    {
+        edgeView = new PlaceEdgeView(transform, edgeMat, edgeWidth, edgeLift);
+        edgeView.Setup(boards);
+    }
 
     private void Update()
     {
-        if (sync.TryBuildPlan(out List<PaintEntry> plan))
+        if (sync == null)
+        {
+            return;
+        }
+
+        bool changed = sync.TryBuildPlan(out List<PaintEntry> plan);
+        ShowEdges();
+
+        if (changed)
         {
             RestoreCells();
             ApplyPlan(plan);
         }
+    }
+
+    // 현재 배치 모드에 맞는 지형 외곽선을 표시합니다.
+    private void ShowEdges()
+    {
+        if (edgeView != null)
+        {
+            edgeView.Show(sync.EdgeData);
+        }
+    }
+
+    // 생성한 외곽선 출력기를 정리합니다.
+    private void OnDestroy()
+    {
+        edgeView?.Dispose();
     }
 
     private void RestoreCells()

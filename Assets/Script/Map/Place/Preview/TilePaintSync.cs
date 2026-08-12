@@ -14,6 +14,8 @@ public class TilePaintSync
     private TileDisplayData lastDisplay;
     private bool hasDisplay;
 
+    public PlaceEdgeData EdgeData { get; private set; }
+
     public TilePaintSync(
         PlaceHoverFinder hoverFinder,
         SkillTargetFinder skillFinder,
@@ -32,12 +34,13 @@ public class TilePaintSync
     {
         result = plan;
 
-        HoverMode mode = hoverFinder.FindHover(out PlaceData placeData, out GameObject unit);
+        HoverMode mode = hoverFinder.FindHover(out PlaceData placeData, out GameObject unit, out OccupantKind kind);
+        EdgeData = new PlaceEdgeData(mode, kind);
         skillFinder.TryFindTarget(out Hero caster, out HeroActiveSkill skill, out Tile skillOrigin);
         int rangeVersion = ResolveRangeVersion(mode);
 
         TileDisplayData display = BuildDisplayKey(
-            mode, placeData.Area, unit, placeData.CanPlace, rangeVersion,
+            mode, placeData.Area, unit, kind, placeData.CanPlace, rangeVersion,
             caster, skill, skillOrigin);
 
         if (IsSameDisplay(display))
@@ -68,6 +71,7 @@ public class TilePaintSync
         HoverMode mode,
         PlacementArea area,
         GameObject unit,
+        OccupantKind kind,
         bool canPlace,
         int rangeVersion,
         Hero skillCaster,
@@ -77,7 +81,7 @@ public class TilePaintSync
         ResolveAreaOrigin(area, out MapBoard board, out Vector2Int origin);
 
         return new TileDisplayData(
-            mode, board, origin, unit, canPlace, rangeVersion,
+            mode, board, origin, unit, kind, canPlace, rangeVersion,
             skillCaster, skill, skillOrigin);
     }
 

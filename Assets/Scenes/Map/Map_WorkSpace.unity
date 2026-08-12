@@ -19036,7 +19036,7 @@ MonoBehaviour:
   rangeColor: {r: 0.3, g: 0.6, b: 1, a: 1}
   skillColor: {r: 1, g: 0.55, b: 0.15, a: 1}
   scanMat: {fileID: 2100000, guid: 8dae224055c5dd84ca610649e6dc8fc6, type: 2}
-  scanLight: 0.55
+  scanLight: 1
   lift: 0.02
 --- !u!114 &314587628
 MonoBehaviour:
@@ -58555,6 +58555,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TilePaintView
   painter: {fileID: 314587627}
+  edgeMat: {fileID: 2100000, guid: d0bd7e8bce7c8504a8b1f645ca59a572, type: 2}
+  edgeWidth: 0.06
+  edgeLift: 0.025
 --- !u!4 &1235437631
 Transform:
   m_ObjectHideFlags: 0
