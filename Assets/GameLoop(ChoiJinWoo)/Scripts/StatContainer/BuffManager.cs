@@ -26,6 +26,7 @@ public class BuffManager : ITickable
                 Modifiers = new List<Modifier> { modifier },
                 Stacks = 1,
                 RemainingTime = duration,
+                Persistent = duration <= 0f,
                 Source = source
             });
             return;
@@ -53,6 +54,7 @@ public class BuffManager : ITickable
         for (int i = activeBuffs.Count - 1; i >= 0; i--)
         {
             var buff = activeBuffs[i];
+            if (buff.Persistent) continue;
             buff.RemainingTime -= Time.deltaTime;
             if (buff.RemainingTime <= 0f)
             {
@@ -61,6 +63,18 @@ public class BuffManager : ITickable
                 activeBuffs.RemoveAt(i);
             }
         }
+    }
+
+    // Persistent 버프(장판형 아군 버프 등)의 명시적 해제 — ApplyStackingModifier(진입)의 반대짝(이탈).
+    public void RemoveBuff(IUnit target, StatType type, object source)
+    {
+        int index = activeBuffs.FindIndex(b => b.Target == target && b.StatType == type && b.Source == source);
+        if (index < 0) return;
+
+        var buff = activeBuffs[index];
+        foreach (var modifier in buff.Modifiers)
+            buff.Target.Stats.RemoveModifier(buff.StatType, modifier);
+        activeBuffs.RemoveAt(index);
     }
 
     public void RemoveAllBuffs(IUnit target)

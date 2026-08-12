@@ -7760,6 +7760,7 @@ GameObject:
   m_Component:
   - component: {fileID: 7336677387634691527}
   - component: {fileID: 7762409628043492132}
+  - component: {fileID: 5022767824271313021}
   m_Layer: 0
   m_Name: Samurai
   m_TagString: Untagged
@@ -7801,14 +7802,29 @@ MonoBehaviour:
   - {fileID: 11400000, guid: a6dd79d2802a80d4b9cdf7db50f64a4e, type: 2}
   - {fileID: 11400000, guid: 29fcb58731e9de84ba10d989c8f256f9, type: 2}
   - {fileID: 11400000, guid: f8f02fa9135171e4db10c07135224a3b, type: 2}
-  heroData: {fileID: 11400000, guid: 800a3b1a96e6f0f479bad8600ffb4514, type: 2}
-  basePattern: []
+  heroData: {fileID: 11400000, guid: e3a6a4df39d89cd46a909243e2352431, type: 2}
+  basePattern:
+  - {fileID: 11400000, guid: 7b601a572d5698a4a9890407c019defa, type: 2}
   anim: {fileID: 7638390345114475594}
   animEvents: {fileID: 962424670496171388}
-  statData: {fileID: 11400000, guid: c1b26d8a18f965e46b5f7053d1531779, type: 2}
+  statData: {fileID: 11400000, guid: 68c45df672389a646bf9d0d0525a47c3, type: 2}
   board: {fileID: 0}
   auraZonePrefabs: []
   occupantKind: 1
+--- !u!114 &5022767824271313021
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2762850617625843917}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 71f4ec0063568874f8d0c94daeb655ad, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NthHitHeavyTrait
+  everyN: 5
+  heavyAttackData: {fileID: 11400000, guid: ee1fba2583818074cb9f9322b927d83b, type: 2}
 --- !u!1 &2766463481628903502
 GameObject:
   m_ObjectHideFlags: 0

@@ -189,6 +189,7 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
     [Tooltip("몸통 이펙트가 뜰 위치(독·화상 등). 머리 앵커와 같은 방식으로 빈 오브젝트를 꽂는다. 비우면 몸통 이펙트가 뜨지 않음. " +
              "발밑에 깔리는 이펙트(둔화 등)는 앵커가 필요 없다 — 이펙트 쪽 anchor를 Foot으로 두면 유닛 원점을 쓴다.")]
     [SerializeField] private Transform bodyEffectAnchor;
+    public Transform BodyEffectAnchor => bodyEffectAnchor != null ? bodyEffectAnchor : transform;
     // 디버프별 이펙트 설정은 모든 적이 같은 것을 쓰므로 프리팹마다 꽂지 않고 Resources에서 읽는다
     // (EnemyCloak의 CloakSettings, 위의 EnemyEffectPrefab/Stun과 같은 방식).
     // 종류를 추가할 때 프리팹 8개를 다시 손대지 않아도 된다 — 에셋 하나만 고치면 전부 반영된다.

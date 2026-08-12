@@ -4,7 +4,7 @@ using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
-public enum GroundZoneMode { Damage, Heal }
+public enum GroundZoneMode { Damage, Heal, Buff }
 
 // 장판 프리팹에 직접 붙는 컴포넌트. 예전엔 GroundZoneDataSO(데이터)+GroundZoneRunner(정적 tick 루프)+
 // landEffect(별도 참조 프리팹)로 3분할돼 있었지만, 장판은 원래도 "스폰되는 자기 완결 오브젝트"라 프리팹
@@ -33,18 +33,25 @@ public class GroundZoneEffect : MonoBehaviour
     public GameObject selfEffect;
     [Tooltip("selfEffect가 기본 크기(localScale=1)로 나타내는 반경(타일 수). radius/이값만큼 스케일한다. 0이면 스케일하지 않음.")]
     public float selfEffectVisualRadius = 0f;
+    [Tooltip("mode==Buff: 범위 안 아군에게 적용할 버프 목록. duration/maxStacks는 무시된다 — 범위에 머무는 동안 유지되고 벗어나면 즉시 제거된다.")]
+    public List<BuffEffect> allyBuffs = new();
 
     private MapBoard board;
     private Hero owner;
+    private bool followOwner;
     private Action<GameObject> release;
     private CancellationTokenSource cts;
     private GameObject selfEffectInstance;
+    private readonly HashSet<Hero> buffedAllies = new();
 
-    // Hero.SpawnGroundZone이 풀에서 꺼낸 직후 호출한다.
-    public void Init(MapBoard board, Hero owner, Action<GameObject> release)
+    // Hero.SpawnGroundZone이 풀에서 꺼낸 직후 호출한다. followOwner는 오라(소유자를 따라다녀야 하는
+    // 장판)인지, 스킬/공격이 심어놓고 떠나는 장판인지를 호출부가 명시한다(duration 값으로는 구분 불가 —
+    // 실제 오라 프리팹도 duration을 999처럼 유한값으로 쓴다).
+    public void Init(MapBoard board, Hero owner, bool followOwner, Action<GameObject> release)
     {
         this.board = board;
         this.owner = owner;
+        this.followOwner = followOwner;
         this.release = release;
         ApplyVisualScale();
         SpawnSelfEffect();
@@ -82,10 +89,32 @@ public class GroundZoneEffect : MonoBehaviour
         catch (OperationCanceledException) { }
         finally
         {
-            if (duration <= 0f && selfEffectInstance != null)
-                owner.DespawnEffect(selfEffect, selfEffectInstance);
-            release?.Invoke(gameObject);
+            if (mode == GroundZoneMode.Buff)
+                ClearAllyBuffs();
+
+            // this가 이미 파괴된 상태(예: followOwner 오라가 소유자 파괴와 함께 자식으로 같이 파괴된 경우)면
+            // gameObject 등 네이티브 접근은 전부 건너뛴다 — 반납할 풀도 소유자와 함께 사라지는 것이므로 안전하다.
+            if (this != null)
+            {
+                if (duration <= 0f && selfEffectInstance != null)
+                    owner.DespawnEffect(selfEffect, selfEffectInstance);
+                release?.Invoke(gameObject);
+            }
         }
+    }
+
+    // Buff 모드 장판이 사라질 때(정상 만료/소유자 사망/파괴) 아직 범위 안에 있던 아군의 버프도
+    // "지금 나간 것"과 동일하게 정리한다 — 방치되는 버프가 없도록.
+    private void ClearAllyBuffs()
+    {
+        if (buffedAllies.Count == 0) return;
+        foreach (Hero ally in buffedAllies)
+        {
+            if (ally == null) continue;
+            foreach (BuffEffect effect in allyBuffs)
+                owner.Buffs.RemoveBuff(ally, effect.statType, this);
+        }
+        buffedAllies.Clear();
     }
 
     private void Tick()
@@ -100,6 +129,31 @@ public class GroundZoneEffect : MonoBehaviour
             if (target == null) return;
             target.Heal(heal);
             SpawnHitEffect(transform.position);
+            return;
+        }
+
+        if (mode == GroundZoneMode.Buff)
+        {
+            var inRange = new HashSet<Hero>();
+            foreach (GameObject go in owner.GetObjectsInRange(transform.position, radius, shape, RangeQueryAffinity.Ally))
+                if (go.GetComponentInParent<Hero>() is Hero ally)
+                    inRange.Add(ally);
+
+            foreach (Hero ally in inRange)
+            {
+                if (!buffedAllies.Add(ally)) continue;
+                foreach (BuffEffect effect in allyBuffs)
+                    owner.Buffs.ApplyStackingModifier(ally, effect.statType, effect.modifierType, effect.value, 0f, effect.maxStacks, this);
+            }
+
+            buffedAllies.RemoveWhere(ally =>
+            {
+                if (ally != null && inRange.Contains(ally)) return false;
+                if (ally != null)
+                    foreach (BuffEffect effect in allyBuffs)
+                        owner.Buffs.RemoveBuff(ally, effect.statType, this);
+                return true;
+            });
             return;
         }
 
@@ -123,7 +177,12 @@ public class GroundZoneEffect : MonoBehaviour
     {
         if (selfEffect == null) return;
         selfEffectInstance = owner.SpawnEffect(selfEffect, transform.position, selfEffect.transform.rotation, duration > 0f ? duration : 0f);
-        if (selfEffectInstance != null && selfEffectVisualRadius > 0f)
+        if (selfEffectInstance == null) return;
+        // 장판 자신의 transform(ApplyVisualScale로 이미 스케일됨)이 아니라 owner에 직접 매달아야
+        // 스케일이 중첩되지 않는다.
+        if (followOwner)
+            selfEffectInstance.transform.SetParent(owner.transform, worldPositionStays: true);
+        if (selfEffectVisualRadius > 0f)
             selfEffectInstance.transform.localScale = Vector3.one * (radius / selfEffectVisualRadius);
     }
 

@@ -15,6 +15,8 @@ public struct AttackContext
     public StatContainer sc;
     public Hero hero;
 
+    public Transform MuzzleOrSelf => muzzle != null ? muzzle : self;
+
     public async UniTask WaitForAnimEvent(string eventName, CancellationToken ct)
     {
         bool fired = false;

@@ -9,7 +9,7 @@ public class ChanceHeavyTrait : HeroTrait
 
     public override void OnAttackPerformed(AttackDataSO data)
     {
-        if (Random.value > chance)
+        if (Random.value < chance)
         {
             hero.QueueNextAttackOverride(heavyAttackData);
         }

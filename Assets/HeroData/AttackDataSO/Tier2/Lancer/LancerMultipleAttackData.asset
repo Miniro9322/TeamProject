@@ -24,6 +24,7 @@ MonoBehaviour:
   areaShape: 2
   areaRange: 0
   lineLength: 2
+  areaCenterOnTarget: 0
   chainRange: 2
   chainCount: 3
   chainFalloff: 0.8
@@ -42,7 +43,7 @@ MonoBehaviour:
   buffList: []
   targetDebuffs: []
   groundZonePrefab: {fileID: 0}
-  attackEffect: {fileID: 0}
+  attackEffect: {fileID: 1893033738566276, guid: 3e04efdf8ee665d48962b33b06e8e3d3, type: 3}
   attackEffectLifetime: 1
   hitEffect: {fileID: 1153730961705006, guid: f1aeeba2f9003904da5c0a24ba150198, type: 3}
   hitEffectLifetime: 1

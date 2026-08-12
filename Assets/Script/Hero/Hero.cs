@@ -192,16 +192,21 @@ public class Hero : MonoBehaviour, IDamageAble, IUnit, IStunAble, IDebuffCarrier
 
     // GroundZoneEffect 프리팹을 풀에서 꺼내 위치를 잡고 Init만 넘긴다 — 이후 틱/소멸(풀 반납)은
     // GroundZoneEffect 컴포넌트가 스스로 처리한다.
-    public void SpawnGroundZone(GameObject prefab, Vector3 pos)
+    // TilePainter.lift(0.02f)와 동일한 값 — 바닥 메시 윗면과 같은 높이에 놓이면 알파블렌드 장판
+    // 링 VFX가 오파크 바닥과 z-fighting을 일으켜 깜빡여 보인다.
+    private const float GroundZoneLift = 0.02f;
+
+    public void SpawnGroundZone(GameObject prefab, Vector3 pos, bool followOwner = false)
     {
         if (prefab == null) return;
         IObjectPool<GameObject> pool = GetEffectPool(prefab);
         GameObject go = pool.Get();
         while (go == null)
             go = pool.Get();
-        go.transform.position = pos;
+        go.transform.SetParent(followOwner ? transform : null, worldPositionStays: false);
+        go.transform.position = pos + Vector3.up * GroundZoneLift;
         if (go.TryGetComponent(out GroundZoneEffect zone))
-            zone.Init(Board, this, released => pool.Release(released));
+            zone.Init(Board, this, followOwner, released => pool.Release(released));
     }
 
     private StatContainer sc = new();
@@ -339,7 +344,7 @@ public class Hero : MonoBehaviour, IDamageAble, IUnit, IStunAble, IDebuffCarrier
     private void SpawnAuraZones()
     {
         foreach (GameObject prefab in auraZonePrefabs)
-            SpawnGroundZone(prefab, transform.position);
+            SpawnGroundZone(prefab, transform.position, followOwner: true);
     }
 
     private void ApplyStatUpgradeBonus()
@@ -608,6 +613,7 @@ public class Hero : MonoBehaviour, IDamageAble, IUnit, IStunAble, IDebuffCarrier
 
     public void Resurrection()
     {
+        if (!isDead) return;
         currentHp = sc[StatType.HP];
         isDead = false;
         SpawnAuraZones();

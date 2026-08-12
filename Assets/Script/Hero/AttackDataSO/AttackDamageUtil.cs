@@ -6,6 +6,13 @@ using UnityEngine;
 
 public static class AttackDamageUtil
 {
+    // 적의 bodyEffectAnchor(EnemyBase)가 있으면 그 위치, 없으면(적이 아니거나 앵커 미설정) 기존처럼
+    // 루트 transform.position — 사거리/AoE 판정에는 쓰지 않고 이펙트·투사체 유도 좌표 전용.
+    public static Vector3 EffectPosition(GameObject go) =>
+        go.GetComponentInParent<EnemyBase>() is EnemyBase enemy ? enemy.BodyEffectAnchor.position : go.transform.position;
+
+    public static Vector3 EffectPosition(Component c) => EffectPosition(c.gameObject);
+
     public static async UniTask ApplyInstantDamage(AttackDataSO data, AttackContext ctx, CancellationToken ct)
     {
         float baseDamage = ctx.sc[StatType.ATK] * data.attackPer;
@@ -27,7 +34,7 @@ public static class AttackDamageUtil
                     ctx.hero.NotifyHit((e as Component)?.gameObject, (int)baseDamage, false);
                     ApplyTargetDebuffs(e as Component, data.targetDebuffs, ctx.buffManager, data);
                     ApplyHealOptions(data, ctx.self.position, ctx.hero.Heal, AllyQuery, baseDamage, ctx.sc[StatType.ATK]);
-                    ctx.hero.SpawnEffect(data.hitEffect, (e as Component).transform.position, Quaternion.identity, data.hitEffectLifetime);
+                    ctx.hero.SpawnEffect(data.hitEffect, EffectPosition(e as Component), Quaternion.identity, data.hitEffectLifetime);
                 }
                 if (i < data.attackCount - 1)
                     await UniTask.Delay(TimeSpan.FromSeconds(data.shotInterval), cancellationToken: ct);
@@ -43,12 +50,12 @@ public static class AttackDamageUtil
             {
                 ApplyTargetDebuffs(go.transform, data.targetDebuffs, ctx.buffManager, data);
                 ApplyHealOptions(data, ctx.self.position, ctx.hero.Heal, AllyQuery, baseDamage, ctx.sc[StatType.ATK]);
-                ctx.hero.SpawnEffect(data.hitEffect, go.transform.position, Quaternion.identity, data.hitEffectLifetime);
+                ctx.hero.SpawnEffect(data.hitEffect, EffectPosition(go), Quaternion.identity, data.hitEffectLifetime);
             }
             // hits[0]은 체인 시작 타겟(캐스터→시작 타겟 구간은 빔 비주얼 등 별도 이펙트가 표현) —
             // 튕긴 대상들 사이(hits[i]→hits[i+1])만 아크로 잇는다.
             for (int i = 0; i < hits.Count - 1; i++)
-                ctx.hero.SpawnChainArc(data.chainEffectPrefab, hits[i].transform.position, hits[i + 1].transform.position, data.chainEffectLifetime);
+                ctx.hero.SpawnChainArc(data.chainEffectPrefab, EffectPosition(hits[i]), EffectPosition(hits[i + 1]), data.chainEffectLifetime);
             return;
         }
 
@@ -62,7 +69,7 @@ public static class AttackDamageUtil
                     ctx.hero.NotifyHit(ctx.target.gameObject, (int)baseDamage, false);
                     ApplyTargetDebuffs(ctx.target, data.targetDebuffs, ctx.buffManager, data);
                     ApplyHealOptions(data, ctx.self.position, ctx.hero.Heal, AllyQuery, baseDamage, ctx.sc[StatType.ATK]);
-                    ctx.hero.SpawnEffect(data.hitEffect, ctx.target.position, Quaternion.identity, data.hitEffectLifetime);
+                    ctx.hero.SpawnEffect(data.hitEffect, EffectPosition(ctx.target), Quaternion.identity, data.hitEffectLifetime);
                 }
                 if (i < data.attackCount - 1)
                     await UniTask.Delay(TimeSpan.FromSeconds(data.shotInterval), cancellationToken: ct);
@@ -81,7 +88,7 @@ public static class AttackDamageUtil
                 ctx.hero.NotifyHit(t, (int)baseDamage, false);
                 ApplyTargetDebuffs(t.transform, data.targetDebuffs, ctx.buffManager, data);
                 ApplyHealOptions(data, ctx.self.position, ctx.hero.Heal, AllyQuery, baseDamage, ctx.sc[StatType.ATK]);
-                ctx.hero.SpawnEffect(data.hitEffect, t.transform.position, Quaternion.identity, data.hitEffectLifetime);
+                ctx.hero.SpawnEffect(data.hitEffect, EffectPosition(t), Quaternion.identity, data.hitEffectLifetime);
             }, data.shotInterval, ct);
             return;
         }
@@ -90,16 +97,17 @@ public static class AttackDamageUtil
 
         if (data.attackType == AttackType.Area && data.targetMode == TargetMode.SameTarget)
         {
+            Vector3 aoeCenter = data.areaCenterOnTarget && ctx.target != null ? ctx.target.position : ctx.self.position;
             for (int i = 0; i < data.attackCount; i++)
             {
-                foreach (GameObject go in ctx.hero.GetObjectsInRange(ctx.self.position, data.areaRange, aoeShape, RangeQueryAffinity.Enemy))
+                foreach (GameObject go in ctx.hero.GetObjectsInRange(aoeCenter, data.areaRange, aoeShape, RangeQueryAffinity.Enemy))
                 {
                     if (go.GetComponentInParent<IDamageAble>() is not IDamageAble e) continue;
                     e.TakeDamage((int)baseDamage);
                     ctx.hero.NotifyHit(go, (int)baseDamage, false);
                     ApplyTargetDebuffs(go.transform, data.targetDebuffs, ctx.buffManager, data);
                     ApplyHealOptions(data, ctx.self.position, ctx.hero.Heal, AllyQuery, baseDamage, ctx.sc[StatType.ATK]);
-                    ctx.hero.SpawnEffect(data.hitEffect, go.transform.position, Quaternion.identity, data.hitEffectLifetime);
+                    ctx.hero.SpawnEffect(data.hitEffect, EffectPosition(go), Quaternion.identity, data.hitEffectLifetime);
                 }
                 if (i < data.attackCount - 1)
                     await UniTask.Delay(TimeSpan.FromSeconds(data.shotInterval), cancellationToken: ct);
@@ -118,7 +126,7 @@ public static class AttackDamageUtil
                 ctx.hero.NotifyHit(hit, (int)baseDamage, false);
                 ApplyTargetDebuffs(hit.transform, data.targetDebuffs, ctx.buffManager, data);
                 ApplyHealOptions(data, ctx.self.position, ctx.hero.Heal, AllyQuery, baseDamage, ctx.sc[StatType.ATK]);
-                ctx.hero.SpawnEffect(data.hitEffect, hit.transform.position, Quaternion.identity, data.hitEffectLifetime);
+                ctx.hero.SpawnEffect(data.hitEffect, EffectPosition(hit), Quaternion.identity, data.hitEffectLifetime);
             }
         }, data.shotInterval, ct);
     }
