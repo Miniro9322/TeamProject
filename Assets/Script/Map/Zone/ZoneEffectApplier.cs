@@ -11,8 +11,10 @@ public class ZoneEffectApplier : IDisposable
     private readonly WindPreview preview;
     private readonly DesertLineEffect lineEffect;
     private readonly Dictionary<Hero, IceZone> iceByHero = new();
+    private readonly List<Hero> iceHeroes = new();
     private readonly Dictionary<IceZone, object[]> iceSources = new();
     private readonly object[] desertSources;
+    private bool isNight;
 
     // 지대 효과에 필요한 고정 정보와 현재 배치 장부를 보관합니다.
     public ZoneEffectApplier(
@@ -32,7 +34,7 @@ public class ZoneEffectApplier : IDisposable
         desertSources = CreateSources(desertZone.Debuffs);
     }
 
-    // 영웅이 배치되면 낮에도 필요한 얼음 지대 효과만 적용합니다.
+    // 영웅이 배치되면 얼음 지대 소속만 기록하고, 디버프는 밤일 때만 적용됩니다.
     public void EnterZone(Hero hero, PlacementArea area)
     {
         ApplyIce(hero, area);
@@ -46,7 +48,7 @@ public class ZoneEffectApplier : IDisposable
         Debug.Log($"[Zone] {hero.name} 지대 이탈 - 효과 제거");
     }
 
-    // 낮이 시작되면 지난 사막 효과를 지우고 새 바람과 화살표를 준비합니다.
+    // 낮이 시작되면 지난 사막 효과를 지우고 새 바람과 화살표를 준비하며, 얼음 디버프도 걷어냅니다.
     public void OnDayChanged()
     {
         RemoveDesert();
@@ -55,14 +57,20 @@ public class ZoneEffectApplier : IDisposable
         desertZone.SetWindDirection(wind);
         preview.Show(wind);
         ReportWind();
+
+        isNight = false;
+        RemoveAllIce();
     }
 
-    // 밤이 시작되면 화살표를 숨기고 현재 배치를 한 번 읽어 사막 효과를 확정합니다.
+    // 밤이 시작되면 화살표를 숨기고 현재 배치를 한 번 읽어 사막 효과를 확정하며, 얼음 지대도 다시 판정합니다.
     public void OnNightChanged()
     {
         preview.Hide();
         DesertUnits units = ReadUnits();
         ApplyNight(units, desertZone.WindDirection);
+
+        isNight = true;
+        ApplyAllIce();
     }
 
     // 현재 바람 방향을 로그로 출력합니다.
@@ -80,7 +88,7 @@ public class ZoneEffectApplier : IDisposable
         lineEffect.Hide();
     }
 
-    // 얼음 지대라면 설정된 디버프를 적용합니다.
+    // 얼음 지대라면 소속을 기록해두고, 밤일 때만 디버프를 실제로 적용합니다.
     private void ApplyIce(Hero hero, PlacementArea area)
     {
         if (!area.Board.TryGetComponent(out IceZone iceZone))
@@ -89,9 +97,48 @@ public class ZoneEffectApplier : IDisposable
         }
 
         EnsureSources(iceZone);
-        object[] sources = GetSources(iceZone);
+        if (!iceByHero.ContainsKey(hero))
+        {
+            iceHeroes.Add(hero);
+        }
+
         iceByHero[hero] = iceZone;
+
+        if (!isNight)
+        {
+            Debug.Log($"[Zone] {hero.name} 얼음 지대 진입 - 낮이라 효과 보류");
+            return;
+        }
+
+        object[] sources = GetSources(iceZone);
         RefreshIce(hero, area, iceZone, sources);
+    }
+
+    // 밤이 시작되면 얼음 지대에 서 있는 영웅 전원을 그 순간 자리 기준으로 다시 판정합니다.
+    private void ApplyAllIce()
+    {
+        for (int heroIndex = 0; heroIndex < iceHeroes.Count; heroIndex++)
+        {
+            Hero hero = iceHeroes[heroIndex];
+            IceZone iceZone = iceByHero[hero];
+            if (!unitList.TryGetArea(hero.gameObject, out PlacementArea area))
+            {
+                continue;
+            }
+
+            RefreshIce(hero, area, iceZone, GetSources(iceZone));
+        }
+    }
+
+    // 낮이 시작되면 얼음 지대에 서 있는 영웅 전원의 디버프만 걷어냅니다(소속은 유지합니다).
+    private void RemoveAllIce()
+    {
+        for (int heroIndex = 0; heroIndex < iceHeroes.Count; heroIndex++)
+        {
+            Hero hero = iceHeroes[heroIndex];
+            IceZone iceZone = iceByHero[hero];
+            RemoveEffects(hero, iceZone.Debuffs, GetSources(iceZone));
+        }
     }
 
     // 기존 얼음 효과를 정리하고 현재 모닥불 보호 상태에 맞춰 다시 결정합니다.
@@ -252,6 +299,7 @@ public class ZoneEffectApplier : IDisposable
 
         RemoveEffects(hero, iceZone.Debuffs, GetSources(iceZone));
         iceByHero.Remove(hero);
+        iceHeroes.Remove(hero);
     }
 
     // 얼음 지대의 독립적인 적용 출처가 없으면 만듭니다.
