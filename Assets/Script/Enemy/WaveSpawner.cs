@@ -362,14 +362,18 @@ public class WaveSpawner : MonoBehaviour
         }
     }
     // reinforcementSources: 해금된 "다른" 지역 번호들. 그 지역이 export하는 증원 몹(9001 대역)을 이 지역 웨이브에 추가로 얹는다.
-    public void SpawnWave(int region,int currentStage, IEnumerable<int> reinforcementSources = null)
+    // currentStage: 이 지역의 로컬 진행도 — 어떤 웨이브 행(1~10, 1001~1005 순환)을 쓸지 고른다.
+    // scaleStage: 마릿수 배율 기준. 비워두면 currentStage를 그대로 쓴다(하위 호환). 배율은 지역과 무관하게
+    // 글로벌 DayCount로 유지하고 싶을 때 여기에 DayCount를 넘긴다.
+    public void SpawnWave(int region,int currentStage, IEnumerable<int> reinforcementSources = null, int? scaleStage = null)
     {
         Enemycount =0;
         if (_activePaths.Count == 0) RollActivePortals(); // 포탈 추첨 없이 스폰되면 여기서 보정
         int lookupId = GetStageLookupId(currentStage);
+        int scale = scaleStage ?? currentStage;
         foreach(var wave in waveTable.GetWave(region,lookupId))
         {
-            int count = GetScaleCount(wave.Count, currentStage); // 라운드가 돌수록 마릿수 스케일업
+            int count = GetScaleCount(wave.Count, scale); // 라운드가 돌수록 마릿수 스케일업
             SpawnWaveRout(wave, count).Forget();
             Enemycount += count;
         }
@@ -438,18 +442,19 @@ public class WaveSpawner : MonoBehaviour
 
     // 스테이지 정보 표시. infoView가 있으면 적 아이콘 + x마릿수 행으로, 없으면 예전처럼 텍스트 한 덩어리로 쓴다.
     // (프리팹에 StageInfoView를 아직 붙이지 않은 상태에서도 게임이 돌아가도록 폴백을 남겨둠)
-    public void OnClickStage(int region,int currentstage, IEnumerable<int> reinforcementSources = null)
+    public void OnClickStage(int region,int currentstage, IEnumerable<int> reinforcementSources = null, int? scaleStage = null)
     {
         if (waveTable == null) return;                          // Start 전 클릭 방어
         if (infoView == null && text == null) return;           // 표시할 대상이 아무것도 없음
 
         int lookupId = GetStageLookupId(currentstage);
+        int scale = scaleStage ?? currentstage;
         // 이번 클릭 내용만 남게 매번 비우고 시작한다(안 비우면 클릭할수록 목록이 쌓인다).
         if (infoView != null) infoView.Begin();
         else text.text = string.Empty;
 
         foreach(var w in waveTable.GetWave(region,lookupId))
-            AddStageLine(w.MonsterName, GetScaleCount(w.Count, currentstage), null);
+            AddStageLine(w.MonsterName, GetScaleCount(w.Count, scale), null);
 
         if (reinforcementSources != null)
         {
@@ -457,7 +462,7 @@ public class WaveSpawner : MonoBehaviour
             {
                 if (src == region) continue;
                 foreach (var w in waveTable.GetWave(src, ReinforceId))
-                    AddStageLine(w.MonsterName, GetScaleCount(w.Count, currentstage), "Ui_Add");
+                    AddStageLine(w.MonsterName, GetScaleCount(w.Count, scale), "Ui_Add");
             }
         }
         if(currentstage>10&&currentstage%10==0&&region==1)

@@ -22,6 +22,10 @@ public static class DotRegistry
         public DebuffTracker Ledger;   // 제거 시 조회 비트도 같이 끈다. 대상이 IDebuffCarrier가 아니면 null
         public DebuffType Type;
         public float Percent;      // 한 틱에 넣을 대상 최대 체력 비율(%). 2 = 2%
+        // 한 틱에 위 비율 피해와 함께 더할 고정값. 걸 때 (시전자 공격력 × atkPercent%)로 계산해 찍어 둔 값이다.
+        // 시전자를 참조로 들지 않는 이유는 클래스 주석의 "시전자가 죽어도 남는다"와 같다 —
+        // 풀에서 재사용된 오브젝트를 통해 다른 적의 공격력을 읽어 오는 것을 막는다.
+        public float AtkDamage;
         public float Interval;
         public float Expiry;
         public float TickTimer;
@@ -48,6 +52,13 @@ public static class DotRegistry
     public static int PercentDamage(GameObject target, float percent) =>
         ToDamage(MaxHp(target != null ? target.GetComponentInParent<IUnit>() : null), percent);
 
+    /// <summary>
+    /// 지속 피해 한 틱에 들어갈 값. 대상 최대 체력의 비율 + 걸 때 확정된 시전자 몫.
+    /// 최소 1 보장은 합계에 한 번만 건다 — 두 몫에 따로 걸면 공격력 몫이 0인 디버프가 2 피해로 커진다.
+    /// </summary>
+    public static int TickDamage(float maxHp, float percent, float atkDamage) =>
+        Mathf.Max(1, Mathf.RoundToInt(maxHp * percent * 0.01f + atkDamage));
+
     private static readonly List<Entry> entries = new();
     private static GameManager subscribedGm;
 
@@ -70,9 +81,13 @@ public static class DotRegistry
     ///
     /// percentPerTick은 고정 피해가 아니라 <b>대상 최대 체력의 %</b>다(2 = 2%).
     /// 실제 피해값은 틱마다 다시 계산하므로 최대 체력이 변하면 남은 틱부터 따라간다.
+    ///
+    /// atkDamage는 거기에 더할 시전자 몫이다(공격력 × atkPercent%를 호출부가 이미 환산해 넘긴다).
+    /// 한 틱 피해 = 대상 최대 체력의 percentPerTick% + atkDamage. 안 넘기면 0이라 예전과 같이 비율 피해만 들어간다.
     /// </summary>
     /// <returns>장부에 올라갔으면 true. 거절되면 false — 호출부가 아이콘까지 취소할 수 있게 결과를 돌려준다.</returns>
-    public static bool Apply(IDamageAble target, DebuffType type, float percentPerTick, float interval, float duration, GameManager gm)
+    public static bool Apply(IDamageAble target, DebuffType type, float percentPerTick, float interval, float duration, GameManager gm,
+        float atkDamage = 0f)
     {
         if (target == null || percentPerTick <= 0f || duration <= 0f)
         {
@@ -120,11 +135,14 @@ public static class DotRegistry
             entries.Add(e);
         }
         e.Percent = Mathf.Max(e.Percent, percentPerTick);
+        // 공격력 몫도 비율과 같은 규칙으로 갱신한다 — 센 쪽이 이긴다.
+        // 비율과 따로 최댓값을 잡으므로, 약한 적의 독 위에 센 적이 덧걸면 각각의 최댓값을 합친 틱이 된다.
+        e.AtkDamage = Mathf.Max(e.AtkDamage, Mathf.Max(0f, atkDamage));
         e.Interval = Mathf.Max(0.05f, interval);
         e.Expiry = Mathf.Max(e.Expiry, Time.time + duration);
 
         DebuffDebug.Log($"DotRegistry {host.name} {type} {(isNew ? "신규" : "갱신")} — 최대체력 {e.Percent:F2}%" +
-            $"(={ToDamage(MaxHp(e.Unit), e.Percent)}피해)/{e.Interval}초," +
+            $"(={ToDamage(MaxHp(e.Unit), e.Percent)}피해) + 공격력몫 {e.AtkDamage:F0} = {TickDamage(e)}피해/{e.Interval}초," +
             $" {e.Expiry - Time.time:F1}초 남음 (진행중 {entries.Count}건)", host);
         return true;
     }
@@ -195,15 +213,19 @@ public static class DotRegistry
             if (e.TickTimer < e.Interval) continue;
 
             e.TickTimer = 0f;
-            // 방어력 감산 없이 그대로 넣는다 — Hero.Defense는 NotImplementedException을 던지므로
-            // 공통 "방어력 적용" 경로를 절대 타면 안 된다.
             // 최대 체력은 걸 때가 아니라 틱마다 다시 읽는다 — 도중에 최대 체력 버프가 붙거나 풀려도
             // 남은 틱이 그 값을 따라간다(걸 때 한 번 굳히면 버프 창과 어긋난다).
+            // 공격력 몫(AtkDamage)은 걸 때 확정된 값이라 여기서 더하기만 한다.
             float maxHp = MaxHp(e.Unit);
-            int damage = ToDamage(maxHp, e.Percent);
+            int tick = TickDamage(e);
+            // 방어력을 도로 더해 상쇄한다 — TakeDamage가 빼므로, 안 그러면 지속 피해에 방어력이 먹혀
+            // 표에 적은 %와 공격력 몫이 그만큼 깎여 들어간다(지속 피해는 방어력을 무시하는 게 규칙이다).
+            // 두 몫을 합쳐 한 번만 때리는 이유: 나눠 부르면 폭주 발동선과 사망 판정이 두 번 걸리고,
+            // 최소 1 피해 보장도 두 번 붙는다.
             float hpBefore = e.Target.Hp;
-            e.Target.TakeDamage(damage);
-            DebuffDebug.Log($"DotRegistry {e.Host.name} {e.Type} 틱 최대체력 {e.Percent:F2}%={damage}피해" +
+            e.Target.TakeDamage(tick + e.Target.Defense);
+            DebuffDebug.Log($"DotRegistry {e.Host.name} {e.Type} 틱 최대체력 {e.Percent:F2}%" +
+                $"(={ToDamage(maxHp, e.Percent)}) + 공격력몫 {e.AtkDamage:F0} = {tick}피해" +
                 $"(최대 {maxHp:F0}) — Hp {hpBefore:F0}→{e.Target.Hp:F0}," +
                 $" {e.Expiry - Time.time:F1}초 남음", e.Host);
         }
@@ -227,6 +249,9 @@ public static class DotRegistry
         }
         DebuffEffectView.Sync(ledgerlessMasks);
     }
+
+    // 장부 항목 하나의 현재 틱 피해. 최대 체력은 지금 값으로 다시 읽는다.
+    private static int TickDamage(Entry e) => TickDamage(MaxHp(e.Unit), e.Percent, e.AtkDamage);
 
     private static Entry Find(IDamageAble target, DebuffType type)
     {

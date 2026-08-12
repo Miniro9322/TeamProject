@@ -16,6 +16,10 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
     [SerializeField] private CloakSettingsSO cloakSettings;
     [Tooltip("기본 공격 애니 클립의 원래 길이(초). 공속이 빨라져 공격 간격(1/AS)이 이 값보다 짧아지면 애니를 그만큼 배속한다. 0이면 배속하지 않음.")]
     [SerializeField] private float attackClipLength = 0f;
+    /// <summary>공격 한 번이 실제로 재생하는 애니 길이(초). 배속 보정의 기준값.
+    /// 2타 이상으로 나누어 때리는 적(GrimReaper 등)은 이걸 재정의해 모든 클립 길이의 합을 돌려준다 —
+    /// 그래야 공격 한 번이 통째로 공격 간격 안에 들어온다. 0이면 배속하지 않는다는 뜻이므로 그대로 흘려보낼 것.</summary>
+    protected virtual float AttackClipLength => attackClipLength;
     [Tooltip("잠행(Burrow) 중 지면에 표시할 마커 이펙트(흙더미/먼지 등). IsBurrow일 때만 사용. 비우면 마커 없이 숨는다.")]
     [SerializeField] private GameObject burrowMarkerPrefab;
     [Tooltip("파고들기/솟아오르기 애니 이벤트가 안 왔을 때 강제로 다음 상태로 넘기는 시간(초). 클립 길이보다 넉넉하게.")]
@@ -104,8 +108,8 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
     private StatContainer sc = new();
     public StatContainer Stats => sc;
     public Animator animator;
-    private bool _attacking; // 공격 모션 재생 중 — 이 동안 스킬 시전을 막아 애니메이터 충돌 방지
-    private EnemyMovement _move; // 경로 추종 이동 — Awake에서 생성, 아래 API는 여기로 위임
+    protected bool _attacking; // 공격 모션 재생 중 — 이 동안 스킬 시전을 막아 애니메이터 충돌 방지
+    protected EnemyMovement _move; // 경로 추종 이동 — Awake에서 생성, 아래 API는 여기로 위임
     private PoolManager _pool;
     private GameManager gameManager;
     public GameManager GameManager => gameManager;
@@ -352,7 +356,10 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
             if (Keyboard.current.numpad2Key.wasPressedThisFrame) ApplyDebuff(DebuffLoader.Get("Root_Basic"));
             // 침묵: 걸어오면서 평타는 하지만 스킬을 하나도 안 써야 정상.
             if (Keyboard.current.numpad3Key.wasPressedThisFrame) ApplyDebuff(DebuffLoader.Get("Silence_Basic"));
+            // 점화 비교 테스트. 4 = 시전자 없이(최대 체력 비율만), 5 = 이 적이 시전자(공격력 몫까지).
+            // 번갈아 누르고 콘솔의 "틱 ... = N피해"를 견주면 공격력 몫이 실제로 더해지는지 바로 보인다.
             if (Keyboard.current.numpad4Key.wasPressedThisFrame) ApplyDebuff(DebuffLoader.Get("Ignite_Basic"));
+   
         }
     }
 
@@ -385,19 +392,24 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
         if (!wasStunned) InterruptActiveSkills();
     }
 
+    // 자기 자신에게 거는 쪽 — 시전자도 자기 자신으로 보고 공격력을 넘긴다.
+    // 그래서 지속 피해의 공격력 몫(DotDebuffSO.atkPercent)이 이 적의 공격력 기준으로 들어간다.
     public void ApplyDebuff(DebuffSO debuff, float durationOverride = 0f, float scale = 1f, object source = null)
     {
         if (debuff == null || IsDead) return;
-
-        debuff.Apply(DebuffContext.For(this, buffManager, gameManager, source ?? debuff), durationOverride, scale);
+        // debuff.Apply(DebuffContext.For(this, buffManager, gameManager, source ?? debuff), durationOverride, scale);
+        DebuffApply.To(this,debuff,buffManager,gameManager,durationOverride,scale:scale,attackerAtk : AttackPower);
     }
     
+    // 남에게 거는 쪽 — 이 적이 시전자이므로 자기 공격력을 같이 넘긴다.
+    // 지속 피해(DotDebuffSO.atkPercent)가 그 값의 몇 %를 틱마다 더한다. 안 쓰는 디버프는 무시한다.
     public void ApplyDebuffTo(Component target, DebuffSO debuff,
         float durationOverride = 0f, float scale = 1f, object source = null)
     {
         if (debuff == null || target == null) return;
 
-        debuff.Apply(DebuffContext.For(target, buffManager, gameManager, source ?? debuff), durationOverride, scale);
+        debuff.Apply(DebuffContext.For(target, buffManager, gameManager, source ?? debuff, AttackPower),
+            durationOverride, scale);
     }
 
     public bool HasDebuff(DebuffType mask) => _debuffTracker.HasAny(mask);
@@ -760,7 +772,8 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
         if (animator != null)
         {
             float interval = AttackSpeed > 0f ? 1f / AttackSpeed : 1f;
-            animator.speed = (attackClipLength > interval && interval > 0f) ? attackClipLength / interval : 1f;
+            float clipLength = AttackClipLength; // 2타 몹은 두 클립 길이의 합이 온다(GrimReaper 참조)
+            animator.speed = (clipLength > interval && interval > 0f) ? clipLength / interval : 1f;
             animator.SetTrigger("Attack");
         }
         AttackWatchdog(skillCts.Token).Forget(); // 애니 끝나면 상태 복구(이벤트 누락 대비 타임아웃 포함)
@@ -778,6 +791,7 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
         }
             
     }
+    
     protected GameObject FindAttackTarget()
     {
         if (Board == null) return null;
@@ -795,7 +809,7 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
         return target;
     }
 
-    private async UniTask AttackWatchdog(CancellationToken token)
+    protected virtual async UniTask AttackWatchdog(CancellationToken token)
     {
         try { await WaitForAttackAnim("Attack", 5f, token); }
         catch (OperationCanceledException) { }
@@ -806,7 +820,7 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
             _move.Resume();
         }
     }
-    private async UniTask WaitForAttackAnim(string stateName,float timeout,CancellationToken token)
+    protected virtual async UniTask WaitForAttackAnim(string stateName,float timeout,CancellationToken token)
     {
         const int layer = 0;
         float elapsed = 0f;

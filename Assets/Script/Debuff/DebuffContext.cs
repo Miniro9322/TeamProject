@@ -20,18 +20,25 @@ public struct DebuffContext
     public BuffManager buffManager;
     public GameManager gameManager;
     public object source;             // BuffManager의 스택 판정 키. 보통 디버프를 건 SO 자신
+    // 디버프를 건 쪽의 공격력. 지속 피해의 공격력 몫(DotDebuffSO.atkPercent)에만 쓴다.
+    // 시전자 참조가 아니라 값을 찍어 넘기는 이유 — 그 유닛은 디버프보다 먼저 죽거나 풀에 반납될 수 있고,
+    // 재사용된 오브젝트에서 다른 적의 공격력을 읽으면 남은 틱이 조용히 다른 세기가 된다.
+    // 안 넘기는 경로(불 칸 등 시전자가 없는 것)는 0이라 공격력 몫이 빠지고 비율 피해만 들어간다.
+    public float attackerAtk;
 
     /// <summary>
     /// 대상 컴포넌트에서 통로들을 찾아 컨텍스트를 만든다.
     /// 자식 콜라이더를 맞은 경우도 있어 자기 자신에서 못 찾으면 부모까지 올라간다.
     /// </summary>
-    public static DebuffContext For(Component target, BuffManager buffManager, GameManager gameManager, object source)
+    public static DebuffContext For(Component target, BuffManager buffManager, GameManager gameManager, object source,
+        float attackerAtk = 0f)
     {
         var ctx = new DebuffContext
         {
             buffManager = buffManager,
             gameManager = gameManager,
             source = source,
+            attackerAtk = attackerAtk,
         };
         if (target == null) return ctx;
 

@@ -21,6 +21,9 @@ public class SpawnerManager : MonoBehaviour
     private readonly Dictionary<int, WaveSpawner> _byRegion = new();
     // 지역번호 → 해금 여부
     public Dictionary<int, bool> IsUnlockregion = new();
+    // 지역번호 → 그 지역이 해금된 시점의 글로벌 DayCount - 1. LocalStage 계산용 오프셋.
+    // 시작 해금 지역(startUnlocked)은 0으로 둬서 기존처럼 글로벌 DayCount와 로컬 진행도가 같게 유지한다.
+    private readonly Dictionary<int, int> _unlockOffset = new();
     public ModuleLogic[] moduleLogics;
     public GameObject spawnPoint;
     private float yOffset = 1f;
@@ -124,6 +127,22 @@ public class SpawnerManager : MonoBehaviour
             return _gameManager != null ? _gameManager.DayCount : 0;
         }
     }
+
+    // 지역별 로컬 진행도. 그 지역이 해금된 날을 1일차로 다시 센다 —
+    // 나중에 해금된 지역이 글로벌 DayCount 배율을 그대로 물려받아 첫 웨이브부터 몰리는 걸 막는다.
+    // 오프셋은 해금되는 그 순간(UnlockRegion 호출 시점)이 아니라, 이 지역 정보가 처음 조회되는 시점에 확정한다.
+    // ResultState처럼 UnlockNextModule()이 OnDay()로 DayCount가 오르기 "직전"에 불리는 경로가 있어서,
+    // 해금 시점에 바로 계산하면 아직 안 오른 DayCount 기준으로 오프셋이 고정되어 그 지역이 영구히 하루씩 밀린다.
+    private int LocalStage(int region)
+    {
+        if (!_unlockOffset.TryGetValue(region, out int off))
+        {
+            off = CurrentDay - 1;
+            _unlockOffset[region] = off;
+        }
+        return CurrentDay - off;
+    }
+
     void Start()
     {
         if (_gameManager == null && _resolver != null)
@@ -189,7 +208,7 @@ public class SpawnerManager : MonoBehaviour
     {
         PortalTable table = DataTableManager.Get<PortalTable>(DataTableIds.Portal);
         if (table == null) return 1;
-        int id = WaveSpawner.GetStageLookupId(CurrentDay);
+        int id = WaveSpawner.GetStageLookupId(LocalStage(region));
         return table.GetCount(region, id, 1);
     }
 
@@ -240,7 +259,7 @@ public class SpawnerManager : MonoBehaviour
         StageInfoView view = go.GetComponent<StageInfoView>() ?? go.GetComponentInChildren<StageInfoView>(true);
         spawner.infoView = view;
         spawner.text = view != null ? null : go.GetComponentInChildren<TMP_Text>(true);
-        spawner.OnClickStage(region, CurrentDay, UnlockedRegions()); // 웨이브/증원/보스 정보 기록
+        spawner.OnClickStage(region, LocalStage(region), UnlockedRegions(), CurrentDay); // 웨이브/증원/보스 정보 기록
     }
 
     // 클릭한 칸과 같은 격자 좌표에 서 있는 포탈을 찾는다. 없으면 null(그 칸은 이번 라운드에 안 뽑힌 스폰 지점).
@@ -286,13 +305,17 @@ public class SpawnerManager : MonoBehaviour
         }
 
         foreach (int region in startUnlocked)
+        {
             IsUnlockregion[region] = true;
+            _unlockOffset[region] = 0; // 글로벌 DayCount와 로컬 진행도를 그대로 일치시킨다
+        }
     }
 
     public void UnlockRegion(int region,ModuleState state)
     {
         if(state!=ModuleState.Locked)
         {
+            // 오프셋은 여기서 계산하지 않는다 — LocalStage가 이 지역을 처음 조회하는 시점에 확정한다(위 주석 참고).
             IsUnlockregion[region] = true; //해금 할때 씀
             if (changeCheck) ShowPortal(region); // 낮에 확장하면 확장된 곳에 즉시 포탈 생성
         }
@@ -314,11 +337,12 @@ public class SpawnerManager : MonoBehaviour
         return list;
     }
 
-    public void SpawnWave(int round) //해당라운드 전체소환
+    public void SpawnWave(int round) //해당라운드 전체소환 (round는 GameManager.DayCount와 항상 같음 — 지역별 진행도는 LocalStage로 따로 계산)
     {
         var unlocked = UnlockedRegions();
+        // 웨이브 조합(어떤 몹이 나올지)은 지역별 LocalStage, 마릿수 배율은 글로벌 DayCount 기준으로 유지한다.
         foreach (int region in unlocked)
-            _byRegion[region].SpawnWave(region, round, unlocked);
+            _byRegion[region].SpawnWave(region, LocalStage(region), unlocked, CurrentDay);
     }
 
 
@@ -326,7 +350,7 @@ public class SpawnerManager : MonoBehaviour
     {
         if (!IsUnlocked(region)) return;
         if (_byRegion.TryGetValue(region, out WaveSpawner s))
-            s.SpawnWave(region, round);
+            s.SpawnWave(region, LocalStage(region), null, CurrentDay);
     }
     private void OnRegionClear() //몹 다잡았을때
     {
