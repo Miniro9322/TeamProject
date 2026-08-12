@@ -17373,7 +17373,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0f482275a1b393744b95b4b49ba1417b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Mage
-  statUpgrades: []
+  statUpgrades:
+  - {fileID: 11400000, guid: 024d160f71f942b4189efd44499389c5, type: 2}
+  - {fileID: 11400000, guid: 3f6746566778e5b4f88705adc3c9a1e9, type: 2}
+  - {fileID: 11400000, guid: a6dd79d2802a80d4b9cdf7db50f64a4e, type: 2}
+  - {fileID: 11400000, guid: 29fcb58731e9de84ba10d989c8f256f9, type: 2}
+  - {fileID: 11400000, guid: f8f02fa9135171e4db10c07135224a3b, type: 2}
   heroData: {fileID: 0}
   basePattern: []
   anim: {fileID: 0}

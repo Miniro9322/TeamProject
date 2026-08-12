@@ -156,21 +156,22 @@ public class Hero : MonoBehaviour, IDamageAble, IUnit, IStunAble, IDebuffCarrier
     public void DespawnEffect(GameObject prefab, GameObject instance)
     {
         if (prefab == null || instance == null) return;
+        if (instance.TryGetComponent(out BeamLinkEffect link)) link.StopTracking();
         GetEffectPool(prefab).Release(instance);
     }
 
-    // 체인 튕김 두 지점(from/to)을 잇는 이펙트. SpawnEffect의 풀링/회수 타이머를 그대로 감싸고
-    // 두 점만 추가로 세팅한다.
-    public GameObject SpawnChainArc(GameObject prefab, Vector3 from, Vector3 to, float lifetime)
+    // 체인 튕김 두 지점을 잇는 이펙트. 좌표가 아니라 대상 GameObject를 받아서, 스폰 후에도
+    // TrackLinkEndpoints로 계속 그 대상들을 따라가게 한다(대상이 움직이는 동안 얼어붙지 않도록).
+    public GameObject SpawnChainArc(GameObject prefab, GameObject fromTarget, GameObject toTarget, float lifetime)
     {
-        GameObject go = SpawnEffect(prefab, from, Quaternion.identity, lifetime);
-        UpdateLinkEndpoints(go, from, to);
+        GameObject go = SpawnEffect(prefab, AttackDamageUtil.EffectPosition(fromTarget), Quaternion.identity, lifetime);
+        TrackLinkEndpoints(go, AttackDamageUtil.TrackingPosition(fromTarget), AttackDamageUtil.TrackingPosition(toTarget));
         return go;
     }
 
-    // 빔/체인 두 점 이펙트의 끝점을 갱신하는 공용 헬퍼. BeamLinkEffect가 붙어 있으면 텍스처 스크롤/히트
-    // 이펙트 배치까지 맡기고, 없으면(단순 LineRenderer만 있는 프리팹) 두 점만 직접 세팅하는 폴백을
-    // 유지한다 — ContinuousBeamStrategy의 매 tick 갱신에서도 재사용.
+    // 빔/체인 두 점 이펙트의 끝점을 한 번만 적용하는 공용 헬퍼. BeamLinkEffect가 붙어 있으면 텍스처
+    // 스크롤/히트 이펙트 배치까지 맡기고, 없으면(단순 LineRenderer만 있는 프리팹) 두 점만 직접
+    // 세팅하는 폴백을 유지한다.
     public static void UpdateLinkEndpoints(GameObject go, Vector3 from, Vector3 to)
     {
         if (go == null) return;
@@ -181,6 +182,17 @@ public class Hero : MonoBehaviour, IDamageAble, IUnit, IStunAble, IDebuffCarrier
             lr.SetPosition(0, from);
             lr.SetPosition(1, to);
         }
+    }
+
+    // 매 프레임 스스로 갱신하도록 두 지점 제공자를 등록한다. BeamLinkEffect가 있으면 Track으로
+    // 넘겨 매 프레임 다시 계산하게 하고, 없으면(단순 LineRenderer 프리팹) 기존처럼 1회만 적용한다.
+    public static void TrackLinkEndpoints(GameObject go, Func<Vector3> from, Func<Vector3> to)
+    {
+        if (go == null) return;
+        if (go.TryGetComponent(out BeamLinkEffect link))
+            link.Track(from, to);
+        else
+            UpdateLinkEndpoints(go, from(), to());
     }
 
     private async UniTask ReturnEffectAfter(GameObject prefab, GameObject go, float delay)

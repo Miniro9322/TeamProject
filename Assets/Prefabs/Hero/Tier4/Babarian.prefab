@@ -3246,7 +3246,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2209334264993888092}
   - component: {fileID: 642141430422632474}
-  - component: {fileID: 7091129758448407350}
+  - component: {fileID: 5231495635789993909}
   m_Layer: 0
   m_Name: Babarian
   m_TagString: Untagged
@@ -3282,17 +3282,23 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6deb4eeb61823d14e85febf5c0cf9d3c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SwordMan
-  statUpgrades: []
-  heroData: {fileID: 0}
+  statUpgrades:
+  - {fileID: 11400000, guid: 024d160f71f942b4189efd44499389c5, type: 2}
+  - {fileID: 11400000, guid: 3f6746566778e5b4f88705adc3c9a1e9, type: 2}
+  - {fileID: 11400000, guid: a6dd79d2802a80d4b9cdf7db50f64a4e, type: 2}
+  - {fileID: 11400000, guid: 29fcb58731e9de84ba10d989c8f256f9, type: 2}
+  - {fileID: 11400000, guid: f8f02fa9135171e4db10c07135224a3b, type: 2}
+  heroData: {fileID: 11400000, guid: fa3d38d31378a1144a998b9aca1c856b, type: 2}
   basePattern:
-  - {fileID: 11400000, guid: 3b29d244c372dea42b4f6b07c60943c4, type: 2}
+  - {fileID: 11400000, guid: 15c65868243dc8649ba70d2febbf1251, type: 2}
   anim: {fileID: 4961962971643976453}
   animEvents: {fileID: 6012942502851000738}
-  statData: {fileID: 11400000, guid: cbb9cead14128214eaa4791ce343711f, type: 2}
+  statData: {fileID: 11400000, guid: d8257cf8e232f2147a96e231fac1ced7, type: 2}
   board: {fileID: 0}
-  auraZonePrefabs: []
+  auraZonePrefabs:
+  - {fileID: 4269708727165565049, guid: 2034443a396fb894594d0cb81cdd5c74, type: 3}
   occupantKind: 1
---- !u!114 &7091129758448407350
+--- !u!114 &5231495635789993909
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -3301,11 +3307,19 @@ MonoBehaviour:
   m_GameObject: {fileID: 1125355577782864148}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 71f4ec0063568874f8d0c94daeb655ad, type: 3}
+  m_Script: {fileID: 11500000, guid: 70884c9239b802249a37f85d89918ccc, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::NthHitHeavyTrait
-  everyN: 4
-  heavyAttackData: {fileID: 11400000, guid: 906e78217476eef4c955ee73f0e400d7, type: 2}
+  m_EditorClassIdentifier: Assembly-CSharp::AttackStanceSkill
+  targetScope: 0
+  buffList: []
+  groundZonePrefab: {fileID: 0}
+  instantDamagePer: 0
+  instantHitEffect: {fileID: 0}
+  instantHitEffectLifetime: 1
+  cooldown: 20
+  duration: 20
+  blocksBasicAttack: 0
+  stanceAttackData: {fileID: 11400000, guid: ca6e867ce74801342a8738251febd720, type: 2}
 --- !u!1 &1184476059935144041
 GameObject:
   m_ObjectHideFlags: 0
