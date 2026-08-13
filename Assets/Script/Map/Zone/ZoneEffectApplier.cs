@@ -204,7 +204,8 @@ public class ZoneEffectApplier : IDisposable
     private void ApplyNight(DesertUnits units, Vector2Int wind)
     {
         UnitShelter unitShelter = new(units.Cells);
-        lineEffect.Show(wind, unitShelter);
+        DesertEffectData effectData = new DesertEffectCalc().BuildData(desertBoard, shelterData, unitShelter, windwallData, wind);
+        lineEffect.Show(wind, effectData);
         for (int unitIndex = 0; unitIndex < units.Heroes.Count; unitIndex++)
         {
             Hero hero = units.Heroes[unitIndex];

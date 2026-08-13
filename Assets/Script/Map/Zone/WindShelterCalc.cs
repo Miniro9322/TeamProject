@@ -7,10 +7,6 @@ public class WindShelterCalc
     private readonly List<Tile> highTiles = new();
     private readonly List<Tile> groundTiles = new();
     private readonly HashSet<Vector2Int> highCells = new();
-    private readonly Dictionary<int, int> rowLeft = new();
-    private readonly Dictionary<int, int> rowRight = new();
-    private readonly Dictionary<int, int> colBottom = new();
-    private readonly Dictionary<int, int> colTop = new();
 
     private int minCol = int.MaxValue;
     private int maxCol = int.MinValue;
@@ -24,7 +20,6 @@ public class WindShelterCalc
         CollectTiles(cells, data);
         CollectHighs();
         ResolveGrounds(data);
-        data.KeepLines(rowLeft, rowRight, colBottom, colTop);
         return data;
     }
 
@@ -86,32 +81,10 @@ public class WindShelterCalc
             && cell.y < maxRow;
     }
 
-    // 이 고지 타일의 좌표를 기록해둔다. 줄 끝값 표는 바람 VFX가 아직 쓰므로 함께 남긴다.
+    // 이 고지 타일의 좌표를 기록해둔다.
     private void KeepHigh(Vector2Int cell)
     {
         highCells.Add(cell);
-        KeepMinimum(rowLeft, cell.y, cell.x);
-        KeepMaximum(rowRight, cell.y, cell.x);
-        KeepMinimum(colBottom, cell.x, cell.y);
-        KeepMaximum(colTop, cell.x, cell.y);
-    }
-
-    // 같은 줄에서 가장 작은 위치 값을 저장한다.
-    private static void KeepMinimum(Dictionary<int, int> values, int line, int position)
-    {
-        if (!values.TryGetValue(line, out int current) || position < current)
-        {
-            values[line] = position;
-        }
-    }
-
-    // 같은 줄에서 가장 큰 위치 값을 저장한다.
-    private static void KeepMaximum(Dictionary<int, int> values, int line, int position)
-    {
-        if (!values.TryGetValue(line, out int current) || position > current)
-        {
-            values[line] = position;
-        }
     }
 
     // 모든 평지 타일에 대해 바람 막힘 여부를 계산해서 채운다.
