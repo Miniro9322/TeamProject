@@ -28,7 +28,7 @@ public class MapAssemble : MonoBehaviour
     private HeroSkillCastController skillCast;
     private ZoneEffectApplier zoneEffectApplier;
     private CampfireLightController campfireLights;
-    private ModuleLogic desertModule;
+    private MapBoard desertBoard;
 
     private void Start()
     {
@@ -38,8 +38,7 @@ public class MapAssemble : MonoBehaviour
         PointerPick pointerPick = new PointerPick(boards);
         PlaceFinder finder = new PlaceFinder(pointerPick, palette, placeYOffset);
 
-        MapBoard desertBoard = desertZone.GetComponent<MapBoard>();
-        desertModule = desertZone.GetComponent<ModuleLogic>();
+        desertBoard = desertZone.GetComponent<MapBoard>();
         WindShelterData shelterData = new WindShelterCalc().BuildData(desertBoard.Cells);
         WindwallData windwallData = new WindwallCalc().BuildData(desertBoard.Cells, desertZone.WindwallReach);
         WindPreview windPreview = new WindPreview(
@@ -50,7 +49,6 @@ public class MapAssemble : MonoBehaviour
             desertZone.ArrowColor);
         DesertLineEffect lineEffect = new DesertLineEffect(
             desertBoard,
-            shelterData,
             Resources.Load<GameObject>("ZoneEffectPrefab/DesertStrongVFX"),
             Resources.Load<GameObject>("ZoneEffectPrefab/DesertWeakVFX"));
         zoneEffectApplier = new ZoneEffectApplier(
@@ -254,7 +252,7 @@ public class MapAssemble : MonoBehaviour
     // 사막 모듈이 아직 잠겨있으면 밤이 되어도 지대 효과 적용을 건너뛴다.
     private void OnDesertNightChanged()
     {
-        if (!desertModule.IsUnlocked)
+        if (!desertBoard.IsUnlocked)
         {
             return;
         }
