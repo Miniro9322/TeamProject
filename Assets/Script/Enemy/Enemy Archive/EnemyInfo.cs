@@ -74,6 +74,9 @@ public class EnemyInfo : MonoBehaviour
     // Animation Event가 왔는지. revealDelay는 이벤트를 안 걸었을 때를 위한 안전망이다
     // (EnemyBurrow가 파고들기 이벤트에 타임아웃을 함께 두는 것과 같은 구조).
     private bool bookOpenedEvent;
+    // 잠금 문구 팝업을 띄울 차례인지. 이건 풀에서 새로 꺼내는 오브젝트라 미리 alpha를 낮춰 둘 수가 없어
+    // (SetRevealAlpha가 닿지 않는다) 스폰 자체를 펼침이 끝나는 시점까지 미룬다.
+    private bool pendingLockedPopup;
 
     /// <summary>책이 펼쳐지고 있는 동안 true(펼침이 끝나 텍스트가 뜨기 시작하면 false).
     /// EnemyArchive가 이걸 보고 클릭을 무시한다 — 펼치는 중에 다른 적으로 갈아끼우면 애니가 끊겨 보인다.</summary>
@@ -215,8 +218,10 @@ public class EnemyInfo : MonoBehaviour
         page = 0;
         skillNames.Clear();
         skillDescs.Clear();
-        GameObject go = PoolManager.Instance.Spawn(lockedEnemyText,transform.position,Quaternion.identity,gameObject.transform);
-        PoolManager.Instance.Despawn(go,1f);
+        // 책이 펼쳐지는 중이면 예약만 하고 RevealAfterOpen이 다 펼쳐진 뒤 띄운다 —
+        // 여기서 바로 띄우면 다른 텍스트·아이콘이 아직 투명한 동안 이것만 튀어나온다.
+        if (IsBookOpening) pendingLockedPopup = true;
+        else SpawnLockedPopup();
         SetText(e_NameText, lockedName);
         SetText(e_DescText, lockedMessage);
         SetText(e_TypeText, string.Empty);
@@ -231,6 +236,16 @@ public class EnemyInfo : MonoBehaviour
         }
         SetActive(leftArrowButton, false);
         SetActive(rightArrowButton, false);
+    }
+
+    // 잠금 문구 팝업을 풀에서 꺼내 1초 뒤 되돌린다.
+    // PoolManager가 아직 없을 수도 있어(씬 전환 중 등) null을 확인한다 — 없으면 팝업만 생략한다.
+    private void SpawnLockedPopup()
+    {
+        if (lockedEnemyText == null || PoolManager.Instance == null) return;
+
+        GameObject go = PoolManager.Instance.Spawn(lockedEnemyText, transform.position, Quaternion.identity, transform);
+        PoolManager.Instance.Despawn(go, 1f,false);
     }
 
     private void NextPage()
@@ -370,6 +385,7 @@ public class EnemyInfo : MonoBehaviour
         revealCts?.Dispose();
         revealCts = null;
         IsBookOpening = false;   // 취소로 끝나도 잠금이 남으면 클릭이 영구히 막힌다
+        pendingLockedPopup = false;  // 중간에 끊겼으면 예약해 둔 팝업도 버린다(다음 적 위로 뒤늦게 뜨지 않게)
     }
 
     // own을 그대로 받는 이유 — 취소된 앞선 작업의 finally가 뒤늦게 깨어나
@@ -389,6 +405,14 @@ public class EnemyInfo : MonoBehaviour
             }
 
             IsBookOpening = false;   // 펼침 끝 — 여기서부터 다른 적으로 넘어갈 수 있다
+
+            // 미해금 적이면 이제야 잠금 문구를 띄운다. 아래 페이드와 같은 프레임에 시작하므로
+            // 이름·설명·? 아이콘이 떠오르는 것과 같은 타이밍이 된다.
+            if (pendingLockedPopup)
+            {
+                pendingLockedPopup = false;
+                SpawnLockedPopup();
+            }
 
             t = 0f;
             while (t < fadeDuration)

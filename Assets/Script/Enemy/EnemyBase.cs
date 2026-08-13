@@ -340,6 +340,12 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
         // 잠행 몹은 파고들기/솟아오르기 모션 중에도 멈춘다 — 안 그러면 걸어가면서 땅을 파고 솟는 게 보인다.
         // 수영 몹도 잠수(Pool)/상승(Up) 모션 중엔 멈춘다 — 같은 이유.
         _move.Tick(!IsDead && !CannotMove && !_burrow.IsTransitioning && !_swim.IsTransitioning, CurrentMoveSpeed);
+        // 본진 도달은 위 _move.Tick 안에서 ArrivedAtCore로 터져 그 자리에서 풀에 반납된다(SetActive(false) → OnDisable).
+        // 그런데 Unity는 비활성화됐다고 지금 돌고 있는 Update를 끊지 않으므로 아래가 그대로 이어서 실행된다 —
+        // OnDisable의 _burrow.Reset()이 방금 반납한 지면 마커를 _burrow.Tick이 다시 꺼내고,
+        // 이미 비활성이라 OnDisable이 또 돌 일이 없어 그 마커가 본진에 영영 남았다. 여기서 끊는다.
+        // (사망은 DieRoutine이 await 뒤에 반납하므로 Update 밖이라 원래 이 문제가 없다.)
+        if (!gameObject.activeInHierarchy) return;
         UpdateExposedAttribute();       // 저지 상태에 따라 Hero가 보는 Attribute를 갱신
         _cloak.Tick(CloakClear);
         _burrow.Tick(CloakClear, transform.position); // 은신과 같은 트리거(저지/사망) — 저지되면 솟아오른다

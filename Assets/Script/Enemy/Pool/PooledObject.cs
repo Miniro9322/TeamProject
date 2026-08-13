@@ -52,20 +52,20 @@ public class PooledObject : MonoBehaviour
     }
 
     // delay초 뒤 자기 자신을 풀로 회수 (기존 Destroy(go, t) 대체).
-    public void ScheduleDespawn(float delay)
+    public void ScheduleDespawn(float delay,bool scaleCheck=true)
     {
         dcts.Cancel();
         dcts.Dispose();
         dcts = new CancellationTokenSource();
-        DespawnAfter(delay).Forget();
+        DespawnAfter(delay,scaleCheck).Forget();
     }
 
-    private async UniTask DespawnAfter(float delay)
+    private async UniTask DespawnAfter(float delay,bool scaleCheck = true)
     {
         var token = dcts.Token;
         try
         {
-            await UniTask.Delay(TimeSpan.FromSeconds(delay),cancellationToken : token);
+            await UniTask.Delay(TimeSpan.FromSeconds(delay),ignoreTimeScale:!scaleCheck,cancellationToken : token);   
         }
         catch(OperationCanceledException)
         {
