@@ -7,6 +7,9 @@ public class PlacePalette : MonoBehaviour
     private PlaceMode _mode = PlaceMode.Off;
     private HeroRosterEntry _runtimeEntry;
 
+    // MapAssemble이 조립할 때 넣어준다.
+    public DayNightBuildRule dayNightRule;
+
     // 모드가 바뀔 때마다 알린다(UI가 매 프레임 폴링하지 않게).
     public event Action OnModeChanged;
 
@@ -35,8 +38,10 @@ public class PlacePalette : MonoBehaviour
     }
 
     // 로스터 엔트리를 현재 배치 대상으로 선택한다(생성 직후 또는 이미 생성된 영웅의 재배치).
+    // 밤에는 배치 자체가 막히므로 미리보기 상태로도 들어가지 않는다.
     public void SelectRuntimeSlot(HeroRosterEntry entry)
     {
+        if (dayNightRule != null && !dayNightRule.CanBuild()) return;
         _runtimeEntry = entry;
         SetMode(PlaceMode.Place);
     }
