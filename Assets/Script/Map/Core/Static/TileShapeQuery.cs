@@ -13,8 +13,9 @@ public static class TileShapeQuery
         // Cross: 정사각 블록을 받아 축(가로/세로) 위의 타일만 남긴다.
         List<Tile> block = board.GetTiles(origin, range, true);
         var result = new List<Tile>();
-        foreach (Tile tile in block)
+        for (int i = 0; i < block.Count; i++)
         {
+            Tile tile = block[i];
             Vector2Int d = tile.Coord - origin;
             if (d.x == 0 || d.y == 0) result.Add(tile);
         }
@@ -26,8 +27,6 @@ public static class TileShapeQuery
     public static List<Tile> GetLineTiles(MapBoard board, Vector2Int origin, Vector2Int direction, int length, int width = 0)
     {
         Vector2Int perp = new Vector2Int(-direction.y, direction.x);
-        int radius = Mathf.Max(length, width);
-        List<Tile> block = board.GetTiles(origin, radius, true);
         var result = new List<Tile>(length * (2 * width + 1));
         for (int step = 1; step <= length; step++)
         {
@@ -35,8 +34,10 @@ public static class TileShapeQuery
             for (int offset = -width; offset <= width; offset++)
             {
                 Vector2Int target = center + perp * offset;
-                Tile tile = block.Find(t => t.Coord == target);
-                if (tile != null) result.Add(tile);
+                if (board.TryGetCell(target, out Tile tile))
+                {
+                    result.Add(tile);
+                }
             }
         }
         return result;
