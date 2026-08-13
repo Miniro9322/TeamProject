@@ -83,6 +83,9 @@ public static class TileStamp
             case MapBrush.Campfire:
                 StampGimmick(tile, GimmickType.Campfire, on);
                 break;
+            case MapBrush.Windwall:
+                StampGimmick(tile, GimmickType.Windwall, on);
+                break;
             default:
                 throw new System.ArgumentOutOfRangeException(
                     nameof(brush), brush, "찍을 수 없는 붓입니다. 창이 None 상태로 Stamp를 부른 것입니다.");
@@ -138,5 +141,6 @@ public enum MapBrush
     Decor,
     Swim,
     Fire,
-    Campfire
+    Campfire,
+    Windwall
 }

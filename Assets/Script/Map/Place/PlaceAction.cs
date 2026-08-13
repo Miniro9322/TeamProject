@@ -129,7 +129,8 @@ public class PlaceAction
 
     public void PickUpUnit(Tile tile)
     {
-        bool hasHero = TryGetHero(tile, out Hero hero);   // 집으면 칸이 비므로 미리 본다
+        if (IsNightTime()) return; 
+        bool hasHero = TryGetHero(tile, out Hero hero); 
         if (!replace.PickUp(tile)) return;
         view.Select(tile);
 

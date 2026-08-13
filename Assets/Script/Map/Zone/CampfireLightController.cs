@@ -5,6 +5,7 @@ using UnityEngine;
 public class CampfireLightController
 {
     private readonly List<CampfireLight> lights = new();
+    private readonly List<MapBoard> lightBoards = new();
 
     // 이 얼음 보드의 장식 자리를 훑어 모닥불 불빛을 모으고, 보호 반경(월드 단위)으로 범위를 맞춘다.
     public void Collect(MapBoard iceBoard, int campfireRange)
@@ -18,14 +19,20 @@ public class CampfireLightController
         {
             found[index].SetRange(worldRange);
             lights.Add(found[index]);
+            lightBoards.Add(iceBoard);
         }
     }
 
-    // 밤이 시작되면 모아둔 불빛을 전부 켠다.
+    // 밤이 시작되면 소속 모듈이 해금된 불빛만 켠다. 잠긴 모듈의 불빛은 건너뛴다.
     public void TurnOn()
     {
         for (int index = 0; index < lights.Count; index++)
         {
+            if (!lightBoards[index].IsUnlocked)
+            {
+                continue;
+            }
+
             lights[index].SetOn(true);
         }
     }
