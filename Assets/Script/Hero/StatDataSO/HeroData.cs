@@ -6,6 +6,8 @@ public class HeroData : ScriptableObject
     public int UnitId;
     public int Tier;
     public string HeroName;
+    public string HeroNameKey;
+    public string HeroDescriptionKey;
     public int HeroType;
     public Sprite Icon;
     public GameObject HeroPrefab;
