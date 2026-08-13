@@ -85,6 +85,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2805576539338045496}
   - component: {fileID: 1725371234133005363}
+  - component: {fileID: 4240659223196951748}
   m_Layer: 0
   m_Name: HeroArchiveItem
   m_TagString: Untagged
@@ -139,6 +140,21 @@ MonoBehaviour:
   m_ChildScaleWidth: 0
   m_ChildScaleHeight: 0
   m_ReverseArrangement: 0
+--- !u!114 &4240659223196951748
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1819461018684351892}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1229961017a4d654089bdbecd09c0f21, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HeroArchiveItem
+  icon: {fileID: 2389622481960881921}
+  button: {fileID: 4952516017749029250}
+  nameText: {fileID: 4811931850018196609}
 --- !u!1 &3894170041636493190
 GameObject:
   m_ObjectHideFlags: 0

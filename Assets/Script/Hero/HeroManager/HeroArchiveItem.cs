@@ -1,16 +1,22 @@
+using System;
+using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class HeroArchiveItem : MonoBehaviour
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    [SerializeField] private Image icon;
+    [SerializeField] private Button button;
+    [SerializeField] private TextMeshProUGUI nameText;
+    private Action<HeroData> onClick;
+    private HeroData data;
+    public void Setup(HeroData data, Action<HeroData> onClick)
     {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
+        this.data = data;
+        this.onClick = onClick;
+        icon.sprite = data.Icon;
+        nameText.text = DataTableManager.StringTable.Get(data.HeroNameKey);
+        button.onClick.RemoveAllListeners();
+        button.onClick.AddListener(() => this.onClick(this.data));
     }
 }
