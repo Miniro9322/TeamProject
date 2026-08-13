@@ -44,7 +44,7 @@ public static class AttackDamageUtil
                 {
                     e.TakeDamage((int)baseDamage);
                     ctx.hero.NotifyHit((e as Component)?.gameObject, (int)baseDamage, false);
-                    ApplyTargetDebuffs(e as Component, data.targetDebuffs, ctx.buffManager, data);
+                    ApplyTargetDebuffs(e as Component, data.targetDebuffs, ctx.buffManager, data, ctx.sc[StatType.ATK]);
                     ApplyHealOptions(data, ctx.self.position, ctx.hero.Heal, AllyQuery, baseDamage, ctx.sc[StatType.ATK]);
                     ctx.hero.SpawnEffect(data.hitEffect, EffectPosition(e as Component), Quaternion.identity, data.hitEffectLifetime);
                 }
@@ -60,7 +60,7 @@ public static class AttackDamageUtil
                 data.chainFalloff, TargetableEnemyQuery, ctx.hero.NotifyHit);
             foreach (GameObject go in hits)
             {
-                ApplyTargetDebuffs(go.transform, data.targetDebuffs, ctx.buffManager, data);
+                ApplyTargetDebuffs(go.transform, data.targetDebuffs, ctx.buffManager, data, ctx.sc[StatType.ATK]);
                 ApplyHealOptions(data, ctx.self.position, ctx.hero.Heal, AllyQuery, baseDamage, ctx.sc[StatType.ATK]);
                 ctx.hero.SpawnEffect(data.hitEffect, EffectPosition(go), Quaternion.identity, data.hitEffectLifetime);
             }
@@ -79,7 +79,7 @@ public static class AttackDamageUtil
                 {
                     d.TakeDamage((int)baseDamage);
                     ctx.hero.NotifyHit(ctx.target.gameObject, (int)baseDamage, false);
-                    ApplyTargetDebuffs(ctx.target, data.targetDebuffs, ctx.buffManager, data);
+                    ApplyTargetDebuffs(ctx.target, data.targetDebuffs, ctx.buffManager, data, ctx.sc[StatType.ATK]);
                     ApplyHealOptions(data, ctx.self.position, ctx.hero.Heal, AllyQuery, baseDamage, ctx.sc[StatType.ATK]);
                     ctx.hero.SpawnEffect(data.hitEffect, EffectPosition(ctx.target), Quaternion.identity, data.hitEffectLifetime);
                 }
@@ -98,7 +98,7 @@ public static class AttackDamageUtil
                 if (t.GetComponentInParent<IDamageAble>() is not IDamageAble d) return;
                 d.TakeDamage((int)baseDamage);
                 ctx.hero.NotifyHit(t, (int)baseDamage, false);
-                ApplyTargetDebuffs(t.transform, data.targetDebuffs, ctx.buffManager, data);
+                ApplyTargetDebuffs(t.transform, data.targetDebuffs, ctx.buffManager, data, ctx.sc[StatType.ATK]);
                 ApplyHealOptions(data, ctx.self.position, ctx.hero.Heal, AllyQuery, baseDamage, ctx.sc[StatType.ATK]);
                 ctx.hero.SpawnEffect(data.hitEffect, EffectPosition(t), Quaternion.identity, data.hitEffectLifetime);
             }, data.shotInterval, ct);
@@ -117,7 +117,7 @@ public static class AttackDamageUtil
                     if (go.GetComponentInParent<IDamageAble>() is not IDamageAble e) continue;
                     e.TakeDamage((int)baseDamage);
                     ctx.hero.NotifyHit(go, (int)baseDamage, false);
-                    ApplyTargetDebuffs(go.transform, data.targetDebuffs, ctx.buffManager, data);
+                    ApplyTargetDebuffs(go.transform, data.targetDebuffs, ctx.buffManager, data, ctx.sc[StatType.ATK]);
                     ApplyHealOptions(data, ctx.self.position, ctx.hero.Heal, AllyQuery, baseDamage, ctx.sc[StatType.ATK]);
                     ctx.hero.SpawnEffect(data.hitEffect, EffectPosition(go), Quaternion.identity, data.hitEffectLifetime);
                 }
@@ -136,7 +136,7 @@ public static class AttackDamageUtil
                 if (hit.GetComponentInParent<IDamageAble>() is not IDamageAble e) continue;
                 e.TakeDamage((int)baseDamage);
                 ctx.hero.NotifyHit(hit, (int)baseDamage, false);
-                ApplyTargetDebuffs(hit.transform, data.targetDebuffs, ctx.buffManager, data);
+                ApplyTargetDebuffs(hit.transform, data.targetDebuffs, ctx.buffManager, data, ctx.sc[StatType.ATK]);
                 ApplyHealOptions(data, ctx.self.position, ctx.hero.Heal, AllyQuery, baseDamage, ctx.sc[StatType.ATK]);
                 ctx.hero.SpawnEffect(data.hitEffect, EffectPosition(hit), Quaternion.identity, data.hitEffectLifetime);
             }
@@ -225,14 +225,14 @@ public static class AttackDamageUtil
     // 적 디버프 시스템(DebuffSO/DebuffContext/DebuffTracker)을 그대로 재사용한다 — EnemyBase.ApplyDebuff와
     // 하는 일이 같고, DebuffApply.To가 유일한 공용 입구다. 이걸 거쳐야 DebuffTracker 장부·면역·UI 아이콘이
     // 반영된다(예전처럼 BuffManager를 직접 호출하면 스탯만 바뀌고 장부에는 안 남는다).
-    public static void ApplyTargetDebuffs(Component target, List<TargetDebuffRef> targetDebuffs, BuffManager buffManager, object source)
+    public static void ApplyTargetDebuffs(Component target, List<TargetDebuffRef> targetDebuffs, BuffManager buffManager, object source, float attackerAtk = 0f)
     {
         if (target == null || targetDebuffs == null) return;
         foreach (TargetDebuffRef entry in targetDebuffs)
         {
             if (entry.debuff == null) continue;
             float scale = entry.scale > 0f ? entry.scale : 1f;
-            DebuffApply.To(target, entry.debuff, buffManager, null, entry.durationOverride, scale, source);
+            DebuffApply.To(target, entry.debuff, buffManager, null, entry.durationOverride, scale, source, attackerAtk);
         }
     }
 
