@@ -20,8 +20,6 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
     /// 2타 이상으로 나누어 때리는 적(GrimReaper 등)은 이걸 재정의해 모든 클립 길이의 합을 돌려준다 —
     /// 그래야 공격 한 번이 통째로 공격 간격 안에 들어온다. 0이면 배속하지 않는다는 뜻이므로 그대로 흘려보낼 것.</summary>
     protected virtual float AttackClipLength => attackClipLength;
-    [Tooltip("잠행(Burrow) 중 지면에 표시할 마커 이펙트(흙더미/먼지 등). IsBurrow일 때만 사용. 비우면 마커 없이 숨는다.")]
-    [SerializeField] private GameObject burrowMarkerPrefab;
     [Tooltip("파고들기/솟아오르기 애니 이벤트가 안 왔을 때 강제로 다음 상태로 넘기는 시간(초). 클립 길이보다 넉넉하게.")]
     [SerializeField] private float burrowTimeout = 3f;
     [Tooltip("잠수(Pool)/상승(Up) 애니 이벤트가 안 왔을 때 강제로 다음 상태로 넘기는 시간(초). IsSwim일 때만 사용. 클립 길이보다 넉넉하게.")]
@@ -213,7 +211,7 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
         _move = new EnemyMovement(gameObject, animator, arriveSqr);
         // 잠행 몹은 은신 셰이더 페이드를 쓰지 않는다(연출을 EnemyBurrow가 전담) — Cloaking 비트는 피격 판정용으로만 남긴다.
         if (IsCloaking && !IsBurrow) _cloak.Setup(gameObject, cloakSettings); // Attribute 결정(LoadStats) 뒤에 호출
-        if (IsBurrow) _burrow.Setup(gameObject, animator, burrowMarkerPrefab, burrowTimeout);
+        if (IsBurrow) _burrow.Setup(gameObject, animator, burrowTimeout);
         if (IsSwim) _swim.Setup(animator, swimTimeout,gameObject);   // Attribute 결정(LoadStats) 뒤에 호출
         stunEffectPrefab = Resources.Load<GameObject>("EnemyEffectPrefab/Stun");
         // Resources.Load는 내부 캐시가 있어 적마다 불러도 에셋을 다시 읽지 않는다.

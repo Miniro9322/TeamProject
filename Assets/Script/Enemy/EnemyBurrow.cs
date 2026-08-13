@@ -16,6 +16,9 @@ using UnityEngine;
 public class EnemyBurrow
 {
     private const string BurrowedBool = "Burrowed";
+    // 지면 마커는 잠행 몹이면 늘 같은 것을 쓴다 — 적 프리팹마다 꽂아 두면 새 잠행 몹을 만들 때마다
+    // 빠뜨릴 수 있어(비면 마커 없이 조용히 숨는다) EnemySwim의 Bubble과 같은 방식으로 여기서 직접 로드한다.
+    private const string MarkerPath = "EnemyEffectPrefab/BurrowEffect";
 
     private Animator _animator;
     private Renderer[] _renderers;
@@ -42,12 +45,14 @@ public class EnemyBurrow
     public bool IsTransitioning => IsSetup && (_hidden ? !_buried : !_surfaced);
 
     // 잠행 몹일 때 EnemyBase가 (Attribute 결정 뒤) 1회 호출.
-    public void Setup(GameObject root, Animator animator, GameObject markerPrefab, float timeout)
+    public void Setup(GameObject root, Animator animator, float timeout)
     {
         if (root == null || animator == null) return;
         _animator = animator;
         _renderers = root.GetComponentsInChildren<Renderer>(true);
-        _markerPrefab = markerPrefab;
+        _markerPrefab = Resources.Load<GameObject>(MarkerPath);
+        if (_markerPrefab == null)
+            Debug.LogWarning($"[{root.name}] Resources/{MarkerPath}를 못 찾음 — 마커 없이 숨는다.", root);
         _timeout = timeout > 0f ? timeout : 3f;
     }
 
