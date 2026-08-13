@@ -7,11 +7,14 @@ using UnityEngine.InputSystem;
 // 배치물이 여러 칸을 차지할 때는 타일 하나로 부족하므로 놓일 자리(PlacementArea)까지 내준다.
 public class PointerPick
 {
-    private readonly List<MapBoard> _boards;
+    private readonly List<MapBoard> boards;
+    private readonly HoveredTileData hoverData;
+    private int lastUpdateFrame = -1;
 
-    public PointerPick(List<MapBoard> boards)
+    public PointerPick(List<MapBoard> boards, HoveredTileData hoverData)
     {
-        _boards = boards;
+        this.boards = boards;
+        this.hoverData = hoverData;
     }
 
     private Ray PointerRay()
@@ -35,12 +38,26 @@ public class PointerPick
 
     public Tile UnderPointer()   // 없으면 null
     {
-        return Under(PointerRay());
+        EnsureFrameHoverTile();
+        return hoverData.HoveredTile;
     }
 
     public Tile NearestCell()
     {
         return Nearest(PointerRay());
+    }
+
+    private void EnsureFrameHoverTile()
+    {
+        int currentFrame = Time.frameCount;
+        if (lastUpdateFrame == currentFrame)
+        {
+            return;
+        }
+
+        lastUpdateFrame = currentFrame;
+        Tile tile = Under(PointerRay());
+        hoverData.Keep(tile);
     }
 
     private Tile Under(Ray ray)
@@ -49,8 +66,9 @@ public class PointerPick
         // 위쪽 칸을 눌렀을 때도 그 유닛의 발밑 칸이 선택된다.
         Tile best = null;
         float bestSqr = float.MaxValue;
-        foreach (MapBoard board in _boards)
+        for (int i = 0; i < boards.Count; i++)
         {
+            MapBoard board = boards[i];
             if (!board.gameObject.activeInHierarchy) continue;
             if (!board.IsUnlocked) continue;
 
@@ -72,8 +90,9 @@ public class PointerPick
     {
         Tile best = null;
         float bestDist = float.MaxValue;
-        foreach (MapBoard board in _boards)
+        for (int i = 0; i < boards.Count; i++)
         {
+            MapBoard board = boards[i];
             if (!board.gameObject.activeInHierarchy) continue;
             if (!board.IsUnlocked) continue;
 
