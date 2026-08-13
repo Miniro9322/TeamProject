@@ -118,7 +118,7 @@ public class EnemyRouteWindow : EditorWindow
 
         Rect area = GridArea(view);
         HandleMouse(view, area, module);
-        view.Draw(area, _cellPixels, _preview, PreviewIndexOf(_selected), _nodes, _hover, _noOverrides, false, null);
+        view.Draw(area, _cellPixels, _preview, PreviewIndexOf(_selected), _nodes, _hover, _noOverrides, false, null, null);
 
         DrawStatus();
         DrawEntryList();
