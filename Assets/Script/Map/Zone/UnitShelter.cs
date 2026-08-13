@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -9,37 +8,18 @@ public class UnitShelter
     private readonly Dictionary<int, int> rowRight = new();
     private readonly Dictionary<int, int> colBottom = new();
     private readonly Dictionary<int, int> colTop = new();
+    private readonly HashSet<Vector2Int> unitCells = new();
 
-    // 동적으로 배치된 유닛 좌표를 한 번 읽어 행·열 끝값을 저장합니다.
+    // 동적으로 배치된 유닛 좌표를 한 번 읽어 행·열 끝값과 점유 칸을 저장합니다.
     public UnitShelter(IReadOnlyList<Vector2Int> units)
     {
         Collect(units);
     }
 
-    // 대상보다 바람이 들어오는 쪽에 다른 유닛이 있는지 조회합니다.
+    // 대상 바로 한 칸 뒤(바람이 불어온 쪽)에 다른 유닛이 있는지 조회합니다.
     public bool IsSheltered(Vector2Int target, Vector2Int wind)
     {
-        if (wind == GridCalculator.Right)
-        {
-            return HasLower(rowLeft, target.y, target.x);
-        }
-
-        if (wind == GridCalculator.Left)
-        {
-            return HasHigher(rowRight, target.y, target.x);
-        }
-
-        if (wind == GridCalculator.Up)
-        {
-            return HasLower(colBottom, target.x, target.y);
-        }
-
-        if (wind == GridCalculator.Down)
-        {
-            return HasHigher(colTop, target.x, target.y);
-        }
-
-        throw new ArgumentOutOfRangeException(nameof(wind));
+        return unitCells.Contains(target - wind);
     }
 
     // 이 행에서 가장 서쪽 유닛 X를 꺼내온다.
@@ -75,6 +55,7 @@ public class UnitShelter
             KeepMax(rowRight, unit.y, unit.x);
             KeepMin(colBottom, unit.x, unit.y);
             KeepMax(colTop, unit.x, unit.y);
+            unitCells.Add(unit);
         }
     }
 
@@ -94,17 +75,5 @@ public class UnitShelter
         {
             values[line] = position;
         }
-    }
-
-    // 같은 줄의 더 작은 위치에 다른 유닛이 있는지 조회합니다.
-    private static bool HasLower(Dictionary<int, int> values, int line, int position)
-    {
-        return values.TryGetValue(line, out int minimum) && minimum < position;
-    }
-
-    // 같은 줄의 더 큰 위치에 다른 유닛이 있는지 조회합니다.
-    private static bool HasHigher(Dictionary<int, int> values, int line, int position)
-    {
-        return values.TryGetValue(line, out int maximum) && maximum > position;
     }
 }
