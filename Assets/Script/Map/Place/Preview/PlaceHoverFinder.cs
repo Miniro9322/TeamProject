@@ -14,10 +14,10 @@ public class PlaceHoverFinder
         this.hoverPlace = hoverPlace;
     }
 
-    public HoverMode FindHover(out PlaceData placeData, out GameObject unit)
+    public HoverMode FindHover(out PlaceData placeData, out GameObject unit, out OccupantKind kind)
     {
         HoverMode mode = ResolveHoverMode();
-        ResolveHover(mode, out placeData, out unit);
+        ResolveHover(mode, out placeData, out unit, out kind);
         UpdateHoverPlace(mode, placeData);
         return mode;
     }
@@ -82,31 +82,41 @@ public class PlaceHoverFinder
         return mode == HoverMode.Held;
     }
 
-    private void ResolveHover(HoverMode mode, out PlaceData placeData, out GameObject unit)
+    private void ResolveHover(HoverMode mode, out PlaceData placeData, out GameObject unit, out OccupantKind kind)
     {
         placeData = default;
         unit = null;
+        kind = OccupantKind.None;
 
         if (IsPlacingHoverMode(mode))
         {
-            ResolvePlacingHover(out placeData, out unit);
+            ResolvePlacingHover(out placeData, out unit, out kind);
             return;
         }
 
         if (IsHeldHoverMode(mode))
         {
             ResolveHeldHover(out placeData, out unit);
+            kind = game.HeldKind;
         }
     }
 
-    private void ResolvePlacingHover(out PlaceData placeData, out GameObject unit)
+    private void ResolvePlacingHover(out PlaceData placeData, out GameObject unit, out OccupantKind kind)
     {
         placeData = default;
         unit = null;
+        kind = OccupantKind.None;
 
-        if (finder.TryResolveSlot(out Placeable slot, out placeData))
+        bool resolved = finder.TryResolveSlot(out Placeable slot, out placeData);
+        if (slot != null)
         {
             unit = slot.prefab;
+            kind = slot.kind;
+        }
+
+        if (!resolved)
+        {
+            placeData = default;
         }
     }
 

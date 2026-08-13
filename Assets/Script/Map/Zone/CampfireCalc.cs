@@ -14,31 +14,36 @@ public class CampfireCalc
         {
             if (tile.IsCampfire)
             {
-                KeepRange(cells, data, tile.Coord, safeRange);
+                KeepRange(cells, data, tile, safeRange);
             }
         }
 
         return data;
     }
 
-    // 중심에서 맨해튼 거리 안에 있는 실제 타일만 보관합니다.
+    // 이 모닥불 원점에서 맨해튼 거리 안에 있는 실제 타일만 보관합니다. 통합 좌표와 원점 전용 범위를 함께 채웁니다.
     private static void KeepRange(
         IReadOnlyDictionary<Vector2Int, Tile> cells,
         CampfireData data,
-        Vector2Int center,
+        Tile origin,
         int range)
     {
+        var protectedTiles = new List<Tile>();
+
         for (int x = -range; x <= range; x++)
         {
             int height = range - Mathf.Abs(x);
             for (int y = -height; y <= height; y++)
             {
-                Vector2Int cell = center + new Vector2Int(x, y);
-                if (cells.ContainsKey(cell))
+                Vector2Int cell = origin.Coord + new Vector2Int(x, y);
+                if (cells.TryGetValue(cell, out Tile tile))
                 {
                     data.Keep(cell);
+                    protectedTiles.Add(tile);
                 }
             }
         }
+
+        data.KeepRange(origin, protectedTiles);
     }
 }

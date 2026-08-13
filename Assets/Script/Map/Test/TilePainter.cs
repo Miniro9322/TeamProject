@@ -14,30 +14,42 @@ public class TilePainter : MonoBehaviour
     public Color rangeColor = new(0.30f, 0.60f, 1f);
     [Tooltip("시전자로 선택된 영웅의 액티브 스킬 타격 범위 타일 색.")]
     public Color skillColor = new(1f, 0.55f, 0.15f);
-    [Header("칠하기")]
-    [Tooltip("색 판에 쓸 셰이더. 비워두면 URP/Unlit을 알아서 잡는다.")]
-    public Shader tintShader;
+    [Header("Range Scan")]
+    [Tooltip("모든 타일 표시에 공통으로 사용할 RangeScan 머티리얼입니다.")]
+    [SerializeField] private Material scanMat;
     [Range(0f, 1f)]
-    [Tooltip("색 판의 진하기. 낮출수록 타일 무늬가 잘 보인다.")]
-    public float tintAlpha = 0.45f;
+    [Tooltip("상태 색상에서 스캔 선을 얼마나 밝힐지 정합니다.")]
+    [SerializeField] private float scanLight = 0.55f;
     [Tooltip("타일 윗면에서 이만큼 띄워 그린다.")]
     public float lift = 0.02f;
 
     private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
-    private readonly Dictionary<Color, Material> _tints = new();      // 색마다 만들어 둔 판 머티리얼
+    private static readonly int ScanColorId = Shader.PropertyToID("_ScanColor");
+    private MaterialPropertyBlock _props;
     private readonly Dictionary<Tile, GameObject> _marks = new();     // 칠해진 타일 → 그 위에 띄운 판
     private readonly Stack<GameObject> _pool = new();                 // 다 쓴 판(매 프레임 다시 쓴다)
     private Mesh _quad;
-    private bool _shaderMissing;
+
+    // 타일별 색상 전달 상자를 준비합니다.
+    private void Awake()
+    {
+        _props = new MaterialPropertyBlock();
+    }
 
     public void SetColor(Vector2Int coord, Color color)
     {
-        if (board.TryGetCell(coord, out Tile tile)) Paint(tile, color);
+        if (board.TryGetCell(coord, out Tile tile))
+        {
+            Paint(tile, color);
+        }
     }
 
     public void ClearColor(Vector2Int coord)
     {
-        if (board.TryGetCell(coord, out Tile tile)) Restore(tile);
+        if (board.TryGetCell(coord, out Tile tile))
+        {
+            Restore(tile);
+        }
     }
 
     // 타일을 직접 받는 경로 — 좌표는 모듈 로컬이라 보드 역조회가 모듈을 특정 못 하므로,
@@ -47,6 +59,7 @@ public class TilePainter : MonoBehaviour
         Paint(tile, color);
     }
 
+    // 타일 표시를 제거합니다.
     public void ClearColor(Tile tile)
     {
         Restore(tile);
@@ -56,13 +69,18 @@ public class TilePainter : MonoBehaviour
     // 타일 셰이더에 색 프로퍼티가 없는 것도 있어서, 타일 자체를 물들이는 방식은 쓸 수 없다.
     private void Paint(Tile tile, Color color)
     {
+        PaintScan(tile, color);
+    }
+
+    // 타일 윗면에 공통 스캔 표시 메시를 배치합니다.
+    private void PaintScan(Tile tile, Color color)
+    {
         if (tile == null || !Paintable(tile))
         {
             return;
         }
 
-        Material tint = Tint(color);
-        if (tint == null)
+        if (scanMat == null)
         {
             return;
         }
@@ -73,13 +91,36 @@ public class TilePainter : MonoBehaviour
             _marks[tile] = mark;
         }
 
-        float size = tile.Board != null ? tile.Board.CellSize : 1f;
+        float size = ResolveSize(tile);
         mark.transform.SetPositionAndRotation(
             tile.WorldTop + Vector3.up * lift,
             Quaternion.Euler(90f, 0f, 0f));
         mark.transform.localScale = new Vector3(size, size, 1f);
-        mark.GetComponent<MeshRenderer>().sharedMaterial = tint;
+        MeshRenderer renderer = mark.GetComponent<MeshRenderer>();
+        renderer.sharedMaterial = scanMat;
+        ApplyColor(renderer, color);
         mark.SetActive(true);
+    }
+
+    // 타일 크기를 반환합니다.
+    private static float ResolveSize(Tile tile)
+    {
+        if (tile.Board != null)
+        {
+            return tile.Board.CellSize;
+        }
+
+        return 1f;
+    }
+
+    // 상태 색상과 같은 계열의 밝은 스캔 색상을 적용합니다.
+    private void ApplyColor(MeshRenderer renderer, Color color)
+    {
+        Color scanColor = Color.Lerp(color, Color.white, scanLight);
+        _props.Clear();
+        _props.SetColor(BaseColorId, color);
+        _props.SetColor(ScanColorId, scanColor);
+        renderer.SetPropertyBlock(_props);
     }
 
     private void Restore(Tile tile)
@@ -156,76 +197,8 @@ public class TilePainter : MonoBehaviour
         return _quad;
     }
 
-    // 덧칠에 쓸 셰이더. 인스펙터가 비어 있으면 직접 잡는다(씬 배선이 없어도 돌아야 한다).
-    // 경고는 한 번만 — 매 프레임 타일마다 불리는 자리라 그냥 찍으면 로그가 넘친다.
-    private Shader TintShader()
-    {
-        if (tintShader != null)
-        {
-            return tintShader;
-        }
-
-        if (_shaderMissing)
-        {
-            return null;
-        }
-
-        tintShader = Shader.Find("Universal Render Pipeline/Unlit");
-        if (tintShader == null)
-        {
-            tintShader = Shader.Find("Universal Render Pipeline/Lit");
-        }
-
-        if (tintShader == null)
-        {
-            _shaderMissing = true;
-            Debug.LogWarning("[TilePainter] 덧칠용 셰이더를 찾지 못했습니다. tintShader에 색 있는 셰이더를 직접 넣으세요.", this);
-        }
-
-        return tintShader;
-    }
-
-    // 색마다 반투명 머티리얼을 한 번만 만들어 재사용한다.
-    private Material Tint(Color color)
-    {
-        if (_tints.TryGetValue(color, out Material cached))
-        {
-            return cached;
-        }
-
-        Shader shader = TintShader();
-        if (shader == null)
-        {
-            return null;
-        }
-
-        Material mat = new(shader) { hideFlags = HideFlags.DontSave };
-        mat.SetColor(BaseColorId, new Color(color.r, color.g, color.b, tintAlpha));
-
-        // URP 투명 설정. 깊이를 쓰지 않아 타일 윗면과 겹쳐도 z 다툼이 없다.
-        mat.SetFloat("_Surface", 1f);
-        mat.SetFloat("_Blend", 0f);
-        mat.SetFloat("_SrcBlend", (float)BlendMode.SrcAlpha);
-        mat.SetFloat("_DstBlend", (float)BlendMode.OneMinusSrcAlpha);
-        mat.SetFloat("_ZWrite", 0f);
-        mat.SetFloat("_AlphaClip", 0f);
-        mat.SetFloat("_Cull", (float)CullMode.Off);   // 판이 뒤집혀도 보이게
-        mat.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
-        mat.DisableKeyword("_ALPHATEST_ON");
-        mat.renderQueue = (int)RenderQueue.Transparent;
-
-        _tints[color] = mat;
-        return mat;
-    }
-
     private void OnDestroy()
     {
-        foreach (Material tint in _tints.Values)
-        {
-            Destroy(tint);
-        }
-        _tints.Clear();
-
         if (_quad != null)
         {
             Destroy(_quad);

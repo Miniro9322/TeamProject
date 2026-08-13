@@ -10,9 +10,19 @@ public class TilePaintSync
     private readonly RangeTileData rangeStore;
     private readonly TilePainter painter;
 
+    private static readonly List<Tile> NoCampfireEdge = new();
+
     private readonly List<PaintEntry> plan = new();
     private TileDisplayData lastDisplay;
     private bool hasDisplay;
+
+    public PlaceEdgeData EdgeData { get; private set; }
+
+    // 지금 눌러서 켜진 모닥불의 범위. 모닥불이 아니면 빈 목록.
+    public IReadOnlyList<Tile> CampfireEdgeTiles { get; private set; } = NoCampfireEdge;
+
+    // CampfireEdgeTiles가 바뀔 때마다 올라간다 — CampfireEdgeView가 다시 그릴지 판단하는 값.
+    public int CampfireEdgeVersion { get; private set; }
 
     public TilePaintSync(
         PlaceHoverFinder hoverFinder,
@@ -32,12 +42,13 @@ public class TilePaintSync
     {
         result = plan;
 
-        HoverMode mode = hoverFinder.FindHover(out PlaceData placeData, out GameObject unit);
+        HoverMode mode = hoverFinder.FindHover(out PlaceData placeData, out GameObject unit, out OccupantKind kind);
+        EdgeData = new PlaceEdgeData(mode, kind);
         skillFinder.TryFindTarget(out Hero caster, out HeroActiveSkill skill, out Tile skillOrigin);
         int rangeVersion = ResolveRangeVersion(mode);
 
         TileDisplayData display = BuildDisplayKey(
-            mode, placeData.Area, unit, placeData.CanPlace, rangeVersion,
+            mode, placeData.Area, unit, kind, placeData.CanPlace, rangeVersion,
             caster, skill, skillOrigin);
 
         if (IsSameDisplay(display))
@@ -68,6 +79,7 @@ public class TilePaintSync
         HoverMode mode,
         PlacementArea area,
         GameObject unit,
+        OccupantKind kind,
         bool canPlace,
         int rangeVersion,
         Hero skillCaster,
@@ -77,7 +89,7 @@ public class TilePaintSync
         ResolveAreaOrigin(area, out MapBoard board, out Vector2Int origin);
 
         return new TileDisplayData(
-            mode, board, origin, unit, canPlace, rangeVersion,
+            mode, board, origin, unit, kind, canPlace, rangeVersion,
             skillCaster, skill, skillOrigin);
     }
 
@@ -113,6 +125,8 @@ public class TilePaintSync
     private void RebuildPlan(HoverMode mode, PlaceData data, GameObject unit, HeroActiveSkill skill, Tile skillOrigin)
     {
         plan.Clear();
+        CampfireEdgeTiles = NoCampfireEdge;
+        CampfireEdgeVersion = 0;
         AddHoverEntries(mode, data, unit);
         AddSkillEntries(skill, skillOrigin);
     }
@@ -200,12 +214,13 @@ public class TilePaintSync
     {
         if (CanPlaceHere(data))
         {
-            return painter.rangeColor;
+            return painter.okColor;
         }
 
         return painter.denyColor;
     }
 
+    // 배치 영역 타일을 상태 색상으로 추가합니다.
     private void AddAreaCellEntries(PlacementArea area, Color color)
     {
         for (int i = 0; i < area.Cells.Count; i++)
@@ -218,6 +233,18 @@ public class TilePaintSync
     }
 
     private void AddUnitRangeEntries()
+    {
+        if (rangeStore.IsCampfireRange)
+        {
+            CampfireEdgeTiles = rangeStore.Tiles;
+            CampfireEdgeVersion = rangeStore.Version;
+            return;
+        }
+
+        AddRangeFillEntries();
+    }
+
+    private void AddRangeFillEntries()
     {
         for (int i = 0; i < rangeStore.Tiles.Count; i++)
         {
