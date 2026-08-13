@@ -34,6 +34,8 @@ public class MapAssemble : MonoBehaviour
         List<MapBoard> boards = ModuleBoards();
         BuildCampfires(boards);
 
+        palette.Bind(mapGame.HeroRoster);
+
         PointerPick pointerPick = new PointerPick(boards);
         PlaceFinder finder = new PlaceFinder(pointerPick, palette, placeYOffset);
 

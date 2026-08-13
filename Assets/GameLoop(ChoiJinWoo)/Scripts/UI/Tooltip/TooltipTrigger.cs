@@ -34,6 +34,11 @@ public class TooltipTrigger : MonoBehaviour, IPointerEnterHandler, IPointerExitH
         if (TooltipUi.Instance != null) TooltipUi.Instance.Hide();
     }
 
+    public void SetMessaege(string message)
+    {
+        this.message = message;
+    }
+
     private async UniTaskVoid DelayedShow(CancellationToken token)
     {
         try

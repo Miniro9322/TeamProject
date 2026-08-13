@@ -6,9 +6,33 @@ public class PlacePalette : MonoBehaviour
 {
     private PlaceMode _mode = PlaceMode.Off;
     private HeroRosterEntry _runtimeEntry;
+    private HeroRoster _roster;
 
     // 모드가 바뀔 때마다 알린다(UI가 매 프레임 폴링하지 않게).
     public event Action OnModeChanged;
+
+    // MapAssemble이 조립할 때 한 번 불러준다.
+    public void Bind(HeroRoster roster)
+    {
+        if (_roster != null) _roster.Changed -= ValidateRuntimeEntry;
+        _roster = roster;
+        _roster.Changed += ValidateRuntimeEntry;
+    }
+
+    private void OnDestroy()
+    {
+        if (_roster != null) _roster.Changed -= ValidateRuntimeEntry;
+    }
+
+    // 로스터가 바뀔 때(합성 등으로 엔트리가 사라졌을 때) 지금 배치 대기 중인 엔트리가
+    // 더 이상 로스터에 없으면 배치모드를 꺼서 죽은 엔트리로 유닛이 생기는 걸 막는다.
+    private void ValidateRuntimeEntry()
+    {
+        if (_runtimeEntry != null && !_roster.Contains(_runtimeEntry))
+        {
+            ClearMode();
+        }
+    }
 
     public PlaceMode Mode
     {

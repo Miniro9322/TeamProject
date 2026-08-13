@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SmasherJumpAttackData
   m_EditorClassIdentifier: Assembly-CSharp::AttackDataSO
   range: 1
-  rangeShape: 2
+  rangeShape: 0
   unattackableTarget: 3
   attackType: 1
   attackPer: 3
@@ -21,7 +21,7 @@ MonoBehaviour:
   targetMode: 0
   targetCount: 1
   shotInterval: 0.1
-  areaShape: 2
+  areaShape: 0
   areaRange: 1
   lineLength: 4
   areaCenterOnTarget: 0
@@ -46,9 +46,9 @@ MonoBehaviour:
     durationOverride: 3
     scale: 1
   groundZonePrefab: {fileID: 0}
-  attackEffect: {fileID: 117666, guid: 6568ce2818682d840b0cf583a00c5c99, type: 3}
+  attackEffect: {fileID: 1210069404974878, guid: fbab27c98b168764eb295cfff1e9f61f, type: 3}
   attackEffectLifetime: 1
-  hitEffect: {fileID: 3391861480771957413, guid: 79885226978b938489ab94d515f1acc7, type: 3}
+  hitEffect: {fileID: 217993222680584950, guid: f970de182f6e61a4cbfe879f6b82b89d, type: 3}
   hitEffectLifetime: 1
   lifestealPercent: 0
   allyHealAmount: 0

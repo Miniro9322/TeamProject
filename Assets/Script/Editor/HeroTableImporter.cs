@@ -40,6 +40,8 @@ public static class HeroTableImporter
             so.Tier = data.Tier;
             so.HeroName = data.HeroName;
             so.HeroType = data.HeroType;
+            so.HeroNameKey = $"Hero_{data.HeroName}_Name";
+            so.HeroDescriptionKey = $"Hero_{data.HeroName}_Desc";
 
             if (isNew)
             {
