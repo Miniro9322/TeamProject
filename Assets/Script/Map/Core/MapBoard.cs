@@ -172,13 +172,27 @@ public class MapBoard : MonoBehaviour
     // 가장 가까운 본진까지의 칸 거리. 경로 찾기가 어느 쪽을 먼저 뒤질지 정하는 데 쓴다.
     private int HeuristicToNearestCore(Tile tile)
     {
-        int best = int.MaxValue;
-        foreach (Tile core in _cores)
+        if (_cores.Count == 0)
         {
-            int d = GridCalculator.GetDistance(tile.Coord, core.Coord);
-            if (d < best) best = d;
+            return 0;
         }
-        return best == int.MaxValue ? 0 : best;
+
+        int best = int.MaxValue;
+        for (int i = 0; i < _cores.Count; i++)
+        {
+            int distance = GridCalculator.GetDistance(tile.Coord, _cores[i].Coord);
+            if (distance < best)
+            {
+                best = distance;
+            }
+        }
+
+        if (best == int.MaxValue)
+        {
+            return 0;
+        }
+
+        return best;
     }
 
     public List<Vector3> GetWaypoints(float yOffset = 0f)
