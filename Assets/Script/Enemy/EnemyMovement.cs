@@ -38,7 +38,9 @@ public class EnemyMovement
     /// <summary>공중(지형 무시). true면 중간 경로점을 건너뛰고 본진(마지막 웨이포인트)으로 직선 이동한다.</summary>
     public bool Flying { get; set; }
 
-    /// <summary>수영(헤엄 칸 통행). true면 물 칸(PassType.Swim)까지 길로 인정해 경로를 다시 찾는다.
+    /// <summary>수영(헤엄 칸 통행). 물 칸(PassType.Swim) 위를 지나갈 수 있다는 뜻이며,
+    /// 경로 자체는 저작 경로(EnemyRouteSet) → 일반 레인 순으로 받은 것을 그대로 따른다.
+    /// 받은 경로가 아예 없을 때만 물 칸까지 열어 스스로 길을 찾는다(EnterMap 참조).
     /// Flying이 켜져 있으면 그쪽이 더 넓은 통행권이라 이 값은 무시된다.</summary>
     public bool Swimming { get; set; }
 
@@ -139,12 +141,16 @@ public class EnemyMovement
                 var flying = FlyingPathfinder.BuildWaypoints(board, startW, src[src.Count - 1], 0.5f);
                 if (flying.Count > 0) src = flying;
             }
-            // 공중이 아니면서 수영이면 물 칸까지 열고 다시 찾는다. Flying은 통행권이 더 넓으니 그쪽이 우선.
-            // src가 비어 있어도(= 물이 걷는 길을 완전히 막은 맵) 현재 위치에서 찾아야 하므로 Count로 막지 않는다.
-            else if (Swimming)
+            // 수영 적은 저작 경로(EnemyRouteSet)가 있으면 그걸 타고, 없으면 지상 적과 같은 일반 레인 경로를
+            // 그대로 따른다 — 자동 재탐색은 설계된 레인을 무시하고 맵을 가로지르는 길을 내놓기 때문이다.
+            // 그래서 레인이 아예 없을 때(= 물이 걷는 길을 완전히 막은 맵)만 최후 수단으로 헤엄 길찾기를 돈다.
+            // Flying은 통행권이 더 넓으니 그쪽이 우선.
+            else if (Swimming && src.Count == 0)
             {
-                Vector3 startW = src.Count > 0 && snapToStart ? src[0] : _tf.position;
-                Vector3 goalW = src.Count > 0 ? src[src.Count - 1] : _tf.position;
+                // 여기까지 왔다는 건 src가 비었다는 뜻이라 시작·목표를 모두 현재 위치로 잡는다.
+                // 도착 판정은 좌표가 아니라 Tile.IsCore라 목표 좌표가 근사여도 본진까지 이어진다(SwimPathfinder 주석 참조).
+                Vector3 startW = _tf.position;
+                Vector3 goalW = _tf.position;
                 var swimming = SwimPathfinder.BuildWaypoints(
                     board, startW, goalW, SwimSpeedMultiplier, SwimTransitionPenaltyTiles);
                 if (swimming.Count > 0) src = swimming;

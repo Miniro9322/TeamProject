@@ -7760,6 +7760,7 @@ GameObject:
   m_Component:
   - component: {fileID: 7336677387634691527}
   - component: {fileID: 7762409628043492132}
+  - component: {fileID: 3418726371322759984}
   m_Layer: 0
   m_Name: DragonSlayer
   m_TagString: Untagged
@@ -7801,14 +7802,37 @@ MonoBehaviour:
   - {fileID: 11400000, guid: a6dd79d2802a80d4b9cdf7db50f64a4e, type: 2}
   - {fileID: 11400000, guid: 29fcb58731e9de84ba10d989c8f256f9, type: 2}
   - {fileID: 11400000, guid: f8f02fa9135171e4db10c07135224a3b, type: 2}
-  heroData: {fileID: 0}
-  basePattern: []
+  heroData: {fileID: 11400000, guid: af5a6c0ca0d72fc478cdebae1baa6d33, type: 2}
+  basePattern:
+  - {fileID: 11400000, guid: a24a09f971b78664d8e3892b2a5571cc, type: 2}
   anim: {fileID: 7638390345114475594}
   animEvents: {fileID: 962424670496171388}
-  statData: {fileID: 11400000, guid: c1b26d8a18f965e46b5f7053d1531779, type: 2}
+  statData: {fileID: 11400000, guid: 24a72ec7d3c97d644946a9d65fd9b5de, type: 2}
   board: {fileID: 0}
   auraZonePrefabs: []
   occupantKind: 1
+--- !u!114 &3418726371322759984
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2762850617625843917}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 70884c9239b802249a37f85d89918ccc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AttackStanceSkill
+  targetScope: 0
+  buffList: []
+  groundZonePrefab: {fileID: 0}
+  instantDamagePer: 0
+  instantHitEffect: {fileID: 0}
+  instantHitEffectLifetime: 1
+  cooldown: 20
+  duration: 20
+  blocksBasicAttack: 0
+  stanceAttackData: {fileID: 11400000, guid: 346d477c357788a46bb3bcfdd7dacb6a, type: 2}
 --- !u!1 &2766463481628903502
 GameObject:
   m_ObjectHideFlags: 0

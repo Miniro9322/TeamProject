@@ -22553,6 +22553,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8960899001449437281}
   - component: {fileID: 4332685919364535766}
+  - component: {fileID: 3275692631701980282}
   m_Layer: 0
   m_Name: Dragoon
   m_TagString: Untagged
@@ -22594,18 +22595,32 @@ MonoBehaviour:
   - {fileID: 11400000, guid: a6dd79d2802a80d4b9cdf7db50f64a4e, type: 2}
   - {fileID: 11400000, guid: 29fcb58731e9de84ba10d989c8f256f9, type: 2}
   - {fileID: 11400000, guid: f8f02fa9135171e4db10c07135224a3b, type: 2}
-  heroData: {fileID: 0}
+  heroData: {fileID: 11400000, guid: 85d4249170b0f42458bd6edaa6d380f0, type: 2}
   basePattern:
-  - {fileID: 11400000, guid: a17338591fbe42e4e9e0971a1f166103, type: 2}
+  - {fileID: 11400000, guid: fc9892aae7fb8174b8fd3dd1bf86042e, type: 2}
   anim: {fileID: 4378586045599540503}
   animEvents: {fileID: 7722490271011846444}
-  statData: {fileID: 11400000, guid: 8d6fa0f0a36921a4eac423cbec1169ad, type: 2}
+  statData: {fileID: 11400000, guid: 8be930248d3d39a46affb50e8bff0fe5, type: 2}
   board: {fileID: 0}
   auraZonePrefabs: []
   occupantKind: 2
   bowAnim: {fileID: 5443066929859240409}
   arrowAnim: {fileID: 8610688408873876571}
   muzzle: {fileID: 1517930423594004449}
+--- !u!114 &3275692631701980282
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9004755700449656008}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 71f4ec0063568874f8d0c94daeb655ad, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NthHitHeavyTrait
+  everyN: 5
+  heavyAttackData: {fileID: 11400000, guid: 3c3894bdf6f01344aad17c95b035d565, type: 2}
 --- !u!1 &9019854544271929726
 GameObject:
   m_ObjectHideFlags: 0

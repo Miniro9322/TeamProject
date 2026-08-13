@@ -78,6 +78,7 @@ public class RangedAttackExecutor : IAttackExecutor
     {
         Projectile arrow = pool.Get();
         arrow.transform.SetPositionAndRotation(ctx.MuzzleOrSelf.position, ctx.MuzzleOrSelf.rotation);
+        ctx.hero.SpawnEffect(data.attackEffect, ctx.MuzzleOrSelf.position, ctx.MuzzleOrSelf.rotation, data.attackEffectLifetime);
 
         if (data.attackType == AttackType.Area && data.areaShape == AreaShape.Line)
         {
