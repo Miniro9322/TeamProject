@@ -13,7 +13,7 @@ public class WindShelterDebug : MonoBehaviour
     public void TintShelter()
     {
         WindShelterData shelterData = new WindShelterCalc().BuildData(desertBoard.Cells);
-        WindwallData windwallData = new WindwallCalc().BuildData(desertBoard, desertZone.WindwallReach);
+        WindwallData windwallData = new WindwallCalc().BuildData(desertBoard.Cells, desertZone.WindwallReach);
         UnitShelter unitShelter = new(CollectHeroCells());
         Vector2Int wind = desertZone.WindDirection;
 
