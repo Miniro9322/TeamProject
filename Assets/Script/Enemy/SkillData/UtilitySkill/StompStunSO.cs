@@ -11,6 +11,7 @@ public class StompStunSO : UtilitySkillDataSO
 {
     private string StunId = "Stun_Basic";
     private DebuffSO debuffSO;
+    public GameObject shockWaveEffect;
     private string skillstate = "Skill";
     public override async UniTask Execute(EnemyBase owner, CancellationToken token)
     {
@@ -23,6 +24,18 @@ public class StompStunSO : UtilitySkillDataSO
         {
             owner.animator.SetTrigger(skillstate);
             await WaitForAnimationEnd(owner, skillstate, 3f, token);
+            GameObject go = PoolManager.Instance.Spawn(shockWaveEffect,owner.transform.position,shockWaveEffect.transform.rotation);
+            go.transform.localScale = Vector3.one;
+            await UniTask.Delay(TimeSpan.FromSeconds(0.25f));
+            GameObject go1 = PoolManager.Instance.Spawn(shockWaveEffect,owner.transform.position,shockWaveEffect.transform.rotation);
+            go1.transform.localScale = new Vector3(2f,2f,1f);
+            await UniTask.Delay(TimeSpan.FromSeconds(0.25f));
+            GameObject go2 = PoolManager.Instance.Spawn(shockWaveEffect,owner.transform.position,shockWaveEffect.transform.rotation);
+            go2.transform.localScale = new Vector3(3f,3f,1f);
+            await UniTask.Delay(TimeSpan.FromSeconds(0.25f));
+            PoolManager.Instance.Despawn(go);
+            PoolManager.Instance.Despawn(go1);
+            PoolManager.Instance.Despawn(go2);
             if (owner == null || owner.IsDead || owner.Board == null) return;
             var hit = new HashSet<GameObject>();
             
