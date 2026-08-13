@@ -12914,7 +12914,8 @@ GameObject:
   m_Component:
   - component: {fileID: 5007865040228602982}
   - component: {fileID: 364525912173520321}
-  - component: {fileID: 9143031485708459060}
+  - component: {fileID: 7610506174405703524}
+  - component: {fileID: 8398115731693330870}
   m_Layer: 0
   m_Name: Inquisitor
   m_TagString: Hero
@@ -12956,16 +12957,16 @@ MonoBehaviour:
   - {fileID: 11400000, guid: a6dd79d2802a80d4b9cdf7db50f64a4e, type: 2}
   - {fileID: 11400000, guid: 29fcb58731e9de84ba10d989c8f256f9, type: 2}
   - {fileID: 11400000, guid: f8f02fa9135171e4db10c07135224a3b, type: 2}
-  heroData: {fileID: 0}
+  heroData: {fileID: 11400000, guid: 5f5f6e6a05f65d940b9f22b67ec25e7b, type: 2}
   basePattern:
-  - {fileID: 11400000, guid: 1b1dc8f3debeea5498e9512f0296c0a9, type: 2}
+  - {fileID: 11400000, guid: 75478e79ddab29c4e9789232f958fd0c, type: 2}
   anim: {fileID: 2363077200644652993}
   animEvents: {fileID: 6241445073555916122}
-  statData: {fileID: 11400000, guid: 7b41ee83b1ea5574f8002684d4e2c81f, type: 2}
+  statData: {fileID: 11400000, guid: 447e1442ac2cfdf41ba731ded9d3146c, type: 2}
   board: {fileID: 0}
   auraZonePrefabs: []
   occupantKind: 1
---- !u!114 &9143031485708459060
+--- !u!114 &7610506174405703524
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -12977,8 +12978,23 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 71f4ec0063568874f8d0c94daeb655ad, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::NthHitHeavyTrait
-  everyN: 4
-  heavyAttackData: {fileID: 11400000, guid: 2d4726aeedd2b81418969715bcb8b376, type: 2}
+  everyN: 5
+  heavyAttackData: {fileID: 11400000, guid: 6a002bcbb6703de4e98634a20bb68e88, type: 2}
+--- !u!114 &8398115731693330870
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5228687494590014126}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a6dc3914ade7e5646ba63013a350f6ee, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HeavyRechanceTrait
+  heavyAttackData: {fileID: 11400000, guid: 6a002bcbb6703de4e98634a20bb68e88, type: 2}
+  chance: 0.5
+  allowRecursive: 1
 --- !u!1 &5299033108214222058
 GameObject:
   m_ObjectHideFlags: 0
