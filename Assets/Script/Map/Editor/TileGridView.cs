@@ -62,7 +62,8 @@ public class TileGridView
     /// </summary>
     public void Draw(Rect area, int cellPixels, IReadOnlyList<LaneData> lanes, int chosen,
         IReadOnlyList<RouteNode> nodes, Vector2Int hover,
-        HashSet<Vector2Int> overrides, bool showInert, CampfireData campfireData)
+        HashSet<Vector2Int> overrides, bool showInert, CampfireData campfireData,
+        HashSet<Vector2Int> windwallShape)
     {
         Vector2Int focus = FocusSpawn(lanes, chosen);
         HashSet<Vector2Int> route = RouteCells(lanes, chosen);
@@ -81,6 +82,7 @@ public class TileGridView
                 Rect rect = CellRect(area, cellPixels, col, row);
                 DrawCell(rect, tile, cellPixels, SpawnLit(focus, coord), RouteLit(route, coord));
                 DrawCampfireRange(rect, coord, campfireData);
+                DrawWindwallRange(rect, coord, windwallShape);
 
                 // 붓과 무관한 상시 표식이라 DrawCell(붓에 따라 죽는 층) 위에 얹는다.
                 if (overrides != null && overrides.Contains(coord))
@@ -128,6 +130,40 @@ public class TileGridView
         }
 
         if (!CampfireQuery.IsProtected(data, coord + Vector2Int.right))
+        {
+            EditorGUI.DrawRect(new Rect(rect.xMax - line, rect.y, line, rect.height), color);
+        }
+    }
+
+    // 가림막 원점과 보호 팔을 하나로 합친 덩어리(shape)의 바깥 경계만 십자 모양 외곽선으로 표시합니다.
+    // 덩어리 안쪽에서 서로 붙은 변에는 선을 안 그어, 원점·팔이 상자 여러 개로 겹쳐 보이지 않고
+    // 하나로 이어진 윤곽선이 된다.
+    private static void DrawWindwallRange(Rect rect, Vector2Int coord, HashSet<Vector2Int> shape)
+    {
+        if (shape == null || !shape.Contains(coord))
+        {
+            return;
+        }
+
+        Color color = MapMakerPalette.Windwall;
+        const float line = 3f;
+
+        if (!shape.Contains(coord + Vector2Int.up))
+        {
+            EditorGUI.DrawRect(new Rect(rect.x, rect.y, rect.width, line), color);
+        }
+
+        if (!shape.Contains(coord + Vector2Int.down))
+        {
+            EditorGUI.DrawRect(new Rect(rect.x, rect.yMax - line, rect.width, line), color);
+        }
+
+        if (!shape.Contains(coord + Vector2Int.left))
+        {
+            EditorGUI.DrawRect(new Rect(rect.x, rect.y, line, rect.height), color);
+        }
+
+        if (!shape.Contains(coord + Vector2Int.right))
         {
             EditorGUI.DrawRect(new Rect(rect.xMax - line, rect.y, line, rect.height), color);
         }
@@ -399,6 +435,7 @@ public class TileGridView
             case MapBrush.Swim: return tile.State.Pass == PassType.Swim;
             case MapBrush.Fire: return tile.IsFire;
             case MapBrush.Campfire: return tile.IsCampfire;
+            case MapBrush.Windwall: return tile.IsWindwall;
             default: return TileFlagQuery.IsOn(tile, _brush);
         }
     }

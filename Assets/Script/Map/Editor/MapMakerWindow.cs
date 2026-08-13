@@ -182,6 +182,7 @@ public class MapMakerWindow : EditorWindow
         List<Tile> tiles = ModuleScan.CollectTiles(module);
         Dictionary<Vector2Int, Tile> cells = ModuleScan.MapCells(tiles, out _, out _);
         CampfireData campfireData = BuildCampfire(module, cells);
+        HashSet<Vector2Int> windwallShape = BuildWindwallShape(module, cells);
 
         if (cells.Count == 0)
         {
@@ -229,7 +230,7 @@ public class MapMakerWindow : EditorWindow
                 DrawTerrainPanel(module, cells);
             }
 
-            DrawGridArea(view, cells, lanes, overrides, campfireData);
+            DrawGridArea(view, cells, lanes, overrides, campfireData, windwallShape);
 
             if (roomForBoth)
             {
@@ -634,6 +635,7 @@ public class MapMakerWindow : EditorWindow
             BrushRow(MapBrush.Fire, "불", MapMakerPalette.Fire, TileTally.CountGimmick(cells, GimmickType.Fire));
             BrushRow(MapBrush.Campfire, "모닥불", MapMakerPalette.Campfire, TileTally.CountGimmick(cells, GimmickType.Campfire));
             DrawCampfireRange(module);
+            BrushRow(MapBrush.Windwall, "가림막", MapMakerPalette.Windwall, TileTally.CountGimmick(cells, GimmickType.Windwall));
 
             GUILayout.Space(6);
             GUILayout.Label("표식", EditorStyles.miniBoldLabel);
@@ -751,7 +753,8 @@ public class MapMakerWindow : EditorWindow
     private void DrawGridArea(TileGridView view, Dictionary<Vector2Int, Tile> cells,
         IReadOnlyList<LaneData> lanes,
         HashSet<Vector2Int> overrides,
-        CampfireData campfireData)
+        CampfireData campfireData,
+        HashSet<Vector2Int> windwallShape)
     {
         // 프레임을 접을 때 짝이 맞게 풀리도록 스크롤 판을 scope로 연다 — 입력 처리가 이 안에서 프레임을 접는다.
         using (new EditorGUILayout.VerticalScope())
@@ -763,7 +766,7 @@ public class MapMakerWindow : EditorWindow
             HandleHover(area, view);
             HandleStroke(area, view, cells);
             view.Draw(area, _cellPixels, lanes, RouteIndex(lanes), RouteNodes(),
-                _hover, overrides, _showInert, campfireData);
+                _hover, overrides, _showInert, campfireData, windwallShape);
         }
     }
 
@@ -779,6 +782,45 @@ public class MapMakerWindow : EditorWindow
         }
 
         return new CampfireCalc().BuildData(cells, iceZone.CampfireRange);
+    }
+
+    // 현재 모듈의 실제 DesertZone 값(가림막 사거리)으로 에디터 미리보기용 가림막 범위를 계산합니다.
+    // 저작 창은 "오늘 바람"이 없으므로 네 방향 팔을 전부 계산해 둔다 — 어느 방향이든 확인할 수 있게.
+    //
+    // 화면 표시 전용으로 원점 칸(가림막 자신)을 팔 칸들과 하나로 합친다 — 실제 판정(WindwallData)은
+    // 원점을 비보호로 그대로 두되(§4.4, 자기 자신은 안 막힘), 윤곽선은 원점까지 이어진 한 덩어리로 그려야
+    // 원점 따로·팔 따로 닫힌 상자가 겹쳐 보이는 문제가 없다.
+    private static HashSet<Vector2Int> BuildWindwallShape(
+        Grid module,
+        IReadOnlyDictionary<Vector2Int, Tile> cells)
+    {
+        DesertZone desertZone = module.GetComponentInParent<DesertZone>(true);
+        if (desertZone == null)
+        {
+            return null;
+        }
+
+        WindwallData data = new WindwallCalc().BuildData(cells, desertZone.WindwallReach);
+        var shape = new HashSet<Vector2Int>();
+
+        foreach (KeyValuePair<Vector2Int, Tile> entry in cells)
+        {
+            if (entry.Value.IsHigh && entry.Value.IsWindwall)
+            {
+                shape.Add(entry.Key);
+            }
+
+            for (int index = 0; index < GridCalculator.Directions.Length; index++)
+            {
+                if (data.HasArm(GridCalculator.Directions[index], entry.Key))
+                {
+                    shape.Add(entry.Key);
+                    break;
+                }
+            }
+        }
+
+        return shape;
     }
 
     // 별도 에디터 값 없이 IceZone의 실제 직렬화 범위를 편집합니다.
@@ -1304,11 +1346,17 @@ public class MapMakerWindow : EditorWindow
                 }
 
                 bool hadCampfire = tile.State.Gimmick == GimmickType.Campfire;
+                bool hadWindwall = tile.State.Gimmick == GimmickType.Windwall;
                 TileStamp.Stamp(tile, _brush, on);
 
                 if (_brush == MapBrush.Campfire)
                 {
                     ApplyCampfireDecor(tile, on, hadCampfire);
+                }
+
+                if (_brush == MapBrush.Windwall)
+                {
+                    ApplyWindwallDecor(tile, on, hadWindwall);
                 }
 
                 break;
@@ -1333,6 +1381,29 @@ public class MapMakerWindow : EditorWindow
         }
 
         if (!on && hadCampfire)
+        {
+            DecorPlace.Remove(module, tile);
+        }
+    }
+
+    // 가림막 기믹을 찍고 끌 때 WIndWall 장식도 같이 얹고 걷는다 — 데이터와 겉모습이 갈리지 않게.
+    // 걷을 땐 그 칸 제일 위 장식 하나만 지운다 — 같은 칸에 다른 장식을 더 얹었다면 그게 지워질 수 있다.
+    private void ApplyWindwallDecor(Tile tile, bool on, bool hadWindwall)
+    {
+        if (_theme == null || _theme.WindwallPrefab == null)
+        {
+            return;
+        }
+
+        Grid module = _modules[_moduleIndex];
+
+        if (on && !hadWindwall)
+        {
+            DecorPlace.Add(module, tile, _theme.WindwallPrefab);
+            return;
+        }
+
+        if (!on && hadWindwall)
         {
             DecorPlace.Remove(module, tile);
         }
@@ -1533,6 +1604,7 @@ public class MapMakerWindow : EditorWindow
             case MapBrush.Swim: return "헤엄";
             case MapBrush.Fire: return "불";
             case MapBrush.Campfire: return "모닥불";
+            case MapBrush.Windwall: return "가림막";
             default: return "읽기만";
         }
     }

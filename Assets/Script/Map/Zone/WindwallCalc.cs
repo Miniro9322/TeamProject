@@ -1,43 +1,29 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 // 고정된 언덕 가림막을 읽어 바람 방향별 보호 칸을 맵 로드 때 한 번 계산합니다.
+// 칸 딕셔너리만 있으면 계산 가능하다 — 런타임(MapBoard.Cells)과 저작 창(에디터 스캔) 둘 다 같은 함수를 쓴다.
 public class WindwallCalc
 {
     // 안쪽 칸을 한 번 훑어 가림막마다 네 방향 팔을 채운 결과를 돌려줍니다.
-    public WindwallData BuildData(MapBoard board, int reach)
+    public WindwallData BuildData(IReadOnlyDictionary<Vector2Int, Tile> cells, int reach)
     {
         WindwallData data = new();
-        RectInt play = board.PlayRect;
 
-        for (int row = play.yMin; row < play.yMax; row++)
+        foreach (Tile tile in cells.Values)
         {
-            KeepRowArms(board, data, play, row, reach);
+            if (IsHighWindwall(tile))
+            {
+                KeepArms(data, tile.Coord, reach);
+            }
         }
 
         return data;
     }
 
-    // 한 행을 훑어 가림막 칸마다 네 방향 팔을 채운다.
-    private static void KeepRowArms(MapBoard board, WindwallData data, RectInt play, int row, int reach)
+    // 이 타일이 언덕 위 가림막인지 확인한다. 지상은 고지가 대신 막아주므로 가림막으로 인정하지 않는다.
+    private static bool IsHighWindwall(Tile tile)
     {
-        for (int col = play.xMin; col < play.xMax; col++)
-        {
-            Vector2Int cell = new(col, row);
-            if (IsHighWindwall(board, cell))
-            {
-                KeepArms(data, cell, reach);
-            }
-        }
-    }
-
-    // 이 좌표에 언덕 위 가림막이 있는지 확인한다. 지상은 고지가 대신 막아주므로 가림막으로 인정하지 않는다.
-    private static bool IsHighWindwall(MapBoard board, Vector2Int cell)
-    {
-        if (!board.TryGetCell(cell, out Tile tile))
-        {
-            return false;
-        }
-
         if (!tile.IsHigh)
         {
             return false;

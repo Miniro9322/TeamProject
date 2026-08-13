@@ -39,7 +39,7 @@ public class MapAssemble : MonoBehaviour
 
         MapBoard desertBoard = desertZone.GetComponent<MapBoard>();
         WindShelterData shelterData = new WindShelterCalc().BuildData(desertBoard.Cells);
-        WindwallData windwallData = new WindwallCalc().BuildData(desertBoard, desertZone.WindwallReach);
+        WindwallData windwallData = new WindwallCalc().BuildData(desertBoard.Cells, desertZone.WindwallReach);
         WindPreview windPreview = new WindPreview(
             desertBoard,
             desertZone.transform,
@@ -62,6 +62,7 @@ public class MapAssemble : MonoBehaviour
 
         DayNightBuildRule dayNightRule = new DayNightBuildRule();
         dayNightRule.rule = mapGame.Rule;
+        palette.dayNightRule = dayNightRule;
 
         mapGame.Placer.zoneEffectApplier = zoneEffectApplier;
         UnitReplace replace = new UnitReplace(mapGame.Units, zoneEffectApplier);
