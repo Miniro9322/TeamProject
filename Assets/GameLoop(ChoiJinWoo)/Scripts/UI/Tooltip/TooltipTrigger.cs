@@ -21,4 +21,9 @@ public class TooltipTrigger : MonoBehaviour, IPointerEnterHandler, IPointerExitH
         // 호버 도중 버튼/패널이 꺼지면(패널 토글 등) PointerExit이 안 불릴 수 있어 여기서도 닫아준다.
         if (TooltipUi.Instance != null) TooltipUi.Instance.Hide();
     }
+
+    public void SetMessaege(string message)
+    {
+        this.message = message;
+    }
 }
