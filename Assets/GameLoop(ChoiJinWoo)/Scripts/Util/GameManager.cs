@@ -19,7 +19,7 @@ public class GameManager : MonoBehaviour
     public UiManager UiManager => uiManager;
     private SpawnerManager waveSpawner;
     private UpgradeState upgradeState;
-    private int dayCount = 4;
+    private int dayCount = 0;
     [SerializeField] private int hp = 20;
     [SerializeField] private List<BaseUpgradeData> hpUpgrades;
     private bool requestSupport = false;
