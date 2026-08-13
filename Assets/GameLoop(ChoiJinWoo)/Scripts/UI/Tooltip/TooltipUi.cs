@@ -1,3 +1,6 @@
+using System;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -11,8 +14,11 @@ public class TooltipUi : MonoBehaviour
     [SerializeField] private TextMeshProUGUI text;
     [SerializeField] private Canvas canvas; // 화면 좌표 -> 캔버스 로컬 좌표 변환에 필요
     [SerializeField] private Vector2 offset = new(16f, 16f);
+    [SerializeField] private float fadeDuration = 0.12f;
 
     private RectTransform canvasRect;
+    private CanvasGroup canvasGroup;
+    private CancellationTokenSource fadeCts;
 
     private void Awake()
     {
@@ -22,10 +28,11 @@ public class TooltipUi : MonoBehaviour
         // panel이 마우스 밑에 뜨면서 자기가 레이캐스트를 가로채면, 밑에 있던 버튼이 PointerExit ->
         // 패널 사라짐 -> 버튼 PointerEnter -> 패널 다시 뜸 순으로 매 프레임 깜빡인다.
         // CanvasGroup으로 패널이 절대 레이캐스트를 막지 않게 고정해서 이 루프 자체를 없앤다.
-        var canvasGroup = panel.GetComponent<CanvasGroup>();
+        canvasGroup = panel.GetComponent<CanvasGroup>();
         if (canvasGroup == null) canvasGroup = panel.gameObject.AddComponent<CanvasGroup>();
         canvasGroup.blocksRaycasts = false;
         canvasGroup.interactable = false;
+        canvasGroup.alpha = 0f;
 
         // pivot이 인스펙터 설정값(예: 센터)에 따라 달라지면 offset을 줘도 커서가 패널 안쪽에 걸릴 수 있다.
         // 좌하단(0,0)으로 고정해서 "커서 지점에서 오른쪽 위로 offset만큼 벌어진 자리"가 항상
@@ -53,11 +60,42 @@ public class TooltipUi : MonoBehaviour
         // 여기서 강제로 즉시 재계산시켜서 SetPosition이 최신 크기를 보게 한다.
         LayoutRebuilder.ForceRebuildLayoutImmediate(panel);
         SetPosition(screenPosition);
+
+        FadeTo(1f).Forget();
     }
 
     public void Hide()
     {
-        panel.gameObject.SetActive(false);
+        if (!panel.gameObject.activeSelf) return;
+        FadeTo(0f).Forget();
+    }
+
+    // 페이드 도중 다시 Show/Hide가 불리면 진행 중이던 페이드를 취소하고 새 목표값으로 다시 시작한다.
+    private async UniTaskVoid FadeTo(float target)
+    {
+        fadeCts?.Cancel();
+        fadeCts = new CancellationTokenSource();
+        var token = fadeCts.Token;
+
+        float start = canvasGroup.alpha;
+        float elapsed = 0f;
+
+        try
+        {
+            while (elapsed < fadeDuration)
+            {
+                elapsed += Time.unscaledDeltaTime;
+                canvasGroup.alpha = Mathf.Lerp(start, target, elapsed / fadeDuration);
+                await UniTask.Yield(PlayerLoopTiming.Update, token);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            return;
+        }
+
+        canvasGroup.alpha = target;
+        if (target <= 0f) panel.gameObject.SetActive(false);
     }
 
     private void SetPosition(Vector2 screenPosition)
