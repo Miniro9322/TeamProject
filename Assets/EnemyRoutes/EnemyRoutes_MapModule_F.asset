@@ -44,10 +44,12 @@ MonoBehaviour:
     Spawn: {x: 1, y: 1}
     Nodes:
     - {x: 1, y: 4}
-    - {x: 4, y: 4}
+    - {x: 5, y: 4}
+    - {x: 8, y: 6}
+    - {x: 8, y: 3}
+    - {x: 5, y: 3}
     - {x: 4, y: 1}
-    - {x: 11, y: 1}
-    - {x: 11, y: 5}
+    - {x: 12, y: 5}
   - Kind: 2
     Spawn: {x: 4, y: 6}
     Nodes:
@@ -69,3 +71,11 @@ MonoBehaviour:
   - Kind: 1
     Spawn: {x: 4, y: 6}
     Nodes: []
+  - Kind: 2
+    Spawn: {x: 1, y: 6}
+    Nodes:
+    - {x: 1, y: 4}
+    - {x: 3, y: 1}
+    - {x: 6, y: 6}
+    - {x: 8, y: 3}
+    - {x: 4, y: 1}

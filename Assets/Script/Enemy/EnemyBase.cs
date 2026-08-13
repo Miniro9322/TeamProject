@@ -20,8 +20,6 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
     /// 2타 이상으로 나누어 때리는 적(GrimReaper 등)은 이걸 재정의해 모든 클립 길이의 합을 돌려준다 —
     /// 그래야 공격 한 번이 통째로 공격 간격 안에 들어온다. 0이면 배속하지 않는다는 뜻이므로 그대로 흘려보낼 것.</summary>
     protected virtual float AttackClipLength => attackClipLength;
-    [Tooltip("잠행(Burrow) 중 지면에 표시할 마커 이펙트(흙더미/먼지 등). IsBurrow일 때만 사용. 비우면 마커 없이 숨는다.")]
-    [SerializeField] private GameObject burrowMarkerPrefab;
     [Tooltip("파고들기/솟아오르기 애니 이벤트가 안 왔을 때 강제로 다음 상태로 넘기는 시간(초). 클립 길이보다 넉넉하게.")]
     [SerializeField] private float burrowTimeout = 3f;
     [Tooltip("잠수(Pool)/상승(Up) 애니 이벤트가 안 왔을 때 강제로 다음 상태로 넘기는 시간(초). IsSwim일 때만 사용. 클립 길이보다 넉넉하게.")]
@@ -213,7 +211,7 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
         _move = new EnemyMovement(gameObject, animator, arriveSqr);
         // 잠행 몹은 은신 셰이더 페이드를 쓰지 않는다(연출을 EnemyBurrow가 전담) — Cloaking 비트는 피격 판정용으로만 남긴다.
         if (IsCloaking && !IsBurrow) _cloak.Setup(gameObject, cloakSettings); // Attribute 결정(LoadStats) 뒤에 호출
-        if (IsBurrow) _burrow.Setup(gameObject, animator, burrowMarkerPrefab, burrowTimeout);
+        if (IsBurrow) _burrow.Setup(gameObject, animator, burrowTimeout);
         if (IsSwim) _swim.Setup(animator, swimTimeout,gameObject);   // Attribute 결정(LoadStats) 뒤에 호출
         stunEffectPrefab = Resources.Load<GameObject>("EnemyEffectPrefab/Stun");
         // Resources.Load는 내부 캐시가 있어 적마다 불러도 에셋을 다시 읽지 않는다.
@@ -340,6 +338,12 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
         // 잠행 몹은 파고들기/솟아오르기 모션 중에도 멈춘다 — 안 그러면 걸어가면서 땅을 파고 솟는 게 보인다.
         // 수영 몹도 잠수(Pool)/상승(Up) 모션 중엔 멈춘다 — 같은 이유.
         _move.Tick(!IsDead && !CannotMove && !_burrow.IsTransitioning && !_swim.IsTransitioning, CurrentMoveSpeed);
+        // 본진 도달은 위 _move.Tick 안에서 ArrivedAtCore로 터져 그 자리에서 풀에 반납된다(SetActive(false) → OnDisable).
+        // 그런데 Unity는 비활성화됐다고 지금 돌고 있는 Update를 끊지 않으므로 아래가 그대로 이어서 실행된다 —
+        // OnDisable의 _burrow.Reset()이 방금 반납한 지면 마커를 _burrow.Tick이 다시 꺼내고,
+        // 이미 비활성이라 OnDisable이 또 돌 일이 없어 그 마커가 본진에 영영 남았다. 여기서 끊는다.
+        // (사망은 DieRoutine이 await 뒤에 반납하므로 Update 밖이라 원래 이 문제가 없다.)
+        if (!gameObject.activeInHierarchy) return;
         UpdateExposedAttribute();       // 저지 상태에 따라 Hero가 보는 Attribute를 갱신
         _cloak.Tick(CloakClear);
         _burrow.Tick(CloakClear, transform.position); // 은신과 같은 트리거(저지/사망) — 저지되면 솟아오른다

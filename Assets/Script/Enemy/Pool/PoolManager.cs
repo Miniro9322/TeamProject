@@ -98,13 +98,15 @@ public class PoolManager : MonoBehaviour
         po.MarkReleased();
         GetPool(po.SourcePrefab).Release(go);
     }
-    public void Despawn(GameObject go, float delay)
+    public void Despawn(GameObject go, float delay,bool scaleCheck = true)
     {
         if (go == null) return;
         if (delay <= 0f) { Despawn(go); return; }
 
         var po = go.GetComponent<PooledObject>();
         if (po == null) { Destroy(go, delay); return; }
-        po.ScheduleDespawn(delay);
+        po.ScheduleDespawn(delay,scaleCheck);
+
+        
     }
 }
