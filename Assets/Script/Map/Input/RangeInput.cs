@@ -30,9 +30,10 @@ public class RangeInput : MonoBehaviour
     // 누른 자리의 유닛이 닿는 칸을 보관소에 채운다.
     private void KeepRange()
     {
-        if (rangeCalc.TryGetRange(pointerPick.UnderPointer(), out List<Tile> range))
+        Tile tile = pointerPick.UnderPointer();
+        if (rangeCalc.TryGetRange(tile, out List<Tile> range))
         {
-            rangeStore.KeepRange(range);
+            rangeStore.KeepRange(range, tile.IsCampfire);
             return;
         }
 

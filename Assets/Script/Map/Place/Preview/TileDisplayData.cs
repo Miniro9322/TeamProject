@@ -7,6 +7,7 @@ public readonly struct TileDisplayData
     public readonly MapBoard Board;
     public readonly Vector2Int Origin;
     public readonly GameObject Unit;
+    public readonly OccupantKind Kind;
     public readonly bool CanPlace;
     public readonly int RangeVersion;
     public readonly Hero SkillCaster;
@@ -18,6 +19,7 @@ public readonly struct TileDisplayData
         MapBoard board,
         Vector2Int origin,
         GameObject unit,
+        OccupantKind kind,
         bool canPlace,
         int rangeVersion,
         Hero skillCaster,
@@ -28,6 +30,7 @@ public readonly struct TileDisplayData
         Board = board;
         Origin = origin;
         Unit = unit;
+        Kind = kind;
         CanPlace = canPlace;
         RangeVersion = rangeVersion;
         SkillCaster = skillCaster;
@@ -41,6 +44,7 @@ public readonly struct TileDisplayData
             && Board == other.Board
             && Origin == other.Origin
             && Unit == other.Unit
+            && Kind == other.Kind
             && CanPlace == other.CanPlace
             && RangeVersion == other.RangeVersion
             && SkillCaster == other.SkillCaster
