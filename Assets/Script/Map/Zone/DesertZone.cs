@@ -14,16 +14,25 @@ public class DesertZone : MonoBehaviour
     [SerializeField, Min(0f)] private float arrowHeight = 0.08f;
     [SerializeField] private Color arrowColor = Color.yellow;
 
+    private WindwallData windwallData;
+
     public DebuffSO[] Debuffs => debuffs;
     public Vector2Int WindDirection => windDirection;
     public int WindwallReach => windwallReach;
     public float ArrowSize => arrowSize;
     public float ArrowHeight => arrowHeight;
     public Color ArrowColor => arrowColor;
+    public WindwallData WindwallData => windwallData;
 
     // 바람 방향을 새 값으로 바꿔 저장한다.
     public void SetWindDirection(Vector2Int direction)
     {
         windDirection = direction;
+    }
+
+    // 완성된 가림막 범위 데이터를 이 사막 지대에 연결한다.
+    public void SetWindwall(WindwallData data)
+    {
+        windwallData = data;
     }
 }

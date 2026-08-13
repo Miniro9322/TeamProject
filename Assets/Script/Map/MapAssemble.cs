@@ -41,6 +41,7 @@ public class MapAssemble : MonoBehaviour
         desertBoard = desertZone.GetComponent<MapBoard>();
         WindShelterData shelterData = new WindShelterCalc().BuildData(desertBoard.Cells);
         WindwallData windwallData = new WindwallCalc().BuildData(desertBoard.Cells, desertZone.WindwallReach);
+        desertZone.SetWindwall(windwallData);
         WindPreview windPreview = new WindPreview(
             desertBoard,
             desertZone.transform,

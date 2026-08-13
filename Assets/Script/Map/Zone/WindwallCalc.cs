@@ -14,7 +14,7 @@ public class WindwallCalc
         {
             if (IsHighWindwall(tile))
             {
-                KeepArms(data, tile.Coord, reach);
+                KeepArms(cells, data, tile.Coord, reach);
             }
         }
 
@@ -32,15 +32,35 @@ public class WindwallCalc
         return tile.IsWindwall;
     }
 
-    // 가림막 한 칸에서 네 방향으로 reach 칸까지 보호 칸을 보관한다.
-    private static void KeepArms(WindwallData data, Vector2Int origin, int reach)
+    // 가림막 한 칸에서 네 방향 팔을 보관하고, 이 가림막 혼자만의 범위도 함께 모은다.
+    private static void KeepArms(IReadOnlyDictionary<Vector2Int, Tile> cells, WindwallData data, Vector2Int origin, int reach)
     {
+        List<Tile> range = new();
         for (int index = 0; index < GridCalculator.Directions.Length; index++)
         {
             Vector2Int wind = GridCalculator.Directions[index];
-            for (int step = 1; step <= reach; step++)
+            KeepArm(cells, data, origin, wind, reach, range);
+        }
+
+        data.KeepRange(origin, range);
+    }
+
+    // 한 방향으로 reach 칸까지 보호 칸을 보관하고, 실제 타일이 있는 칸은 범위 목록에도 담는다.
+    private static void KeepArm(
+        IReadOnlyDictionary<Vector2Int, Tile> cells,
+        WindwallData data,
+        Vector2Int origin,
+        Vector2Int wind,
+        int reach,
+        List<Tile> range)
+    {
+        for (int step = 1; step <= reach; step++)
+        {
+            Vector2Int cell = origin + wind * step;
+            data.KeepArm(wind, cell);
+            if (cells.TryGetValue(cell, out Tile tile))
             {
-                data.KeepArm(wind, origin + wind * step);
+                range.Add(tile);
             }
         }
     }

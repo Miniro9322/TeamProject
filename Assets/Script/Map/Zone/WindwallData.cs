@@ -6,6 +6,9 @@ public class WindwallData
 {
     private readonly Dictionary<Vector2Int, HashSet<Vector2Int>> armsByWind = new();
 
+    // 가림막 타일 하나하나가 자기 혼자만의 범위를 따로 들고 있습니다(면역 판정용 통합 표와는 다른 용도).
+    private readonly Dictionary<Vector2Int, List<Tile>> ranges = new();
+
     // 네 방향 빈 세트를 미리 만들어 둡니다. 채울 때 방향 존재 검사가 필요 없어집니다.
     public WindwallData()
     {
@@ -25,5 +28,17 @@ public class WindwallData
     public bool HasArm(Vector2Int wind, Vector2Int cell)
     {
         return armsByWind[wind].Contains(cell);
+    }
+
+    // 이 가림막 타일 혼자만의 범위를 보관합니다.
+    public void KeepRange(Vector2Int origin, List<Tile> range)
+    {
+        ranges[origin] = range;
+    }
+
+    // 이 가림막 타일 혼자만의 범위를 가져옵니다. 가림막 원점이 아니면 실패합니다.
+    public bool TryGetRange(Vector2Int origin, out List<Tile> range)
+    {
+        return ranges.TryGetValue(origin, out range);
     }
 }
