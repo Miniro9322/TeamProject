@@ -6,6 +6,7 @@ public class WindShelterCalc
 {
     private readonly List<Tile> highTiles = new();
     private readonly List<Tile> groundTiles = new();
+    private readonly HashSet<Vector2Int> highCells = new();
     private readonly Dictionary<int, int> rowLeft = new();
     private readonly Dictionary<int, int> rowRight = new();
     private readonly Dictionary<int, int> colBottom = new();
@@ -85,9 +86,10 @@ public class WindShelterCalc
             && cell.y < maxRow;
     }
 
-    // 이 고지 타일의 좌표를 상하좌우 기준별로 기록해둔다.
+    // 이 고지 타일의 좌표를 기록해둔다. 줄 끝값 표는 바람 VFX가 아직 쓰므로 함께 남긴다.
     private void KeepHigh(Vector2Int cell)
     {
+        highCells.Add(cell);
         KeepMinimum(rowLeft, cell.y, cell.x);
         KeepMaximum(rowRight, cell.y, cell.x);
         KeepMinimum(colBottom, cell.x, cell.y);
@@ -123,27 +125,27 @@ public class WindShelterCalc
         }
     }
 
-    // 이 타일이 동서남북 중 어느 방향에서 오는 바람을 막고 있는지 계산한다.
+    // 이 타일 바로 옆 한 칸에 고지가 있어 어느 방향 바람을 막는지 계산한다.
     private WindShelter ResolveShelter(Vector2Int cell)
     {
         WindShelter shelter = WindShelter.NoShelter;
 
-        if (HasLowerHigh(rowLeft, cell.y, cell.x))
+        if (HasHigh(cell + GridCalculator.Left))
         {
             shelter |= WindShelter.FromWest;
         }
 
-        if (HasHigherHigh(rowRight, cell.y, cell.x))
+        if (HasHigh(cell + GridCalculator.Right))
         {
             shelter |= WindShelter.FromEast;
         }
 
-        if (HasLowerHigh(colBottom, cell.x, cell.y))
+        if (HasHigh(cell + GridCalculator.Down))
         {
             shelter |= WindShelter.FromSouth;
         }
 
-        if (HasHigherHigh(colTop, cell.x, cell.y))
+        if (HasHigh(cell + GridCalculator.Up))
         {
             shelter |= WindShelter.FromNorth;
         }
@@ -151,15 +153,9 @@ public class WindShelterCalc
         return shelter;
     }
 
-    // 같은 줄에서 더 작은 위치에 고지가 있는지 확인한다.
-    private static bool HasLowerHigh(Dictionary<int, int> values, int line, int position)
+    // 이 좌표에 고지가 있는지 확인한다.
+    private bool HasHigh(Vector2Int cell)
     {
-        return values.TryGetValue(line, out int highPosition) && highPosition < position;
-    }
-
-    // 같은 줄에서 더 큰 위치에 고지가 있는지 확인한다.
-    private static bool HasHigherHigh(Dictionary<int, int> values, int line, int position)
-    {
-        return values.TryGetValue(line, out int highPosition) && highPosition > position;
+        return highCells.Contains(cell);
     }
 }

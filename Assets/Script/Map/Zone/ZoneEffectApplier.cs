@@ -7,6 +7,7 @@ public class ZoneEffectApplier : IDisposable
     private readonly DesertZone desertZone;
     private readonly MapBoard desertBoard;
     private readonly WindShelterData shelterData;
+    private readonly WindwallData windwallData;
     private readonly PlacedUnitData unitList;
     private readonly WindPreview preview;
     private readonly DesertLineEffect lineEffect;
@@ -21,6 +22,7 @@ public class ZoneEffectApplier : IDisposable
         DesertZone desertZone,
         MapBoard desertBoard,
         WindShelterData shelterData,
+        WindwallData windwallData,
         PlacedUnitData unitList,
         WindPreview preview,
         DesertLineEffect lineEffect)
@@ -28,6 +30,7 @@ public class ZoneEffectApplier : IDisposable
         this.desertZone = desertZone;
         this.desertBoard = desertBoard;
         this.shelterData = shelterData;
+        this.windwallData = windwallData;
         this.unitList = unitList;
         this.preview = preview;
         this.lineEffect = lineEffect;
@@ -211,7 +214,7 @@ public class ZoneEffectApplier : IDisposable
         }
     }
 
-    // 한 영웅의 고지·유닛 보호 결과에 맞춰 사막 효과를 적용합니다.
+    // 한 영웅의 고지·유닛·가림막 보호 결과에 맞춰 사막 효과를 적용합니다.
     private void ApplyWind(
         Hero hero,
         Tile tile,
@@ -219,15 +222,15 @@ public class ZoneEffectApplier : IDisposable
         Vector2Int wind,
         UnitShelter unitShelter)
     {
-        bool exposed = IsUnsheltered(tile, cell, wind, unitShelter);
-        ApplyExposed(hero, exposed);
-        LogShelter(hero, cell, wind, exposed);
+        bool unsheltered = DesertShelterQuery.IsUnsheltered(shelterData, unitShelter, windwallData, tile, wind);
+        ApplyUnsheltered(hero, unsheltered);
+        LogShelter(hero, cell, wind, unsheltered);
     }
 
-    // 바람에 노출된 영웅에게만 사막 디버프를 무한 시간으로 적용합니다.
-    private void ApplyExposed(Hero hero, bool exposed)
+    // 가려지지 않은 영웅에게만 사막 디버프를 무한 시간으로 적용합니다.
+    private void ApplyUnsheltered(Hero hero, bool unsheltered)
     {
-        if (!exposed)
+        if (!unsheltered)
         {
             return;
         }
@@ -240,22 +243,9 @@ public class ZoneEffectApplier : IDisposable
         Hero hero,
         Vector2Int cell,
         Vector2Int wind,
-        bool exposed)
+        bool unsheltered)
     {
-        Debug.Log($"[Zone] {hero.name} 사막 밤 - 좌표={cell} 바람={wind} 노출={exposed}");
-    }
-
-    // 고지와 다른 유닛 중 어느 쪽에도 가려지지 않았는지 확인합니다.
-    private bool IsUnsheltered(
-        Tile tile,
-        Vector2Int cell,
-        Vector2Int wind,
-        UnitShelter unitShelter)
-    {
-        WindShelter tileShelter = shelterData.ReadShelter(tile);
-        bool highShelter = WindShelterQuery.IsSheltered(tileShelter, wind);
-        bool unitBlock = unitShelter.IsSheltered(cell, wind);
-        return !highShelter && !unitBlock;
+        Debug.Log($"[Zone] {hero.name} 사막 밤 - 좌표={cell} 바람={wind} 노출={unsheltered}");
     }
 
     // 현재 사막 영웅에게 이 지대가 건 디버프를 제거합니다.

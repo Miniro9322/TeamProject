@@ -39,6 +39,7 @@ public class MapAssemble : MonoBehaviour
 
         MapBoard desertBoard = desertZone.GetComponent<MapBoard>();
         WindShelterData shelterData = new WindShelterCalc().BuildData(desertBoard.Cells);
+        WindwallData windwallData = new WindwallCalc().BuildData(desertBoard, desertZone.WindwallReach);
         WindPreview windPreview = new WindPreview(
             desertBoard,
             desertZone.transform,
@@ -54,6 +55,7 @@ public class MapAssemble : MonoBehaviour
             desertZone,
             desertBoard,
             shelterData,
+            windwallData,
             mapGame.Units,
             windPreview,
             lineEffect);

@@ -65,6 +65,9 @@ public partial class Tile : MonoBehaviour
     // 추위 디버프를 막는 고정 모닥불 칸인가.
     public bool IsCampfire => Gimmick == GimmickType.Campfire;
 
+    // 바람을 막는 언덕 위 가림막 칸인가.
+    public bool IsWindwall => Gimmick == GimmickType.Windwall;
+
     // 이 칸을 지나갈 수 있는지.(현재는 물적도 일반 땅 밟을 수 있게 오픈된 형태)
     public bool CanPass(PassType way)
     {
