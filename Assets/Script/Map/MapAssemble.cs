@@ -28,6 +28,7 @@ public class MapAssemble : MonoBehaviour
     private HeroSkillCastController skillCast;
     private ZoneEffectApplier zoneEffectApplier;
     private CampfireLightController campfireLights;
+    private ModuleLogic desertModule;
 
     private void Start()
     {
@@ -38,6 +39,7 @@ public class MapAssemble : MonoBehaviour
         PlaceFinder finder = new PlaceFinder(pointerPick, palette, placeYOffset);
 
         MapBoard desertBoard = desertZone.GetComponent<MapBoard>();
+        desertModule = desertZone.GetComponent<ModuleLogic>();
         WindShelterData shelterData = new WindShelterCalc().BuildData(desertBoard.Cells);
         WindwallData windwallData = new WindwallCalc().BuildData(desertBoard.Cells, desertZone.WindwallReach);
         WindPreview windPreview = new WindPreview(
@@ -136,7 +138,7 @@ public class MapAssemble : MonoBehaviour
         campfireLights.TurnOff(); // 첫 날도 낮이니 꺼진 채로 시작
 
         mapGame.Rule.ChangeToNight += view.ClearMode;
-        mapGame.Rule.ChangeToNight += zoneEffectApplier.OnNightChanged;
+        mapGame.Rule.ChangeToNight += OnDesertNightChanged;
         mapGame.Rule.ChangeToNight += skillCast.ClearSelection;
         mapGame.Rule.ChangeToNight += campfireLights.TurnOn;
 
@@ -152,7 +154,7 @@ public class MapAssemble : MonoBehaviour
     {
         ghost.ClearGhosts();
         mapGame.Rule.ChangeToNight -= view.ClearMode;
-        mapGame.Rule.ChangeToNight -= zoneEffectApplier.OnNightChanged;
+        mapGame.Rule.ChangeToNight -= OnDesertNightChanged;
         mapGame.Rule.ChangeToDay -= zoneEffectApplier.OnDayChanged;
         zoneEffectApplier.Dispose();
         if (campfireLights != null)
@@ -247,5 +249,16 @@ public class MapAssemble : MonoBehaviour
         {
             laneModules[i].RefreshForDay(day);
         }
+    }
+
+    // 사막 모듈이 아직 잠겨있으면 밤이 되어도 지대 효과 적용을 건너뛴다.
+    private void OnDesertNightChanged()
+    {
+        if (!desertModule.IsUnlocked)
+        {
+            return;
+        }
+
+        zoneEffectApplier.OnNightChanged();
     }
 }
