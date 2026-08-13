@@ -13,7 +13,7 @@ using UnityEngine.Pool;
 // data.continuousDelivery == Beam이면 attackCount개의 빔을 동시에 들고(TickBeams 참고 — SameTarget은
 // 전부 같은 타겟, DifferentEnemies는 targetCount종에게 분배하고 죽은 슬롯은 사거리 내 다른 적으로
 // 보충) 각자 즉시 데미지(data.beamEffectPrefab이 있으면 캐스터→타겟을 잇는 이펙트를 채널링 내내
-// 스폰/갱신 — 두 점 갱신은 Hero.UpdateLinkEndpoints에 위임), ProjectileVolley면 매 tick 실제 투사체를
+// 스폰 시 1회 — 두 점 추적은 Hero.TrackLinkEndpoints로 등록해 이후 매 프레임 스스로 갱신), ProjectileVolley면 매 tick 실제 투사체를
 // 발사하는 방식으로 갈린다(attackCount/targetCount로 매 tick 몇 발을 어디에 쏠지 결정 —
 // RangedAttackExecutor.FireVolley와 동일한 타겟팅 규칙). SelfArea면 타겟 잠금 없이 매 tick
 // AttackDamageUtil의 자기중심 AOE 분기(attackType=Area, targetMode=SameTarget)를 그대로 호출해
@@ -43,8 +43,13 @@ public class ContinuousBeamStrategy : IAttackDeliveryStrategy
         List<(GameObject target, GameObject beamGo)> beamSlots = new();
         if (isBeam && data.beamEffectPrefab != null)
         {
+            Transform muzzle = ctx.MuzzleOrSelf;
             foreach (GameObject t in ResolveBeamTargets(hero, data, ctx))
-                beamSlots.Add((t, hero.SpawnPersistentEffect(data.beamEffectPrefab, ctx.MuzzleOrSelf.position, Quaternion.identity)));
+            {
+                GameObject beamGo = hero.SpawnPersistentEffect(data.beamEffectPrefab, muzzle.position, Quaternion.identity);
+                Hero.TrackLinkEndpoints(beamGo, () => muzzle.position, BeamTargetProvider(hero, data, t, muzzle));
+                beamSlots.Add((t, beamGo));
+            }
         }
 
         // SelfArea 전용 — 캐스터→타겟 라인이 아니라 캐스터 위치에 붙는 단일 이펙트(회전 이펙트 등)이므로
@@ -109,15 +114,17 @@ public class ContinuousBeamStrategy : IAttackDeliveryStrategy
         if (data.targetMode == TargetMode.SameTarget)
         {
             if (hero.Target == null) return false;
-            foreach (var (_, beamGo) in slots)
-                Hero.UpdateLinkEndpoints(beamGo, ctx.MuzzleOrSelf.position, AttackDamageUtil.EffectPosition(hero.Target));
+            // 끝점 갱신은 스폰 시 등록한 Track이 매 프레임 알아서 하므로 여기서 다시 부를 필요가 없다.
             for (int i = 0; i < slots.Count; i++)
                 await AttackDamageUtil.ApplyInstantDamage(data, hero.Context, ct);
             return true;
         }
 
         List<GameObject> candidates = hero.GetObjectsInRange(ctx.self.position, data.range, data.rangeShape, RangeQueryAffinity.TargetableEnemy);
-        HashSet<GameObject> stillValid = new(candidates);
+        // 유효성 판정은 실제 사거리보다 한 칸 넓게 봐서, 타겟이 경계를 살짝 넘나들 때마다
+        // 빔 인스턴스를 통째로 반납·재생성하지 않게 한다 — 반납·재생성마다 SpawnPersistentEffect가
+        // Flash 파티클을 Clear+Play로 리셋해서, 경계 근처에서 판정이 흔들리면 빔이 안 보이는 것처럼 된다.
+        HashSet<GameObject> stillValid = new(hero.GetObjectsInRange(ctx.self.position, data.range + 1, data.rangeShape, RangeQueryAffinity.TargetableEnemy));
         for (int i = slots.Count - 1; i >= 0; i--)
         {
             if (slots[i].target != null && stillValid.Contains(slots[i].target)) continue;
@@ -144,13 +151,14 @@ public class ContinuousBeamStrategy : IAttackDeliveryStrategy
                 for (int i = 0; i < need; i++)
                 {
                     GameObject t = pool[i % pool.Count];
-                    slots.Add((t, hero.SpawnPersistentEffect(data.beamEffectPrefab, ctx.MuzzleOrSelf.position, Quaternion.identity)));
+                    GameObject beamGo = hero.SpawnPersistentEffect(data.beamEffectPrefab, ctx.MuzzleOrSelf.position, Quaternion.identity);
+                    Hero.TrackLinkEndpoints(beamGo, () => ctx.MuzzleOrSelf.position, AttackDamageUtil.TrackingPosition(t));
+                    slots.Add((t, beamGo));
                 }
         }
         if (slots.Count == 0) return false;
 
-        foreach (var (target, beamGo) in slots)
-            Hero.UpdateLinkEndpoints(beamGo, ctx.MuzzleOrSelf.position, AttackDamageUtil.EffectPosition(target));
+        // 기존 슬롯은 스폰 시 등록한 Track이 매 프레임 알아서 끝점을 갱신하므로 여기서 다시 부를 필요가 없다.
         foreach (var (target, _) in slots)
         {
             AttackContext slotCtx = hero.Context;
@@ -158,6 +166,15 @@ public class ContinuousBeamStrategy : IAttackDeliveryStrategy
             await AttackDamageUtil.ApplyInstantDamage(data, slotCtx, ct);
         }
         return true;
+    }
+
+    // 빔 슬롯의 "도착 지점" 제공자. SameTarget은 재타겟팅으로 hero.Target 자체가 바뀔 수 있어 매 프레임
+    // 다시 읽고, DifferentEnemies는 슬롯이 고정한 특정 대상 하나를 TrackingPosition으로 계속 추적한다.
+    private static Func<Vector3> BeamTargetProvider(Hero hero, AttackDataSO data, GameObject slotTarget, Transform muzzle)
+    {
+        if (data.targetMode == TargetMode.SameTarget)
+            return () => hero.Target != null ? AttackDamageUtil.EffectPosition(hero.Target) : muzzle.position;
+        return AttackDamageUtil.TrackingPosition(slotTarget);
     }
 
     // FireProjectileVolley와 동일한 타겟팅 규칙 — DifferentEnemies는 targetCount종의 적에게 attackCount개

@@ -16387,7 +16387,8 @@ GameObject:
   m_Component:
   - component: {fileID: 1513609081994893304}
   - component: {fileID: 2641520252210245043}
-  - component: {fileID: -3546406333219499582}
+  - component: {fileID: 8352718005985519378}
+  - component: {fileID: 9143932808570695239}
   m_Layer: 0
   m_Name: Penetrator
   m_TagString: Untagged
@@ -16429,16 +16430,16 @@ MonoBehaviour:
   - {fileID: 11400000, guid: a6dd79d2802a80d4b9cdf7db50f64a4e, type: 2}
   - {fileID: 11400000, guid: 29fcb58731e9de84ba10d989c8f256f9, type: 2}
   - {fileID: 11400000, guid: f8f02fa9135171e4db10c07135224a3b, type: 2}
-  heroData: {fileID: 0}
+  heroData: {fileID: 11400000, guid: 96e5a364348cd2244b468e2641258bd3, type: 2}
   basePattern:
-  - {fileID: 11400000, guid: a05dbc65e7604cd4980382754815d81d, type: 2}
+  - {fileID: 11400000, guid: de72fdcd543f2c64daf33d053ef4b487, type: 2}
   anim: {fileID: 6989708048733833427}
   animEvents: {fileID: 8003858886257523969}
-  statData: {fileID: 11400000, guid: 74789d1d0a2a31548b3a0d6b17291d33, type: 2}
+  statData: {fileID: 11400000, guid: 8e1ec3ba9db883340b137c288773d8db, type: 2}
   board: {fileID: 0}
   auraZonePrefabs: []
   occupantKind: 1
---- !u!114 &-3546406333219499582
+--- !u!114 &8352718005985519378
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -16450,8 +16451,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e9e0f46a658cce344a48ef3b3f507a9a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ChanceHeavyTrait
-  chance: 0.4
-  heavyAttackData: {fileID: 11400000, guid: 4d18cd030dae0b04f82e03b89fe23cde, type: 2}
+  chance: 0.3
+  heavyAttackData: {fileID: 11400000, guid: edf49e721100e9540bd1e6a9baa7092e, type: 2}
+--- !u!114 &9143932808570695239
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6360810507945036553}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 71f4ec0063568874f8d0c94daeb655ad, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NthHitHeavyTrait
+  everyN: 3
+  heavyAttackData: {fileID: 11400000, guid: ee0357edda5ab2f4d88940dd08a10c5f, type: 2}
 --- !u!1 &6371844147298520082
 GameObject:
   m_ObjectHideFlags: 0

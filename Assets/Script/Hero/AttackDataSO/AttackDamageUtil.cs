@@ -13,6 +13,18 @@ public static class AttackDamageUtil
 
     public static Vector3 EffectPosition(Component c) => EffectPosition(c.gameObject);
 
+    // 대상이 살아있는 동안은 EffectPosition을 다시 읽고, 파괴되거나 풀에 반납되면 마지막 위치에
+    // 고정한다 — 빔/체인 이펙트(BeamLinkEffect.Track)가 매 프레임 스스로 위치를 갱신할 때 쓴다.
+    public static Func<Vector3> TrackingPosition(GameObject target)
+    {
+        Vector3 last = EffectPosition(target);
+        return () =>
+        {
+            if (target != null) last = EffectPosition(target);
+            return last;
+        };
+    }
+
     public static async UniTask ApplyInstantDamage(AttackDataSO data, AttackContext ctx, CancellationToken ct)
     {
         float baseDamage = ctx.sc[StatType.ATK] * data.attackPer;
@@ -55,7 +67,7 @@ public static class AttackDamageUtil
             // hits[0]은 체인 시작 타겟(캐스터→시작 타겟 구간은 빔 비주얼 등 별도 이펙트가 표현) —
             // 튕긴 대상들 사이(hits[i]→hits[i+1])만 아크로 잇는다.
             for (int i = 0; i < hits.Count - 1; i++)
-                ctx.hero.SpawnChainArc(data.chainEffectPrefab, EffectPosition(hits[i]), EffectPosition(hits[i + 1]), data.chainEffectLifetime);
+                ctx.hero.SpawnChainArc(data.chainEffectPrefab, hits[i], hits[i + 1], data.chainEffectLifetime);
             return;
         }
 

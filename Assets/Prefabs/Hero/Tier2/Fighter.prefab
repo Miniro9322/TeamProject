@@ -17374,7 +17374,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6deb4eeb61823d14e85febf5c0cf9d3c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SwordMan
-  statUpgrades: []
+  statUpgrades:
+  - {fileID: 11400000, guid: 024d160f71f942b4189efd44499389c5, type: 2}
+  - {fileID: 11400000, guid: 3f6746566778e5b4f88705adc3c9a1e9, type: 2}
+  - {fileID: 11400000, guid: a6dd79d2802a80d4b9cdf7db50f64a4e, type: 2}
+  - {fileID: 11400000, guid: 29fcb58731e9de84ba10d989c8f256f9, type: 2}
+  - {fileID: 11400000, guid: f8f02fa9135171e4db10c07135224a3b, type: 2}
   heroData: {fileID: 11400000, guid: d4fb667e0a5e9ec499dffb07a8b963da, type: 2}
   basePattern:
   - {fileID: 11400000, guid: 3fadf56df25194c49b78b2c3dfe70c7c, type: 2}
