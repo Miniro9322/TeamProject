@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -12,6 +13,9 @@ public class HeroRosterIcon : MonoBehaviour, IPointerClickHandler
     [SerializeField] private Button button;
     [SerializeField] private Image placedIcon;
     [SerializeField] private TextMeshProUGUI tierText;
+    [SerializeField] private List<Sprite> classIcons;
+    [SerializeField] private Image classIcon;
+    [SerializeField] private TooltipTrigger toolTip;
 
     private const float DoubleClickWindow = 0.3f; // PlaceAction.DoubleClickWindow와 동일한 값
 
@@ -32,7 +36,8 @@ public class HeroRosterIcon : MonoBehaviour, IPointerClickHandler
         Color c = placedIcon.color;
         c.a = alpha;
         placedIcon.color = c;
-
+        classIcon.sprite = classIcons[entry.Data.HeroType];
+        toolTip.SetMessaege(entry.Data.HeroNameKey);
     }
 
     // 첫 클릭은 곧바로 실행하지 않고 잠깐 기다린다. 그 안에 두 번째 클릭이 오면 단일 클릭 동작은

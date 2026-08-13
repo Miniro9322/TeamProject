@@ -35,4 +35,9 @@ public class HeroRoster
     {
         Changed?.Invoke();
     }
+
+    public bool Contains(HeroRosterEntry entry)
+    {
+        return _entries.Contains(entry);
+    }
 }
