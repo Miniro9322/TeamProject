@@ -326,7 +326,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::StageEnemyRow
   icon: {fileID: 4707813707064904592}
-  border: {fileID: 7636248209559533985}
+  border: {fileID: 0}
   nameText: {fileID: 5096070599011458651}
   countText: {fileID: 4481403753917065226}
   normalColor: {r: 0.7, g: 0.7, b: 0.7, a: 1}
@@ -444,13 +444,19 @@ PrefabInstance:
       propertyPath: m_SizeDelta.y
       value: 30
       objectReference: {fileID: 0}
+    - target: {fileID: 6593943441407892395, guid: b7bc907be7af50047b7f90f577e71868, type: 3}
+      propertyPath: border
+      value: 
+      objectReference: {fileID: 0}
     - target: {fileID: 7461122158856516193, guid: b7bc907be7af50047b7f90f577e71868, type: 3}
       propertyPath: m_Name
       value: Enemy
       objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 6152012670975925511, guid: b7bc907be7af50047b7f90f577e71868, type: 3}
-    m_RemovedGameObjects: []
+    m_RemovedGameObjects:
+    - {fileID: 2204883326564438233, guid: b7bc907be7af50047b7f90f577e71868, type: 3}
+    - {fileID: 7223147882796912177, guid: b7bc907be7af50047b7f90f577e71868, type: 3}
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: b7bc907be7af50047b7f90f577e71868, type: 3}
@@ -462,17 +468,6 @@ RectTransform:
 --- !u!114 &4707813707064904592 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 8828695760210043506, guid: b7bc907be7af50047b7f90f577e71868, type: 3}
-  m_PrefabInstance: {fileID: 4310041170500692450}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
---- !u!114 &7636248209559533985 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 5920316865208553539, guid: b7bc907be7af50047b7f90f577e71868, type: 3}
   m_PrefabInstance: {fileID: 4310041170500692450}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 0}

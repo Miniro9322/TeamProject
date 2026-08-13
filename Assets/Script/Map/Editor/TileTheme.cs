@@ -34,6 +34,9 @@ public class TileTheme : ScriptableObject
     [Tooltip("모닥불 기믹 칸을 찍고 끌 때 자동으로 얹고 걷는 장식 프리팹(FireTorch_CampFire 등)")]
     public GameObject CampfirePrefab;
 
+    [Tooltip("가림막 기믹 칸을 찍고 끌 때 자동으로 얹고 걷는 장식 프리팹(WIndWall 등)")]
+    public GameObject WindwallPrefab;
+
     /// <summary>탭에 뜨는 이름.</summary>
     public string Title
     {

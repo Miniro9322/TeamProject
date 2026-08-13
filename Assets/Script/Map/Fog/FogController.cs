@@ -11,6 +11,10 @@ public class FogController : MonoBehaviour
     [SerializeField] private MapRegistry registry;
     [SerializeField, Min(0.05f)] private float openDuration = 4f;   // 안개가 완전히 걷히는 시간(초)
 
+    [Header("Debug/Test")]
+    [Tooltip("끄면 안개 셰이더 효과를 완전히 없앤다(그리기 재료를 0개로 만듦). 테스트용 스위치.")]
+    [SerializeField] private bool fogEnabled = true;
+
     public static event Action<int> RevealDone;
 
     [Header("Edge")]
@@ -48,7 +52,7 @@ public class FogController : MonoBehaviour
         BuildAreas();
         RegisterStaticAreas();
         ApplyEdgeMargin();
-        ApplyAreas();
+        ApplyEnabledState();
         BindModules();
         RevealUnlocked();
     }
@@ -56,6 +60,7 @@ public class FogController : MonoBehaviour
     private void OnValidate()
     {
         ApplyEdgeMargin();
+        ApplyEnabledState();
     }
 
     // 등록된 모듈마다 보드 경계를 사각형(xy=중심XZ, zw=반크기XZ)으로 담는다.
@@ -247,6 +252,19 @@ public class FogController : MonoBehaviour
         Shader.SetGlobalVectorArray(AreasId, _areas);
         Shader.SetGlobalFloatArray(OpensId, _opens);
         Shader.SetGlobalInt(CountId, _count);
+    }
+
+    // 스위치가 꺼져 있으면 그릴 안개 재료를 0개로 만들어 효과를 완전히 없앤다.
+    private void ApplyEnabledState()
+    {
+        if (fogEnabled)
+        {
+            ApplyAreas();
+        }
+        else
+        {
+            Shader.SetGlobalInt(CountId, 0);
+        }
     }
 
     private void ApplyEdgeMargin()

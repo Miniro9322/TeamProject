@@ -25,6 +25,11 @@ public class RangeCalc
             return TryGetCampfireRange(unitTile, out range);
         }
 
+        if (unitTile.IsWindwall)
+        {
+            return TryGetWindwallRange(unitTile, out range);
+        }
+
         return TryGetRangeAtCenter(unitTile.OccupantObject, unitTile, out range);
     }
 
@@ -40,6 +45,20 @@ public class RangeCalc
         }
 
         return iceZone.CampfireData.TryGetRange(campfireTile, out range);
+    }
+
+    // 가림막 칸이면 유닛을 찾지 않고, 그 가림막이 미리 계산해 둔 자기 범위를 그대로 가져온다.
+    private static bool TryGetWindwallRange(Tile windwallTile, out List<Tile> range)
+    {
+        range = new List<Tile>();
+        DesertZone desertZone = windwallTile.Board.GetComponent<DesertZone>();
+
+        if (desertZone == null)
+        {
+            return false;
+        }
+
+        return desertZone.WindwallData.TryGetRange(windwallTile.Coord, out range);
     }
 
     // 아직 타일에 놓이지 않은 유닛(배치 프리뷰)도 중심 타일을 따로 받아 계산한다.

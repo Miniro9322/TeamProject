@@ -78,6 +78,9 @@ public static class MapMakerPalette
     /// <summary>모닥불 칸 표식 — 불의 주황색과 구분되는 따뜻한 노란색.</summary>
     public static readonly Color Campfire = new(1.000f, 0.765f, 0.235f);
 
+    /// <summary>가림막 칸 표식 — 밝은 자홍색, 초록·갈색·보라 지형 위에서도 확실히 튄다.</summary>
+    public static readonly Color Windwall = new(1.000f, 0.259f, 0.702f);
+
     /// <summary>칸 글자(P·G·H·B) — 지형색 위에서 읽히도록 거의 흰색으로 둔다.</summary>
     public static readonly Color Letter = new(0.945f, 0.945f, 0.945f);
 
