@@ -4,6 +4,7 @@ using UnityEngine;
 public class MapBoard : MonoBehaviour
 {
     private readonly Dictionary<Vector2Int, Tile> _cells = new();
+    private readonly List<Tile> _cellList = new();
     private readonly List<Tile> _spawns = new();
     private readonly List<Tile> _cores = new();
     private readonly Dictionary<GameObject, Tile> _enemyCell = new(); // 적→현재 칸(직전 칸과 비교해 이동 감지)
@@ -17,6 +18,7 @@ public class MapBoard : MonoBehaviour
     private ModuleLogic _module; // 소속 모듈. Awake에서 한 번만 잡는다(매 호출 GetComponent 금지).
 
     public IReadOnlyDictionary<Vector2Int, Tile> Cells => _cells;
+    public IReadOnlyList<Tile> CellList => _cellList;
     public int CellCount => _cells.Count;
     public Bounds WorldBounds => _worldBounds;
     public float CellSize => _grid.cellSize.x;
@@ -40,6 +42,7 @@ public class MapBoard : MonoBehaviour
     public void Build()
     {
         _cells.Clear();
+        _cellList.Clear();
         _spawns.Clear();
         _cores.Clear();
         _enemyCell.Clear();
@@ -76,6 +79,11 @@ public class MapBoard : MonoBehaviour
             else _worldBounds.Encapsulate(bound);
         }
 
+        foreach (Tile cell in _cells.Values)
+        {
+            _cellList.Add(cell);
+        }
+
         // 2) 안쪽 칸 범위: 장식(Special)을 뺀 타일들의 바운딩 박스. 외곽 한 줄이 장식이라 그만큼 좁다.
         _playRect = InnerRect();
         _floorY = LowestFloor();
@@ -97,8 +105,9 @@ public class MapBoard : MonoBehaviour
         Transform space = _grid.transform;
         float lowest = float.MaxValue;
 
-        foreach (Tile tile in _cells.Values)
+        for (int i = 0; i < _cellList.Count; i++)
         {
+            Tile tile = _cellList[i];
             float top = space.InverseTransformPoint(tile.WorldTop).y;
             if (top < lowest) { lowest = top; }
         }
@@ -112,8 +121,9 @@ public class MapBoard : MonoBehaviour
         Vector2Int min = new(int.MaxValue, int.MaxValue);
         Vector2Int max = new(int.MinValue, int.MinValue);
 
-        foreach (Tile tile in _cells.Values)
+        for (int i = 0; i < _cellList.Count; i++)
         {
+            Tile tile = _cellList[i];
             if (tile.IsSpecial) { continue; }
 
             min = Vector2Int.Min(min, tile.Coord);
@@ -148,8 +158,10 @@ public class MapBoard : MonoBehaviour
     private void SetLanes(List<Tile> path)
     {
         ClearLanes();
-        foreach (Tile tile in path)
+        if (path == null) return;
+        for (int i = 0; i < path.Count; i++)
         {
+            Tile tile = path[i];
             if (tile.IsEnemySpawn) continue; 
             if (tile.IsCore) continue;
             tile.State.EnemyLane = true;
@@ -158,9 +170,9 @@ public class MapBoard : MonoBehaviour
 
     private void ClearLanes()
     {
-        foreach (Tile tile in _cells.Values)
+        for (int i = 0; i < _cellList.Count; i++)
         {
-            tile.State.EnemyLane = false;
+            _cellList[i].State.EnemyLane = false;
         }
     }
 
@@ -199,8 +211,10 @@ public class MapBoard : MonoBehaviour
     {
         var list = new List<Vector3>();
         List<Tile> path = GetPath();
-        foreach (Tile t in path) 
+        if (path == null) return list;
+        for (int i = 0; i < path.Count; i++) 
         {
+            Tile t = path[i];
             list.Add(t.WorldTop + Vector3.up * yOffset);
         }
         return list;
@@ -223,8 +237,9 @@ public class MapBoard : MonoBehaviour
         Tile best = null;
         float bestT = float.MaxValue;
 
-        foreach (Tile tile in _cells.Values)
+        for (int i = 0; i < _cellList.Count; i++)
         {
+            Tile tile = _cellList[i];
             Vector3 top = space.InverseTransformPoint(tile.WorldTop);
             if (!TryEnterColumn(local, top, half, _floorY, out float t)) continue;
             if (t >= bestT) continue; // 이미 더 앞에서 맞은 타일이 있으면 그쪽이 이 타일을 가린다
@@ -272,7 +287,7 @@ public class MapBoard : MonoBehaviour
     {
         Tile hit = CellFromRay(ray);
         if (hit != null) return hit;
-        if (_cells.Count == 0 || Mathf.Abs(ray.direction.y) < 1e-6f) return null;
+        if (_cellList.Count == 0 || Mathf.Abs(ray.direction.y) < 1e-6f) return null;
 
         float t = (_worldBounds.center.y - ray.origin.y) / ray.direction.y;
         if (t < 0f) return null; // 카메라 뒤쪽이면 클램프 안 함
@@ -280,8 +295,9 @@ public class MapBoard : MonoBehaviour
 
         Tile best = null;
         float bestSqr = float.MaxValue;
-        foreach (Tile tile in _cells.Values)
+        for (int i = 0; i < _cellList.Count; i++)
         {
+            Tile tile = _cellList[i];
             Vector3 top = tile.WorldTop;
             float dx = p.x - top.x, dz = p.z - top.z;
             float sqr = dx * dx + dz * dz;
