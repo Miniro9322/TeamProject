@@ -850,9 +850,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a5101fd72a0f2cd45b09fef27953088c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HeroSetPanel
-  view: {fileID: 0}
-  game: {fileID: 0}
-  createManager: {fileID: 0}
+  view: {fileID: 314587628}
+  game: {fileID: 314587623}
+  createManager: {fileID: 1508222710}
   meleeIcon: {fileID: 865059035}
   rangedIcon: {fileID: 1619923858}
   rosterPanel: {fileID: 991506362}
@@ -12106,29 +12106,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FogLook
   showInEditor: 1
-  fogColor: {r: 0.92549026, g: 0.9294118, b: 0.9294118, a: 1}
-  cloudHighlight: {r: 0.427451, g: 0.5647059, b: 0.6784314, a: 1}
+  fogColor: {r: 0.21747063, g: 0.21747063, b: 0.254717, a: 1}
   density: 1
-  cloudTint: 1
-  edgeSoft: 0.83
-  edgeRough: 1.36
-  edgeScale: 0.118
-  shadowOffsetDist: 0
-  shadowSoft: 0.92
-  shadowDarken: 1
-  shadowStrength: 1
-  edgeLineColor: {r: 0.48264506, g: 0.49555, b: 0.5471698, a: 0.85}
-  edgeLineSharpness: 3.15
-  edgeLineStrength: 0.405
-  cloudScale: 1
-  cloudCoverage: 0.544
-  cloudSoftness: 0.01
-  cloudContrast: 2.73
-  cloudShadeStrength: 0
-  cloudShadeSharpness: 8.83
-  cloudMinAlpha: 1
-  cloudAltitude: 6.1
-  windSpeed: 0.17
+  cloudTint: 0.858
+  edgeSoft: 1.28
+  edgeRough: 5.2
+  edgeScale: 0.096
+  cloudScale: 0.41
+  windSpeed: 1.5
 --- !u!114 &676769916
 MonoBehaviour:
   m_ObjectHideFlags: 0

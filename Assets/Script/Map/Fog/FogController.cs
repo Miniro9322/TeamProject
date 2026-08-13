@@ -17,7 +17,7 @@ public class FogController : MonoBehaviour
     [Tooltip("잠긴 모듈 외곽 밖으로 안개를 더 밀어낼 칸 수. 경계 노이즈가 외곽 타일을 깎아먹는 걸 막는다.")]
     [SerializeField, Range(0f, 8f)] private float edgeCells = 1.5f;
 
-    private const int MaxAreas = 12;
+    private const int MaxAreas = 8;
     private const float FullyOpenAmount = 1f;
 
     private static readonly int AreasId = Shader.PropertyToID("_FogAreas");
