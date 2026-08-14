@@ -37,7 +37,8 @@ public class MapAssemble : MonoBehaviour
 
         palette.Bind(mapGame.HeroRoster);
 
-        PointerPick pointerPick = new PointerPick(boards);
+        HoveredTileData hoverData = new HoveredTileData();
+        PointerPick pointerPick = new PointerPick(boards, hoverData);
         PlaceFinder finder = new PlaceFinder(pointerPick, palette, placeYOffset);
 
         desertBoard = desertZone.GetComponent<MapBoard>();
