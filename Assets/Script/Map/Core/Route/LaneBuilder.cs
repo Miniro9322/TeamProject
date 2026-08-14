@@ -13,56 +13,56 @@ public class LaneBuilder : ILaneBuilder
     }
 
     // 모든 스폰을 좌표순으로 정렬하고 스폰마다 독립된 레인을 만듭니다.
-    public IReadOnlyList<LaneData> BuildLanes(LaneInputData input)
+    public IReadOnlyList<LaneData> BuildLanes(IReadOnlyDictionary<Vector2Int, Tile> cells, IReadOnlyList<Tile> spawnTiles, IReadOnlyList<Tile> coreTiles)
     {
         var lanes = new List<LaneData>();
-        var spawns = new List<Tile>(input.Spawns);
-        var cores = new HashSet<Tile>(input.Cores);
+        var spawns = new List<Tile>(spawnTiles);
+        var cores = new HashSet<Tile>(coreTiles);
 
         spawns.Sort(CompareSpawn);
 
         for (int i = 0; i < spawns.Count; i++)
         {
-            AddSpawnLanes(input, spawns[i], cores, lanes);
+            AddSpawnLanes(cells, spawns[i], cores, lanes);
         }
 
         return lanes;
     }
 
     // 이 스폰에 지정된 경로마다 레인 하나를 만듭니다. 지정이 없으면 자동 최단 경로 하나만 냅니다.
-    private void AddSpawnLanes(LaneInputData input, Tile spawn, HashSet<Tile> cores, List<LaneData> lanes)
+    private void AddSpawnLanes(IReadOnlyDictionary<Vector2Int, Tile> cells, Tile spawn, HashSet<Tile> cores, List<LaneData> lanes)
     {
         List<RouteData> spawnRoutes = GetRoutes(spawn);
 
         if (spawnRoutes.Count == 0)
         {
-            lanes.Add(BuildLane(input, spawn, null, cores));
+            lanes.Add(BuildLane(cells, spawn, null, cores));
             return;
         }
 
         for (int index = 0; index < spawnRoutes.Count; index++)
         {
-            lanes.Add(BuildLane(input, spawn, spawnRoutes[index], cores));
+            lanes.Add(BuildLane(cells, spawn, spawnRoutes[index], cores));
         }
     }
 
     // 레인 하나를 걷기·헤엄 두 통행 방식으로 각각 계산해 함께 담습니다. 걷기가 실패하면 빈 레인을 냅니다.
     // 헤엄은 걷기보다 지날 수 있는 칸이 더 넓어(물+걷는 칸) 걷기가 되면 헤엄도 항상 됩니다.
-    private LaneData BuildLane(LaneInputData input, Tile spawn, RouteData route, HashSet<Tile> cores)
+    private LaneData BuildLane(IReadOnlyDictionary<Vector2Int, Tile> cells, Tile spawn, RouteData route, HashSet<Tile> cores)
     {
         if (cores.Count == 0)
         {
             return new LaneData(spawn, null, route, Array.Empty<Tile>(), Array.Empty<Tile>());
         }
 
-        List<Tile> walk = FindRoute(input, spawn, route, cores, PassType.Walk);
+        List<Tile> walk = FindRoute(cells, spawn, route, cores, PassType.Walk);
 
         if (walk == null || walk.Count == 0)
         {
             return new LaneData(spawn, null, route, Array.Empty<Tile>(), Array.Empty<Tile>());
         }
 
-        List<Tile> swim = FindRoute(input, spawn, route, cores, PassType.Swim);
+        List<Tile> swim = FindRoute(cells, spawn, route, cores, PassType.Swim);
         Tile goal = walk[walk.Count - 1];
         return new LaneData(spawn, goal, route, walk, swim ?? EmptyTiles);
     }
@@ -71,15 +71,15 @@ public class LaneBuilder : ILaneBuilder
     private static readonly List<Tile> EmptyTiles = new();
 
     // 지정 경로가 있으면 그 노드를 따르고, 없으면 최단 경로를 씁니다.
-    private List<Tile> FindRoute(LaneInputData input, Tile spawn, RouteData route, HashSet<Tile> cores, PassType pass)
+    private List<Tile> FindRoute(IReadOnlyDictionary<Vector2Int, Tile> cells, Tile spawn, RouteData route, HashSet<Tile> cores, PassType pass)
     {
         if (route == null)
         {
-            return AutoPath(input, spawn, cores, pass);
+            return AutoPath(spawn, cores, pass);
         }
 
-        List<Tile> nodes = GetNodes(input.Cells, route.Nodes, pass);
-        return NodePath(input, spawn, nodes, cores, pass);
+        List<Tile> nodes = GetNodes(cells, route.Nodes, pass);
+        return NodePath(spawn, nodes, cores, pass);
     }
 
     // 이 스폰에 지정된 경로들. 보관처가 없거나 지정이 없으면 빈 목록입니다.
@@ -126,7 +126,6 @@ public class LaneBuilder : ILaneBuilder
 
     // 스폰에서 노드를 차례로 거쳐 코어까지 이어진 경로를 만듭니다.
     private static List<Tile> NodePath(
-        LaneInputData input,
         Tile spawn,
         IReadOnlyList<Tile> nodes,
         HashSet<Tile> cores,
@@ -137,7 +136,7 @@ public class LaneBuilder : ILaneBuilder
 
         for (int i = 0; i < nodes.Count; i++)
         {
-            List<Tile> segment = NodeSegment(input, current, nodes[i], pass);
+            List<Tile> segment = NodeSegment(current, nodes[i], pass);
 
             if (segment == null)
             {
@@ -148,7 +147,7 @@ public class LaneBuilder : ILaneBuilder
             current = nodes[i];
         }
 
-        List<Tile> last = AutoPath(input, current, cores, pass);
+        List<Tile> last = AutoPath(current, cores, pass);
 
         if (last == null)
         {
@@ -160,7 +159,7 @@ public class LaneBuilder : ILaneBuilder
     }
 
     // 한 지점에서 지정된 노드까지, 이 통행 방식으로 갈 수 있는 최단 구간을 계산합니다.
-    private static List<Tile> NodeSegment(LaneInputData input, Tile from, Tile node, PassType pass)
+    private static List<Tile> NodeSegment(Tile from, Tile node, PassType pass)
     {
         return Pathfinder.FindPath(
             new[] { from },
@@ -170,7 +169,7 @@ public class LaneBuilder : ILaneBuilder
     }
 
     // 코어까지, 이 통행 방식으로 갈 수 있는 최단 경로를 계산합니다.
-    private static List<Tile> AutoPath(LaneInputData input, Tile from, HashSet<Tile> cores, PassType pass)
+    private static List<Tile> AutoPath(Tile from, HashSet<Tile> cores, PassType pass)
     {
         return Pathfinder.FindPath(
             new[] { from },
