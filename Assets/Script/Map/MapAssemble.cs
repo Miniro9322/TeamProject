@@ -139,6 +139,10 @@ public class MapAssemble : MonoBehaviour
         mapGame.Rule.ChangeToDay += campfireLights.TurnOff;
         campfireLights.TurnOff(); // 첫 날도 낮이니 꺼진 채로 시작
 
+        mapGame.Rule.ChangeToDay += OnFireDayChanged;
+        OnFireDayChanged(); // 첫 날도 낮이니 꺼진 채로 시작
+        mapGame.Rule.ChangeToNight += OnFireNightChanged;
+
         mapGame.Rule.ChangeToNight += view.ClearMode;
         mapGame.Rule.ChangeToNight += OnDesertNightChanged;
         mapGame.Rule.ChangeToNight += skillCast.ClearSelection;
@@ -164,6 +168,8 @@ public class MapAssemble : MonoBehaviour
             mapGame.Rule.ChangeToNight -= campfireLights.TurnOn;
             mapGame.Rule.ChangeToDay -= campfireLights.TurnOff;
         }
+        mapGame.Rule.ChangeToDay -= OnFireDayChanged;
+        mapGame.Rule.ChangeToNight -= OnFireNightChanged;
         if (laneModules != null)
         {
             mapGame.Rule.ChangeToDay -= OnDayChanged;
@@ -262,5 +268,33 @@ public class MapAssemble : MonoBehaviour
         }
 
         zoneEffectApplier.OnNightChanged();
+    }
+
+    // 낮이 되면 불 칸이 대미지를 끊도록 알린다.
+    private void OnFireDayChanged()
+    {
+        FireReceiver.SetNight(false);
+    }
+
+    // 밤이 되면 불 칸이 대미지를 넣도록 알린다.
+    private void OnFireNightChanged()
+    {
+        FireReceiver.SetNight(true);
+        IgniteStandingUnits();
+    }
+
+    // 낮에 배치돼 진입 신호를 놓친 유닛도 밤이 오면 불 칸이면 점화한다.
+    private void IgniteStandingUnits()
+    {
+        for (int i = 0; i < mapGame.Units.Count; i++)
+        {
+            GameObject unit = mapGame.Units.UnitAt(i);
+            PlacementArea area = mapGame.Units.AreaAt(i);
+            for (int j = 0; j < area.Cells.Count; j++)
+            {
+                Tile tile = area.Board.Cells[area.Cells[j]];
+                FireReceiver.ReceiveEntry(tile, unit.transform);
+            }
+        }
     }
 }

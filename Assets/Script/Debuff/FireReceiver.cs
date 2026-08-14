@@ -9,12 +9,20 @@ public static class FireReceiver
     private static readonly DotDebuffSO IgniteEffect = LoadEffect();
     private static readonly Dictionary<Component, int> Active = new();
     private static int nextToken;
+    private static bool isNight;
 
     // 플레이 재시작 시 점화 대상 기록을 비운다.
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void ResetStatics()
     {
         Active.Clear();
+        isNight = false;
+    }
+
+    // Map이 낮/밤 전환을 알려줄 때 부른다. 불은 밤에만 붙는다.
+    public static void SetNight(bool value)
+    {
+        isNight = value;
     }
 
     // 불 타일에 들어온 대상의 점화 갱신을 시작한다.
@@ -22,7 +30,7 @@ public static class FireReceiver
     {
         if (CanIgnite(tile, target))
         {
-            StartRefresh(target);
+            StartRefresh(tile, target);
         }
     }
 
@@ -41,26 +49,26 @@ public static class FireReceiver
     {
         EnemyBase enemyBase = target.GetComponent<EnemyBase>();
         bool isFlying = enemyBase != null && enemyBase.IsFly;
-        return tile.IsFire && isFlying == false;
+        return tile.IsFire && isNight && isFlying == false;
     }
 
     // 대상을 등록하고 즉시 점화를 적용한다.
-    private static void StartRefresh(Component target)
+    private static void StartRefresh(Tile tile, Component target)
     {
         nextToken++;
-        Active.Add(target, nextToken);
+        Active[target] = nextToken;
         ApplyEffect(target);
-        RefreshEffect(target, nextToken).Forget();
+        RefreshEffect(tile, target, nextToken).Forget();
     }
 
     // 대상이 불 타일에 있는 동안 점화를 다시 적용한다.
-    private static async UniTask RefreshEffect(Component target, int token)
+    private static async UniTask RefreshEffect(Tile tile, Component target, int token)
     {
-        while (CanRefresh(target, token))
+        while (CanRefresh(tile, target, token))
         {
             await UniTask.Delay(TimeSpan.FromSeconds(IgniteEffect.interval));
 
-            if (CanRefresh(target, token))
+            if (CanRefresh(tile, target, token))
             {
                 ApplyEffect(target);
             }
@@ -69,10 +77,10 @@ public static class FireReceiver
         ReleaseTarget(target, token);
     }
 
-    // 대상이 살아 있고 현재 갱신 대상인지 확인한다.
-    private static bool CanRefresh(Component target, int token)
+    // 대상이 살아 있고, 현재 갱신 대상이고, 여전히 점화 조건을 만족하는지 확인한다.
+    private static bool CanRefresh(Tile tile, Component target, int token)
     {
-        return target != null && IsCurrent(target, token);
+        return target != null && IsCurrent(target, token) && CanIgnite(tile, target);
     }
 
     // 실행 중인 번호표가 현재 대상의 번호표와 같은지 확인한다.
