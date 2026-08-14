@@ -16452,6 +16452,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ChanceHeavyTrait
   chance: 0.3
+  watchedAttack: {fileID: 11400000, guid: de72fdcd543f2c64daf33d053ef4b487, type: 2}
   heavyAttackData: {fileID: 11400000, guid: edf49e721100e9540bd1e6a9baa7092e, type: 2}
 --- !u!114 &9143932808570695239
 MonoBehaviour:
@@ -16466,6 +16467,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::NthHitHeavyTrait
   everyN: 3
+  watchedAttack: {fileID: 11400000, guid: de72fdcd543f2c64daf33d053ef4b487, type: 2}
   heavyAttackData: {fileID: 11400000, guid: ee0357edda5ab2f4d88940dd08a10c5f, type: 2}
 --- !u!1 &6371844147298520082
 GameObject:
