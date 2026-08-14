@@ -142,6 +142,7 @@ public class MapAssemble : MonoBehaviour
         mapGame.Rule.ChangeToDay += OnFireDayChanged;
         OnFireDayChanged(); // 첫 날도 낮이니 꺼진 채로 시작
         mapGame.Rule.ChangeToNight += OnFireNightChanged;
+        FireReceiver.SetGameManager(mapGame.Rule);
 
         mapGame.Rule.ChangeToNight += view.ClearMode;
         mapGame.Rule.ChangeToNight += OnDesertNightChanged;

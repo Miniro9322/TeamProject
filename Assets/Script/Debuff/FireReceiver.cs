@@ -10,6 +10,7 @@ public static class FireReceiver
     private static readonly Dictionary<Component, int> Active = new();
     private static int nextToken;
     private static bool isNight;
+    private static GameManager gameManager;
 
     // 플레이 재시작 시 점화 대상 기록을 비운다.
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
@@ -23,6 +24,12 @@ public static class FireReceiver
     public static void SetNight(bool value)
     {
         isNight = value;
+    }
+
+    // Map이 조립 시 한 번 넣어준다. 낮 전환 시 DotRegistry가 즉시 지우려면 필요하다.
+    public static void SetGameManager(GameManager value)
+    {
+        gameManager = value;
     }
 
     // 불 타일에 들어온 대상의 점화 갱신을 시작한다.
@@ -102,7 +109,7 @@ public static class FireReceiver
     // 준비된 점화 데이터를 디버프 입구로 전달한다.
     private static void ApplyEffect(Component target)
     {
-        DebuffApply.To(target, IgniteEffect, null);
+        DebuffApply.To(target, IgniteEffect, null, gameManager);
     }
 
     // Ignite_Basic 점화 데이터를 불러온다.
