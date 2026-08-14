@@ -58,8 +58,9 @@ public static class AreaPlace
     {
         foreach (Vector2Int cell in data.Area.Cells)
         {
-            Tile tile = data.Area.Board.Cells[cell]; 
+            Tile tile = data.Area.Board.Cells[cell];
             tile.SetOccupant(unit, kind);
+            FireReceiver.ReceiveEntry(tile, unit.transform);
         }
 
         unit.transform.position = data.Position;
@@ -71,7 +72,8 @@ public static class AreaPlace
         for (int i = 0; i < area.Cells.Count; i++)
         {
             Tile tile = area.Board.Cells[area.Cells[i]];
-            tile.ClearOccupant();
+            GameObject unit = tile.ClearOccupant();
+            FireReceiver.ReceiveExit(tile, unit.transform);
         }
     }
 }

@@ -40,7 +40,8 @@ public static class FireReceiver
     private static bool CanIgnite(Tile tile, Component target)
     {
         EnemyBase enemyBase = target.GetComponent<EnemyBase>();
-        return tile.IsFire && enemyBase.IsFly == false;
+        bool isFlying = enemyBase != null && enemyBase.IsFly;
+        return tile.IsFire && isFlying == false;
     }
 
     // 대상을 등록하고 즉시 점화를 적용한다.
