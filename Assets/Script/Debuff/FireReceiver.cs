@@ -5,7 +5,7 @@ using UnityEngine;
 
 public static class FireReceiver
 {
-    private const string IgniteId = "Ignite_Basic";
+    private const string IgniteId = "Ignite_Tile_Debuff";
     private static readonly DotDebuffSO IgniteEffect = LoadEffect();
     private static readonly Dictionary<Component, int> Active = new();
     private static int nextToken;
@@ -104,7 +104,7 @@ public static class FireReceiver
 
         if (effect == null)
         {
-            throw new InvalidOperationException("Ignite_Basic 점화 데이터가 없습니다.");
+            throw new InvalidOperationException("점화 데이터가 없습니다.");
         }
 
         return effect;
