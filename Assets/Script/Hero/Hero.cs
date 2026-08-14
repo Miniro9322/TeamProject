@@ -346,6 +346,7 @@ public class Hero : MonoBehaviour, IDamageAble, IUnit, IStunAble, IDebuffCarrier
         if (gameManager != null)
         {
             gameManager.ChangeToDay += Resurrection;
+            gameManager.ChangeToDay += HealFull;
             gameManager.ChangeToDay += ResetSkillCooldown;
         }
         SpawnAuraZones();
@@ -392,6 +393,7 @@ public class Hero : MonoBehaviour, IDamageAble, IUnit, IStunAble, IDebuffCarrier
         if (gameManager != null)
         {
             gameManager.ChangeToDay -= Resurrection;
+            gameManager.ChangeToDay -= HealFull;
             gameManager.ChangeToDay -= ResetSkillCooldown;
         }
         tierUpgradeState.LevelChanged -= OnTierLevelChanged;
@@ -629,6 +631,11 @@ public class Hero : MonoBehaviour, IDamageAble, IUnit, IStunAble, IDebuffCarrier
         currentHp = sc[StatType.HP];
         isDead = false;
         SpawnAuraZones();
+    }
+
+    public void HealFull()
+    {
+        Heal(sc[StatType.HP]);
     }
 
     public void SetCurrentTile()
