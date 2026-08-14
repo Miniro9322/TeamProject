@@ -106,7 +106,7 @@ public sealed class PlaceEdgeView : IDisposable
     // 한 보드의 배치 가능 타일 경계 변을 추가합니다.
     private void AddBoard(MapBoard board, OccupantKind kind)
     {
-        List<Tile> tiles = new(board.Cells.Values);
+        IReadOnlyList<Tile> tiles = board.CellList;
         for (int tileIndex = 0; tileIndex < tiles.Count; tileIndex++)
         {
             Tile tile = tiles[tileIndex];

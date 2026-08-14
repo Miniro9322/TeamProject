@@ -228,6 +228,16 @@ public class MapBoard : MonoBehaviour
     // — 그래서 옆면을 눌러도 그 타일이 잡히고, 앞에 선 높은 타일이 뒤 타일을 가린다.
     public Tile CellFromRay(Ray ray)
     {
+        if (_cellList.Count == 0) return null;
+
+        // Broad-phase Bounding Culling: 광선이 모듈 WorldBounds 근처를 지나지 않으면 순회 무시
+        Bounds checkBounds = _worldBounds;
+        checkBounds.Expand(CellSize * 2f);
+        if (!checkBounds.IntersectRay(ray))
+        {
+            return null;
+        }
+
         Transform space = _grid.transform; // 맵을 돌려 놔도 축이 어긋나지 않게 보드 기준으로 옮겨서 잰다
         var local = new Ray(
             space.InverseTransformPoint(ray.origin),

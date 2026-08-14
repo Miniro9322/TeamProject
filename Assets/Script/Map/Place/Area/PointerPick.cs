@@ -47,6 +47,9 @@ public class PointerPick
         return Nearest(PointerRay());
     }
 
+    private Vector2 lastMousePos;
+    private bool mousePosInitialized;
+
     private void EnsureFrameHoverTile()
     {
         int currentFrame = Time.frameCount;
@@ -56,6 +59,18 @@ public class PointerPick
         }
 
         lastUpdateFrame = currentFrame;
+        Vector2 currentMousePos = Vector2.zero;
+        if (Mouse.current != null)
+        {
+            currentMousePos = Mouse.current.position.ReadValue();
+        }
+        if (mousePosInitialized && currentMousePos == lastMousePos && hoverData.HoveredTile != null)
+        {
+            return;
+        }
+
+        mousePosInitialized = true;
+        lastMousePos = currentMousePos;
         Tile tile = Under(PointerRay());
         hoverData.Keep(tile);
     }
