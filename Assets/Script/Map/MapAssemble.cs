@@ -32,7 +32,8 @@ public class MapAssemble : MonoBehaviour
 
     private void Start()
     {
-        List<MapBoard> boards = ModuleBoards();
+        List<MapBoard> boards;
+        CollectModuleComponents(out boards, out pathTrails, out laneModules);
         BuildCampfires(boards);
 
         palette.Bind(mapGame.HeroRoster);
@@ -122,14 +123,12 @@ public class MapAssemble : MonoBehaviour
             { PlaceMode.Place, action.PlaceUnit },
             { PlaceMode.Remove, action.RemoveUnit },
         };
-        pathTrails = ModuleTrails();
         foreach(PathTrail trail in pathTrails)
         {
             mapGame.Rule.ChangeToDay += trail.PlayLoop;
             mapGame.Rule.ChangeToNight += trail.PlayOnce;
         }
 
-        laneModules = ModuleLanes();
         mapGame.Rule.ChangeToDay += OnDayChanged;
         OnDayChanged(); // 첫 날짜도 시작하자마자 바로 맞춘다 — 이벤트가 처음 울릴 때까지 기다리지 않는다
 
@@ -193,15 +192,32 @@ public class MapAssemble : MonoBehaviour
         }
     }
 
-    // 레지스트리에 등록된 모듈들의 보드 목록. 모듈 루트에 ModuleLogic과 MapBoard가 함께 산다.
-    private List<MapBoard> ModuleBoards()
+    // 레지스트리에 등록된 모듈들의 보드·트레일·레인 목록을 한 번의 순회로 모은다. 모듈 루트에 ModuleLogic과 MapBoard가 함께 산다.
+    private void CollectModuleComponents(
+        out List<MapBoard> boards,
+        out List<PathTrail> trails,
+        out List<EnemyLanes> lanes)
     {
-        List<MapBoard> boards = new();
+        boards = new List<MapBoard>();
+        trails = new List<PathTrail>();
+        lanes = new List<EnemyLanes>();
+
         foreach (ModuleLogic logic in registry.AllModules.Values)
         {
             boards.Add(logic.GetComponent<MapBoard>());
+
+            PathTrail trail = logic.GetComponent<PathTrail>();
+            if (trail != null)
+            {
+                trails.Add(trail);
+            }
+
+            EnemyLanes lane = logic.GetComponent<EnemyLanes>();
+            if (lane != null)
+            {
+                lanes.Add(lane);
+            }
         }
-        return boards;
     }
 
     // 모든 얼음 보드의 고정 모닥불 보호 영역과 그 자리에 놓인 불빛을 시작할 때 한 번 만듭니다.
@@ -220,34 +236,6 @@ public class MapAssemble : MonoBehaviour
                 campfireLights.Collect(board, iceZone.CampfireRange);
             }
         }
-    }
-    private List<PathTrail> ModuleTrails()
-    {
-        List<PathTrail> trails = new();
-        foreach (ModuleLogic logic in registry.AllModules.Values)
-        {
-            PathTrail trail = logic.GetComponent<PathTrail>();
-            if (trail != null)
-            {
-                trails.Add(trail);
-            }
-        }
-        return trails;
-    }
-
-    // 레지스트리에 등록된 모듈들의 EnemyLanes 목록.
-    private List<EnemyLanes> ModuleLanes()
-    {
-        List<EnemyLanes> lanes = new();
-        foreach (ModuleLogic logic in registry.AllModules.Values)
-        {
-            EnemyLanes found = logic.GetComponent<EnemyLanes>();
-            if (found != null)
-            {
-                lanes.Add(found);
-            }
-        }
-        return lanes;
     }
 
     // 날짜가 바뀔 때마다 모든 모듈의 레인을 그 날짜로 다시 계산한다.
