@@ -25,15 +25,10 @@ public class PointerPick
     // 포인터 아래에 배치물이 몇 칸으로 어디에 놓일지. 그리드 밖이면 가장자리 타일을 기준으로 잡는다.
     public PlacementArea GetArea(Vector2Int size)
     {
+        // 기준 칸과 자리 계산이 같은 광선에서 나와야 한다 — 따로 뽑으면 포인터가 움직인 만큼 어긋난다.
         Ray ray = PointerRay();
-        Tile anchor = Nearest(ray);
-        if (anchor == null)
-        {
-            return null;
-        }
-
-        // 앵커와 스냅이 같은 광선에서 나와야 한다 — 따로 뽑으면 포인터가 움직인 만큼 어긋난다.
-        return AreaAnchor.Resolve(anchor, ray, size);
+        Tile tile = Nearest(ray);
+        return AreaAnchor.Resolve(tile, ray, size);
     }
 
     public Tile UnderPointer()   // 없으면 null

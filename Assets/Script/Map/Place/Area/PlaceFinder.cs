@@ -24,16 +24,8 @@ public class PlaceFinder
         out PlaceData data)
     {
         PlacementArea area = pointerPick.GetArea(size);
-        if (area == null)
-        {
-            data = default;
-            return false;
-        }
-
-        data = new PlaceData(
-            area,
-            AreaPlace.Position(area, kind, yOffset),
-            AreaPlace.CanPlace(area, kind));
+        Vector3 position = AreaPlace.Position(area, kind, yOffset, out bool canPlace);
+        data = new PlaceData(area, position, canPlace);
         return true;
     }
 
