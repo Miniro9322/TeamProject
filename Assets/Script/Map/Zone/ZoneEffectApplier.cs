@@ -65,15 +65,20 @@ public class ZoneEffectApplier : IDisposable
         RemoveAllIce();
     }
 
-    // 밤이 시작되면 화살표를 숨기고 현재 배치를 한 번 읽어 사막 효과를 확정하며, 얼음 지대도 다시 판정합니다.
+    // 밤이 시작되면 얼음 지대는 무조건 다시 판정하고, 사막 효과는 잠금이 풀렸을 때만 확정합니다.
     public void OnNightChanged()
     {
+        isNight = true;
+        ApplyAllIce();
+
+        if (!desertBoard.IsUnlocked)
+        {
+            return;
+        }
+
         preview.Hide();
         DesertUnits units = ReadUnits();
         ApplyNight(units, desertZone.WindDirection);
-
-        isNight = true;
-        ApplyAllIce();
     }
 
     // 현재 바람 방향을 로그로 출력합니다.

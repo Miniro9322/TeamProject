@@ -143,7 +143,7 @@ public class MapAssemble : MonoBehaviour
         FireReceiver.SetGameManager(mapGame.Rule);
 
         mapGame.Rule.ChangeToNight += view.ClearMode;
-        mapGame.Rule.ChangeToNight += OnDesertNightChanged;
+        mapGame.Rule.ChangeToNight += zoneEffectApplier.OnNightChanged;
         mapGame.Rule.ChangeToNight += skillCast.ClearSelection;
         mapGame.Rule.ChangeToNight += campfireLights.TurnOn;
 
@@ -159,7 +159,7 @@ public class MapAssemble : MonoBehaviour
     {
         ghost.ClearGhosts();
         mapGame.Rule.ChangeToNight -= view.ClearMode;
-        mapGame.Rule.ChangeToNight -= OnDesertNightChanged;
+        mapGame.Rule.ChangeToNight -= zoneEffectApplier.OnNightChanged;
         mapGame.Rule.ChangeToDay -= zoneEffectApplier.OnDayChanged;
         zoneEffectApplier.Dispose();
         if (campfireLights != null)
@@ -247,17 +247,6 @@ public class MapAssemble : MonoBehaviour
         }
     }
 
-    // 사막 모듈이 아직 잠겨있으면 밤이 되어도 지대 효과 적용을 건너뛴다.
-    private void OnDesertNightChanged()
-    {
-        if (!desertBoard.IsUnlocked)
-        {
-            return;
-        }
-
-        zoneEffectApplier.OnNightChanged();
-    }
-
     // 낮이 되면 불 칸이 대미지를 끊도록 알린다.
     private void OnFireDayChanged()
     {
@@ -278,11 +267,8 @@ public class MapAssemble : MonoBehaviour
         {
             GameObject unit = mapGame.Units.UnitAt(i);
             PlacementArea area = mapGame.Units.AreaAt(i);
-            for (int j = 0; j < area.Cells.Count; j++)
-            {
-                Tile tile = area.Board.Cells[area.Cells[j]];
-                FireReceiver.ReceiveEntry(tile, unit.transform);
-            }
+            Tile tile = area.Board.Cells[area.Origin];
+            FireReceiver.ReceiveEntry(tile, unit.transform);
         }
     }
 }
