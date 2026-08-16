@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -6,6 +7,20 @@ using UnityEngine.UI;
 public class HeroCreateIcon : MonoBehaviour
 {
     [SerializeField] private Button button;
+    [SerializeField] private int citizenCost;
+    [SerializeField] private List<ResourceCost> resourceCost;
+    [SerializeField] private List<ResourceIcon> resourceIcons;
+    [SerializeField] private string createName;
+    [SerializeField] private HeroCreateToolTipTrigger toolTipTrigger;
+    public int CitizenCost => citizenCost;
+    public List<ResourceCost> ResourceCost => resourceCost;
+    public List<ResourceIcon> ResourceIcons => resourceIcons;
+    public string CreateName => createName;
+
+    private void Awake()
+    {
+        if (toolTipTrigger != null) toolTipTrigger.SetData(createName, resourceCost, resourceIcons);
+    }
 
     public void Set(bool interactable, Action onClick)
     {
