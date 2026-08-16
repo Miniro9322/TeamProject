@@ -9,7 +9,8 @@ public class PointerPick
 {
     private readonly List<MapBoard> boards;
     private readonly HoveredTileData hoverData;
-    private int lastUpdateFrame = -1;
+    private int hoverFrame = -1;
+    private Vector2 mousePos;
 
     public PointerPick(List<MapBoard> boards, HoveredTileData hoverData)
     {
@@ -33,7 +34,7 @@ public class PointerPick
 
     public Tile UnderPointer()   // 없으면 null
     {
-        EnsureFrameHoverTile();
+        RefreshHoverData();
         return hoverData.HoveredTile;
     }
 
@@ -42,32 +43,57 @@ public class PointerPick
         return Nearest(PointerRay());
     }
 
-    private Vector2 lastMousePos;
-    private bool mousePosInitialized;
-
-    private void EnsureFrameHoverTile()
+    // 포인터 아래 타일을 갱신한다. 이미 갱신한 프레임이면 아무것도 안 한다.
+    private void RefreshHoverData()
     {
-        int currentFrame = Time.frameCount;
-        if (lastUpdateFrame == currentFrame)
+        if (IsSameFrame())
+        {
+            return;
+        }
+        MarkFrame();
+
+        Vector2 current = MousePos();
+        bool moved = IsMoved(current);
+        MarkPos(current);
+
+        if (!moved && hoverData.HasTile)
         {
             return;
         }
 
-        lastUpdateFrame = currentFrame;
-        Vector2 currentMousePos = Vector2.zero;
-        if (Mouse.current != null)
-        {
-            currentMousePos = Mouse.current.position.ReadValue();
-        }
-        if (mousePosInitialized && currentMousePos == lastMousePos && hoverData.HoveredTile != null)
-        {
-            return;
-        }
-
-        mousePosInitialized = true;
-        lastMousePos = currentMousePos;
         Tile tile = Under(PointerRay());
         hoverData.Keep(tile);
+    }
+
+    private bool IsSameFrame()
+    {
+        return hoverFrame == Time.frameCount;
+    }
+
+    private void MarkFrame()
+    {
+        hoverFrame = Time.frameCount;
+    }
+
+    // 지금 마우스 위치. 아직 안 잡혔으면 (0,0).
+    private Vector2 MousePos()
+    {
+        if (Mouse.current == null)
+        {
+            return Vector2.zero;
+        }
+        return Mouse.current.position.ReadValue();
+    }
+
+    // 지난 화면에 적어둔 자리랑 다른가만 본다. 아무것도 안 바꾼다.
+    private bool IsMoved(Vector2 current)
+    {
+        return current != mousePos;
+    }
+
+    private void MarkPos(Vector2 current)
+    {
+        mousePos = current;
     }
 
     private Tile Under(Ray ray)
