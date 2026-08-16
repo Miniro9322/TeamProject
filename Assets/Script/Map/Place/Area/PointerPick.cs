@@ -61,7 +61,7 @@ public class PointerPick
             return;
         }
 
-        Tile tile = Under(PointerRay());
+        Tile tile = HitTile(PointerRay());
         hoverData.Keep(tile);
     }
 
@@ -96,53 +96,67 @@ public class PointerPick
         mousePos = current;
     }
 
-    private Tile Under(Ray ray)
+    private Tile HitTile(Ray ray)
     {
         // 클릭은 언제나 타일이 받는다. 유닛 몸통을 먼저 잡으면, 몸통이 화면에서 덮는
         // 위쪽 칸을 눌렀을 때도 그 유닛의 발밑 칸이 선택된다.
-        Tile best = null;
-        float bestSqr = float.MaxValue;
+        Tile frontTile = null;
+        float frontSqr = float.MaxValue;
         for (int i = 0; i < boards.Count; i++)
         {
             MapBoard board = boards[i];
-            if (!board.gameObject.activeInHierarchy) continue;
-            if (!board.IsUnlocked) continue;
+            if (!IsUsable(board)) continue;
 
             Tile tile = board.CellFromRay(ray);
             if (tile == null) continue; // 이 보드는 레이가 안 맞음 — 다음 모듈
 
-            // 레이가 두 모듈에 다 걸치면 카메라(레이 원점)에 가까운 쪽이 앞에 보이는 타일이다.
-            float sqr = (tile.WorldTop - ray.origin).sqrMagnitude;
-            if (sqr < bestSqr)
+            float sqr = DistanceSqr(tile, ray);
+            if (sqr < frontSqr)
             {
-                bestSqr = sqr;
-                best = tile;
+                frontSqr = sqr;
+                frontTile = tile;
             }
         }
-        return best;
+        return frontTile;
+    }
+
+    // 화면에 켜져 있고 잠금이 풀린 모듈인지.
+    private bool IsUsable(MapBoard board)
+    {
+        return board.gameObject.activeInHierarchy && board.IsUnlocked;
+    }
+
+    // 카메라(레이 원점)에서 이 타일까지 얼마나 가까운지 — 두 모듈에 겹쳐 맞으면 더 가까운 쪽이 앞에 보이는 타일이다.
+    private float DistanceSqr(Tile tile, Ray ray)
+    {
+        return (tile.WorldTop - ray.origin).sqrMagnitude;
     }
 
     private Tile Nearest(Ray ray)
     {
-        Tile best = null;
-        float bestDist = float.MaxValue;
+        Tile nearestTile = null;
+        float nearestDistance = float.MaxValue;
         for (int i = 0; i < boards.Count; i++)
         {
             MapBoard board = boards[i];
-            if (!board.gameObject.activeInHierarchy) continue;
-            if (!board.IsUnlocked) continue;
+            if (!IsUsable(board)) continue;
 
             Tile tile = board.NearestCellFromRay(ray);
             if (tile == null) continue;
 
-            // 그리드 밖 클램프 후보끼리는 "레이 직선에서 얼마나 벗어났나"로 비교한다(포인터에 가장 붙은 타일).
-            float dist = Vector3.Cross(ray.direction, tile.WorldTop - ray.origin).magnitude;
-            if (dist < bestDist)
+            float distance = LineDistance(tile, ray);
+            if (distance < nearestDistance)
             {
-                bestDist = dist;
-                best = tile;
+                nearestDistance = distance;
+                nearestTile = tile;
             }
         }
-        return best;
+        return nearestTile;
+    }
+
+    // 그리드 밖 클램프 후보끼리는 레이 직선에서 얼마나 벗어났나로 비교한다(포인터에 가장 붙은 타일).
+    private float LineDistance(Tile tile, Ray ray)
+    {
+        return Vector3.Cross(ray.direction, tile.WorldTop - ray.origin).magnitude;
     }
 }

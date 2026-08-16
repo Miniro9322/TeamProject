@@ -15,53 +15,35 @@ public static class AreaPlace
         return position;
     }
 
-    // 놓을 수 있는 칸들 중 가장 높은 윗면. 칸 하나라도 놓을 수 없으면 canPlace가 false로 나온다.
+    // 이 칸의 윗면. 놓을 수 없으면 자리 한가운데 높이로 대신한다.
     private static float TopY(PlacementArea area, OccupantKind kind, out bool canPlace)
     {
-        float top = float.MinValue;
-        canPlace = true;
-
-        foreach (Vector2Int cell in area.Cells)
+        canPlace = area.Board.CanPlace(area.Origin, kind);
+        if (!canPlace)
         {
-            if (!area.Board.CanPlace(cell, kind))
-            {
-                canPlace = false;
-                continue;
-            }
-
-            if (area.Board.TryGetCell(cell, out Tile tile) && tile.WorldTop.y > top)
-            {
-                top = tile.WorldTop.y;
-            }
+            return area.Center.y;
         }
-
-        return top > float.MinValue ? top : area.Center.y;
+        return area.Board.Cells[area.Origin].WorldTop.y;
     }
 
-    // 자리가 덮는 칸을 모두 채우고 유닛을 한가운데 세운다.
+    // 그 칸을 채우고 유닛을 한가운데 세운다.
     public static void Place(
         PlaceData data,
         GameObject unit,
         OccupantKind kind)
     {
-        foreach (Vector2Int cell in data.Area.Cells)
-        {
-            Tile tile = data.Area.Board.Cells[cell];
-            tile.SetOccupant(unit, kind);
-            FireReceiver.ReceiveEntry(tile, unit.transform);
-        }
+        Tile tile = data.Area.Board.Cells[data.Area.Origin];
+        tile.SetOccupant(unit, kind);
+        FireReceiver.ReceiveEntry(tile, unit.transform);
 
         unit.transform.position = data.Position;
     }
 
-    // 자리가 덮는 칸을 모두 비운다.
+    // 그 칸을 비운다.
     public static void Remove(PlacementArea area)
     {
-        for (int i = 0; i < area.Cells.Count; i++)
-        {
-            Tile tile = area.Board.Cells[area.Cells[i]];
-            GameObject unit = tile.ClearOccupant();
-            FireReceiver.ReceiveExit(tile, unit.transform);
-        }
+        Tile tile = area.Board.Cells[area.Origin];
+        GameObject unit = tile.ClearOccupant();
+        FireReceiver.ReceiveExit(tile, unit.transform);
     }
 }
