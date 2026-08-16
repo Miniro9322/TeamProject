@@ -98,7 +98,6 @@ public class MapAssemble : MonoBehaviour
 
         PlaceAction action = new PlaceAction();
         action.palette = palette;
-        action.finder = finder;
         action.placer = mapGame.Placer;
         action.remover = new UnitRemover(mapGame.Units, mapGame.HeroRoster, zoneEffectApplier);
         action.replace = replace;
@@ -107,6 +106,7 @@ public class MapAssemble : MonoBehaviour
         action.heroRoster = mapGame.HeroRoster;
         action.skillCast = skillCast;
         action.combineManager = combineManager;
+        action.hoverPlace = hoverPlace;
 
         command.pointerPick = pointerPick;
         command.dragDetect = new DragDetect(dragPixels);
@@ -115,7 +115,6 @@ public class MapAssemble : MonoBehaviour
         command.action = action;
         ghost = new PlaceGhost(ghostAlpha);
         command.ghost = ghost;
-        command.finder = finder;
         command.hoverPlace = hoverPlace;
         command.dispatch = new Dictionary<PlaceMode, Action<Tile>>
         {
