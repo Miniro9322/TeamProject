@@ -223,12 +223,9 @@ public class TilePaintSync
     // 배치 영역 타일을 상태 색상으로 추가합니다.
     private void AddAreaCellEntries(PlacementArea area, Color color)
     {
-        for (int i = 0; i < area.Cells.Count; i++)
+        if (area.Board.TryGetCell(area.Origin, out Tile tile))
         {
-            if (area.Board.TryGetCell(area.Cells[i], out Tile tile))
-            {
-                plan.Add(new PaintEntry(tile, color));
-            }
+            plan.Add(new PaintEntry(tile, color));
         }
     }
 

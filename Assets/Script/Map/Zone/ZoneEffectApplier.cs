@@ -152,7 +152,7 @@ public class ZoneEffectApplier : IDisposable
         object[] sources)
     {
         RemoveEffects(hero, iceZone.Debuffs, sources);
-        bool protectedCell = CampfireQuery.HasProtected(iceZone.CampfireData, area.Cells);
+        bool protectedCell = CampfireQuery.IsProtected(iceZone.CampfireData, area.Origin);
         if (protectedCell)
         {
             Debug.Log($"[Zone] {hero.name} 모닥불 보호 - 얼음 효과 면역");
