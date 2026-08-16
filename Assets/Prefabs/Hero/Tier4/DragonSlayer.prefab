@@ -7760,7 +7760,8 @@ GameObject:
   m_Component:
   - component: {fileID: 7336677387634691527}
   - component: {fileID: 7762409628043492132}
-  - component: {fileID: 3418726371322759984}
+  - component: {fileID: 6445357235651806607}
+  - component: {fileID: 3416815398295345479}
   m_Layer: 0
   m_Name: DragonSlayer
   m_TagString: Untagged
@@ -7811,7 +7812,7 @@ MonoBehaviour:
   board: {fileID: 0}
   auraZonePrefabs: []
   occupantKind: 1
---- !u!114 &3418726371322759984
+--- !u!114 &6445357235651806607
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -7820,19 +7821,28 @@ MonoBehaviour:
   m_GameObject: {fileID: 2762850617625843917}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 70884c9239b802249a37f85d89918ccc, type: 3}
+  m_Script: {fileID: 11500000, guid: 71f4ec0063568874f8d0c94daeb655ad, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::AttackStanceSkill
-  targetScope: 0
-  buffList: []
-  groundZonePrefab: {fileID: 0}
-  instantDamagePer: 0
-  instantHitEffect: {fileID: 0}
-  instantHitEffectLifetime: 1
-  cooldown: 20
-  duration: 20
-  blocksBasicAttack: 0
+  m_EditorClassIdentifier: Assembly-CSharp::NthHitHeavyTrait
+  everyN: 5
+  watchedAttack: {fileID: 11400000, guid: a24a09f971b78664d8e3892b2a5571cc, type: 2}
+  heavyAttackData: {fileID: 11400000, guid: 346d477c357788a46bb3bcfdd7dacb6a, type: 2}
+--- !u!114 &3416815398295345479
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2762850617625843917}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 501e84d02049a104ca0715b5c977960e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HitCountStanceTrait
+  watchedAttack: {fileID: 11400000, guid: 346d477c357788a46bb3bcfdd7dacb6a, type: 2}
+  hitsToTrigger: 5
   stanceAttackData: {fileID: 11400000, guid: 346d477c357788a46bb3bcfdd7dacb6a, type: 2}
+  stanceDuration: 9999
 --- !u!1 &2766463481628903502
 GameObject:
   m_ObjectHideFlags: 0

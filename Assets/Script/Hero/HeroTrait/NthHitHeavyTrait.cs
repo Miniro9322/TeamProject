@@ -7,12 +7,15 @@ using UnityEngine;
 public class NthHitHeavyTrait : HeroTrait
 {
     public int everyN = 4;
+    public AttackDataSO watchedAttack; // null이면 모든 공격 카운트 (기존 동작 유지)
     public AttackDataSO heavyAttackData;
 
     private int count;
 
     public override void OnAttackPerformed(AttackDataSO data)
     {
+        if (watchedAttack != null && data != watchedAttack) return;
+
         count++;
         if (count >= everyN)
         {

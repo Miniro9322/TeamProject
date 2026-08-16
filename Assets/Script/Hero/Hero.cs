@@ -347,6 +347,7 @@ public class Hero : MonoBehaviour, IDamageAble, IUnit, IStunAble, IDebuffCarrier
         {
             gameManager.ChangeToDay += Resurrection;
             gameManager.ChangeToDay += ResetSkillCooldown;
+            gameManager.ChangeToDay += NotifyDayStart;
         }
         SpawnAuraZones();
     }
@@ -393,6 +394,7 @@ public class Hero : MonoBehaviour, IDamageAble, IUnit, IStunAble, IDebuffCarrier
         {
             gameManager.ChangeToDay -= Resurrection;
             gameManager.ChangeToDay -= ResetSkillCooldown;
+            gameManager.ChangeToDay -= NotifyDayStart;
         }
         tierUpgradeState.LevelChanged -= OnTierLevelChanged;
         debuffEffects.Reset();
@@ -412,6 +414,11 @@ public class Hero : MonoBehaviour, IDamageAble, IUnit, IStunAble, IDebuffCarrier
         for (int i = 0; i < traits.Length; i++) traits[i]?.OnHit(hitTarget, amount, isCrit);
         if (hitTarget != null && hitTarget.GetComponentInParent<IDamageAble>() is IDamageAble d && d.Hp <= 0f)
             NotifyKill(hitTarget);
+    }
+
+    public void NotifyDayStart()
+    {
+        for (int i = 0; i < traits.Length; i++) traits[i]?.OnDayStart();
     }
 
     public void NotifyKill(GameObject killedTarget)

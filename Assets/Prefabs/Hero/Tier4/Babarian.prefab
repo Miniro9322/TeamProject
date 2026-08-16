@@ -3246,7 +3246,8 @@ GameObject:
   m_Component:
   - component: {fileID: 2209334264993888092}
   - component: {fileID: 642141430422632474}
-  - component: {fileID: 5231495635789993909}
+  - component: {fileID: 1298495047875084309}
+  - component: {fileID: -4493755571375677299}
   m_Layer: 0
   m_Name: Babarian
   m_TagString: Untagged
@@ -3298,7 +3299,7 @@ MonoBehaviour:
   auraZonePrefabs:
   - {fileID: 4269708727165565049, guid: 2034443a396fb894594d0cb81cdd5c74, type: 3}
   occupantKind: 1
---- !u!114 &5231495635789993909
+--- !u!114 &1298495047875084309
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -3307,19 +3308,28 @@ MonoBehaviour:
   m_GameObject: {fileID: 1125355577782864148}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 70884c9239b802249a37f85d89918ccc, type: 3}
+  m_Script: {fileID: 11500000, guid: 501e84d02049a104ca0715b5c977960e, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::AttackStanceSkill
-  targetScope: 0
-  buffList: []
-  groundZonePrefab: {fileID: 0}
-  instantDamagePer: 0
-  instantHitEffect: {fileID: 0}
-  instantHitEffectLifetime: 1
-  cooldown: 20
-  duration: 20
-  blocksBasicAttack: 0
+  m_EditorClassIdentifier: Assembly-CSharp::HitCountStanceTrait
+  watchedAttack: {fileID: 11400000, guid: 15c65868243dc8649ba70d2febbf1251, type: 2}
+  hitsToTrigger: 20
   stanceAttackData: {fileID: 11400000, guid: ca6e867ce74801342a8738251febd720, type: 2}
+  stanceDuration: 15
+--- !u!114 &-4493755571375677299
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1125355577782864148}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7ba75646a75d8b6408f0174f05337371, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::OnAttackSpeedBuffTrait
+  attackSpeedBonus: 0.3
+  duration: 10
+  maxStacks: 10
 --- !u!1 &1184476059935144041
 GameObject:
   m_ObjectHideFlags: 0

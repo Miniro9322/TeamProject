@@ -10,6 +10,7 @@ public class HeroArchiveUI : MonoBehaviour
 
     [SerializeField] private Image mainImage;
     [SerializeField] private TextMeshProUGUI nameText;
+    [SerializeField] private Button exitButton;
     private Animator bookAnimator;
 
     private void OnEnable()
@@ -41,5 +42,8 @@ public class HeroArchiveUI : MonoBehaviour
         for (int i = listContent.childCount - 1; i >= 0; i--)
             Destroy(listContent.GetChild(i).gameObject);
     }
-
+    public void OnExit()
+    {
+        gameObject.SetActive(false);
+    }
 }
