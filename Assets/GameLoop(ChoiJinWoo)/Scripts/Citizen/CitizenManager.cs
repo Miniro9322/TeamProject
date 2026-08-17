@@ -55,6 +55,12 @@ public class CitizenManager : MonoBehaviour
         UpdateCitizen();
     }
 
+    public void FreeCitizenForHero(int amount)
+    {
+        heroUsedCitizen -= amount;
+        UpdateCitizen();
+    }
+
     public void RecycleCitizen()
     {
         usedCitizen--;
