@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 // 얼음 보드에 놓인 모닥불 불빛을 모아 밤/낮에 맞춰 한꺼번에 켜고 끈다.
-public class CampfireLightController
+public class CampfireLightController : IZoneEffect
 {
     private readonly List<CampfireLight> lights = new();
     private readonly List<MapBoard> lightBoards = new();
@@ -24,7 +24,7 @@ public class CampfireLightController
     }
 
     // 밤이 시작되면 소속 모듈이 해금된 불빛만 켠다. 잠긴 모듈의 불빛은 건너뛴다.
-    public void TurnOn()
+    public void OnNightChanged()
     {
         for (int index = 0; index < lights.Count; index++)
         {
@@ -38,7 +38,7 @@ public class CampfireLightController
     }
 
     // 낮이 시작되면 모아둔 불빛을 전부 끈다.
-    public void TurnOff()
+    public void OnDayChanged()
     {
         for (int index = 0; index < lights.Count; index++)
         {

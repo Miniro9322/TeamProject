@@ -18,51 +18,85 @@ public class LaneBuilder : ILaneBuilder
         var lanes = new List<LaneData>();
         var spawns = new List<Tile>(spawnTiles);
         var cores = new HashSet<Tile>(coreTiles);
+        Dictionary<Tile, int> coreDistance = BuildCoreDistance(cells, coreTiles);
 
         spawns.Sort(CompareSpawn);
 
         for (int i = 0; i < spawns.Count; i++)
         {
-            AddSpawnLanes(cells, spawns[i], cores, lanes);
+            AddSpawnLanes(cells, spawns[i], cores, coreDistance, lanes);
         }
 
         return lanes;
     }
 
+    // 타일마다 가장 가까운 본진까지 칸 거리를 미리 재 둔다(갈래마다 길찾기가 매번 다시 재지 않게).
+    // cells가 Dictionary.Values라 색인 목록으로 바꿀 다른 수단이 없어 foreach로 한 번만 편다.
+    private static Dictionary<Tile, int> BuildCoreDistance(IReadOnlyDictionary<Vector2Int, Tile> cells, IReadOnlyList<Tile> cores)
+    {
+        var result = new Dictionary<Tile, int>();
+        foreach (Tile tile in cells.Values)
+        {
+            result[tile] = ComputeNearestCore(tile, cores);
+        }
+        return result;
+    }
+
+    // 한 타일에서 가장 가까운 본진까지 칸 거리를 잰다. BuildCoreDistance가 한 번만 부른다.
+    private static int ComputeNearestCore(Tile tile, IReadOnlyList<Tile> cores)
+    {
+        if (cores.Count == 0)
+        {
+            return 0;
+        }
+
+        int best = int.MaxValue;
+        for (int i = 0; i < cores.Count; i++)
+        {
+            int distance = GridCalculator.GetDistance(tile.Coord, cores[i].Coord);
+            if (distance < best)
+            {
+                best = distance;
+            }
+        }
+
+        return best;
+    }
+
     // 이 스폰에 지정된 경로마다 레인 하나를 만듭니다. 지정이 없으면 자동 최단 경로 하나만 냅니다.
-    private void AddSpawnLanes(IReadOnlyDictionary<Vector2Int, Tile> cells, Tile spawn, HashSet<Tile> cores, List<LaneData> lanes)
+    private void AddSpawnLanes(IReadOnlyDictionary<Vector2Int, Tile> cells, Tile spawn, HashSet<Tile> cores, Dictionary<Tile, int> coreDistance, List<LaneData> lanes)
     {
         List<RouteData> spawnRoutes = GetRoutes(spawn);
 
         if (spawnRoutes.Count == 0)
         {
-            lanes.Add(BuildLane(cells, spawn, null, cores));
+            lanes.Add(BuildLane(cells, spawn, null, cores, coreDistance));
             return;
         }
 
         for (int index = 0; index < spawnRoutes.Count; index++)
         {
-            lanes.Add(BuildLane(cells, spawn, spawnRoutes[index], cores));
+            lanes.Add(BuildLane(cells, spawn, spawnRoutes[index], cores, coreDistance));
         }
     }
 
     // 레인 하나를 걷기·헤엄 두 통행 방식으로 각각 계산해 함께 담습니다. 걷기가 실패하면 빈 레인을 냅니다.
     // 헤엄은 걷기보다 지날 수 있는 칸이 더 넓어(물+걷는 칸) 걷기가 되면 헤엄도 항상 됩니다.
-    private LaneData BuildLane(IReadOnlyDictionary<Vector2Int, Tile> cells, Tile spawn, RouteData route, HashSet<Tile> cores)
+    private LaneData BuildLane(IReadOnlyDictionary<Vector2Int, Tile> cells, Tile spawn, RouteData route, HashSet<Tile> cores, Dictionary<Tile, int> coreDistance)
     {
         if (cores.Count == 0)
         {
             return new LaneData(spawn, null, route, Array.Empty<Tile>(), Array.Empty<Tile>());
         }
 
-        List<Tile> walk = FindRoute(cells, spawn, route, cores, PassType.Walk);
+        List<Tile> walk = FindRoute(cells, spawn, route, cores, coreDistance, PassType.Walk);
 
         if (walk == null || walk.Count == 0)
         {
             return new LaneData(spawn, null, route, Array.Empty<Tile>(), Array.Empty<Tile>());
         }
 
-        List<Tile> swim = FindRoute(cells, spawn, route, cores, PassType.Swim);
+        List<Tile> swim = FindRoute(cells, spawn, route, cores, coreDistance, PassType.Swim);
         Tile goal = walk[walk.Count - 1];
         return new LaneData(spawn, goal, route, walk, swim ?? EmptyTiles);
     }
@@ -71,15 +105,15 @@ public class LaneBuilder : ILaneBuilder
     private static readonly List<Tile> EmptyTiles = new();
 
     // 지정 경로가 있으면 그 노드를 따르고, 없으면 최단 경로를 씁니다.
-    private List<Tile> FindRoute(IReadOnlyDictionary<Vector2Int, Tile> cells, Tile spawn, RouteData route, HashSet<Tile> cores, PassType pass)
+    private List<Tile> FindRoute(IReadOnlyDictionary<Vector2Int, Tile> cells, Tile spawn, RouteData route, HashSet<Tile> cores, Dictionary<Tile, int> coreDistance, PassType pass)
     {
         if (route == null)
         {
-            return AutoPath(spawn, cores, pass);
+            return AutoPath(spawn, cores, coreDistance, pass);
         }
 
         List<Tile> nodes = GetNodes(cells, route.Nodes, pass);
-        return NodePath(spawn, nodes, cores, pass);
+        return NodePath(spawn, nodes, cores, coreDistance, pass);
     }
 
     // 이 스폰에 지정된 경로들. 보관처가 없거나 지정이 없으면 빈 목록입니다.
@@ -129,6 +163,7 @@ public class LaneBuilder : ILaneBuilder
         Tile spawn,
         IReadOnlyList<Tile> nodes,
         HashSet<Tile> cores,
+        Dictionary<Tile, int> coreDistance,
         PassType pass)
     {
         var path = new List<Tile> { spawn };
@@ -147,7 +182,7 @@ public class LaneBuilder : ILaneBuilder
             current = nodes[i];
         }
 
-        List<Tile> last = AutoPath(current, cores, pass);
+        List<Tile> last = AutoPath(current, cores, coreDistance, pass);
 
         if (last == null)
         {
@@ -169,13 +204,20 @@ public class LaneBuilder : ILaneBuilder
     }
 
     // 코어까지, 이 통행 방식으로 갈 수 있는 최단 경로를 계산합니다.
-    private static List<Tile> AutoPath(Tile from, HashSet<Tile> cores, PassType pass)
+    private static List<Tile> AutoPath(Tile from, HashSet<Tile> cores, Dictionary<Tile, int> coreDistance, PassType pass)
     {
         return Pathfinder.FindPath(
             new[] { from },
             tile => cores.Contains(tile),
             tile => tile.CanPass(pass),
-            tile => GetDistance(tile, cores));
+            tile => NearestCore(tile, coreDistance));
+    }
+
+    // 가장 가까운 본진까지의 칸 거리. BuildCoreDistance가 미리 재 둔 값을 그대로 꺼낸다.
+    private static int NearestCore(Tile tile, Dictionary<Tile, int> coreDistance)
+    {
+        coreDistance.TryGetValue(tile, out int distance);
+        return distance;
     }
 
     // 구간을 이어붙입니다. 첫 타일은 앞 구간의 끝과 겹치므로 건너뜁니다.
@@ -185,23 +227,6 @@ public class LaneBuilder : ILaneBuilder
         {
             path.Add(segment[i]);
         }
-    }
-
-    // 현재 타일에서 가장 가까운 코어까지의 맨해튼 거리를 구합니다.
-    private static int GetDistance(Tile tile, HashSet<Tile> cores)
-    {
-        int nearest = int.MaxValue;
-
-        foreach (Tile core in cores)
-        {
-            int gap = GridCalculator.GetDistance(tile.Coord, core.Coord);
-            if (gap < nearest)
-            {
-                nearest = gap;
-            }
-        }
-
-        return nearest;
     }
 
     // 스폰을 X 좌표 우선, Y 좌표 차순으로 비교합니다.

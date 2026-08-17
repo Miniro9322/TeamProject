@@ -26,7 +26,8 @@ public class MapAssemble : MonoBehaviour
     private List<EnemyLanes> laneModules;
     private PlaceGhost ghost;
     private HeroSkillCastController skillCast;
-    private ZoneEffectApplier zoneEffectApplier;
+    private DesertZoneEffect desertZoneEffect;
+    private List<IceZoneEffect> iceZoneEffects;
     private CampfireLightController campfireLights;
     private MapBoard desertBoard;
 
@@ -56,7 +57,7 @@ public class MapAssemble : MonoBehaviour
             desertBoard,
             Resources.Load<GameObject>("ZoneEffectPrefab/DesertStrongVFX"),
             Resources.Load<GameObject>("ZoneEffectPrefab/DesertWeakVFX"));
-        zoneEffectApplier = new ZoneEffectApplier(
+        desertZoneEffect = new DesertZoneEffect(
             desertZone,
             desertBoard,
             shelterData,
@@ -69,8 +70,7 @@ public class MapAssemble : MonoBehaviour
         dayNightRule.rule = mapGame.Rule;
         palette.dayNightRule = dayNightRule;
 
-        mapGame.Placer.zoneEffectApplier = zoneEffectApplier;
-        UnitReplace replace = new UnitReplace(mapGame.Units, zoneEffectApplier);
+        UnitReplace replace = new UnitReplace(mapGame.Units);
 
         skillCast = new HeroSkillCastController { dayNightRule = dayNightRule };
 
@@ -99,7 +99,7 @@ public class MapAssemble : MonoBehaviour
         PlaceAction action = new PlaceAction();
         action.palette = palette;
         action.placer = mapGame.Placer;
-        action.remover = new UnitRemover(mapGame.Units, mapGame.HeroRoster, zoneEffectApplier);
+        action.remover = new UnitRemover(mapGame.Units, mapGame.HeroRoster);
         action.replace = replace;
         action.dayNightRule = dayNightRule;
         action.view = view;
@@ -131,11 +131,12 @@ public class MapAssemble : MonoBehaviour
         mapGame.Rule.ChangeToDay += OnDayChanged;
         OnDayChanged(); // 첫 날짜도 시작하자마자 바로 맞춘다 — 이벤트가 처음 울릴 때까지 기다리지 않는다
 
-        mapGame.Rule.ChangeToDay += zoneEffectApplier.OnDayChanged;
-        zoneEffectApplier.OnDayChanged();
-
-        mapGame.Rule.ChangeToDay += campfireLights.TurnOff;
-        campfireLights.TurnOff(); // 첫 날도 낮이니 꺼진 채로 시작
+        RegisterZoneEffect(desertZoneEffect);
+        RegisterZoneEffect(campfireLights);
+        for (int index = 0; index < iceZoneEffects.Count; index++)
+        {
+            RegisterZoneEffect(iceZoneEffects[index]);
+        }
 
         mapGame.Rule.ChangeToDay += OnFireDayChanged;
         OnFireDayChanged(); // 첫 날도 낮이니 꺼진 채로 시작
@@ -143,9 +144,7 @@ public class MapAssemble : MonoBehaviour
         FireReceiver.SetGameManager(mapGame.Rule);
 
         mapGame.Rule.ChangeToNight += view.ClearMode;
-        mapGame.Rule.ChangeToNight += zoneEffectApplier.OnNightChanged;
         mapGame.Rule.ChangeToNight += skillCast.ClearSelection;
-        mapGame.Rule.ChangeToNight += campfireLights.TurnOn;
 
         // 확장 이벤트: 5일마다 GameManager가 쏘고, 밤이 되면 선택을 무른다.
         // 미배선이면 확장만 꺼지고 나머지 조립은 그대로 돈다.
@@ -159,13 +158,18 @@ public class MapAssemble : MonoBehaviour
     {
         ghost.ClearGhosts();
         mapGame.Rule.ChangeToNight -= view.ClearMode;
-        mapGame.Rule.ChangeToNight -= zoneEffectApplier.OnNightChanged;
-        mapGame.Rule.ChangeToDay -= zoneEffectApplier.OnDayChanged;
-        zoneEffectApplier.Dispose();
+        UnregisterZoneEffect(desertZoneEffect);
+        desertZoneEffect.Dispose();
         if (campfireLights != null)
         {
-            mapGame.Rule.ChangeToNight -= campfireLights.TurnOn;
-            mapGame.Rule.ChangeToDay -= campfireLights.TurnOff;
+            UnregisterZoneEffect(campfireLights);
+        }
+        if (iceZoneEffects != null)
+        {
+            for (int index = 0; index < iceZoneEffects.Count; index++)
+            {
+                UnregisterZoneEffect(iceZoneEffects[index]);
+            }
         }
         mapGame.Rule.ChangeToDay -= OnFireDayChanged;
         mapGame.Rule.ChangeToNight -= OnFireNightChanged;
@@ -189,6 +193,21 @@ public class MapAssemble : MonoBehaviour
                 mapGame.Rule.ChangeToNight -= trail.PlayOnce;
             }
         }
+    }
+
+    // 지대 효과를 낮/밤 이벤트에 연결하고 첫 상태를 낮으로 맞춘다.
+    private void RegisterZoneEffect(IZoneEffect effect)
+    {
+        mapGame.Rule.ChangeToDay += effect.OnDayChanged;
+        mapGame.Rule.ChangeToNight += effect.OnNightChanged;
+        effect.OnDayChanged();
+    }
+
+    // 등록해둔 지대 효과를 낮/밤 이벤트에서 뗀다.
+    private void UnregisterZoneEffect(IZoneEffect effect)
+    {
+        mapGame.Rule.ChangeToDay -= effect.OnDayChanged;
+        mapGame.Rule.ChangeToNight -= effect.OnNightChanged;
     }
 
     // 레지스트리에 등록된 모듈들의 보드·트레일·레인 목록을 한 번의 순회로 모은다. 모듈 루트에 ModuleLogic과 MapBoard가 함께 산다.
@@ -219,11 +238,12 @@ public class MapAssemble : MonoBehaviour
         }
     }
 
-    // 모든 얼음 보드의 고정 모닥불 보호 영역과 그 자리에 놓인 불빛을 시작할 때 한 번 만듭니다.
+    // 모든 얼음 보드의 고정 모닥불 보호 영역과 그 자리에 놓인 불빛, 지대 효과를 시작할 때 한 번 만듭니다.
     private void BuildCampfires(List<MapBoard> boards)
     {
         CampfireCalc calc = new();
         campfireLights = new CampfireLightController();
+        iceZoneEffects = new List<IceZoneEffect>();
         for (int index = 0; index < boards.Count; index++)
         {
             MapBoard board = boards[index];
@@ -233,6 +253,7 @@ public class MapAssemble : MonoBehaviour
                 CampfireData data = calc.BuildData(board.Cells, iceZone.CampfireRange);
                 iceZone.SetCampfire(data);
                 campfireLights.Collect(board, iceZone.CampfireRange);
+                iceZoneEffects.Add(new IceZoneEffect(board, mapGame.Units, iceZone));
             }
         }
     }

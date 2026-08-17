@@ -149,11 +149,4 @@ public class PlaceAction
         // 선택 표시는 칸 하나에 붙으므로 덮은 칸 중 시작 칸을 대표로 쓴다.
         if (data.Area.Board.TryGetCell(data.Area.Origin, out Tile tile)) view.Select(tile);
     }
-
-    public void ClearAllPlacedUnit()
-    {
-        replace.CancelHeldAndDestroy();
-        remover.RemoveAll();
-        view.ClearSelection();
-    }
 }
