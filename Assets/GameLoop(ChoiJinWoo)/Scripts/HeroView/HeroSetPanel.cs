@@ -1,8 +1,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-// 영웅 "생성" 전용 패널. 근접/원거리 버튼 2개뿐 — 누르면 고정 비용을 내고 HeroCreateManager가
-// 티어 확률대로 뽑은 영웅 하나를 로스터에 추가한다.
+// 영웅 "생성" 전용 패널. 근접/원거리 버튼 2개뿐 — 누르면 자원 비용을 내고 HeroCreateManager가
+// 티어 확률대로 뽑은 영웅 하나를 로스터에 추가한다. 인구수는 뽑힌 영웅의 실제 티어만큼 소모되며,
+// 남은 인구수를 넘으면 음수로 내려간다(자원 비용과 달리 생성을 막지 않는다).
 public class HeroSetPanel : MonoBehaviour
 {
     [SerializeField] private MapView view;
@@ -46,7 +47,8 @@ public class HeroSetPanel : MonoBehaviour
         if (!view.IsOff || !CanAfford(icon)) return;
         if (!createManager.TryRollHero(kind, out HeroData picked)) return; // 비용은 결과가 나온 뒤에 낸다.
 
-        game.CitizenManager.UseCitizenForHero(icon.CitizenCost);
+        // 뽑힌 영웅의 실제 티어만큼 인구수를 소모한다 — 남은 인구수를 초과해도 생성은 진행되고 음수로 남는다.
+        game.CitizenManager.UseCitizenForHero(picked.PopulationCost);
         view.resourcesManager.ProductChanged(icon.ResourceCost.ToNegatedCostArray());
 
         Placeable slot = new Placeable
@@ -55,13 +57,15 @@ public class HeroSetPanel : MonoBehaviour
             prefab = picked.HeroPrefab,
             kind = kind,
         };
-        game.HeroRoster.Add(slot, picked);
+        game.HeroRoster.Add(slot, picked, picked.PopulationCost);
         if (!rosterPanel.activeSelf) rosterPanel.SetActive(true);
     }
 
+    // 인구수가 하나라도 남아있으면 생성은 허용한다 — 뽑힌 영웅의 실제 티어 비용이 남은 인구수를 넘으면
+    // OnCreate에서 그만큼 음수로 내려간다(인구수가 0 이하일 때만 버튼을 막는다).
     private bool CanAfford(HeroCreateIcon icon)
     {
-        return game.CitizenManager.CheckCanUseCitizen(icon.CitizenCost)
+        return game.CitizenManager.CheckCanUseCitizen()
             && view.resourcesManager.CheckResources(icon.ResourceCost.ToNegatedCostArray());
     }
 

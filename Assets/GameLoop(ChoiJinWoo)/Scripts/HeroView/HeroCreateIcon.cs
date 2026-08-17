@@ -7,12 +7,10 @@ using UnityEngine.UI;
 public class HeroCreateIcon : MonoBehaviour
 {
     [SerializeField] private Button button;
-    [SerializeField] private int citizenCost;
     [SerializeField] private List<ResourceCost> resourceCost;
     [SerializeField] private List<ResourceIcon> resourceIcons;
     [SerializeField] private string createName;
     [SerializeField] private HeroCreateToolTipTrigger toolTipTrigger;
-    public int CitizenCost => citizenCost;
     public List<ResourceCost> ResourceCost => resourceCost;
     public List<ResourceIcon> ResourceIcons => resourceIcons;
     public string CreateName => createName;

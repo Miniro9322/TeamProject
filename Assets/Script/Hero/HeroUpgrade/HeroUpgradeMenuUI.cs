@@ -88,7 +88,7 @@ public class HeroUpgradeMenuUI : MonoBehaviour
     public void UpdateResourceInfo(int currentLevel)
     {
         var costs = upgradeState.GetCostForLevel(tier, currentLevel);
-        currentLevelText.text = $"LV.{currentLevel}";
+        currentLevelText.text = $"LV.{currentLevel + 1}";
         //foreach (var resourceInfo in resourceInfoMap.Values)
         //{
         //    resourceInfo.gameObject.SetActive(false);

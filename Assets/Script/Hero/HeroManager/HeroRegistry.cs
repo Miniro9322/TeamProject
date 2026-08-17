@@ -9,7 +9,6 @@ public class HeroRegistry : MonoBehaviour
     [SerializeField] private MapGame game;
 
     public IReadOnlyList<HeroData> AllHeroDatas => datas;
-    private readonly Dictionary<int, List<HeroData>> heroForTierDatas = new();
 
     // HeroRoster.Entries를 MergeKey로 묶어둔 캐시. HeroRoster가 원본, 여긴 조회용 인덱스일 뿐.
     // Placed/Available 상태와 무관하게 엔트리 자체를 담아, 배치되지 않은 로스터 사본도 합성 후보가 되게 한다.
@@ -23,10 +22,6 @@ public class HeroRegistry : MonoBehaviour
         foreach (HeroData data in datas)
         {
             if (data.HeroPrefab == null) continue; // 프리팹 참조가 끊긴 데이터는 합성/생성 후보 풀에서 제외.
-
-            if (heroForTierDatas.ContainsKey(data.Tier) == false)
-                heroForTierDatas[data.Tier] = new List<HeroData>();
-            heroForTierDatas[data.Tier].Add(data);
 
             var tierKindKey = (data.Tier, data.HeroType);
             if (!heroDatasByTierAndKind.TryGetValue(tierKindKey, out List<HeroData> kindList))
@@ -83,10 +78,11 @@ public class HeroRegistry : MonoBehaviour
         return true;
     }
 
-    // currentTier 영웅들을 합성했을 때 나올 수 있는 다음 티어(currentTier + 1) HeroData 후보들.
-    public bool TryGetNextTierHeroDatas(int currentTier, out List<HeroData> datas)
+    // currentTier 영웅들을 합성했을 때 나올 수 있는 다음 티어(currentTier + 1), 같은 종류(근접/원거리) HeroData 후보들.
+    public bool TryGetNextTierHeroDatas(int currentTier, OccupantKind kind, out List<HeroData> datas)
     {
-        return heroForTierDatas.TryGetValue(currentTier + 1, out datas) && datas.Count > 0;
+        int heroTypeKind = kind == OccupantKind.RangedHero ? 1 : 0;
+        return heroDatasByTierAndKind.TryGetValue((currentTier + 1, heroTypeKind), out datas) && datas.Count > 0;
     }
 
     // 영웅 생성 뽑기용: 그 티어+종류(근접/원거리)에 해당하는 HeroData들.

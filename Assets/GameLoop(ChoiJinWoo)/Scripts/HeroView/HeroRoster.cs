@@ -14,9 +14,9 @@ public class HeroRoster
         get { return _entries; }
     }
 
-    public HeroRosterEntry Add(Placeable slot, HeroData data)
+    public HeroRosterEntry Add(Placeable slot, HeroData data, int citizenCost = 0)
     {
-        HeroRosterEntry entry = new HeroRosterEntry(slot, data);
+        HeroRosterEntry entry = new HeroRosterEntry(slot, data, citizenCost);
         _entries.Add(entry);
         Changed?.Invoke();
         return entry;
