@@ -19,7 +19,7 @@ public class Hero : MonoBehaviour, IDamageAble, IUnit, IStunAble, IDebuffCarrier
     public MergeKey MergeKey => heroData.MergeKey;
 
     // 티어 단위로 공유되는 업그레이드 레벨(개체별로 갖지 않음) — HeroTierUpgradeState 참고.
-    public int Level => tierUpgradeState.GetLevel(Tier);
+    public int Level => tierUpgradeState.GetLevel(Tier) + 1;
 
     private UpgradeState UpgradeStateOrFallback => upgradeState ?? new UpgradeState();
 
@@ -392,7 +392,9 @@ public class Hero : MonoBehaviour, IDamageAble, IUnit, IStunAble, IDebuffCarrier
 
     private void OnTierLevelChanged(int changedTier)
     {
-        if (changedTier == Tier) ApplyTierLevelBonus();
+        if (changedTier != Tier) return;
+        ApplyTierLevelBonus();
+        if (!isDead) currentHp = sc[StatType.HP]; // 업그레이드로 최대체력이 늘어난 만큼 낮이니 그냥 전부 채운다
     }
 
     protected virtual void OnDestroy()
