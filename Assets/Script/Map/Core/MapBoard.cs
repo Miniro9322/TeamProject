@@ -8,6 +8,7 @@ public class MapBoard : MonoBehaviour
     private readonly List<Tile> _spawns = new();
     private readonly List<Tile> _cores = new();
     private readonly Dictionary<GameObject, Tile> _enemyCell = new(); // 적→현재 칸(직전 칸과 비교해 이동 감지)
+    private readonly Dictionary<Tile, int> _coreDistance = new(); // 타일→가장 가까운 본진까지 칸 거리(Build 때 미리 잼)
 
     [SerializeField] private Grid _grid; // 좌표계의 단일 소스. 셀 크기·원점·Swizzle을 모두 쥔다.
     [SerializeField] private Vector2Int _bakedOffset; // TilePosBaker가 구울 때 계산해 저장한 모듈 min값. 런타임은 이걸 그대로 쓴다(재계산 안 함).
@@ -46,6 +47,7 @@ public class MapBoard : MonoBehaviour
         _spawns.Clear();
         _cores.Clear();
         _enemyCell.Clear();
+        _coreDistance.Clear();
 
         // 이 모듈 Grid 하위 타일만 모은다(씬 전체 스캔 금지 — 모듈 격리). Find 미사용.
         var tiles = new List<Tile>();
@@ -82,6 +84,12 @@ public class MapBoard : MonoBehaviour
         foreach (Tile cell in _cells.Values)
         {
             _cellList.Add(cell);
+        }
+
+        // 타일마다 가장 가까운 본진까지 칸 거리를 미리 재 둔다(길찾기가 매번 다시 재지 않게).
+        for (int i = 0; i < _cellList.Count; i++)
+        {
+            _coreDistance[_cellList[i]] = ComputeNearestCore(_cellList[i], _cores);
         }
 
         // 2) 안쪽 칸 범위: 장식(Special)을 뺀 타일들의 바운딩 박스. 외곽 한 줄이 장식이라 그만큼 좁다.
@@ -144,36 +152,10 @@ public class MapBoard : MonoBehaviour
     {
         if (!HasEndpoints)
         {
-            ClearLanes();
             return null;
         }
 
-        List<Tile> path = Pathfinder.FindPath(
-            _spawns, IsCore, CanWalk, HeuristicToNearestCore);
-        SetLanes(path);
-
-        return path;
-    }
-
-    private void SetLanes(List<Tile> path)
-    {
-        ClearLanes();
-        if (path == null) return;
-        for (int i = 0; i < path.Count; i++)
-        {
-            Tile tile = path[i];
-            if (tile.IsEnemySpawn) continue; 
-            if (tile.IsCore) continue;
-            tile.State.EnemyLane = true;
-        }
-    }
-
-    private void ClearLanes()
-    {
-        for (int i = 0; i < _cellList.Count; i++)
-        {
-            _cellList[i].State.EnemyLane = false;
-        }
+        return Pathfinder.FindPath(_spawns, IsCore, CanWalk, HeuristicToNearestCore);
     }
 
     private static bool IsCore(Tile tile) => tile.Terrain == TerrainType.Core;
@@ -181,18 +163,25 @@ public class MapBoard : MonoBehaviour
     // 걸어서 오는 적 기준으로 길을 찾는다 — 헤엄 칸은 통로에서 빠진다.
     private static bool CanWalk(Tile tile) => tile.CanWalk;
 
-    // 가장 가까운 본진까지의 칸 거리. 경로 찾기가 어느 쪽을 먼저 뒤질지 정하는 데 쓴다.
+    // 가장 가까운 본진까지의 칸 거리. Build가 미리 재 둔 값을 그대로 꺼낸다.
     private int HeuristicToNearestCore(Tile tile)
     {
-        if (_cores.Count == 0)
+        _coreDistance.TryGetValue(tile, out int distance);
+        return distance;
+    }
+
+    // 한 타일에서 가장 가까운 본진까지 칸 거리를 잰다. Build 때 한 번만 불린다.
+    private static int ComputeNearestCore(Tile tile, List<Tile> cores)
+    {
+        if (cores.Count == 0)
         {
             return 0;
         }
 
         int best = int.MaxValue;
-        for (int i = 0; i < _cores.Count; i++)
+        for (int i = 0; i < cores.Count; i++)
         {
-            int distance = GridCalculator.GetDistance(tile.Coord, _cores[i].Coord);
+            int distance = GridCalculator.GetDistance(tile.Coord, cores[i].Coord);
             if (distance < best)
             {
                 best = distance;
