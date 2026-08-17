@@ -7,17 +7,17 @@
 float4 _FogAreas[8];
 float _FogOpens[8];
 int _FogCount;
+float4 _FogSafeAreas[8];
+int _FogSafeCount;
+float _FogCoverMargin;
+float _FogSafeMargin;
 
 // FogLook가 인스펙터 값으로 밀어주는 외형 파라미터
 float4 _FogColor;
 float _FogDensity;
-float _EdgeSoft;    // 경계 부드러움
-float _EdgeRough;   // 경계 흔들림 진폭(직선 깨는 핵심)
-float _EdgeScale;   // 경계 노이즈 주기(로브 크기)
-float _EdgeMargin;  // 모듈 외곽에서 바깥으로 더 걷어낼 거리(월드)
 float _CloudScale;  // 색 구름 주기
 float _CloudTint;   // 색 구름 대비
-float _WindSpeed;
+float _CloudWindSpeed;
 
 void FogWorld_float(
     float2 UV,
@@ -136,6 +136,85 @@ float FogSampleDepth01(float2 uv)
 #endif
 }
 
+float FogLockedCoverage(float areaDistance)
+{
+    return step(areaDistance, _FogCoverMargin);
+}
+
+float FogOpenedCoverage(float areaDistance)
+{
+    return step(areaDistance, 0.0);
+}
+
+float FogSafeCoverage(float areaDistance)
+{
+    return step(areaDistance, _FogSafeMargin);
+}
+
+float FogModuleMask(float2 worldPosition)
+{
+    float moduleMask = 0.0;
+    float openedMask = 0.0;
+    int areaCount = _FogCount;
+
+    [unroll]
+    for (int areaIndex = 0; areaIndex < 8; areaIndex++)
+    {
+        if (areaIndex >= areaCount) { break; }
+
+        float areaDistance = BoxDist(worldPosition, _FogAreas[areaIndex]);
+        float lockedCoverage = FogLockedCoverage(areaDistance);
+        float openedCoverage = FogOpenedCoverage(areaDistance);
+        float openAmount = saturate(_FogOpens[areaIndex]);
+
+        moduleMask = max(moduleMask, lockedCoverage * (1.0 - openAmount));
+        openedMask = max(openedMask, openedCoverage * openAmount);
+    }
+
+    return min(moduleMask, 1.0 - openedMask);
+}
+
+float FogSafeMask(float2 worldPosition)
+{
+    float safeMask = 0.0;
+    int safeAreaCount = _FogSafeCount;
+
+    [unroll]
+    for (int safeAreaIndex = 0; safeAreaIndex < 8; safeAreaIndex++)
+    {
+        if (safeAreaIndex >= safeAreaCount) { break; }
+
+        float safeDistance = BoxDist(worldPosition, _FogSafeAreas[safeAreaIndex]);
+        safeMask = max(safeMask, FogSafeCoverage(safeDistance));
+    }
+
+    return safeMask;
+}
+
+// Calculates only the final covered area from a world position.
+float CalculateFogAreaMask(float2 worldPosition)
+{
+    float moduleMask = FogModuleMask(worldPosition);
+    float safeMask = FogSafeMask(worldPosition);
+
+    return moduleMask * (1.0 - safeMask);
+}
+
+// Outputs only the covered area for Shader Graph.
+void FogAreaMask_float(
+    float2 UV,
+    out float AreaMask)
+{
+    float depth = FogSampleDepth01(UV);
+    float3 worldPosition = ComputeWorldSpacePosition(
+        UV,
+        depth,
+        UNITY_MATRIX_I_VP
+    );
+
+    AreaMask = CalculateFogAreaMask(worldPosition.xz);
+}
+
 void FogFinal_float(
     float2 UV,
     out float3 Color,
@@ -150,42 +229,16 @@ void FogFinal_float(
 #endif
     float3 world = ComputeWorldSpacePosition(UV, depth, UNITY_MATRIX_I_VP);
 
-    // 2) 색 구름 — 서로 다른 속도·주기로 흐르는 2겹으로 뭉게뭉게. _WindSpeed는 월드/초.
-    float2 wind = _Time.y * _WindSpeed;
-    float2 uvA = (world.xz + wind) * _CloudScale;
-    float2 uvB = (world.xz + wind * 1.7 + 37.0) * (_CloudScale * 0.5);
+    // 2) Samples two cloud layers with independent visual wind movement.
+    float2 cloudWind = _Time.y * _CloudWindSpeed;
+    float2 uvA = (world.xz + cloudWind) * _CloudScale;
+    float2 uvB = (world.xz + cloudWind * 1.7 + 37.0) * (_CloudScale * 0.5);
     float cloud = FogNoise(uvA) * 0.6 + FogNoise(uvB) * 0.4;
 
-    // 3) 경계 전용 노이즈 — 느리게 흐르는 큰 덩어리로 외곽선을 허문다.
-    float2 edgeUv = (world.xz + wind * 0.4) * _EdgeScale;
-    float edgeNoise = FogNoise(edgeUv);
+    // 3) Reads the shared area result without changing its calculation.
+    float mask = CalculateFogAreaMask(world.xz);
 
-    // 4) 잠금 마스크 (1=안개, 0=맨눈). 기본은 안개 없음 — 잠긴 모듈 발자국 안에서만 낀다.
-    //    판정이 XZ 좌표라 타일 높이와 무관하다: 외곽 벽의 측면도 같이 덮인다.
-    //    경계는 노이즈로 크게 허문다 — 안개는 격자를 모른다. 발자국 사각형을 따라 각지면 안 된다.
-    float soft = max(_EdgeSoft, 1e-3);
-    float mask = 0.0;
-    float opened = 0.0;
-    int count = _FogCount;
-    [unroll]
-    for (int i = 0; i < 8; i++)
-    {
-        if (i >= count) { break; }
-        float raw = BoxDist(world.xz, _FogAreas[i]);
-        float dist = raw - _EdgeMargin + (edgeNoise - 0.5) * _EdgeRough;
-        float inside = 1.0 - smoothstep(-soft, 0.0, dist);
-        float open = saturate(_FogOpens[i]);
-
-        mask = max(mask, inside * (1.0 - open));   // 개방될수록 걷힌다
-        // 열린 모듈의 발자국 안(노이즈 없는 원래 사각형)은 이웃 안개가 넘어오지 못하게 지킨다.
-        // 사각형 안(raw<=0)은 전부 보호하고, 밖으로만 soft만큼 풀린다. 경계에서 반만 지키면 테두리가 뿌옇게 남는다.
-        // 보호 경계도 노이즈로 허문다. 빼기만 하므로 구멍은 밖으로만 커지고 발자국 안은 절대 안 먹힌다.
-        float wob = raw - edgeNoise * _EdgeRough;
-        opened = max(opened, open * (1.0 - smoothstep(-soft, 0.0, wob)));
-    }
-    mask *= 1.0 - opened;
-
-    // 5) 출력 — 잠긴 모듈 자리에서만 불투명. 하늘은 어떤 박스에도 안 들어가 mask=0.
+    // 4) 출력 — 잠긴 모듈 자리에서만 불투명. 하늘은 어떤 박스에도 안 들어가 mask=0.
     Color = _FogColor.rgb * (1.0 - _CloudTint + _CloudTint * cloud);
     Alpha = mask * _FogDensity;
 }
