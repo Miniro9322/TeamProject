@@ -58,7 +58,7 @@ public class EnemyLanes : MonoBehaviour
         }
 
         CollectEndpoints(out List<Tile> spawns, out List<Tile> cores);
-        IReadOnlyList<LaneData> built = builder.BuildLanes(board.Cells, spawns, cores);
+        IReadOnlyList<LaneData> built = builder.BuildLanes(board.Cells, spawns, cores, board.CoreDistance);
         ApplyLanes(built);
     }
 

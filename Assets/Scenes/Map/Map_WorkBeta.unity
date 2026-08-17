@@ -20,7 +20,7 @@ RenderSettings:
   m_FogDensity: 0.01
   m_LinearFogStart: 0
   m_LinearFogEnd: 300
-  m_AmbientSkyColor: {r: 0.3037476, g: 0.3037476, b: 0.32555342, a: 1}
+  m_AmbientSkyColor: {r: 0.33050224, g: 0.33050224, b: 0.34933534, a: 1}
   m_AmbientEquatorColor: {r: 0.114, g: 0.125, b: 0.133, a: 1}
   m_AmbientGroundColor: {r: 0.047, g: 0.043, b: 0.035, a: 1}
   m_AmbientIntensity: 1
@@ -10547,7 +10547,7 @@ MonoBehaviour:
   registry: {fileID: 1862994567}
   openDuration: 1.2
   fogEnabled: 1
-  coverMarginCells: 0
+  coverMarginCells: 0.1
 --- !u!1 &676811881
 GameObject:
   m_ObjectHideFlags: 0
@@ -19608,8 +19608,8 @@ Light:
   m_Enabled: 1
   serializedVersion: 12
   m_Type: 1
-  m_Color: {r: 0.6074952, g: 0.6074952, b: 0.6947185, a: 1}
-  m_Intensity: 2
+  m_Color: {r: 0.6610045, g: 0.6610045, b: 0.7363368, a: 1}
+  m_Intensity: 0.64217144
   m_Range: 10
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
@@ -21449,7 +21449,7 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1484548496}
-  m_LocalRotation: {x: 0, y: 0, z: 0.6327118, w: -0.7743873}
+  m_LocalRotation: {x: 0, y: 0, z: 0.5577386, w: -0.8300167}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -28681,6 +28681,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ExpandTester
   registry: {fileID: 1862994567}
+  mapGame: {fileID: 314587623}
 --- !u!4 &2075775772
 Transform:
   m_ObjectHideFlags: 0

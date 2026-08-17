@@ -56,7 +56,7 @@ public static class FireReceiver
     {
         EnemyBase enemyBase = target.GetComponent<EnemyBase>();
         bool isFlying = enemyBase != null && enemyBase.IsFly;
-        return tile.IsFire && isNight && isFlying == false;
+        return tile.IsFire && isNight && isFlying == false && tile.Board.IsUnlocked;
     }
 
     // 대상을 등록하고 즉시 점화를 적용한다.

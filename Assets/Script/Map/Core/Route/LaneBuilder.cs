@@ -12,13 +12,17 @@ public class LaneBuilder : ILaneBuilder
         routes = config;
     }
 
-    // 모든 스폰을 좌표순으로 정렬하고 스폰마다 독립된 레인을 만듭니다.
-    public IReadOnlyList<LaneData> BuildLanes(IReadOnlyDictionary<Vector2Int, Tile> cells, IReadOnlyList<Tile> spawnTiles, IReadOnlyList<Tile> coreTiles)
+    // 모든 스폰을 좌표순으로 정렬하고 스폰마다 독립된 레인을 만듭니다. coreDistance를 생략하면 직접 계산합니다.
+    public IReadOnlyList<LaneData> BuildLanes(IReadOnlyDictionary<Vector2Int, Tile> cells, IReadOnlyList<Tile> spawnTiles, IReadOnlyList<Tile> coreTiles, IReadOnlyDictionary<Tile, int> coreDistance = null)
     {
         var lanes = new List<LaneData>();
         var spawns = new List<Tile>(spawnTiles);
         var cores = new HashSet<Tile>(coreTiles);
-        Dictionary<Tile, int> coreDistance = BuildCoreDistance(cells, coreTiles);
+
+        if (coreDistance == null)
+        {
+            coreDistance = BuildCoreDistance(cells, coreTiles);
+        }
 
         spawns.Sort(CompareSpawn);
 
@@ -30,8 +34,7 @@ public class LaneBuilder : ILaneBuilder
         return lanes;
     }
 
-    // 타일마다 가장 가까운 본진까지 칸 거리를 미리 재 둔다(갈래마다 길찾기가 매번 다시 재지 않게).
-    // cells가 Dictionary.Values라 색인 목록으로 바꿀 다른 수단이 없어 foreach로 한 번만 편다.
+    // 타일마다 가장 가까운 본진까지 칸 거리를 미리 계산합니다.
     private static Dictionary<Tile, int> BuildCoreDistance(IReadOnlyDictionary<Vector2Int, Tile> cells, IReadOnlyList<Tile> cores)
     {
         var result = new Dictionary<Tile, int>();
@@ -64,7 +67,7 @@ public class LaneBuilder : ILaneBuilder
     }
 
     // 이 스폰에 지정된 경로마다 레인 하나를 만듭니다. 지정이 없으면 자동 최단 경로 하나만 냅니다.
-    private void AddSpawnLanes(IReadOnlyDictionary<Vector2Int, Tile> cells, Tile spawn, HashSet<Tile> cores, Dictionary<Tile, int> coreDistance, List<LaneData> lanes)
+    private void AddSpawnLanes(IReadOnlyDictionary<Vector2Int, Tile> cells, Tile spawn, HashSet<Tile> cores, IReadOnlyDictionary<Tile, int> coreDistance, List<LaneData> lanes)
     {
         List<RouteData> spawnRoutes = GetRoutes(spawn);
 
@@ -82,7 +85,7 @@ public class LaneBuilder : ILaneBuilder
 
     // 레인 하나를 걷기·헤엄 두 통행 방식으로 각각 계산해 함께 담습니다. 걷기가 실패하면 빈 레인을 냅니다.
     // 헤엄은 걷기보다 지날 수 있는 칸이 더 넓어(물+걷는 칸) 걷기가 되면 헤엄도 항상 됩니다.
-    private LaneData BuildLane(IReadOnlyDictionary<Vector2Int, Tile> cells, Tile spawn, RouteData route, HashSet<Tile> cores, Dictionary<Tile, int> coreDistance)
+    private LaneData BuildLane(IReadOnlyDictionary<Vector2Int, Tile> cells, Tile spawn, RouteData route, HashSet<Tile> cores, IReadOnlyDictionary<Tile, int> coreDistance)
     {
         if (cores.Count == 0)
         {
@@ -105,7 +108,7 @@ public class LaneBuilder : ILaneBuilder
     private static readonly List<Tile> EmptyTiles = new();
 
     // 지정 경로가 있으면 그 노드를 따르고, 없으면 최단 경로를 씁니다.
-    private List<Tile> FindRoute(IReadOnlyDictionary<Vector2Int, Tile> cells, Tile spawn, RouteData route, HashSet<Tile> cores, Dictionary<Tile, int> coreDistance, PassType pass)
+    private List<Tile> FindRoute(IReadOnlyDictionary<Vector2Int, Tile> cells, Tile spawn, RouteData route, HashSet<Tile> cores, IReadOnlyDictionary<Tile, int> coreDistance, PassType pass)
     {
         if (route == null)
         {
@@ -163,7 +166,7 @@ public class LaneBuilder : ILaneBuilder
         Tile spawn,
         IReadOnlyList<Tile> nodes,
         HashSet<Tile> cores,
-        Dictionary<Tile, int> coreDistance,
+        IReadOnlyDictionary<Tile, int> coreDistance,
         PassType pass)
     {
         var path = new List<Tile> { spawn };
@@ -204,7 +207,7 @@ public class LaneBuilder : ILaneBuilder
     }
 
     // 코어까지, 이 통행 방식으로 갈 수 있는 최단 경로를 계산합니다.
-    private static List<Tile> AutoPath(Tile from, HashSet<Tile> cores, Dictionary<Tile, int> coreDistance, PassType pass)
+    private static List<Tile> AutoPath(Tile from, HashSet<Tile> cores, IReadOnlyDictionary<Tile, int> coreDistance, PassType pass)
     {
         return Pathfinder.FindPath(
             new[] { from },
@@ -213,8 +216,8 @@ public class LaneBuilder : ILaneBuilder
             tile => NearestCore(tile, coreDistance));
     }
 
-    // 가장 가까운 본진까지의 칸 거리. BuildCoreDistance가 미리 재 둔 값을 그대로 꺼낸다.
-    private static int NearestCore(Tile tile, Dictionary<Tile, int> coreDistance)
+    // 가장 가까운 본진까지의 칸 거리를 꺼냅니다.
+    private static int NearestCore(Tile tile, IReadOnlyDictionary<Tile, int> coreDistance)
     {
         coreDistance.TryGetValue(tile, out int distance);
         return distance;

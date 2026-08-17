@@ -10,8 +10,8 @@ public class MapBoard : MonoBehaviour
     private readonly Dictionary<GameObject, Tile> _enemyCell = new(); // 적→현재 칸(직전 칸과 비교해 이동 감지)
     private readonly Dictionary<Tile, int> _coreDistance = new(); // 타일→가장 가까운 본진까지 칸 거리(Build 때 미리 잼)
 
-    [SerializeField] private Grid _grid; // 좌표계의 단일 소스. 셀 크기·원점·Swizzle을 모두 쥔다.
-    [SerializeField] private Vector2Int _bakedOffset; // TilePosBaker가 구울 때 계산해 저장한 모듈 min값. 런타임은 이걸 그대로 쓴다(재계산 안 함).
+    [SerializeField] private Grid _grid; // 좌표계의 단일 소스. 
+    [SerializeField] private Vector2Int _bakedOffset; // TilePosBaker가 동작할때 계산해 저장한 모듈 min값.
     private Vector2Int _coordOffset; // raw Grid 좌표 → 베이크된 Tile.Coord로 정규화하는 상수 오프셋(모듈마다 다름)
     private Bounds _worldBounds;
     private RectInt _playRect;
@@ -21,6 +21,9 @@ public class MapBoard : MonoBehaviour
     public IReadOnlyDictionary<Vector2Int, Tile> Cells => _cells;
     public IReadOnlyList<Tile> CellList => _cellList;
     public int CellCount => _cells.Count;
+
+    // 타일에서 가장 가까운 본진까지 칸 거리.
+    public IReadOnlyDictionary<Tile, int> CoreDistance => _coreDistance;
     public Bounds WorldBounds => _worldBounds;
     public float CellSize => _grid.cellSize.x;
 
@@ -382,12 +385,13 @@ public class MapBoard : MonoBehaviour
     {
         var result = new List<Tile>();
         for (int dx = -range; dx <= range; dx++)
-            for (int dy = -range; dy <= range; dy++)
+        {
+            int maxDy = square ? range : range - Mathf.Abs(dx);
+            for (int dy = -maxDy; dy <= maxDy; dy++)
             {
-                if (!square && Mathf.Abs(dx) + Mathf.Abs(dy) > range) continue;
-                if (_cells.TryGetValue(new Vector2Int(origin.x + dx, origin.y + dy), out Tile tile))
-                    result.Add(tile);
+                if (_cells.TryGetValue(new Vector2Int(origin.x + dx, origin.y + dy), out Tile tile)) result.Add(tile);
             }
+        }
         return result;
     }
 

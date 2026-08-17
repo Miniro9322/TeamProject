@@ -10,14 +10,19 @@ public static class TileShapeQuery
         if (shape == RangeShape.Diamond) return board.GetTiles(origin, range, false);
         if (shape == RangeShape.Square) return board.GetTiles(origin, range, true);
 
-        // Cross: 정사각 블록을 받아 축(가로/세로) 위의 타일만 남긴다.
-        List<Tile> block = board.GetTiles(origin, range, true);
+        // Cross: 원점을 지나는 가로·세로 축 위의 칸만 직접 훑는다(정사각 전체를 만들고 버리지 않는다).
         var result = new List<Tile>();
-        for (int i = 0; i < block.Count; i++)
+        for (int dx = -range; dx <= range; dx++)
         {
-            Tile tile = block[i];
-            Vector2Int d = tile.Coord - origin;
-            if (d.x == 0 || d.y == 0) result.Add(tile);
+            if (board.TryGetCell(new Vector2Int(origin.x + dx, origin.y), out Tile h)) result.Add(h);
+        }
+        for (int dy = -range; dy < 0; dy++)
+        {
+            if (board.TryGetCell(new Vector2Int(origin.x, origin.y + dy), out Tile v)) result.Add(v);
+        }
+        for (int dy = 1; dy <= range; dy++)
+        {
+            if (board.TryGetCell(new Vector2Int(origin.x, origin.y + dy), out Tile v)) result.Add(v);
         }
         return result;
     }
