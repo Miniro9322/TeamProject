@@ -11,6 +11,7 @@ public class TopBar : MonoBehaviour
     [SerializeField] private TextMeshProUGUI foodText;
     [SerializeField] private TextMeshProUGUI citizenText;
     [SerializeField] private TextMeshProUGUI maxCitizenText;
+    [SerializeField] private TextMeshProUGUI idleCitizenText;
     [SerializeField] private TextMeshProUGUI heroCitizenText;
     [SerializeField] private TextMeshProUGUI LifeText;
     [SerializeField] private GameObject heroCitizen;
@@ -60,14 +61,9 @@ public class TopBar : MonoBehaviour
 
     private void UpdateCitizenUi()
     {
-        citizenText.text = $"{citizenManager.CanUseCitizen}";
-        maxCitizenText.text = $"{citizenManager.MaxCitizen - citizenManager.HeroUsedCitizen}";
-        if(citizenManager.HeroUsedCitizen == 0) heroCitizen.SetActive(false);
-        else
-        {
-            if(!heroCitizen.activeSelf)
-                heroCitizen.SetActive(true);
-            heroCitizenText.text = $"-{citizenManager.HeroUsedCitizen}";
-        }
+        if (citizenText != null) citizenText.text = $"{citizenManager.CurrentCitizen}";
+        if (maxCitizenText != null) maxCitizenText.text = $"{citizenManager.MaxCitizen}";
+        if (idleCitizenText != null) idleCitizenText.text = $"{citizenManager.CanUseCitizen}";
+        if (heroCitizenText != null) heroCitizenText.text = $"{citizenManager.HeroUsedCitizen}";
     }
 }
