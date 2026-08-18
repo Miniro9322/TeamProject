@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Threading;
 using UnityEngine;
 using UnityEngine.Pool;
+using UnityEngine.UI;
 using VContainer;
 
 public enum RangeQueryAffinity { Enemy, TargetableEnemy, Ally }
@@ -18,7 +19,7 @@ public class Hero : MonoBehaviour, IDamageAble, IUnit, IStunAble, IDebuffCarrier
     public MergeKey MergeKey => heroData.MergeKey;
 
     // 티어 단위로 공유되는 업그레이드 레벨(개체별로 갖지 않음) — HeroTierUpgradeState 참고.
-    public int Level => tierUpgradeState.GetLevel(Tier);
+    public int Level => tierUpgradeState.GetLevel(Tier) + 1;
 
     private UpgradeState UpgradeStateOrFallback => upgradeState ?? new UpgradeState();
 
@@ -228,9 +229,13 @@ public class Hero : MonoBehaviour, IDamageAble, IUnit, IStunAble, IDebuffCarrier
     public int BlockCount => IsDead ? 0 : (int)SC[StatType.BLK];
     private float currentHp;
     public float Hp => currentHp;
+    public float MaxHp => sc[StatType.HP];
     public int Defense => Mathf.RoundToInt(sc[StatType.DEF]); // 기존 NotImplementedException 버그 수정
     private bool isDead;
     public bool IsDead => isDead;
+
+    [SerializeField] private Slider healthSlider;
+    private readonly HeroHealthBar _bar = new();
 
     private readonly DebuffTracker debuffTracker = new();
     public DebuffTracker Debuffs => debuffTracker;
@@ -308,6 +313,8 @@ public class Hero : MonoBehaviour, IDamageAble, IUnit, IStunAble, IDebuffCarrier
         sc.AddStat(StatType.BLK, statData.blockCount);
         sc.AddStat(StatType.AS, statData.attackSpeed);
         currentHp = sc[StatType.HP];
+        _bar.Setup(healthSlider, 10f);
+        _bar.ResetTo(currentHp, sc[StatType.HP]);
 
         traits = GetComponents<HeroTrait>();
         activeSkill = GetComponent<HeroActiveSkill>();
@@ -348,6 +355,7 @@ public class Hero : MonoBehaviour, IDamageAble, IUnit, IStunAble, IDebuffCarrier
             gameManager.ChangeToDay += Resurrection;
             gameManager.ChangeToDay += HealFull;
             gameManager.ChangeToDay += ResetSkillCooldown;
+            gameManager.ChangeToDay += NotifyDayStart;
         }
         SpawnAuraZones();
     }
@@ -385,7 +393,9 @@ public class Hero : MonoBehaviour, IDamageAble, IUnit, IStunAble, IDebuffCarrier
 
     private void OnTierLevelChanged(int changedTier)
     {
-        if (changedTier == Tier) ApplyTierLevelBonus();
+        if (changedTier != Tier) return;
+        ApplyTierLevelBonus();
+        if (!isDead) currentHp = sc[StatType.HP]; // 업그레이드로 최대체력이 늘어난 만큼 낮이니 그냥 전부 채운다
     }
 
     protected virtual void OnDestroy()
@@ -395,6 +405,7 @@ public class Hero : MonoBehaviour, IDamageAble, IUnit, IStunAble, IDebuffCarrier
             gameManager.ChangeToDay -= Resurrection;
             gameManager.ChangeToDay -= HealFull;
             gameManager.ChangeToDay -= ResetSkillCooldown;
+            gameManager.ChangeToDay -= NotifyDayStart;
         }
         tierUpgradeState.LevelChanged -= OnTierLevelChanged;
         debuffEffects.Reset();
@@ -414,6 +425,11 @@ public class Hero : MonoBehaviour, IDamageAble, IUnit, IStunAble, IDebuffCarrier
         for (int i = 0; i < traits.Length; i++) traits[i]?.OnHit(hitTarget, amount, isCrit);
         if (hitTarget != null && hitTarget.GetComponentInParent<IDamageAble>() is IDamageAble d && d.Hp <= 0f)
             NotifyKill(hitTarget);
+    }
+
+    public void NotifyDayStart()
+    {
+        for (int i = 0; i < traits.Length; i++) traits[i]?.OnDayStart();
     }
 
     public void NotifyKill(GameObject killedTarget)
@@ -507,6 +523,12 @@ public class Hero : MonoBehaviour, IDamageAble, IUnit, IStunAble, IDebuffCarrier
             traits[i]?.OnPassiveTick(Time.deltaTime);
 
         debuffEffects.Tick(debuffTracker, isDead);
+    }
+
+    // 체력바는 LateUpdate에서 굴린다 — 이동(Update)과 카메라 회전이 모두 끝난 뒤라야 빌보드가 한 프레임 밀리지 않는다.
+    protected virtual void LateUpdate()
+    {
+        _bar.Tick(Hp, MaxHp, isDead);
     }
 
     protected virtual void AcquireTargetFromTiles()
@@ -627,10 +649,11 @@ public class Hero : MonoBehaviour, IDamageAble, IUnit, IStunAble, IDebuffCarrier
 
     public void Resurrection()
     {
-        if (!isDead) return;
+        bool wasDead = isDead;
         currentHp = sc[StatType.HP];
         isDead = false;
-        SpawnAuraZones();
+        _bar.ResetTo(currentHp, sc[StatType.HP]);
+        if (wasDead) SpawnAuraZones(); // 살아있던 영웅은 오라가 이미 돌고 있으므로 다시 스폰하면 중복된다
     }
 
     public void HealFull()

@@ -365,6 +365,9 @@ public class WaveSpawner : MonoBehaviour
     // currentStage: 이 지역의 로컬 진행도 — 어떤 웨이브 행(1~10, 1001~1005 순환)을 쓸지 고른다.
     // scaleStage: 마릿수 배율 기준. 비워두면 currentStage를 그대로 쓴다(하위 호환). 배율은 지역과 무관하게
     // 글로벌 DayCount로 유지하고 싶을 때 여기에 DayCount를 넘긴다.
+    private float _roundStartTime;
+    private int _roundDayCount;
+
     public void SpawnWave(int region,int currentStage, IEnumerable<int> reinforcementSources = null, int? scaleStage = null)
     {
         Enemycount =0;
@@ -398,6 +401,10 @@ public class WaveSpawner : MonoBehaviour
                 Enemycount += w.Count;
             }
         }
+
+        _roundStartTime = Time.time;
+        _roundDayCount = currentStage;
+        AnalyticsRecorder.RoundStart(region, currentStage, Enemycount);
     }
 
     private async UniTask SpawnWaveRout(WaveTable.Data wave, int count, float startDelay = 0f)
@@ -433,6 +440,7 @@ public class WaveSpawner : MonoBehaviour
         Enemycount--;
         if(Enemycount<=0)
         {
+            AnalyticsRecorder.RoundEnd(region, _roundDayCount, Time.time - _roundStartTime);
             EnemyAllClear?.Invoke();
             Debug.Log("적 전멸 이벤트 발생");
         }

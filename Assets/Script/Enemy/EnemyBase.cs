@@ -521,7 +521,12 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
         if (gm == null)
             Debug.LogWarning($"[{name}] GameManager를 찾을 수 없음 — HpDamage 스킵.", this);
         else
+        {
+            int before = gm.Hp;
             gm.HpDamage(Class);
+            int region = waveSpawner != null ? waveSpawner.Region : -1;
+            AnalyticsRecorder.EnemyLeaked(enemyKey, Class.ToString(), region, gm.DayCount, before - gm.Hp, gm.Hp);
+        }
         if (Board != null) Board.RemoveEnemy(gameObject);
     }
     private async UniTask RunSkillLoop(CancellationToken token)

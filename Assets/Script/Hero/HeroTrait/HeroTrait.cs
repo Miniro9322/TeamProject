@@ -9,4 +9,5 @@ public abstract class HeroTrait : MonoBehaviour
     public virtual void OnHit(GameObject target, int amount, bool isCrit) { }
     public virtual void OnKill(GameObject target) { }
     public virtual void OnPassiveTick(float deltaTime) { }
+    public virtual void OnDayStart() { }
 }

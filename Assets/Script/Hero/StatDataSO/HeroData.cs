@@ -12,4 +12,5 @@ public class HeroData : ScriptableObject
     public Sprite Icon;
     public GameObject HeroPrefab;
     public MergeKey MergeKey => new MergeKey(UnitId, Tier);
+    public int PopulationCost => Tier;
 }
