@@ -32,7 +32,7 @@ public class PathTrailCalc
         {
             for (int i = 0; i < paths.Count; i++)
             {
-                runs.AddRange(GroundRuns(paths[i], SpawnOf(spawns, i)));
+                runs.AddRange(GroundRuns(paths[i], SpawnIndexAt(spawns, i)));
             }
         }
 
@@ -73,7 +73,7 @@ public class PathTrailCalc
         for (int i = 0; i < paths.Count; i++)
         {
             int before = authoredRuns.Count;
-            AddAuthored(authoredRuns, SpawnOf(spawns, i), EnemyRouteKind.Air, TrailKind.Air);
+            AddRouteTrails(authoredRuns, SpawnIndexAt(spawns, i), EnemyRouteKind.Air, TrailKind.Air);
             if (authoredRuns.Count == before) AddAirFallback(fallbackRuns, paths[i]);
         }
 
@@ -86,13 +86,13 @@ public class PathTrailCalc
         var runs = new List<TrailPoints>();
         for (int i = 0; i < paths.Count; i++)
         {
-            AddAuthored(runs, SpawnOf(spawns, i), EnemyRouteKind.Swim, TrailKind.Swim);
+            AddRouteTrails(runs, SpawnIndexAt(spawns, i), EnemyRouteKind.Swim, TrailKind.Swim);
         }
         return runs;
     }
 
-    // 이 스폰에 저작된 이 종류 경로 전부를 runs에 담는다. 좌표는 실제 스폰과 같은 표(WaveSpawner.SpawnCoord)에서 가져온다.
-    private void AddAuthored(List<TrailPoints> runs, int spawnIndex, EnemyRouteKind kind, TrailKind trailKind)
+    // 이 스폰에 저작된 이 종류 경로 전부를 트레일로 바꿔 runs에 담는다. 좌표는 실제 스폰과 같은 표(WaveSpawner.SpawnCoord)에서 가져온다.
+    private void AddRouteTrails(List<TrailPoints> runs, int spawnIndex, EnemyRouteKind kind, TrailKind trailKind)
     {
         if (spawnIndex == NoSpawn) return;
 
@@ -153,19 +153,6 @@ public class PathTrailCalc
         }
     }
 
-    // i번째 포탈의 스폰 번호. 목록이 없거나 짧으면 폴백 표시를 낸다.
-    private static int SpawnOf(IReadOnlyList<int> spawns, int index)
-    {
-        if (spawns == null)
-        {
-            return NoSpawn;
-        }
-
-        if (index >= spawns.Count)
-        {
-            return NoSpawn;
-        }
-
-        return spawns[index];
-    }
+    // i번째 활성 포탈의 스폰 번호.
+    private static int SpawnIndexAt(IReadOnlyList<int> spawns, int index) => spawns[index];
 }

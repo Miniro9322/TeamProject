@@ -16,7 +16,7 @@ public static class EnemyRoutePath
 {
     /// <summary>공중 경로의 비행 고도. EnemyMovement가 FlyingPathfinder를 부를 때 쓰는 값과 같아야
     /// 저작 경로와 자동 경로의 높이가 어긋나지 않는다.</summary>
-    public const float FlightHeight = 0.5f;
+    public const float FlightHeight = 1.5f;
 
     /// <summary>이 경로의 웨이포인트(런타임). 경로를 만들 수 없으면 빈 목록.
     /// skipped를 주면 그 방식으로 못 지나는 저작 칸을 담아 준다.</summary>
