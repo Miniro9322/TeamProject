@@ -77,6 +77,7 @@ public class GameLifeTimeScope : LifetimeScope
         builder.RegisterComponentInHierarchy<RegionDetailPanel>();
         builder.RegisterComponentInHierarchy<BuildingPanel>();
         builder.RegisterComponentInHierarchy<HeroTierUpgradeMenu>();
+        builder.RegisterComponentInHierarchy<HeroSetPanel>();
 
         // PoolManager는 RegisterComponentOnNewGameObject라 아무도 Resolve하지 않으면 실제로 생성되지 않는다(lazy).
         // 여기서 강제로 한 번 Resolve해 _resolver가 붙은 상태로 즉시 만들어지게 한다.
