@@ -18,9 +18,8 @@ public static class LaneQuery
         TileLink.LinkNeighbors(cells);   // 창은 MapBoard.Build를 거치지 않으므로 여기서 직접 잇는다
         List<Tile> spawns = CollectSpawns(cells);
         List<Tile> cores = CollectCores(cells);
-        var input = new LaneInputData(cells, spawns, cores);
         var builder = new LaneBuilder(routes);
-        IReadOnlyList<LaneData> built = builder.BuildLanes(input);
+        IReadOnlyList<LaneData> built = builder.BuildLanes(cells, spawns, cores);
         var lanes = new List<LaneData>(built.Count);
 
         for (int i = 0; i < built.Count; i++)

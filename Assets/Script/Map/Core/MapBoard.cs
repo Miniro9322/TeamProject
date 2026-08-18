@@ -4,12 +4,14 @@ using UnityEngine;
 public class MapBoard : MonoBehaviour
 {
     private readonly Dictionary<Vector2Int, Tile> _cells = new();
+    private readonly List<Tile> _cellList = new();
     private readonly List<Tile> _spawns = new();
     private readonly List<Tile> _cores = new();
     private readonly Dictionary<GameObject, Tile> _enemyCell = new(); // 적→현재 칸(직전 칸과 비교해 이동 감지)
+    private readonly Dictionary<Tile, int> _coreDistance = new(); // 타일→가장 가까운 본진까지 칸 거리(Build 때 미리 잼)
 
-    [SerializeField] private Grid _grid; // 좌표계의 단일 소스. 셀 크기·원점·Swizzle을 모두 쥔다.
-    [SerializeField] private Vector2Int _bakedOffset; // TilePosBaker가 구울 때 계산해 저장한 모듈 min값. 런타임은 이걸 그대로 쓴다(재계산 안 함).
+    [SerializeField] private Grid _grid; // 좌표계의 단일 소스. 
+    [SerializeField] private Vector2Int _bakedOffset; // TilePosBaker가 동작할때 계산해 저장한 모듈 min값.
     private Vector2Int _coordOffset; // raw Grid 좌표 → 베이크된 Tile.Coord로 정규화하는 상수 오프셋(모듈마다 다름)
     private Bounds _worldBounds;
     private RectInt _playRect;
@@ -17,7 +19,11 @@ public class MapBoard : MonoBehaviour
     private ModuleLogic _module; // 소속 모듈. Awake에서 한 번만 잡는다(매 호출 GetComponent 금지).
 
     public IReadOnlyDictionary<Vector2Int, Tile> Cells => _cells;
+    public IReadOnlyList<Tile> CellList => _cellList;
     public int CellCount => _cells.Count;
+
+    // 타일에서 가장 가까운 본진까지 칸 거리.
+    public IReadOnlyDictionary<Tile, int> CoreDistance => _coreDistance;
     public Bounds WorldBounds => _worldBounds;
     public float CellSize => _grid.cellSize.x;
 
@@ -40,9 +46,11 @@ public class MapBoard : MonoBehaviour
     public void Build()
     {
         _cells.Clear();
+        _cellList.Clear();
         _spawns.Clear();
         _cores.Clear();
         _enemyCell.Clear();
+        _coreDistance.Clear();
 
         // 이 모듈 Grid 하위 타일만 모은다(씬 전체 스캔 금지 — 모듈 격리). Find 미사용.
         var tiles = new List<Tile>();
@@ -76,6 +84,17 @@ public class MapBoard : MonoBehaviour
             else _worldBounds.Encapsulate(bound);
         }
 
+        foreach (Tile cell in _cells.Values)
+        {
+            _cellList.Add(cell);
+        }
+
+        // 타일마다 가장 가까운 본진까지 칸 거리를 미리 재 둔다(길찾기가 매번 다시 재지 않게).
+        for (int i = 0; i < _cellList.Count; i++)
+        {
+            _coreDistance[_cellList[i]] = ComputeNearestCore(_cellList[i], _cores);
+        }
+
         // 2) 안쪽 칸 범위: 장식(Special)을 뺀 타일들의 바운딩 박스. 외곽 한 줄이 장식이라 그만큼 좁다.
         _playRect = InnerRect();
         _floorY = LowestFloor();
@@ -97,8 +116,9 @@ public class MapBoard : MonoBehaviour
         Transform space = _grid.transform;
         float lowest = float.MaxValue;
 
-        foreach (Tile tile in _cells.Values)
+        for (int i = 0; i < _cellList.Count; i++)
         {
+            Tile tile = _cellList[i];
             float top = space.InverseTransformPoint(tile.WorldTop).y;
             if (top < lowest) { lowest = top; }
         }
@@ -112,8 +132,9 @@ public class MapBoard : MonoBehaviour
         Vector2Int min = new(int.MaxValue, int.MaxValue);
         Vector2Int max = new(int.MinValue, int.MinValue);
 
-        foreach (Tile tile in _cells.Values)
+        for (int i = 0; i < _cellList.Count; i++)
         {
+            Tile tile = _cellList[i];
             if (tile.IsSpecial) { continue; }
 
             min = Vector2Int.Min(min, tile.Coord);
@@ -134,34 +155,10 @@ public class MapBoard : MonoBehaviour
     {
         if (!HasEndpoints)
         {
-            ClearLanes();
             return null;
         }
 
-        List<Tile> path = Pathfinder.FindPath(
-            _spawns, IsCore, CanWalk, HeuristicToNearestCore);
-        SetLanes(path);
-
-        return path;
-    }
-
-    private void SetLanes(List<Tile> path)
-    {
-        ClearLanes();
-        foreach (Tile tile in path)
-        {
-            if (tile.IsEnemySpawn) continue; 
-            if (tile.IsCore) continue;
-            tile.State.EnemyLane = true;
-        }
-    }
-
-    private void ClearLanes()
-    {
-        foreach (Tile tile in _cells.Values)
-        {
-            tile.State.EnemyLane = false;
-        }
+        return Pathfinder.FindPath(_spawns, IsCore, CanWalk, HeuristicToNearestCore);
     }
 
     private static bool IsCore(Tile tile) => tile.Terrain == TerrainType.Core;
@@ -169,24 +166,47 @@ public class MapBoard : MonoBehaviour
     // 걸어서 오는 적 기준으로 길을 찾는다 — 헤엄 칸은 통로에서 빠진다.
     private static bool CanWalk(Tile tile) => tile.CanWalk;
 
-    // 가장 가까운 본진까지의 칸 거리. 경로 찾기가 어느 쪽을 먼저 뒤질지 정하는 데 쓴다.
+    // 가장 가까운 본진까지의 칸 거리. Build가 미리 재 둔 값을 그대로 꺼낸다.
     private int HeuristicToNearestCore(Tile tile)
     {
-        int best = int.MaxValue;
-        foreach (Tile core in _cores)
+        _coreDistance.TryGetValue(tile, out int distance);
+        return distance;
+    }
+
+    // 한 타일에서 가장 가까운 본진까지 칸 거리를 잰다. Build 때 한 번만 불린다.
+    private static int ComputeNearestCore(Tile tile, List<Tile> cores)
+    {
+        if (cores.Count == 0)
         {
-            int d = GridCalculator.GetDistance(tile.Coord, core.Coord);
-            if (d < best) best = d;
+            return 0;
         }
-        return best == int.MaxValue ? 0 : best;
+
+        int best = int.MaxValue;
+        for (int i = 0; i < cores.Count; i++)
+        {
+            int distance = GridCalculator.GetDistance(tile.Coord, cores[i].Coord);
+            if (distance < best)
+            {
+                best = distance;
+            }
+        }
+
+        if (best == int.MaxValue)
+        {
+            return 0;
+        }
+
+        return best;
     }
 
     public List<Vector3> GetWaypoints(float yOffset = 0f)
     {
         var list = new List<Vector3>();
         List<Tile> path = GetPath();
-        foreach (Tile t in path) 
+        if (path == null) return list;
+        for (int i = 0; i < path.Count; i++) 
         {
+            Tile t = path[i];
             list.Add(t.WorldTop + Vector3.up * yOffset);
         }
         return list;
@@ -200,6 +220,16 @@ public class MapBoard : MonoBehaviour
     // — 그래서 옆면을 눌러도 그 타일이 잡히고, 앞에 선 높은 타일이 뒤 타일을 가린다.
     public Tile CellFromRay(Ray ray)
     {
+        if (_cellList.Count == 0) return null;
+
+        // Broad-phase Bounding Culling: 광선이 모듈 WorldBounds 근처를 지나지 않으면 순회 무시
+        Bounds checkBounds = _worldBounds;
+        checkBounds.Expand(CellSize * 2f);
+        if (!checkBounds.IntersectRay(ray))
+        {
+            return null;
+        }
+
         Transform space = _grid.transform; // 맵을 돌려 놔도 축이 어긋나지 않게 보드 기준으로 옮겨서 잰다
         var local = new Ray(
             space.InverseTransformPoint(ray.origin),
@@ -209,8 +239,9 @@ public class MapBoard : MonoBehaviour
         Tile best = null;
         float bestT = float.MaxValue;
 
-        foreach (Tile tile in _cells.Values)
+        for (int i = 0; i < _cellList.Count; i++)
         {
+            Tile tile = _cellList[i];
             Vector3 top = space.InverseTransformPoint(tile.WorldTop);
             if (!TryEnterColumn(local, top, half, _floorY, out float t)) continue;
             if (t >= bestT) continue; // 이미 더 앞에서 맞은 타일이 있으면 그쪽이 이 타일을 가린다
@@ -258,7 +289,7 @@ public class MapBoard : MonoBehaviour
     {
         Tile hit = CellFromRay(ray);
         if (hit != null) return hit;
-        if (_cells.Count == 0 || Mathf.Abs(ray.direction.y) < 1e-6f) return null;
+        if (_cellList.Count == 0 || Mathf.Abs(ray.direction.y) < 1e-6f) return null;
 
         float t = (_worldBounds.center.y - ray.origin.y) / ray.direction.y;
         if (t < 0f) return null; // 카메라 뒤쪽이면 클램프 안 함
@@ -266,8 +297,9 @@ public class MapBoard : MonoBehaviour
 
         Tile best = null;
         float bestSqr = float.MaxValue;
-        foreach (Tile tile in _cells.Values)
+        for (int i = 0; i < _cellList.Count; i++)
         {
+            Tile tile = _cellList[i];
             Vector3 top = tile.WorldTop;
             float dx = p.x - top.x, dz = p.z - top.z;
             float sqr = dx * dx + dz * dz;
@@ -353,12 +385,13 @@ public class MapBoard : MonoBehaviour
     {
         var result = new List<Tile>();
         for (int dx = -range; dx <= range; dx++)
-            for (int dy = -range; dy <= range; dy++)
+        {
+            int maxDy = square ? range : range - Mathf.Abs(dx);
+            for (int dy = -maxDy; dy <= maxDy; dy++)
             {
-                if (!square && Mathf.Abs(dx) + Mathf.Abs(dy) > range) continue;
-                if (_cells.TryGetValue(new Vector2Int(origin.x + dx, origin.y + dy), out Tile tile))
-                    result.Add(tile);
+                if (_cells.TryGetValue(new Vector2Int(origin.x + dx, origin.y + dy), out Tile tile)) result.Add(tile);
             }
+        }
         return result;
     }
 

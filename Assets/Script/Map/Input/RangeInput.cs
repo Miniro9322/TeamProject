@@ -44,7 +44,7 @@ public class RangeInput : MonoBehaviour
     // UI 위에서 떼면 뗌 신호가 오지 않으므로 눌림 상태를 직접 본다.
     private void DropRange()
     {
-        if (IsInputReleased())
+        if (CanDropRange())
         {
             rangeStore.ClearRange();
         }
@@ -53,5 +53,11 @@ public class RangeInput : MonoBehaviour
     private bool IsInputReleased()
     {
         return input.LeftHolding == false;
+    }
+
+    // 손을 뗐고 아직 지울 범위가 남아있을 때만 비우기를 허락한다.
+    private bool CanDropRange()
+    {
+        return IsInputReleased() && rangeStore.HasRange;
     }
 }

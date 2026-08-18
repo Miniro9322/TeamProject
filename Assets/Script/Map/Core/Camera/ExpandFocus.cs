@@ -75,25 +75,23 @@ public class ExpandFocus : MonoBehaviour
 
     private void MoveCamera()
     {
-        Vector3 beforeFocus = rig.focus; // 이동 전 초점 위치를 저장한다.
-        float beforeDistance = rig.distance; // 이동 전 거리를 저장한다.
         rig.focus = Vector3.SmoothDamp(rig.focus, moveTarget, ref moveVel, moveTime); // 새 지역 중앙으로 부드럽게 이동한다.
         rig.distance = Mathf.SmoothDamp(rig.distance, moveDistance, ref moveDistVel, moveTime); // 화면을 채우는 거리로 함께 줌한다.
         rig.ApplyNow();   // 울타리는 꺼진 상태라 렌즈·위치만 갱신된다
-        if (StillMoving(beforeFocus, beforeDistance))
+        if (StillMoving())
         {
             return;
         }
 
-        FinishMove(); // 초점·거리 둘 다 멈췄으면 이동 완료로 처리한다.
+        FinishMove(); // 초점·거리 둘 다 목표 지점에 도달했으면 이동 완료로 처리한다.
     }
 
-    // 초점 또는 거리 중 하나라도 이번 프레임에 움직였으면 아직 이동 중이다.
-    private bool StillMoving(Vector3 beforeFocus, float beforeDistance)
+    // 초점 또는 거리 중 하나라도 목표 지점(moveTarget, moveDistance)에 도달하지 않았으면 아직 이동 중이다.
+    private bool StillMoving()
     {
-        bool focusMoved = (rig.focus - beforeFocus).sqrMagnitude >= 1e-4f;
-        bool distanceMoved = Mathf.Abs(rig.distance - beforeDistance) >= 1e-2f;
-        return focusMoved || distanceMoved;
+        bool focusRemain = (rig.focus - moveTarget).sqrMagnitude >= 1e-3f;
+        bool distanceRemain = Mathf.Abs(rig.distance - moveDistance) >= 1e-2f;
+        return focusRemain || distanceRemain;
     }
 
     // 개발용 자유 카메라가 자동 이동을 중단할 때 사용한다.
