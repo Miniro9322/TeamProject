@@ -12458,7 +12458,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FogLook
   showInEditor: 0
-  fogColor: {r: 0.21747063, g: 0.21747063, b: 0.254717, a: 1}
+  fogColor:
+    r: 0.21747063
+    g: 0.21747063
+    b: 0.254717
+    a: 1
   density: 1
   cloudTint: 0.331
   edgeSoft: 6.46
@@ -12481,8 +12485,7 @@ MonoBehaviour:
   registry: {fileID: 1862994567}
   openDuration: 1.5
   fogEnabled: 1
-  edgeCells: 1.5
-  staticOpenAreas: []
+  coverMarginCells: 1.5
 --- !u!4 &676769917
 Transform:
   m_ObjectHideFlags: 0
@@ -12513,8 +12516,7 @@ MonoBehaviour:
   registry: {fileID: 1862994567}
   openDuration: 1.2
   fogEnabled: 1
-  edgeCells: 1.5
-  staticOpenAreas: []
+  coverMarginCells: 0.1
 --- !u!1 &676811881
 GameObject:
   m_ObjectHideFlags: 0
@@ -13748,7 +13750,7 @@ MonoBehaviour:
   minPitch: 60
   maxPitch: 90
   minDistance: 15
-  maxDistance: 50
+  maxDistance: 90
   fillH: 0.6
   fillV: 0.8
   smoothTime: 0.141
@@ -37679,6 +37681,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ExpandTester
   registry: {fileID: 1862994567}
+  mapGame: {fileID: 314587623}
 --- !u!4 &2075775772
 Transform:
   m_ObjectHideFlags: 0

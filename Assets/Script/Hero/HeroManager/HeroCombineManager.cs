@@ -81,7 +81,7 @@ public class HeroCombineManager : MonoBehaviour
                 if (unit.TryGetComponent(out Hero hero))
                 {
                     HeroSelectionService.ClearIfSelected(hero);
-                    game.Placer.zoneEffectApplier.ExitZone(hero); // 파괴 전 지대 효과 추적에서 해제
+                    //game.Placer.zoneEffectApplier.ExitZone(hero); // 파괴 전 지대 효과 추적에서 해제
                 }
 
                 if (game.Units.TryGetArea(unit, out PlacementArea area))
