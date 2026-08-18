@@ -158,7 +158,8 @@ public class GroundZoneEffect : MonoBehaviour
         }
 
         int dmg = Mathf.RoundToInt(owner.SC[StatType.ATK] * damagePer);
-        foreach (GameObject go in owner.GetObjectsInRange(transform.position, radius, shape, RangeQueryAffinity.Enemy))
+        // 장판(지상)은 공중 적을 절대 때릴 수 없다 — 호출부 설정과 무관한 GroundZoneEffect 자체의 불변식.
+        foreach (GameObject go in owner.GetObjectsInRange(transform.position, radius, shape, RangeQueryAffinity.Enemy, EnemyAttribute.Fly))
         {
             if (dmg > 0 && go.GetComponentInParent<IDamageAble>() is IDamageAble d)
             {

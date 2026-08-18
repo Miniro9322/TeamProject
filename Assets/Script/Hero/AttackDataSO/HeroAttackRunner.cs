@@ -35,6 +35,9 @@ public class HeroAttackRunner
             AttackDataSO postHookOverride = hero.ConsumeAttackOverride(out bool postIsProc);
             if (postHookOverride != null) { data = postHookOverride; isProc = postIsProc; }
 
+            // OnAttackPerformed는 강공 교체 여부를 "판단"하기 위해 교체 전 데이터로 불렸으므로,
+            // 이번 스윙에 실제로 나가는 최종 데이터는 별도 훅으로 한 번 더 통지한다.
+            hero.NotifyAttackResolved(data);
             hero.SetLastUsedAttack(data, isProc);
 
             IAttackDeliveryStrategy strategy = data.timingMode == AttackTimingMode.Continuous ? continuous : discrete;

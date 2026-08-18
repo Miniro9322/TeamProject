@@ -83,7 +83,7 @@ public class RangedAttackExecutor : IAttackExecutor
         if (data.attackType == AttackType.Area && data.areaShape == AreaShape.Line)
         {
             Vector2Int dir = ctx.hero.GetCardinalDirection(ctx.self.position, target.position);
-            foreach (IDamageAble e in ctx.hero.GetEnemiesInLine(ctx.self.position, target.position, data.lineLength, data.areaRange))
+            foreach (IDamageAble e in ctx.hero.GetEnemiesInLine(ctx.self.position, target.position, data.lineLength, data.areaRange, data.AreaUnattackableTarget))
             {
                 e.TakeDamage(damage);
                 ctx.hero.NotifyHit((e as Component)?.gameObject, damage, false);
