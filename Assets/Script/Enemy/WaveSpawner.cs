@@ -361,14 +361,15 @@ public class WaveSpawner : MonoBehaviour
             Enemycount += count;
         }
     }
-    // reinforcementSources: 해금된 "다른" 지역 번호들. 그 지역이 export하는 증원 몹(9001 대역)을 이 지역 웨이브에 추가로 얹는다.
+    // unlockedRegionCount: 지금 해금된 지역 수. 이 수만큼 이 지역 "자신의" 증원 웨이브가 단계별로 얹힌다
+    // (9001, 9002 … — 자세한 건 ReinforceBaseId 주석 참고).
     // currentStage: 이 지역의 로컬 진행도 — 어떤 웨이브 행(1~10, 1001~1005 순환)을 쓸지 고른다.
     // scaleStage: 마릿수 배율 기준. 비워두면 currentStage를 그대로 쓴다(하위 호환). 배율은 지역과 무관하게
     // 글로벌 DayCount로 유지하고 싶을 때 여기에 DayCount를 넘긴다.
     private float _roundStartTime;
     private int _roundDayCount;
 
-    public void SpawnWave(int region,int currentStage, IEnumerable<int> reinforcementSources = null, int? scaleStage = null)
+    public void SpawnWave(int region,int currentStage, int unlockedRegionCount = 1, int? scaleStage = null)
     {
         Enemycount =0;
         if (_activePaths.Count == 0) RollActivePortals(); // 포탈 추첨 없이 스폰되면 여기서 보정
@@ -380,19 +381,15 @@ public class WaveSpawner : MonoBehaviour
             SpawnWaveRout(wave, count).Forget();
             Enemycount += count;
         }
-        if (reinforcementSources != null)
+        for (int tier = 0; tier < ReinforceTiers(unlockedRegionCount); tier++)
         {
-            foreach (int src in reinforcementSources)
+            foreach (var wave in waveTable.GetWave(region, ReinforceBaseId + tier))
             {
-                if (src == region) continue; // 자기 자신 제외
-                foreach (var wave in waveTable.GetWave(src, ReinforceId))
-                {
-                    SpawnWaveRout(wave, wave.Count).Forget();
-                    Enemycount += wave.Count;
-                }
+                SpawnWaveRout(wave, wave.Count).Forget(); // 증원은 라운드 배율을 안 붙인다(표에 적은 마릿수 그대로)
+                Enemycount += wave.Count;
             }
         }
-        
+
         if (region == 1 && currentStage > 10 && currentStage % 10 == 0)
         {
             foreach (var w in waveTable.GetWave(1, 10))
@@ -450,7 +447,7 @@ public class WaveSpawner : MonoBehaviour
 
     // 스테이지 정보 표시. infoView가 있으면 적 아이콘 + x마릿수 행으로, 없으면 예전처럼 텍스트 한 덩어리로 쓴다.
     // (프리팹에 StageInfoView를 아직 붙이지 않은 상태에서도 게임이 돌아가도록 폴백을 남겨둠)
-    public void OnClickStage(int region,int currentstage, IEnumerable<int> reinforcementSources = null, int? scaleStage = null)
+    public void OnClickStage(int region,int currentstage, int unlockedRegionCount = 1, int? scaleStage = null)
     {
         if (waveTable == null) return;                          // Start 전 클릭 방어
         if (infoView == null && text == null) return;           // 표시할 대상이 아무것도 없음
@@ -464,14 +461,12 @@ public class WaveSpawner : MonoBehaviour
         foreach(var w in waveTable.GetWave(region,lookupId))
             AddStageLine(w.MonsterName, GetScaleCount(w.Count, scale), null);
 
-        if (reinforcementSources != null)
+        // 마릿수는 SpawnWave와 같이 배율 없는 원본 그대로 — 여기서 GetScaleCount를 붙이면
+        // 팝업이 실제 스폰보다 많은 수를 알려준다.
+        for (int tier = 0; tier < ReinforceTiers(unlockedRegionCount); tier++)
         {
-            foreach (int src in reinforcementSources)
-            {
-                if (src == region) continue;
-                foreach (var w in waveTable.GetWave(src, ReinforceId))
-                    AddStageLine(w.MonsterName, GetScaleCount(w.Count, scale), "Ui_Add");
-            }
+            foreach (var w in waveTable.GetWave(region, ReinforceBaseId + tier))
+                AddStageLine(w.MonsterName, w.Count, "Ui_Add");
         }
         if(currentstage>10&&currentstage%10==0&&region==1)
         {
@@ -509,7 +504,15 @@ public class WaveSpawner : MonoBehaviour
         return stage > 10 ? ((stage-6)%5)+1001 : stage;
     }
 
-    // 지역 해금 시 다른 해금 지역에 흘려보내는 "증원 몹" 전용 ID 대역.
+    // 지역이 해금될수록 그 지역 웨이브에 덧붙는 "증원 몹" 전용 ID 대역의 시작.
+    // 단계별로 9001, 9002, 9003 … 순으로 이어진다.
     // 일반 라운드(1~10, 1001~1005)와 겹치지 않으므로 정상 웨이브로는 절대 스폰되지 않는다.
-    public const int ReinforceId = 9001;
+    //
+    // 예전에는 A지역 9001을 "다른" 해금 지역들로 흘려보냈지만, 지역마다 테마가 있는 맵 컨셉과 어긋나서
+    // 자기 지역 몹이 단계별로 더 나오는 방식으로 바꿨다.
+    public const int ReinforceBaseId = 9001;
+
+    // 해금 지역이 N개면 증원은 N-1단계 — 지역이 하나뿐이면 증원이 없고, 하나 열릴 때마다 한 단계씩 붙는다.
+    // (예전에 "자기 지역 제외"로 N-1개 지역에서 끌어오던 것과 겹수가 같아 기존 밸런스를 그대로 잇는다.)
+    public static int ReinforceTiers(int unlockedRegionCount) => Mathf.Max(0, unlockedRegionCount - 1);
 }

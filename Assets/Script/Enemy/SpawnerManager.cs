@@ -259,7 +259,7 @@ public class SpawnerManager : MonoBehaviour
         StageInfoView view = go.GetComponent<StageInfoView>() ?? go.GetComponentInChildren<StageInfoView>(true);
         spawner.infoView = view;
         spawner.text = view != null ? null : go.GetComponentInChildren<TMP_Text>(true);
-        spawner.OnClickStage(region, LocalStage(region), UnlockedRegions(), CurrentDay); // 웨이브/증원/보스 정보 기록
+        spawner.OnClickStage(region, LocalStage(region), UnlockedCount(), CurrentDay); // 웨이브/증원/보스 정보 기록
     }
 
     // 클릭한 칸과 같은 격자 좌표에 서 있는 포탈을 찾는다. 없으면 null(그 칸은 이번 라운드에 안 뽑힌 스폰 지점).
@@ -328,7 +328,7 @@ public class SpawnerManager : MonoBehaviour
     public bool IsUnlocked(int region)
         => IsUnlockregion.TryGetValue(region, out bool v) && v; //해금 확인용
 
-    // 현재 해금된 지역 번호 목록. 증원 소스로 각 스포너에 넘긴다(스포너가 자기 지역은 알아서 제외).
+    // 현재 해금된 지역 번호 목록. 스폰을 돌릴 지역을 훑는 데 쓴다.
     private List<int> UnlockedRegions()
     {
         var list = new List<int>();
@@ -337,12 +337,22 @@ public class SpawnerManager : MonoBehaviour
         return list;
     }
 
+    // 해금된 지역 수. 각 지역의 증원 단계(9001, 9002 …)를 정하는 값이라 스포너에 그대로 넘긴다.
+    // 클릭할 때마다 불리므로 목록을 만들지 않고 세기만 한다.
+    private int UnlockedCount()
+    {
+        int count = 0;
+        foreach (var kv in _byRegion)
+            if (IsUnlocked(kv.Key)) count++;
+        return count;
+    }
+
     public void SpawnWave(int round) //해당라운드 전체소환 (round는 GameManager.DayCount와 항상 같음 — 지역별 진행도는 LocalStage로 따로 계산)
     {
         var unlocked = UnlockedRegions();
         // 웨이브 조합(어떤 몹이 나올지)은 지역별 LocalStage, 마릿수 배율은 글로벌 DayCount 기준으로 유지한다.
         foreach (int region in unlocked)
-            _byRegion[region].SpawnWave(region, LocalStage(region), unlocked, CurrentDay);
+            _byRegion[region].SpawnWave(region, LocalStage(region), unlocked.Count, CurrentDay);
     }
 
 
@@ -350,7 +360,7 @@ public class SpawnerManager : MonoBehaviour
     {
         if (!IsUnlocked(region)) return;
         if (_byRegion.TryGetValue(region, out WaveSpawner s))
-            s.SpawnWave(region, LocalStage(region), null, CurrentDay);
+            s.SpawnWave(region, LocalStage(region), UnlockedCount(), CurrentDay);
     }
     private void OnRegionClear() //몹 다잡았을때
     {

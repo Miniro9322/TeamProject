@@ -12,6 +12,8 @@ public static class SpawnWaveReadout
     private const int NoScale = -1;
     // 보스 겹치기가 재활용하는 웨이브 ID(WaveSpawner.cs의 GetWave(1, 10)와 같다).
     private const int BossWaveId = 10;
+    // 훑어볼 증원 단계 상한. 표 편집 중 단계가 늘어도 따라가되, 빈 행을 만나면 그 앞에서 멈춘다.
+    private const int MaxReinforceTiers = 16;
 
     /// <summary>웨이브 한 줄(적 한 종류)과 화면에 쓸 값들.</summary>
     public class Entry
@@ -101,7 +103,19 @@ public static class SpawnWaveReadout
 
         int lookupId = WaveSpawner.GetStageLookupId(round);
         groups.Base = ToEntries(waveTable.GetWave(region, lookupId), round);
-        groups.Reinforce = ToEntries(waveTable.GetWave(region, WaveSpawner.ReinforceId), NoScale);
+
+        // 에디터엔 "지금 몇 개 지역이 해금됐나"가 없다 — 표에 적힌 증원 단계(9001, 9002 …)를 전부 보여준다.
+        // 실제로는 해금 지역 수에 따라 앞에서부터 몇 단계까지만 나온다(WaveSpawner.ReinforceTiers).
+        for (int tier = 0; tier < MaxReinforceTiers; tier++)
+        {
+            List<WaveTable.Data> waves = waveTable.GetWave(region, WaveSpawner.ReinforceBaseId + tier);
+            if (waves.Count == 0)
+            {
+                break;
+            }
+
+            groups.Reinforce.AddRange(ToEntries(waves, NoScale));
+        }
 
         if (IsBossRound(region, round))
         {

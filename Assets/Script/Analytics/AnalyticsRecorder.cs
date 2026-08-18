@@ -99,7 +99,24 @@ public static class AnalyticsRecorder
     {
         if (runner != null) return;
 
-        settings = Resources.Load<AnalyticsSettings>("AnalyticsSettings");
+        // 에디터 플레이는 Resources/Test, 빌드는 Resources/Build를 쓴다 —
+        // 개발 중 테스트 기록이 실제 배포 집계에 섞이지 않게 엔드포인트를 갈라 둔 것이다.
+        // #if로 나누면 컴파일 때 한쪽이 아예 사라져 빌드에서 Test를 집는 경로 자체가 없어진다
+        // (Test.asset 자체는 Resources에 있으니 빌드에 데이터로는 같이 실린다).
+        // (개발 빌드도 Test로 보내려면 아래 조건을 UNITY_EDITOR || DEVELOPMENT_BUILD로 바꾼다.)
+#if UNITY_EDITOR
+        const string settingsName = "Test";
+#else
+        const string settingsName = "Build";
+#endif
+        settings = Resources.Load<AnalyticsSettings>(settingsName);
+        // 에셋을 못 찾으면 원격 전송이 조용히 죽는다(아래 Flush가 null이면 그냥 건너뛴다) —
+        // 어느 쪽을 집었는지 남겨야 "왜 시트에 안 들어오지"를 추적할 수 있다.
+        if (settings == null)
+            Debug.LogWarning($"AnalyticsRecorder: Resources/{settingsName} 에셋이 없습니다 — " +
+                "원격 전송 없이 로컬 파일에만 기록합니다.");
+        else
+            Debug.Log($"AnalyticsRecorder: 설정 '{settingsName}' 사용");
 
         string dir = Path.Combine(Application.persistentDataPath, "Analytics");
         try { Directory.CreateDirectory(dir); }

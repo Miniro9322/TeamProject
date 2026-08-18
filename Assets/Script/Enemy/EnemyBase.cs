@@ -363,6 +363,9 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
             // 점화 비교 테스트. 4 = 시전자 없이(최대 체력 비율만), 5 = 이 적이 시전자(공격력 몫까지).
             // 번갈아 누르고 콘솔의 "틱 ... = N피해"를 견주면 공격력 몫이 실제로 더해지는지 바로 보인다.
             if (Keyboard.current.numpad4Key.wasPressedThisFrame) ApplyDebuff(DebuffLoader.Get("Ignite_Basic"));
+            if (Keyboard.current.numpad5Key.wasPressedThisFrame) ApplyDebuff(DebuffLoader.Get("Exhaust_Basic"));
+            if (Keyboard.current.numpad6Key.wasPressedThisFrame) ApplyDebuff(DebuffLoader.Get("Bleed_Basic"));
+            if (Keyboard.current.numpad7Key.wasPressedThisFrame) ApplyDebuff(DebuffLoader.Get("ArmorBreak_Basic"));
    
         }
     }
@@ -714,11 +717,13 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
         Debug.Log($"[Shield] 쉴드 부여 시점 t={Time.time:F2} block={_damageBlock} expiry={_shieldExpiry:F2}", this);
     }
 
-    public void TakeDamage(int damage)
+    public void TakeDamage(int damage,bool ignore = false)
     {
         if(IsDead)return;
         if(IsSpawnInvincible)return;
-        int reduce = Defense + (IsShielded ? Mathf.RoundToInt(_damageBlock) : 0);
+        // 방어무시(ignore)는 방어력만 걷어낸다 — 실드 감소량(_damageBlock)은 그대로 남는다.
+        // 둘을 같이 0으로 만들면 지속 피해가 실드까지 뚫는다.
+        int reduce = (ignore ? 0 : Defense) + (IsShielded ? Mathf.RoundToInt(_damageBlock) : 0);
         int hitDamage = Mathf.Max(1, damage - reduce);
         if(IsHitsShield)
         {

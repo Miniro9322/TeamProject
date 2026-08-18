@@ -282,10 +282,11 @@ public class Hero : MonoBehaviour, IDamageAble, IUnit, IStunAble, IDebuffCarrier
         skillCts = null;
     }
 
-    public void TakeDamage(int damage)
+    public void TakeDamage(int damage,bool ignore = false)
     {
         if (isDead) return;
-        int hitDamage = Mathf.Max(1, damage - Defense);
+        
+        int hitDamage = Mathf.Max(1, damage - (ignore ? 0 : Defense));
         currentHp -= hitDamage;
         if (currentHp <= 0) Die();
     }
