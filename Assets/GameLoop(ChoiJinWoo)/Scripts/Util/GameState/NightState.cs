@@ -13,12 +13,15 @@ public class NightState : IState
 
     public void Enter()
     {
+        gameManager.perfactDefence = false;
         Night().Forget();
     }
 
     public void Exit()
     {
         gameManager.ChangeCanSpawnEnemy(false);
+        if (gameManager.Hp == gameManager.todayHp)
+            gameManager.perfactDefence = true;
     }
 
     public void Update()

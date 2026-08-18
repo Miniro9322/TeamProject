@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using VContainer;
@@ -15,6 +16,11 @@ public class CenterHubPanel : MonoBehaviour, IClosablePanel
     [SerializeField] private Button tradeFoodButton;
     [SerializeField] private Button tradeGoldButton;
     [SerializeField] private Button tradeStoneButton;
+    [SerializeField] private TextMeshProUGUI tradeWoodText;
+    [SerializeField] private TextMeshProUGUI tradeIronText;
+    [SerializeField] private TextMeshProUGUI tradeFoodText;
+    [SerializeField] private TextMeshProUGUI tradeGoldText;
+    [SerializeField] private TextMeshProUGUI tradeStoneText;
     [SerializeField] private RegionDetailPanel detailPanel;
 
     private FacilityManager facilityManager;
@@ -43,11 +49,39 @@ public class CenterHubPanel : MonoBehaviour, IClosablePanel
         panelStack.Push(this);
         outsideCloser.MarkOpened();
 
-        if (tradeFoodButton != null) tradeFoodButton.onClick.AddListener(() => resourcesManager.TradeResource(ProductionType.Food));
-        if (tradeIronButton != null) tradeIronButton.onClick.AddListener(() => resourcesManager.TradeResource(ProductionType.Iron));
-        if (tradeWoodButton != null) tradeWoodButton.onClick.AddListener(() => resourcesManager.TradeResource(ProductionType.Wood));
-        if (tradeGoldButton != null) tradeGoldButton.onClick.AddListener(() => resourcesManager.TradeResource(ProductionType.Gold));
-        if (tradeStoneButton != null) tradeStoneButton.onClick.AddListener(() => resourcesManager.TradeResource(ProductionType.Stone));
+        if (tradeFoodButton != null)
+            tradeFoodButton.onClick.AddListener(() => {
+                resourcesManager.TradeResource(ProductionType.Food);
+                RefreshButton();
+            });
+        if (tradeIronButton != null)
+            tradeIronButton.onClick.AddListener(() => {
+                resourcesManager.TradeResource(ProductionType.Iron);
+                RefreshButton();
+            });
+        if (tradeWoodButton != null)
+            tradeWoodButton.onClick.AddListener(() => {
+                resourcesManager.TradeResource(ProductionType.Wood);
+                RefreshButton();
+            });
+        if (tradeGoldButton != null)
+            tradeGoldButton.onClick.AddListener(() => {
+                resourcesManager.TradeResource(ProductionType.Gold);
+                RefreshButton();
+            });
+        if (tradeStoneButton != null)
+            tradeStoneButton.onClick.AddListener(() => {
+                resourcesManager.TradeResource(ProductionType.Stone);
+                RefreshButton();
+            });
+
+        if (tradeWoodText != null) tradeWoodText.text = $"{resourcesManager.TradeAmount}";
+        if (tradeIronText != null) tradeIronText.text = $"{resourcesManager.TradeAmount}";
+        if (tradeFoodText != null) tradeFoodText.text = $"{resourcesManager.TradeAmount}";
+        if (tradeGoldText != null) tradeGoldText.text = $"{resourcesManager.TradeAmount}";
+        if (tradeStoneText != null) tradeStoneText.text = $"{resourcesManager.TradeAmount}";
+
+        RefreshButton();
     }
 
     private void OnDisable()
@@ -67,6 +101,15 @@ public class CenterHubPanel : MonoBehaviour, IClosablePanel
     {
         if (addCitizenPanel != null && addCitizenPanel.gameObject.activeSelf) return;
         if (outsideCloser.ClickedOutside()) Close();
+    }
+
+    private void RefreshButton()
+    {
+        tradeStoneButton.interactable = resourcesManager.Special > 0;
+        tradeGoldButton.interactable = resourcesManager.Special > 0;
+        tradeIronButton.interactable = resourcesManager.Special > 0;
+        tradeWoodButton.interactable = resourcesManager.Special > 0;
+        tradeFoodButton.interactable = resourcesManager.Special > 0;
     }
 
     public void Toggle()

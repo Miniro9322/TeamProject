@@ -21,6 +21,8 @@ public class ResourcesManager : MonoBehaviour
     public int Stone => stone;
     public int Special => special;
 
+    public int TradeAmount => tradeAmount;
+
     public event Action ProductUpdate;
 
     [Inject]
@@ -76,6 +78,8 @@ public class ResourcesManager : MonoBehaviour
 
     public void TradeResource(ProductionType type)
     {
+        Debug.Log("trade 호출됨");
+
         switch (type)
         {
             case ProductionType.Wood:
