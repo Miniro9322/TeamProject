@@ -133,7 +133,7 @@ public class SpawnerManager : MonoBehaviour
     // 오프셋은 해금되는 그 순간(UnlockRegion 호출 시점)이 아니라, 이 지역 정보가 처음 조회되는 시점에 확정한다.
     // ResultState처럼 UnlockNextModule()이 OnDay()로 DayCount가 오르기 "직전"에 불리는 경로가 있어서,
     // 해금 시점에 바로 계산하면 아직 안 오른 DayCount 기준으로 오프셋이 고정되어 그 지역이 영구히 하루씩 밀린다.
-    internal int LocalStage(int region)
+    public int LocalStage(int region)
     {
         if (!_unlockOffset.TryGetValue(region, out int off))
         {
@@ -329,7 +329,7 @@ public class SpawnerManager : MonoBehaviour
         => IsUnlockregion.TryGetValue(region, out bool v) && v; //해금 확인용
 
     // 현재 해금된 지역 번호 목록. 증원 소스로 각 스포너에 넘긴다(스포너가 자기 지역은 알아서 제외).
-    private List<int> UnlockedRegions()
+    public List<int> UnlockedRegions()
     {
         var list = new List<int>();
         foreach (var kv in _byRegion)

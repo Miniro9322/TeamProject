@@ -27,7 +27,7 @@ public class PathTrailCalc
         // 라운드당 한 번만 확인 — 웨이브 구성은 지역·라운드 단위라 종류마다 표를 다시 훑을 필요가 없다.
         CollectKindsThisRound(out bool hasGround, out bool hasAir, out bool hasSwim);
 
-        // 활성 포탈 수는 라운드마다(min~maxActivePortals 사이 랜덤) 달라져 미리 정할 수 없다 — 그 수만큼 순회한다.
+        // 활성 포탈 수는 라운드마다 달라져 미리 정할 수 없다.
         if (hasGround)
         {
             for (int i = 0; i < paths.Count; i++)
@@ -65,7 +65,6 @@ public class PathTrailCalc
     }
 
     // 활성 포탈을 한 번만 훑는다: 저작 경로가 있으면 그 자리에 담고, 없는 자리는 대략선 후보로 따로 담아둔다.
-    // 저작 경로가 하나라도 있었으면 대략선 후보는 버린다(실제로도 그 포탈들만 쓰이므로) — 하나도 없었을 때만 대략선 전체를 쓴다.
     private List<TrailPoints> AirRuns(IReadOnlyList<IReadOnlyList<Vector3>> paths, IReadOnlyList<int> spawns)
     {
         var authoredRuns = new List<TrailPoints>();
@@ -81,7 +80,7 @@ public class PathTrailCalc
         return authoredRuns.Count > 0 ? authoredRuns : fallbackRuns;
     }
 
-    // 활성 포탈 중 저작된 수영 경로가 있는 곳만 그린다. 없으면 지상 경로와 완전히 같은 길을 걷기 때문에 추가로 그리지 않는다.
+    // 활성 포탈 중 저작된 물 경로가 있는 곳만 그린다. 없으면 지상 경로와 완전히 같은 길을 걷기 때문에 추가로 그리지 않는다.
     private List<TrailPoints> SwimRuns(IReadOnlyList<IReadOnlyList<Vector3>> paths, IReadOnlyList<int> spawns)
     {
         var runs = new List<TrailPoints>();
@@ -118,7 +117,7 @@ public class PathTrailCalc
         if (fallback.Count > 0) runs.Add(new TrailPoints(fallback, TrailKind.Air));
     }
 
-    // 이번 라운드 웨이브 구성을 딱 한 번만 조회해 지상/공중/수영이 각각 있는지 구한다.
+    // 이번 라운드 웨이브 구성(자기 웨이브 + 다른 해금 지역의 증원 웨이브)을 조회해 지상/공중/수영이 각각 있는지 구한다.
     private void CollectKindsThisRound(out bool hasGround, out bool hasAir, out bool hasSwim)
     {
         hasGround = false;
@@ -128,8 +127,20 @@ public class PathTrailCalc
         int region = spawner.Region;
         int stage = SpawnerManager.Instance.LocalStage(region);
         int lookupId = WaveSpawner.GetStageLookupId(stage);
-        List<WaveTable.Data> wave = DataTableManager.WaveTable.GetWave(region, lookupId);
+        CollectKindsFromWave(DataTableManager.WaveTable.GetWave(region, lookupId), ref hasGround, ref hasAir, ref hasSwim);
 
+        // 다른 해금 지역이 보내는 증원 적도 이번 라운드 실제 스폰에 포함되므로 같은 기준으로 확인한다.
+        List<int> unlockedRegions = SpawnerManager.Instance.UnlockedRegions();
+        for (int i = 0; i < unlockedRegions.Count; i++)
+        {
+            if (unlockedRegions[i] == region) continue;
+            CollectKindsFromWave(DataTableManager.WaveTable.GetWave(unlockedRegions[i], WaveSpawner.ReinforceId), ref hasGround, ref hasAir, ref hasSwim);
+        }
+    }
+
+    // 웨이브 행 목록 하나를 훑어 지상/공중/수영 존재 여부에 반영한다(자기 웨이브·증원 웨이브 공용).
+    private static void CollectKindsFromWave(List<WaveTable.Data> wave, ref bool hasGround, ref bool hasAir, ref bool hasSwim)
+    {
         for (int i = 0; i < wave.Count; i++)
         {
             EnemyTable.Data data = DataTableManager.EnemyTable.Get(wave[i].MonsterName);
