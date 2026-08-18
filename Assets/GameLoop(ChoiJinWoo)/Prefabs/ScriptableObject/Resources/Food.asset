@@ -15,16 +15,20 @@ MonoBehaviour:
   type: 1
   facilityName: "\uB18D\uC7A5"
   facilityInfo: "\uC2DD\uB7C9\uC744 \uC0DD\uC0B0\uD558\uB294 \uAC74\uBB3C"
-  defaultAmount: 10
+  defaultAmount: 25
   defaulthp: 10
   defaultMaxWorker: 4
   constructCost:
   - Type: 0
-    Amount: 20
-  - Type: 4
-    Amount: 30
-  upgradeCost:
-  - Type: 1
     Amount: 50
+  - Type: 4
+    Amount: 50
+  upgradeCost:
+  - Type: 0
+    Amount: 40
+  - Type: 4
+    Amount: 40
+  - Type: 3
+    Amount: 20
   tileWidth: 2
   tileHeight: 2
