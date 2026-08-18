@@ -35,6 +35,8 @@ public class LoadingUI : MonoBehaviour
 
     private async UniTask AnimateDots(CancellationToken token)
     {
+        await UniTask.Yield();
+
         const string baseText = "Loading";
         int dotCount = 0;
 
