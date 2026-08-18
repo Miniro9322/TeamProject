@@ -5,15 +5,13 @@ using UnityEngine;
 public class UnitReplace
 {
     private readonly PlacedUnitData _unitList;
-    private readonly ZoneEffectApplier _zoneEffectApplier;
 
     // 지금 집어 든 것 하나.
     private HeldData held;
 
-    public UnitReplace(PlacedUnitData unitList, ZoneEffectApplier zoneEffectApplier)
+    public UnitReplace(PlacedUnitData unitList)
     {
         _unitList = unitList;
-        _zoneEffectApplier = zoneEffectApplier;
     }
 
     // 집었다/내려놨다가 바뀔 때마다 알린다(UI가 매 프레임 폴링하지 않게).
@@ -45,11 +43,6 @@ public class UnitReplace
         AreaPlace.Remove(area);
         _unitList.Remove(unit);
 
-        if (unit.TryGetComponent(out Hero hero))
-        {
-            _zoneEffectApplier.ExitZone(hero);
-        }
-
         held = new HeldData(unit, tile, area, fromPosition, kind, area.Size);
         OnHoldChanged?.Invoke();
         return true;
@@ -61,11 +54,6 @@ public class UnitReplace
         PlaceData data = new PlaceData(held.FromArea, held.FromPosition, true);
         AreaPlace.Place(data, held.Unit, held.Kind);
         _unitList.Add(held.Unit, held.FromArea);
-
-        if (held.Unit.TryGetComponent(out Hero hero))
-        {
-            _zoneEffectApplier.EnterZone(hero, held.FromArea);
-        }
 
         ClearHeld();
     }
@@ -92,7 +80,6 @@ public class UnitReplace
         {
             hero.SetBoard(data.Area.Board);
             hero.SetCurrentTile();
-            _zoneEffectApplier.EnterZone(hero, data.Area);
         }
         //
         ClearHeld();

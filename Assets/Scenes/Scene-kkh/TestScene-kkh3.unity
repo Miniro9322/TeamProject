@@ -12176,6 +12176,7 @@ MonoBehaviour:
   foodText: {fileID: 1609463189}
   citizenText: {fileID: 2005297681}
   maxCitizenText: {fileID: 1501990569}
+  idleCitizenText: {fileID: 0}
   heroCitizenText: {fileID: 1561435284}
   LifeText: {fileID: 954768992}
   heroCitizen: {fileID: 136478246}
@@ -16505,98 +16506,6 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 395697656}
     m_Modifications:
-    - target: {fileID: 80520434145681580, guid: f352c1935167394408fe119a26e75b74, type: 3}
-      propertyPath: createName
-      value: Melee_Hero_Create
-      objectReference: {fileID: 0}
-    - target: {fileID: 80520434145681580, guid: f352c1935167394408fe119a26e75b74, type: 3}
-      propertyPath: citizenCost
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 80520434145681580, guid: f352c1935167394408fe119a26e75b74, type: 3}
-      propertyPath: toolTipTrigger
-      value: 
-      objectReference: {fileID: 865059037}
-    - target: {fileID: 80520434145681580, guid: f352c1935167394408fe119a26e75b74, type: 3}
-      propertyPath: resourceCost.Array.size
-      value: 5
-      objectReference: {fileID: 0}
-    - target: {fileID: 80520434145681580, guid: f352c1935167394408fe119a26e75b74, type: 3}
-      propertyPath: resourceIcons.Array.size
-      value: 5
-      objectReference: {fileID: 0}
-    - target: {fileID: 80520434145681580, guid: f352c1935167394408fe119a26e75b74, type: 3}
-      propertyPath: resourceCost.Array.data[1].Type
-      value: 4
-      objectReference: {fileID: 0}
-    - target: {fileID: 80520434145681580, guid: f352c1935167394408fe119a26e75b74, type: 3}
-      propertyPath: resourceCost.Array.data[2].Type
-      value: 3
-      objectReference: {fileID: 0}
-    - target: {fileID: 80520434145681580, guid: f352c1935167394408fe119a26e75b74, type: 3}
-      propertyPath: resourceCost.Array.data[3].Type
-      value: 2
-      objectReference: {fileID: 0}
-    - target: {fileID: 80520434145681580, guid: f352c1935167394408fe119a26e75b74, type: 3}
-      propertyPath: resourceCost.Array.data[4].Type
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 80520434145681580, guid: f352c1935167394408fe119a26e75b74, type: 3}
-      propertyPath: resourceIcons.Array.data[0].icon
-      value: 
-      objectReference: {fileID: 21300000, guid: 101de9b13688cf44cb955d48eab6987a, type: 3}
-    - target: {fileID: 80520434145681580, guid: f352c1935167394408fe119a26e75b74, type: 3}
-      propertyPath: resourceIcons.Array.data[1].icon
-      value: 
-      objectReference: {fileID: 21300000, guid: abf0bd98db6e42d4b86995a38d811ee2, type: 3}
-    - target: {fileID: 80520434145681580, guid: f352c1935167394408fe119a26e75b74, type: 3}
-      propertyPath: resourceIcons.Array.data[1].type
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 80520434145681580, guid: f352c1935167394408fe119a26e75b74, type: 3}
-      propertyPath: resourceIcons.Array.data[2].icon
-      value: 
-      objectReference: {fileID: 21300000, guid: 59502ec7417163e4397bfaee6c0dc0ae, type: 3}
-    - target: {fileID: 80520434145681580, guid: f352c1935167394408fe119a26e75b74, type: 3}
-      propertyPath: resourceIcons.Array.data[2].type
-      value: 2
-      objectReference: {fileID: 0}
-    - target: {fileID: 80520434145681580, guid: f352c1935167394408fe119a26e75b74, type: 3}
-      propertyPath: resourceIcons.Array.data[3].icon
-      value: 
-      objectReference: {fileID: 21300000, guid: 52da87d420e08fb4cb4f085f2f1382b2, type: 3}
-    - target: {fileID: 80520434145681580, guid: f352c1935167394408fe119a26e75b74, type: 3}
-      propertyPath: resourceIcons.Array.data[3].type
-      value: 3
-      objectReference: {fileID: 0}
-    - target: {fileID: 80520434145681580, guid: f352c1935167394408fe119a26e75b74, type: 3}
-      propertyPath: resourceIcons.Array.data[4].icon
-      value: 
-      objectReference: {fileID: 21300000, guid: 1a2c8df41b5e407449901242f514e4f1, type: 3}
-    - target: {fileID: 80520434145681580, guid: f352c1935167394408fe119a26e75b74, type: 3}
-      propertyPath: resourceIcons.Array.data[4].type
-      value: 4
-      objectReference: {fileID: 0}
-    - target: {fileID: 80520434145681580, guid: f352c1935167394408fe119a26e75b74, type: 3}
-      propertyPath: resourceCost.Array.data[0].Amount
-      value: 30
-      objectReference: {fileID: 0}
-    - target: {fileID: 80520434145681580, guid: f352c1935167394408fe119a26e75b74, type: 3}
-      propertyPath: resourceCost.Array.data[1].Amount
-      value: 30
-      objectReference: {fileID: 0}
-    - target: {fileID: 80520434145681580, guid: f352c1935167394408fe119a26e75b74, type: 3}
-      propertyPath: resourceCost.Array.data[2].Amount
-      value: 50
-      objectReference: {fileID: 0}
-    - target: {fileID: 80520434145681580, guid: f352c1935167394408fe119a26e75b74, type: 3}
-      propertyPath: resourceCost.Array.data[3].Amount
-      value: 50
-      objectReference: {fileID: 0}
-    - target: {fileID: 80520434145681580, guid: f352c1935167394408fe119a26e75b74, type: 3}
-      propertyPath: resourceCost.Array.data[4].Amount
-      value: 20
-      objectReference: {fileID: 0}
     - target: {fileID: 1429036061297627050, guid: f352c1935167394408fe119a26e75b74, type: 3}
       propertyPath: m_Name
       value: MeleeHeroCreateButton
@@ -16681,63 +16590,27 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 3610302447719977603, guid: f352c1935167394408fe119a26e75b74, type: 3}
-      propertyPath: m_TargetGraphic
-      value: 
-      objectReference: {fileID: 865059034}
     m_RemovedComponents: []
-    m_RemovedGameObjects:
-    - {fileID: 7126053459874726792, guid: f352c1935167394408fe119a26e75b74, type: 3}
+    m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 1429036061297627050, guid: f352c1935167394408fe119a26e75b74, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 865059037}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: f352c1935167394408fe119a26e75b74, type: 3}
 --- !u!224 &865059033 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 2894990447962044250, guid: f352c1935167394408fe119a26e75b74, type: 3}
   m_PrefabInstance: {fileID: 865059032}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &865059034 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 3341226314558891864, guid: f352c1935167394408fe119a26e75b74, type: 3}
-  m_PrefabInstance: {fileID: 865059032}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
 --- !u!114 &865059035 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 80520434145681580, guid: f352c1935167394408fe119a26e75b74, type: 3}
   m_PrefabInstance: {fileID: 865059032}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 865059036}
+  m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4a9b1cbcca1d40c4a84eee8e163bd333, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HeroCreateIcon
---- !u!1 &865059036 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 1429036061297627050, guid: f352c1935167394408fe119a26e75b74, type: 3}
-  m_PrefabInstance: {fileID: 865059032}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &865059037
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 865059036}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0f4bbe2121ffb674bb4d3f0d6f8213f2, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::HeroCreateToolTipTrigger
 --- !u!1001 &866488362
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -22848,8 +22721,6 @@ MonoBehaviour:
   panel: {fileID: 1168996035}
   content: {fileID: 1140418188}
   resourceInfoPrefab: {fileID: 1664128077118262562, guid: 596b2cb30705a5741a29af37014ccd9d, type: 3}
-  canvas: {fileID: 1397291697}
-  offset: {x: 16, y: 16}
   fadeDuration: 0.12
 --- !u!1001 &1173227889
 PrefabInstance:
@@ -30423,98 +30294,6 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 395697656}
     m_Modifications:
-    - target: {fileID: 80520434145681580, guid: ab9477e367096a3478d852f3825c07f3, type: 3}
-      propertyPath: createName
-      value: Ranged_Hero_Create
-      objectReference: {fileID: 0}
-    - target: {fileID: 80520434145681580, guid: ab9477e367096a3478d852f3825c07f3, type: 3}
-      propertyPath: citizenCost
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 80520434145681580, guid: ab9477e367096a3478d852f3825c07f3, type: 3}
-      propertyPath: toolTipTrigger
-      value: 
-      objectReference: {fileID: 1619923860}
-    - target: {fileID: 80520434145681580, guid: ab9477e367096a3478d852f3825c07f3, type: 3}
-      propertyPath: resourceCost.Array.size
-      value: 5
-      objectReference: {fileID: 0}
-    - target: {fileID: 80520434145681580, guid: ab9477e367096a3478d852f3825c07f3, type: 3}
-      propertyPath: resourceIcons.Array.size
-      value: 5
-      objectReference: {fileID: 0}
-    - target: {fileID: 80520434145681580, guid: ab9477e367096a3478d852f3825c07f3, type: 3}
-      propertyPath: resourceCost.Array.data[1].Type
-      value: 4
-      objectReference: {fileID: 0}
-    - target: {fileID: 80520434145681580, guid: ab9477e367096a3478d852f3825c07f3, type: 3}
-      propertyPath: resourceCost.Array.data[2].Type
-      value: 3
-      objectReference: {fileID: 0}
-    - target: {fileID: 80520434145681580, guid: ab9477e367096a3478d852f3825c07f3, type: 3}
-      propertyPath: resourceCost.Array.data[3].Type
-      value: 2
-      objectReference: {fileID: 0}
-    - target: {fileID: 80520434145681580, guid: ab9477e367096a3478d852f3825c07f3, type: 3}
-      propertyPath: resourceCost.Array.data[4].Type
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 80520434145681580, guid: ab9477e367096a3478d852f3825c07f3, type: 3}
-      propertyPath: resourceIcons.Array.data[0].icon
-      value: 
-      objectReference: {fileID: 21300000, guid: 101de9b13688cf44cb955d48eab6987a, type: 3}
-    - target: {fileID: 80520434145681580, guid: ab9477e367096a3478d852f3825c07f3, type: 3}
-      propertyPath: resourceIcons.Array.data[1].icon
-      value: 
-      objectReference: {fileID: 21300000, guid: abf0bd98db6e42d4b86995a38d811ee2, type: 3}
-    - target: {fileID: 80520434145681580, guid: ab9477e367096a3478d852f3825c07f3, type: 3}
-      propertyPath: resourceIcons.Array.data[1].type
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 80520434145681580, guid: ab9477e367096a3478d852f3825c07f3, type: 3}
-      propertyPath: resourceIcons.Array.data[2].icon
-      value: 
-      objectReference: {fileID: 21300000, guid: 59502ec7417163e4397bfaee6c0dc0ae, type: 3}
-    - target: {fileID: 80520434145681580, guid: ab9477e367096a3478d852f3825c07f3, type: 3}
-      propertyPath: resourceIcons.Array.data[2].type
-      value: 2
-      objectReference: {fileID: 0}
-    - target: {fileID: 80520434145681580, guid: ab9477e367096a3478d852f3825c07f3, type: 3}
-      propertyPath: resourceIcons.Array.data[3].icon
-      value: 
-      objectReference: {fileID: 21300000, guid: 52da87d420e08fb4cb4f085f2f1382b2, type: 3}
-    - target: {fileID: 80520434145681580, guid: ab9477e367096a3478d852f3825c07f3, type: 3}
-      propertyPath: resourceIcons.Array.data[3].type
-      value: 3
-      objectReference: {fileID: 0}
-    - target: {fileID: 80520434145681580, guid: ab9477e367096a3478d852f3825c07f3, type: 3}
-      propertyPath: resourceIcons.Array.data[4].icon
-      value: 
-      objectReference: {fileID: 21300000, guid: 1a2c8df41b5e407449901242f514e4f1, type: 3}
-    - target: {fileID: 80520434145681580, guid: ab9477e367096a3478d852f3825c07f3, type: 3}
-      propertyPath: resourceIcons.Array.data[4].type
-      value: 4
-      objectReference: {fileID: 0}
-    - target: {fileID: 80520434145681580, guid: ab9477e367096a3478d852f3825c07f3, type: 3}
-      propertyPath: resourceCost.Array.data[0].Amount
-      value: 50
-      objectReference: {fileID: 0}
-    - target: {fileID: 80520434145681580, guid: ab9477e367096a3478d852f3825c07f3, type: 3}
-      propertyPath: resourceCost.Array.data[1].Amount
-      value: 50
-      objectReference: {fileID: 0}
-    - target: {fileID: 80520434145681580, guid: ab9477e367096a3478d852f3825c07f3, type: 3}
-      propertyPath: resourceCost.Array.data[2].Amount
-      value: 60
-      objectReference: {fileID: 0}
-    - target: {fileID: 80520434145681580, guid: ab9477e367096a3478d852f3825c07f3, type: 3}
-      propertyPath: resourceCost.Array.data[3].Amount
-      value: 60
-      objectReference: {fileID: 0}
-    - target: {fileID: 80520434145681580, guid: ab9477e367096a3478d852f3825c07f3, type: 3}
-      propertyPath: resourceCost.Array.data[4].Amount
-      value: 30
-      objectReference: {fileID: 0}
     - target: {fileID: 1429036061297627050, guid: ab9477e367096a3478d852f3825c07f3, type: 3}
       propertyPath: m_Name
       value: RangedHeroCreateButton
@@ -30599,63 +30378,27 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 3610302447719977603, guid: ab9477e367096a3478d852f3825c07f3, type: 3}
-      propertyPath: m_TargetGraphic
-      value: 
-      objectReference: {fileID: 1619923857}
     m_RemovedComponents: []
-    m_RemovedGameObjects:
-    - {fileID: 7126053459874726792, guid: ab9477e367096a3478d852f3825c07f3, type: 3}
+    m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 1429036061297627050, guid: ab9477e367096a3478d852f3825c07f3, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1619923860}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: ab9477e367096a3478d852f3825c07f3, type: 3}
 --- !u!224 &1619923856 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 2894990447962044250, guid: ab9477e367096a3478d852f3825c07f3, type: 3}
   m_PrefabInstance: {fileID: 1619923855}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &1619923857 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 3341226314558891864, guid: ab9477e367096a3478d852f3825c07f3, type: 3}
-  m_PrefabInstance: {fileID: 1619923855}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
 --- !u!114 &1619923858 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 80520434145681580, guid: ab9477e367096a3478d852f3825c07f3, type: 3}
   m_PrefabInstance: {fileID: 1619923855}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1619923859}
+  m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4a9b1cbcca1d40c4a84eee8e163bd333, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HeroCreateIcon
---- !u!1 &1619923859 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 1429036061297627050, guid: ab9477e367096a3478d852f3825c07f3, type: 3}
-  m_PrefabInstance: {fileID: 1619923855}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &1619923860
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1619923859}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0f4bbe2121ffb674bb4d3f0d6f8213f2, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::HeroCreateToolTipTrigger
 --- !u!1001 &1621498881
 PrefabInstance:
   m_ObjectHideFlags: 0

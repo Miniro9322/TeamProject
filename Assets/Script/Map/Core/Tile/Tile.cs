@@ -26,6 +26,9 @@ public partial class Tile : MonoBehaviour
     //타일을 점유한 오브젝트
     public GameObject OccupantObject { get; private set; }
 
+    // 점유 오브젝트의 Hero 컴포넌트 캐시(SetOccupant/ClearOccupant에서만 갱신)
+    public Hero OccupantHero { get; private set; }
+
     // 내 위에 올라온 적
     private readonly List<GameObject> _enemies = new();
 
@@ -105,7 +108,7 @@ public partial class Tile : MonoBehaviour
     {
         OccupantObject = go;
         State.Occupant = kind;
-
+        OccupantHero = go.GetComponent<Hero>();
     }
 
     //배치되어 있는 유닛을 해제 후 반환.
@@ -115,7 +118,7 @@ public partial class Tile : MonoBehaviour
 
         OccupantObject = null;
         State.Occupant = OccupantKind.None;
-
+        OccupantHero = null;
 
         return go;
     }

@@ -1,4 +1,8 @@
+using System;
+using System.Threading;
 using Cysharp.Threading.Tasks;
+using TMPro;
+
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -11,7 +15,9 @@ public class TitleUI : MonoBehaviour
     [SerializeField] private GameObject settingPanel;
     [SerializeField] private GameObject upgradePanel;
     [SerializeField] private GameObject QuitAlert;
+    [SerializeField] private GameObject LoadingPanel;
     [SerializeField] private AudioMixer mixer;
+
 
     private void Awake()
     {
@@ -46,7 +52,25 @@ public class TitleUI : MonoBehaviour
 
     public void OnStart()
     {
-        SceneManager.LoadScene("MainScene");
+        LoadSceneAsync("MainScene").Forget();
+    }
+
+    private async UniTaskVoid LoadSceneAsync(string sceneName)
+    {
+        LoadingPanel.SetActive(true);
+
+        AsyncOperation op = SceneManager.LoadSceneAsync(sceneName);
+        op.allowSceneActivation = false;
+
+        while(op.progress < 0.9f)
+        {
+            await UniTask.Yield();
+        }
+
+        await UniTask.Delay(TimeSpan.FromSeconds(1f));
+
+        op.allowSceneActivation = true;
+        await op;
     }
 
     public void OnUpgrade()

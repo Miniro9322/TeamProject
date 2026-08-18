@@ -354,6 +354,7 @@ public class Hero : MonoBehaviour, IDamageAble, IUnit, IStunAble, IDebuffCarrier
         if (gameManager != null)
         {
             gameManager.ChangeToDay += Resurrection;
+            gameManager.ChangeToDay += HealFull;
             gameManager.ChangeToDay += ResetSkillCooldown;
             gameManager.ChangeToDay += NotifyDayStart;
         }
@@ -403,6 +404,7 @@ public class Hero : MonoBehaviour, IDamageAble, IUnit, IStunAble, IDebuffCarrier
         if (gameManager != null)
         {
             gameManager.ChangeToDay -= Resurrection;
+            gameManager.ChangeToDay -= HealFull;
             gameManager.ChangeToDay -= ResetSkillCooldown;
             gameManager.ChangeToDay -= NotifyDayStart;
         }
@@ -653,6 +655,11 @@ public class Hero : MonoBehaviour, IDamageAble, IUnit, IStunAble, IDebuffCarrier
         isDead = false;
         _bar.ResetTo(currentHp, sc[StatType.HP]);
         if (wasDead) SpawnAuraZones(); // 살아있던 영웅은 오라가 이미 돌고 있으므로 다시 스폰하면 중복된다
+    }
+
+    public void HealFull()
+    {
+        Heal(sc[StatType.HP]);
     }
 
     public void SetCurrentTile()

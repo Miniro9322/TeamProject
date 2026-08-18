@@ -10,13 +10,19 @@ public static class TileShapeQuery
         if (shape == RangeShape.Diamond) return board.GetTiles(origin, range, false);
         if (shape == RangeShape.Square) return board.GetTiles(origin, range, true);
 
-        // Cross: 정사각 블록을 받아 축(가로/세로) 위의 타일만 남긴다.
-        List<Tile> block = board.GetTiles(origin, range, true);
+        // Cross: 원점을 지나는 가로·세로 축 위의 칸만 직접 훑는다(정사각 전체를 만들고 버리지 않는다).
         var result = new List<Tile>();
-        foreach (Tile tile in block)
+        for (int dx = -range; dx <= range; dx++)
         {
-            Vector2Int d = tile.Coord - origin;
-            if (d.x == 0 || d.y == 0) result.Add(tile);
+            if (board.TryGetCell(new Vector2Int(origin.x + dx, origin.y), out Tile h)) result.Add(h);
+        }
+        for (int dy = -range; dy < 0; dy++)
+        {
+            if (board.TryGetCell(new Vector2Int(origin.x, origin.y + dy), out Tile v)) result.Add(v);
+        }
+        for (int dy = 1; dy <= range; dy++)
+        {
+            if (board.TryGetCell(new Vector2Int(origin.x, origin.y + dy), out Tile v)) result.Add(v);
         }
         return result;
     }
@@ -26,8 +32,6 @@ public static class TileShapeQuery
     public static List<Tile> GetLineTiles(MapBoard board, Vector2Int origin, Vector2Int direction, int length, int width = 0)
     {
         Vector2Int perp = new Vector2Int(-direction.y, direction.x);
-        int radius = Mathf.Max(length, width);
-        List<Tile> block = board.GetTiles(origin, radius, true);
         var result = new List<Tile>(length * (2 * width + 1));
         for (int step = 1; step <= length; step++)
         {
@@ -35,8 +39,10 @@ public static class TileShapeQuery
             for (int offset = -width; offset <= width; offset++)
             {
                 Vector2Int target = center + perp * offset;
-                Tile tile = block.Find(t => t.Coord == target);
-                if (tile != null) result.Add(tile);
+                if (board.TryGetCell(target, out Tile tile))
+                {
+                    result.Add(tile);
+                }
             }
         }
         return result;
