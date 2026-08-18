@@ -14,11 +14,11 @@ public class DayState : IState
         gameManager.UiManager.ToggleGameSpeedUi(false);
         gameManager.ChangeCanBuild(true);
         gameManager.IncreaseDayCount();
-        Debug.Log($"{gameManager.DayCount}일차");
         if (gameManager.DayCount % 5 == 0)
         {
             gameManager.ChangeRequest(true);
         }
+        gameManager.todayHp = gameManager.Hp;
     }
 
     public void Exit()

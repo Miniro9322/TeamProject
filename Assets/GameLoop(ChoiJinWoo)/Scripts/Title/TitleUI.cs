@@ -52,12 +52,13 @@ public class TitleUI : MonoBehaviour
 
     public void OnStart()
     {
+        LoadingPanel.SetActive(true);
         LoadSceneAsync("MainScene").Forget();
     }
 
     private async UniTaskVoid LoadSceneAsync(string sceneName)
     {
-        LoadingPanel.SetActive(true);
+        await UniTask.Delay(TimeSpan.FromSeconds(0.2f));
 
         AsyncOperation op = SceneManager.LoadSceneAsync(sceneName);
         op.allowSceneActivation = false;
@@ -66,8 +67,6 @@ public class TitleUI : MonoBehaviour
         {
             await UniTask.Yield();
         }
-
-        await UniTask.Delay(TimeSpan.FromSeconds(1f));
 
         op.allowSceneActivation = true;
         await op;

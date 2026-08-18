@@ -10,17 +10,24 @@ public class CenterHubPanel : MonoBehaviour, IClosablePanel
     [SerializeField] private List<ResourceAmountRow> resourceRows; // 자원별 아이콘+수량 한 줄씩, 인스펙터에서 구성
     [SerializeField] private AddCitizen addCitizenPanel;
     [SerializeField] private Button openButton;
+    [SerializeField] private Button tradeWoodButton;
+    [SerializeField] private Button tradeIronButton;
+    [SerializeField] private Button tradeFoodButton;
+    [SerializeField] private Button tradeGoldButton;
+    [SerializeField] private Button tradeStoneButton;
     [SerializeField] private RegionDetailPanel detailPanel;
 
     private FacilityManager facilityManager;
     private UiPanelStack panelStack;
     private ClickOutsideCloser outsideCloser;
+    private ResourcesManager resourcesManager;
 
     [Inject]
-    private void Construct(FacilityManager facilityManager, UiPanelStack panelStack)
+    private void Construct(FacilityManager facilityManager, UiPanelStack panelStack, ResourcesManager resourcesManager)
     {
         this.facilityManager = facilityManager;
         this.panelStack = panelStack;
+        this.resourcesManager = resourcesManager;
     }
 
     private void Awake()
@@ -35,11 +42,23 @@ public class CenterHubPanel : MonoBehaviour, IClosablePanel
     {
         panelStack.Push(this);
         outsideCloser.MarkOpened();
+
+        if (tradeFoodButton != null) tradeFoodButton.onClick.AddListener(() => resourcesManager.TradeResource(ProductionType.Food));
+        if (tradeIronButton != null) tradeIronButton.onClick.AddListener(() => resourcesManager.TradeResource(ProductionType.Iron));
+        if (tradeWoodButton != null) tradeWoodButton.onClick.AddListener(() => resourcesManager.TradeResource(ProductionType.Wood));
+        if (tradeGoldButton != null) tradeGoldButton.onClick.AddListener(() => resourcesManager.TradeResource(ProductionType.Gold));
+        if (tradeStoneButton != null) tradeStoneButton.onClick.AddListener(() => resourcesManager.TradeResource(ProductionType.Stone));
     }
 
     private void OnDisable()
     {
         panelStack.Remove(this);
+
+        if (tradeFoodButton != null) tradeFoodButton.onClick.RemoveAllListeners();
+        if (tradeIronButton != null) tradeIronButton.onClick.RemoveAllListeners();
+        if (tradeWoodButton != null) tradeWoodButton.onClick.RemoveAllListeners();
+        if (tradeGoldButton != null) tradeGoldButton.onClick.RemoveAllListeners();
+        if (tradeStoneButton != null) tradeStoneButton.onClick.RemoveAllListeners();
     }
 
     // addCitizenPanel은 하이러키상 자식이 아니라 필드로만 참조되는 별도 패널이라, 열려있는 동안엔

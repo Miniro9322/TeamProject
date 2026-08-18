@@ -9,6 +9,7 @@ public class TopBar : MonoBehaviour
     [SerializeField] private TextMeshProUGUI ironText;
     [SerializeField] private TextMeshProUGUI goldText;
     [SerializeField] private TextMeshProUGUI foodText;
+    [SerializeField] private TextMeshProUGUI specialText;
     [SerializeField] private TextMeshProUGUI citizenText;
     [SerializeField] private TextMeshProUGUI maxCitizenText;
     [SerializeField] private TextMeshProUGUI idleCitizenText;
@@ -51,6 +52,7 @@ public class TopBar : MonoBehaviour
         ironText.text = $"{resourcesManager.Iron}";
         goldText.text = $"{resourcesManager.Gold}";
         foodText.text = $"{resourcesManager.Food}";
+        specialText.text = $"{resourcesManager.Special}";
     }
 
     private void UpdateLife()
