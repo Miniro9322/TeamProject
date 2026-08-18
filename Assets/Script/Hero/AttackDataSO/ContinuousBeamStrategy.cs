@@ -77,7 +77,7 @@ public class ContinuousBeamStrategy : IAttackDeliveryStrategy
                     if (data.continuousDuration <= 0f)
                     {
                         RangeShape aoeShape = AttackDamageUtil.ResolveAoeShape(data);
-                        bool anyEnemyNearby = hero.GetObjectsInRange(ctx.self.position, data.areaRange, aoeShape, RangeQueryAffinity.Enemy).Count > 0;
+                        bool anyEnemyNearby = hero.GetObjectsInRange(ctx.self.position, data.areaRange, aoeShape, RangeQueryAffinity.Enemy, data.AreaUnattackableTarget).Count > 0;
                         if (!anyEnemyNearby) break;
                     }
                     if (selfEffectGo != null) selfEffectGo.transform.position = ctx.self.position;
