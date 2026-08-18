@@ -21,11 +21,13 @@ public class MapAssemble : MonoBehaviour
     [SerializeField] private RangeInput rangeInput;
     [SerializeField] private HeroCombineManager combineManager;
     [SerializeField] private DesertZone desertZone;
+    [SerializeField] private PlayerSkillPanel playerSkillPanel;
 
     private List<PathTrail> pathTrails;
     private List<EnemyLanes> laneModules;
     private PlaceGhost ghost;
     private HeroSkillCastController skillCast;
+    private PlayerSkillCastController playerSkillCast;
     private DesertZoneEffect desertZoneEffect;
     private List<IceZoneEffect> iceZoneEffects;
     private CampfireLightController campfireLights;
@@ -74,6 +76,17 @@ public class MapAssemble : MonoBehaviour
 
         skillCast = new HeroSkillCastController { dayNightRule = dayNightRule };
 
+        playerSkillCast = new PlayerSkillCastController
+        {
+            dayNightRule = dayNightRule,
+            buffManager = mapGame.BuffManager,
+            mana = mapGame.PlayerManaManager,
+            heroSkillCast = skillCast,
+        };
+        if (playerSkillPanel != null) playerSkillPanel.Bind(playerSkillCast);
+        view.skillCast = skillCast;
+        view.playerSkillCast = playerSkillCast;
+
         RangeInfo rangeInfo = new RangeInfo();
         RangeTileData rangeStore = new RangeTileData();
         RangeCalc rangeCalc = new RangeCalc(rangeInfo);
@@ -83,8 +96,9 @@ public class MapAssemble : MonoBehaviour
         {
             PlaceHoverFinder hoverFinder = new PlaceHoverFinder(view, finder, hoverPlace);
             SkillTargetFinder skillFinder = new SkillTargetFinder(skillCast, view);
+            PlayerSkillTargetFinder playerSkillFinder = new PlayerSkillTargetFinder(playerSkillCast, view);
             tilePaintView.SetupEdges(boards);
-            tilePaintView.sync = new TilePaintSync(hoverFinder, skillFinder, rangeCalc, rangeStore, tilePaintView.Painter);
+            tilePaintView.sync = new TilePaintSync(hoverFinder, skillFinder, playerSkillFinder, rangeCalc, rangeStore, tilePaintView.Painter);
         }
 
         rangeInput.pointerPick = pointerPick;
@@ -105,6 +119,7 @@ public class MapAssemble : MonoBehaviour
         action.view = view;
         action.heroRoster = mapGame.HeroRoster;
         action.skillCast = skillCast;
+        action.playerSkillCast = playerSkillCast;
         action.combineManager = combineManager;
         action.hoverPlace = hoverPlace;
 
@@ -145,6 +160,7 @@ public class MapAssemble : MonoBehaviour
 
         mapGame.Rule.ChangeToNight += view.ClearMode;
         mapGame.Rule.ChangeToNight += skillCast.ClearSelection;
+        mapGame.Rule.ChangeToDay += playerSkillCast.ClearArmed;
 
         // 확장 이벤트: 5일마다 GameManager가 쏘고, 밤이 되면 선택을 무른다.
         // 미배선이면 확장만 꺼지고 나머지 조립은 그대로 돈다.
@@ -180,6 +196,10 @@ public class MapAssemble : MonoBehaviour
         if (skillCast != null)
         {
             mapGame.Rule.ChangeToNight -= skillCast.ClearSelection;
+        }
+        if (playerSkillCast != null)
+        {
+            mapGame.Rule.ChangeToDay -= playerSkillCast.ClearArmed;
         }
         if (expand != null)
         {

@@ -37,4 +37,22 @@ public static class SkillRangeCalc
             shape = zone.shape;
         }
     }
+
+    public static List<Tile> BuildHitRange(PlayerSkillSlot skill, Tile origin)
+    {
+        ResolvePlayerZoneShape(skill?.zonePrefab, out int radius, out RangeShape shape);
+        return TileShapeQuery.GetTiles(origin.Board, origin.Coord, radius, shape);
+    }
+
+    private static void ResolvePlayerZoneShape(GameObject zonePrefab, out int radius, out RangeShape shape)
+    {
+        radius = 0;
+        shape = RangeShape.Diamond;
+
+        if (zonePrefab != null && zonePrefab.TryGetComponent(out PlayerGroundZoneEffect zone))
+        {
+            radius = zone.radius;
+            shape = zone.shape;
+        }
+    }
 }

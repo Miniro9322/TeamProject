@@ -13,6 +13,8 @@ public readonly struct TileDisplayData
     public readonly Hero SkillCaster;
     public readonly HeroActiveSkill Skill;
     public readonly Tile SkillOrigin;
+    public readonly PlayerSkillSlot ArmedSkill;
+    public readonly Tile PlayerSkillOrigin;
 
     public TileDisplayData(
         HoverMode mode,
@@ -24,7 +26,9 @@ public readonly struct TileDisplayData
         int rangeVersion,
         Hero skillCaster,
         HeroActiveSkill skill,
-        Tile skillOrigin)
+        Tile skillOrigin,
+        PlayerSkillSlot armedSkill,
+        Tile playerSkillOrigin)
     {
         Mode = mode;
         Board = board;
@@ -36,6 +40,8 @@ public readonly struct TileDisplayData
         SkillCaster = skillCaster;
         Skill = skill;
         SkillOrigin = skillOrigin;
+        ArmedSkill = armedSkill;
+        PlayerSkillOrigin = playerSkillOrigin;
     }
 
     public bool SameAs(TileDisplayData other)
@@ -49,7 +55,9 @@ public readonly struct TileDisplayData
             && RangeVersion == other.RangeVersion
             && SkillCaster == other.SkillCaster
             && Skill == other.Skill
-            && SkillOrigin == other.SkillOrigin;
+            && SkillOrigin == other.SkillOrigin
+            && ArmedSkill == other.ArmedSkill
+            && PlayerSkillOrigin == other.PlayerSkillOrigin;
     }
 }
 

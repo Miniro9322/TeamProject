@@ -45,8 +45,13 @@ public class BuildModePanel : MonoBehaviour
         if (keyboard == null) return;
         if (!keyboard[closeKey].wasPressedThisFrame) return;
 
+        // 영웅 스킬 시전자 선택/플레이어 스킬 무장이 있으면 그것부터 취소한다(우클릭과 동일한 우선순위).
+        if (view.HasArmedOrSelectedSkill)
+        {
+            view.CancelSkillCasts();
+        }
         // 영웅을 집은 상태면 재배치 모드는 유지하고 집은 것만 취소한다.
-        if (view.IsHolding)
+        else if (view.IsHolding)
         {
             view.CancelHold();
         }

@@ -210,6 +210,10 @@ public class PlayerGroundZoneEffect : MonoBehaviour
     {
         if (selfEffect == null) return;
         selfEffectInstance = Instantiate(selfEffect, transform.position, selfEffect.transform.rotation);
+        // 파티클 프리팹은 프로젝트 관례상 Play On Awake가 꺼져 있다 — Hero.SpawnPersistentEffect와
+        // 마찬가지로 직접 Play()를 걸어줘야 실제로 재생된다(안 그러면 스폰만 되고 안 보인다).
+        foreach (ParticleSystem ps in selfEffectInstance.GetComponentsInChildren<ParticleSystem>(true))
+            ps.Play(true);
         if (duration > 0f) Destroy(selfEffectInstance, duration);
         if (selfEffectVisualRadius > 0f)
             selfEffectInstance.transform.localScale = Vector3.one * (radius / selfEffectVisualRadius);
