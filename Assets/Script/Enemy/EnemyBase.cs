@@ -323,8 +323,9 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
     // 보스는 기절 면역이 기본이다 — 스턴 한 번으로 무력화되면 보스 구실을 못 한다.
     // Class는 CSV(EnemyTable)에서 오므로 새 보스를 추가해도 데이터 작업 없이 적용된다.
     // 프리팹의 immuneDebuffs는 여기에 더해진다(빼지는 못한다 — 보스인데 기절이 걸려야 하는 예외가 생기면 그때 방식을 바꾼다).
+    public bool isImmuneDebuffs => BossStunImmunity && Class != EnemyClass.Normal;
     public DebuffType ImmuneDebuffs =>
-        immuneDebuffs | (BossStunImmunity && Class == EnemyClass.Boss ? DebuffType.Stun : DebuffType.None)|(IsFlame?DebuffType.Ignite:DebuffType.None);
+        immuneDebuffs | (isImmuneDebuffs ? DebuffType.Stun : DebuffType.None)|(IsFlame?DebuffType.Ignite:DebuffType.None);
 
     public bool IsImmuneTo(DebuffType mask) => (ImmuneDebuffs & mask) != 0;
         
@@ -356,16 +357,13 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
         if (Keyboard.current != null)
         {
             if (Keyboard.current.numpad1Key.wasPressedThisFrame) Stun(3f);
-            // 속박: 제자리에 멈추되 평타와 일반 스킬은 계속 나가야 정상. 대시만 막힌다.
             if (Keyboard.current.numpad2Key.wasPressedThisFrame) ApplyDebuff(DebuffLoader.Get("Root_Basic"));
-            // 침묵: 걸어오면서 평타는 하지만 스킬을 하나도 안 써야 정상.
             if (Keyboard.current.numpad3Key.wasPressedThisFrame) ApplyDebuff(DebuffLoader.Get("Silence_Basic"));
-            // 점화 비교 테스트. 4 = 시전자 없이(최대 체력 비율만), 5 = 이 적이 시전자(공격력 몫까지).
-            // 번갈아 누르고 콘솔의 "틱 ... = N피해"를 견주면 공격력 몫이 실제로 더해지는지 바로 보인다.
             if (Keyboard.current.numpad4Key.wasPressedThisFrame) ApplyDebuff(DebuffLoader.Get("Ignite_Basic"));
             if (Keyboard.current.numpad5Key.wasPressedThisFrame) ApplyDebuff(DebuffLoader.Get("Exhaust_Basic"));
             if (Keyboard.current.numpad6Key.wasPressedThisFrame) ApplyDebuff(DebuffLoader.Get("Bleed_Basic"));
             if (Keyboard.current.numpad7Key.wasPressedThisFrame) ApplyDebuff(DebuffLoader.Get("ArmorBreak_Basic"));
+            if (Keyboard.current.numpad8Key.wasPressedThisFrame) ApplyDebuff(DebuffLoader.Get("Frost_Basic"));
    
         }
     }
