@@ -5,13 +5,11 @@ public class UnitRemover
 {
     private readonly PlacedUnitData _unitList;
     private readonly HeroRoster _heroRoster;
-    private readonly ZoneEffectApplier _zoneEffectApplier;
 
-    public UnitRemover(PlacedUnitData unitList, HeroRoster heroRoster, ZoneEffectApplier zoneEffectApplier)
+    public UnitRemover(PlacedUnitData unitList, HeroRoster heroRoster)
     {
         _unitList = unitList;
         _heroRoster = heroRoster;
-        _zoneEffectApplier = zoneEffectApplier;
     }
 
     // 한 칸의 유닛을 치운다. 칸이 없으면 false.
@@ -36,32 +34,8 @@ public class UnitRemover
         AreaPlace.Remove(area);
         _unitList.Remove(unit);
 
-        if (unit.TryGetComponent(out Hero hero))
-        {
-            _zoneEffectApplier.ExitZone(hero);
-        }
-
         DestroyOrReturnToPool(unit);
         return unit;
-    }
-
-    // 판 위의 모든 유닛을 치운다. 풀 반납 없이 전부 파괴한다.
-    public void RemoveAll()
-    {
-        for (int i = 0; i < _unitList.Count; i++)
-        {
-            GameObject unit = _unitList.UnitAt(i);
-            AreaPlace.Remove(_unitList.AreaAt(i));
-
-            if (unit.TryGetComponent(out Hero hero))
-            {
-                _zoneEffectApplier.ExitZone(hero);
-            }
-
-            Object.Destroy(unit);
-        }
-
-        _unitList.Clear();
     }
 
     // 영웅(로스터 출신)이면 로스터로 되돌리고 파괴.

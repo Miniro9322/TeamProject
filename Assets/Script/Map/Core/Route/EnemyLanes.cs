@@ -15,6 +15,7 @@ public class EnemyLanes : MonoBehaviour
     // 스폰마다 그 스폰에서 갈라지는 레인들. 계산 단계가 만들면서 밀어 넣는다.
     private readonly List<List<LaneData>> spawnLanes = new();
     private readonly Dictionary<Tile, int> spawnSlot = new();
+    private List<IReadOnlyList<Vector3>> _cachedWalkPaths0;
 
     private ILaneBuilder builder;
 
@@ -44,6 +45,7 @@ public class EnemyLanes : MonoBehaviour
     public void RefreshLanes()
     {
         IsReady = false;
+        _cachedWalkPaths0 = null;
         lanes.Clear();
         spawnLanes.Clear();
         spawnSlot.Clear();
@@ -55,8 +57,8 @@ public class EnemyLanes : MonoBehaviour
             return;
         }
 
-        LaneInputData input = CreateInput();
-        IReadOnlyList<LaneData> built = builder.BuildLanes(input);
+        CollectEndpoints(out List<Tile> spawns, out List<Tile> cores);
+        IReadOnlyList<LaneData> built = builder.BuildLanes(board.Cells, spawns, cores, board.CoreDistance);
         ApplyLanes(built);
     }
 
@@ -86,9 +88,11 @@ public class EnemyLanes : MonoBehaviour
     // pass를 생략하면 걷기 경로를 낸다.
     public IReadOnlyList<IReadOnlyList<Vector3>> GetPaths(float yOffset, PassType pass = PassType.Walk)
     {
-        //외부 호출시
-        //IReadOnlyList<IReadOnlyList<Vector3>> paths = enemyLanes.GetPaths(0f);
-        //로 선언.
+        if (Mathf.Abs(yOffset) < 1e-5f && pass == PassType.Walk && _cachedWalkPaths0 != null)
+        {
+            return _cachedWalkPaths0;
+        }
+
         var paths = new List<IReadOnlyList<Vector3>>();
 
         if (!IsReady)
@@ -99,6 +103,11 @@ public class EnemyLanes : MonoBehaviour
         for (int i = 0; i < spawnLanes.Count; i++)
         {
             paths.Add(spawnLanes[i][0].GetPoints(pass, yOffset));
+        }
+
+        if (Mathf.Abs(yOffset) < 1e-5f && pass == PassType.Walk)
+        {
+            _cachedWalkPaths0 = paths;
         }
 
         return paths;
@@ -134,18 +143,17 @@ public class EnemyLanes : MonoBehaviour
         return board.CellCount > 0;
     }
 
-    // MapBoard의 셀에서 스폰과 코어를 수집해 LaneInput을 만듭니다.
-    private LaneInputData CreateInput()
+    // MapBoard의 셀에서 스폰과 코어를 수집합니다.
+    private void CollectEndpoints(out List<Tile> spawns, out List<Tile> cores)
     {
-        var spawns = new List<Tile>();
-        var cores = new List<Tile>();
+        spawns = new List<Tile>();
+        cores = new List<Tile>();
 
-        foreach (Tile tile in board.Cells.Values)
+        IReadOnlyList<Tile> cellList = board.CellList;
+        for (int i = 0; i < cellList.Count; i++)
         {
-            AddEndpoint(tile, spawns, cores);
+            AddEndpoint(cellList[i], spawns, cores);
         }
-
-        return new LaneInputData(board.Cells, spawns, cores);
     }
 
     // 타일의 역할에 따라 스폰 또는 코어 목록에 추가합니다.

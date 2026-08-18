@@ -5,7 +5,6 @@ public class PlaceAction
 {
     // MapCommand가 조립할 때 넣어준다
     public PlacePalette palette;
-    public PlaceFinder finder;
     public UnitPlacer placer;
     public UnitRemover remover;
     public UnitReplace replace;
@@ -14,6 +13,7 @@ public class PlaceAction
     public HeroRoster heroRoster;
     public HeroSkillCastController skillCast;
     public HeroCombineManager combineManager;
+    public HoverPlaceData hoverPlace;
 
     private Hero lastClickedHero;
     private float lastClickTime;
@@ -76,8 +76,10 @@ public class PlaceAction
 
     public void PlaceUnit(Tile tile)
     {
-        // 슬롯과 덮는 자리를 한 번에 구한다(미리보기와 같은 계산).
-        if (!finder.TryResolveSlot(out Placeable slot, out PlaceData data)) return;
+        // 미리보기가 이번 화면에 이미 구해서 hoverPlace에 남겨둔 자리를 그대로 쓴다.
+        if (!palette.TryCurrentSlot(out Placeable slot)) return;
+        if (!hoverPlace.HasData) return;
+        PlaceData data = hoverPlace.Data;
 
         HeroRosterEntry entry = palette.CurrentRuntimeEntry;   // 배치 전에 미리 캡처(성공 후 모드가 바뀔 수 있음)
         if (IsEntryPlaced(entry)) return;
@@ -149,12 +151,5 @@ public class PlaceAction
 
         // 선택 표시는 칸 하나에 붙으므로 덮은 칸 중 시작 칸을 대표로 쓴다.
         if (data.Area.Board.TryGetCell(data.Area.Origin, out Tile tile)) view.Select(tile);
-    }
-
-    public void ClearAllPlacedUnit()
-    {
-        replace.CancelHeldAndDestroy();
-        remover.RemoveAll();
-        view.ClearSelection();
     }
 }

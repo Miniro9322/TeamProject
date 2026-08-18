@@ -13,6 +13,9 @@ public class RangeTileData
     // 지금 든 범위가 모닥불 것인가 — 유닛 사거리는 채우고, 모닥불은 외곽선만 그리는 갈림에 쓴다.
     public bool IsCampfireRange { get; private set; }
 
+    // 아직 들고 있는 범위가 있는가 — 있어야만 비우는 실행이 의미 있다.
+    public bool HasRange => tiles.Count > 0 || IsCampfireRange;
+
     public void KeepRange(List<Tile> range, bool isCampfire)
     {
         tiles.Clear();

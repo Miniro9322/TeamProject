@@ -21,11 +21,6 @@ public class CameraLimit
         Bounds next = default;
         foreach (ModuleLogic module in registry.AllModules.Values)
         {
-            if (!module.IsUnlocked)
-            {
-                continue;
-            }
-
             MapBoard board = module.GetComponent<MapBoard>();
             if (board.CellCount == 0)
             {

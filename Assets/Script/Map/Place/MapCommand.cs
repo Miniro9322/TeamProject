@@ -16,7 +16,6 @@ public class MapCommand : MonoBehaviour
     public UnitReplace replace;
     public PlaceAction action;
     public PlaceGhost ghost;
-    public PlaceFinder finder;
     public HoverPlaceData hoverPlace;
     public Dictionary<PlaceMode, Action<Tile>> dispatch;
 
@@ -109,10 +108,7 @@ public class MapCommand : MonoBehaviour
     {
         if (replace.IsHolding)
         {
-            if (TryHeldData(out PlaceData data))
-            {
-                action.Drop(data);
-            }
+            action.Drop(HeldData());
             return;
         }
 
@@ -148,10 +144,7 @@ public class MapCommand : MonoBehaviour
             return;
         }
 
-        if (TryHeldData(out PlaceData data))
-        {
-            action.Drop(data);
-        }
+        action.Drop(HeldData());
     }
 
     // 집은 유닛 프리뷰가 목표 자리 한가운데를 따라가게 한다.
@@ -174,10 +167,10 @@ public class MapCommand : MonoBehaviour
         }
     }
 
-    // 집은 유닛이 지금 포인터 위치에 놓인다면 어떻게 놓일지(집기 전 종류·크기를 그대로 쓴다).
-    private bool TryHeldData(out PlaceData data)
+    // 미리보기가 이번 화면에 이미 구해서 hoverPlace에 남겨둔 자리를 그대로 쓴다.
+    private PlaceData HeldData()
     {
-        return finder.TryResolve(replace.HeldKind, replace.HeldSize, out data);
+        return hoverPlace.Data;
     }
 
     // 다른 타일 위에서 뗐거나 화면상 충분히 움직였으면 드래그로 본다(제자리 클릭과 구분).

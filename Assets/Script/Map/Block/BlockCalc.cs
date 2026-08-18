@@ -18,6 +18,6 @@ public static class BlockCalc
             return 0;
         }
 
-        return tile.OccupantObject.GetComponent<Hero>().BlockCount;
+        return tile.OccupantHero.BlockCount;
     }
 }

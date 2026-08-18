@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
@@ -62,8 +63,8 @@ public class TileGridView
     /// </summary>
     public void Draw(Rect area, int cellPixels, IReadOnlyList<LaneData> lanes, int chosen,
         IReadOnlyList<RouteNode> nodes, Vector2Int hover,
-        HashSet<Vector2Int> overrides, bool showInert, CampfireData campfireData,
-        HashSet<Vector2Int> windwallShape)
+        HashSet<Vector2Int> overrides, bool showInert, CampfireData campfireData = null,
+        HashSet<Vector2Int> windwallShape = null)
     {
         Vector2Int focus = FocusSpawn(lanes, chosen);
         HashSet<Vector2Int> route = RouteCells(lanes, chosen);

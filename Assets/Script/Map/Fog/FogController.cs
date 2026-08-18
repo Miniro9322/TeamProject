@@ -3,9 +3,9 @@ using System.Threading;
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.Serialization;
 
-// 모듈 개방 상태를 안개 셰이더 전역값(_FogAreas/_FogOpens/_FogCount)으로 밀어준다.
-// 각 모듈의 월드 사각형은 그 모듈 보드의 WorldBounds(격자 기반)에서 얻는다.
+// 각 모듈의 월드 사각형은 그 모듈 보드의 WorldBounds에서 얻는다.
 public class FogController : MonoBehaviour
 {
     [SerializeField] private MapRegistry registry;
@@ -17,28 +17,16 @@ public class FogController : MonoBehaviour
 
     public static event Action<int> RevealDone;
 
-    [Header("Edge")]
-    [Tooltip("잠긴 모듈 외곽 밖으로 안개를 더 밀어낼 칸 수. 경계 노이즈가 외곽 타일을 깎아먹는 걸 막는다.")]
-    [SerializeField, Range(0f, 8f)] private float edgeCells = 1.5f;
+    [Header("Fog Edge")]
+    [FormerlySerializedAs("edgeCells")]
+    [Tooltip("Changes only the maximum fog reach outside module bounds.")]
+    [SerializeField, Range(0f, 8f)] private float coverMarginCells = 1.5f;
 
     private const int MaxAreas = 8;
-    private const float FullyOpenAmount = 1f;
-
     private static readonly int AreasId = Shader.PropertyToID("_FogAreas");
     private static readonly int OpensId = Shader.PropertyToID("_FogOpens");
     private static readonly int CountId = Shader.PropertyToID("_FogCount");
-    private static readonly int MarginId = Shader.PropertyToID("_EdgeMargin");
-
-    [Serializable]
-    private struct StaticOpenArea
-    {
-        public Transform center;
-        public Vector2 halfSize;
-    }
-
-    [Header("Static Open Areas")]
-    [Tooltip("ModuleLogic이 아니지만 처음부터 항상 열려 있어야 하는 구역(예: 본진 마을). 수동 배선 전용.")]
-    [SerializeField] private List<StaticOpenArea> staticOpenAreas = new();
+    private static readonly int CoverMarginId = Shader.PropertyToID("_FogCoverMargin");
 
     private readonly Vector4[] _areas = new Vector4[MaxAreas];
     private readonly float[] _opens = new float[MaxAreas];
@@ -50,7 +38,6 @@ public class FogController : MonoBehaviour
     private void Start()
     {
         BuildAreas();
-        RegisterStaticAreas();
         ApplyEdgeMargin();
         ApplyEnabledState();
         BindModules();
@@ -117,28 +104,6 @@ public class FogController : MonoBehaviour
         float minZ = Mathf.Min(a.y - a.w, b.y - b.w);
         float maxZ = Mathf.Max(a.y + a.w, b.y + b.w);
         return new Vector4((minX + maxX) * 0.5f, (minZ + maxZ) * 0.5f, (maxX - minX) * 0.5f, (maxZ - minZ) * 0.5f);
-    }
-
-    // 인스펙터에 연결된 상시 오픈 구역을 안개 데이터에 등록한다.
-    private void RegisterStaticAreas()
-    {
-        foreach (StaticOpenArea area in staticOpenAreas)
-        {
-            if (_count >= MaxAreas)
-            {
-                break;
-            }
-            if (area.center == null)
-            {
-                continue;
-            }
-
-            Vector3 position = area.center.position;
-            _areas[_count] = new Vector4(position.x, position.z, area.halfSize.x, area.halfSize.y);
-            _opens[_count] = FullyOpenAmount;
-            _revealed[_count] = true;
-            _count++;
-        }
     }
 
     // 점유 셀 중심들의 격자 정렬 사각형(±반 칸). 렌더러 바운드가 아니라 칸에만 의존한다.
@@ -252,6 +217,7 @@ public class FogController : MonoBehaviour
         Shader.SetGlobalVectorArray(AreasId, _areas);
         Shader.SetGlobalFloatArray(OpensId, _opens);
         Shader.SetGlobalInt(CountId, _count);
+        Shader.SetGlobalFloat(CoverMarginId, coverMarginCells * _cellSize);
     }
 
     // 스위치가 꺼져 있으면 그릴 안개 재료를 0개로 만들어 효과를 완전히 없앤다.
@@ -273,7 +239,7 @@ public class FogController : MonoBehaviour
         {
             return;
         }
-        Shader.SetGlobalFloat(MarginId, edgeCells * _cellSize);
+        Shader.SetGlobalFloat(CoverMarginId, coverMarginCells * _cellSize);
     }
 
     private void ApplyOpenState()
