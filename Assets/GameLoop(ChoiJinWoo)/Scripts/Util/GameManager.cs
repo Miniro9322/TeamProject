@@ -40,6 +40,10 @@ public class GameManager : MonoBehaviour
     public bool isGameOver = false;
     public event Action HpChanged;
     public int Hp => hp;
+    public int todayHp;
+    public bool perfactDefence = false;
+
+    public event Action GetSpecial;
 
     [Inject]
     private void Construct(UiManager uiManager, SpawnerManager waveSpawner, UpgradeState upgradeState)

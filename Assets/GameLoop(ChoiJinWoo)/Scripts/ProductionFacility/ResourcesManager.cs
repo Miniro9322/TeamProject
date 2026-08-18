@@ -10,6 +10,8 @@ public class ResourcesManager : MonoBehaviour
     [SerializeField] private int gold = 500;
     [SerializeField] private int iron = 500;
     [SerializeField] private int stone = 500;
+    [SerializeField] private int special = 0;
+    [SerializeField] private int tradeAmount = 100;
     [SerializeField] private List<BaseUpgradeData> startingResourceUpgrades;
 
     public int Wood => wood;
@@ -17,6 +19,9 @@ public class ResourcesManager : MonoBehaviour
     public int Gold => gold;
     public int Iron => iron;
     public int Stone => stone;
+    public int Special => special;
+
+    public int TradeAmount => tradeAmount;
 
     public event Action ProductUpdate;
 
@@ -69,5 +74,44 @@ public class ResourcesManager : MonoBehaviour
             case ProductionType.Stone: return ref stone;
             default: throw new ArgumentOutOfRangeException(nameof(type), type, null);
         }
+    }
+
+    public void TradeResource(ProductionType type)
+    {
+        Debug.Log("trade 호출됨");
+
+        switch (type)
+        {
+            case ProductionType.Wood:
+                special--;
+                wood += tradeAmount;
+                break;
+            case ProductionType.Food:
+                special--;
+                food += tradeAmount;
+                break;
+            case ProductionType.Gold:
+                special--;
+                gold += tradeAmount;
+                break;
+            case ProductionType.Iron:
+                special--;
+                iron += tradeAmount;
+                break;
+            case ProductionType.Stone:
+                special--;
+                stone += tradeAmount;
+                break;
+            default: throw new ArgumentOutOfRangeException(nameof(type), type, null);
+        }
+
+        ProductUpdate?.Invoke();
+    }
+
+    public void GetSpecial()
+    {
+        special++;
+
+        ProductUpdate?.Invoke();
     }
 }

@@ -23,13 +23,15 @@ public class EnviromentManager : MonoBehaviour
 
     private bool isNight = false;
     private GameManager gameManager;
+    private ResourcesManager resourcesManager;
 
     public event Action OnDay;
 
     [Inject]
-    private void Construct(GameManager gameManager)
+    private void Construct(GameManager gameManager, ResourcesManager resourcesManager)
     {
         this.gameManager = gameManager;
+        this.resourcesManager = resourcesManager;
     }
 
     private void Awake()
@@ -111,6 +113,8 @@ public class EnviromentManager : MonoBehaviour
             SetDay();
             gameManager.ChangeCanBuild(true);
             OnDay?.Invoke();
+            if (gameManager.perfactDefence)
+                resourcesManager.GetSpecial();
         }
     }
 }
