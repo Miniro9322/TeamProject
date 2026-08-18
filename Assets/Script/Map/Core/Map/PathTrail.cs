@@ -15,18 +15,17 @@ public class PathTrail : MonoBehaviour
     }
 
     [SerializeField] private TrailRenderer trailPrefab;
+    [SerializeField] private TrailPalette palette; //경로 종류별 색상을 담은 공용 자산.
     [SerializeField] private float moveSpeed = 8f; //실제 값은 inspector에서 조절한다.
     [SerializeField] private float trailLift = 0.15f;
     [SerializeField] private float loopGap = 1.2f;
     [SerializeField] private bool isAutoPlay = true;
 
-    // 폴백 경로라 갈래 정보가 없다는 표시. WaveSpawner.NoSpawn과 같은 뜻(값의 원본은 그쪽).
-    private const int NoSpawn = -1;
-
     private readonly List<TrailRun> runs = new();
     private WaveSpawner spawner; //활성화된 스폰 지점 참조.
     private ModuleLogic module;
     private EnemyLanes enemyLanes; //스폰별 갈래 조회용.
+    private PathTrailCalc calc; //이번 라운드에 그릴 경로 데이터 계산 담당.
     private bool isLooping;
     private bool isPlaying;
     private bool isWaiting;
@@ -40,6 +39,7 @@ public class PathTrail : MonoBehaviour
         spawner = GetComponent<WaveSpawner>();
         module = GetComponent<ModuleLogic>();
         enemyLanes = GetComponent<EnemyLanes>();
+        calc = new PathTrailCalc(spawner, enemyLanes);
     }
 
     // 모듈 상태 변경 이벤트를 구독합니다.
@@ -68,81 +68,11 @@ public class PathTrail : MonoBehaviour
         StopTrail();
         ClearRuns();
 
-        List<IReadOnlyList<Vector3>> points = CollectRuns();
+        List<TrailPoints> points = calc.CollectRuns();
         for (int i = 0; i < points.Count; i++)
         {
             AddRun(points[i]);
         }
-    }
-
-    // 활성 포탈 전부의 트레일 점 목록만 계산한다(판단만, 실행 없음).
-    private List<IReadOnlyList<Vector3>> CollectRuns()
-    {
-        IReadOnlyList<IReadOnlyList<Vector3>> paths = spawner.ActivePaths;
-        IReadOnlyList<int> spawns = spawner.ActiveSpawns;
-        var runs = new List<IReadOnlyList<Vector3>>();
-
-        // 활성 포탈 수는 라운드마다(min~maxActivePortals 사이 랜덤) 달라져 미리 정할 수 없다 — 그 수만큼 순회한다.
-        for (int i = 0; i < paths.Count; i++)
-        {
-            runs.AddRange(PortalRuns(paths[i], SpawnOf(spawns, i)));
-        }
-
-        return runs;
-    }
-
-    // 이 포탈에서 그릴 점 목록. 갈래가 있으면 갈래 전부, 없으면 대표 경로 하나.
-    private List<IReadOnlyList<Vector3>> PortalRuns(IReadOnlyList<Vector3> representative, int spawnIndex)
-    {
-        List<IReadOnlyList<Vector3>> branches = BranchRuns(spawnIndex);
-
-        if (branches.Count > 0)
-        {
-            return branches;
-        }
-
-        return new List<IReadOnlyList<Vector3>> { representative };
-    }
-
-    // 이 스폰의 갈래 점 목록 전부. 갈래 정보가 없으면 빈 목록(널 반환 금지 규칙).
-    private List<IReadOnlyList<Vector3>> BranchRuns(int spawnIndex)
-    {
-        var runs = new List<IReadOnlyList<Vector3>>();
-
-        if (spawnIndex == NoSpawn)
-        {
-            return runs;
-        }
-
-        if (enemyLanes == null) // WaveSpawner가 Start에서야 EnemyLanes를 붙이는 모듈은 Awake 시점엔 아직 없다 — 실제 발생 경로
-        {
-            return runs;
-        }
-
-        // 갈래 수는 스폰·날짜마다 달라 미리 정할 수 없다 — 그 수만큼 순회한다.
-        int count = enemyLanes.BranchCount(spawnIndex);
-        for (int i = 0; i < count; i++)
-        {
-            runs.Add(enemyLanes.GetBranchPath(spawnIndex, i, 0f));
-        }
-
-        return runs;
-    }
-
-    // i번째 포탈의 스폰 번호. 목록이 없거나 짧으면 폴백 표시를 낸다.
-    private static int SpawnOf(IReadOnlyList<int> spawns, int index)
-    {
-        if (spawns == null)
-        {
-            return NoSpawn;
-        }
-
-        if (index >= spawns.Count)
-        {
-            return NoSpawn;
-        }
-
-        return spawns[index];
     }
 
     // 포털 갱신 다음 프레임에 최신 활성 경로를 반복 재생합니다.
@@ -199,14 +129,16 @@ public class PathTrail : MonoBehaviour
     }
 
     // 활성 경로 하나의 Trail과 누적 길이를 생성합니다.
-    private void AddRun(IReadOnlyList<Vector3> path)
+    private void AddRun(TrailPoints data)
     {
+        IReadOnlyList<Vector3> path = data.Points;
         if (path == null || path.Count < 2) return;
 
         TrailRenderer trail = Instantiate(trailPrefab, transform);
         trail.transform.localScale = Vector3.one;
         trail.emitting = false;
         trail.Clear();
+        ApplyKindColor(trail, data.Kind);
 
         var run = new TrailRun();
         run.Trail = trail;
@@ -224,6 +156,12 @@ public class PathTrail : MonoBehaviour
             run.Points.Add(point);
         }
         runs.Add(run);
+    }
+
+    // 경로 종류에 맞는 색을 팔레트 표에서 찾아 입힙니다.
+    private void ApplyKindColor(TrailRenderer trail, TrailKind kind)
+    {
+        trail.colorGradient = palette.GradientOf(kind);
     }
 
     // 생성된 Trail을 제거하고 실행 목록을 비웁니다.
