@@ -61,18 +61,9 @@ public class TopBar : MonoBehaviour
 
     private void UpdateCitizenUi()
     {
-        // 메인 표기는 총 인구 / 실제 수용 한계로 고정한다.
-        // 영웅에게 배치된 시민은 여전히 인구에 포함되므로 최대치에서 빼지 않는다.
-        citizenText.text = $"{citizenManager.CurrentCitizen}";
-        maxCitizenText.text = $"{citizenManager.MaxCitizen}";
+        if (citizenText != null) citizenText.text = $"{citizenManager.CurrentCitizen}";
+        if (maxCitizenText != null) maxCitizenText.text = $"{citizenManager.MaxCitizen}";
         if (idleCitizenText != null) idleCitizenText.text = $"{citizenManager.CanUseCitizen}";
-
-        if(citizenManager.HeroUsedCitizen == 0) heroCitizen.SetActive(false);
-        else
-        {
-            if(!heroCitizen.activeSelf)
-                heroCitizen.SetActive(true);
-            heroCitizenText.text = $"{citizenManager.HeroUsedCitizen}";
-        }
+        if (heroCitizenText != null) heroCitizenText.text = $"{citizenManager.HeroUsedCitizen}";
     }
 }

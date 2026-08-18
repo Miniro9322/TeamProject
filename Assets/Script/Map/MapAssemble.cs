@@ -28,6 +28,7 @@ public class MapAssemble : MonoBehaviour
     private HeroSkillCastController skillCast;
     private ZoneEffectApplier zoneEffectApplier;
     private CampfireLightController campfireLights;
+    private MapBoard desertBoard;
 
     private void Start()
     {
@@ -39,8 +40,10 @@ public class MapAssemble : MonoBehaviour
         PointerPick pointerPick = new PointerPick(boards);
         PlaceFinder finder = new PlaceFinder(pointerPick, palette, placeYOffset);
 
-        MapBoard desertBoard = desertZone.GetComponent<MapBoard>();
+        desertBoard = desertZone.GetComponent<MapBoard>();
         WindShelterData shelterData = new WindShelterCalc().BuildData(desertBoard.Cells);
+        WindwallData windwallData = new WindwallCalc().BuildData(desertBoard.Cells, desertZone.WindwallReach);
+        desertZone.SetWindwall(windwallData);
         WindPreview windPreview = new WindPreview(
             desertBoard,
             desertZone.transform,
@@ -49,19 +52,20 @@ public class MapAssemble : MonoBehaviour
             desertZone.ArrowColor);
         DesertLineEffect lineEffect = new DesertLineEffect(
             desertBoard,
-            shelterData,
             Resources.Load<GameObject>("ZoneEffectPrefab/DesertStrongVFX"),
             Resources.Load<GameObject>("ZoneEffectPrefab/DesertWeakVFX"));
         zoneEffectApplier = new ZoneEffectApplier(
             desertZone,
             desertBoard,
             shelterData,
+            windwallData,
             mapGame.Units,
             windPreview,
             lineEffect);
 
         DayNightBuildRule dayNightRule = new DayNightBuildRule();
         dayNightRule.rule = mapGame.Rule;
+        palette.dayNightRule = dayNightRule;
 
         mapGame.Placer.zoneEffectApplier = zoneEffectApplier;
         UnitReplace replace = new UnitReplace(mapGame.Units, zoneEffectApplier);
@@ -135,7 +139,7 @@ public class MapAssemble : MonoBehaviour
         campfireLights.TurnOff(); // 첫 날도 낮이니 꺼진 채로 시작
 
         mapGame.Rule.ChangeToNight += view.ClearMode;
-        mapGame.Rule.ChangeToNight += zoneEffectApplier.OnNightChanged;
+        mapGame.Rule.ChangeToNight += OnDesertNightChanged;
         mapGame.Rule.ChangeToNight += skillCast.ClearSelection;
         mapGame.Rule.ChangeToNight += campfireLights.TurnOn;
 
@@ -151,7 +155,7 @@ public class MapAssemble : MonoBehaviour
     {
         ghost.ClearGhosts();
         mapGame.Rule.ChangeToNight -= view.ClearMode;
-        mapGame.Rule.ChangeToNight -= zoneEffectApplier.OnNightChanged;
+        mapGame.Rule.ChangeToNight -= OnDesertNightChanged;
         mapGame.Rule.ChangeToDay -= zoneEffectApplier.OnDayChanged;
         zoneEffectApplier.Dispose();
         if (campfireLights != null)
@@ -246,5 +250,16 @@ public class MapAssemble : MonoBehaviour
         {
             laneModules[i].RefreshForDay(day);
         }
+    }
+
+    // 사막 모듈이 아직 잠겨있으면 밤이 되어도 지대 효과 적용을 건너뛴다.
+    private void OnDesertNightChanged()
+    {
+        if (!desertBoard.IsUnlocked)
+        {
+            return;
+        }
+
+        zoneEffectApplier.OnNightChanged();
     }
 }

@@ -2111,12 +2111,6 @@ MonoBehaviour:
   meleeIcon: {fileID: 865059035}
   rangedIcon: {fileID: 1619923858}
   rosterPanel: {fileID: 991506362}
-  citizenCost: 1
-  resourceCost:
-  - Type: 2
-    Amount: 20
-  - Type: 3
-    Amount: 20
 --- !u!114 &39460966
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -27227,6 +27221,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::FogView
   registry: {fileID: 1862994567}
   openDuration: 1.5
+  fogEnabled: 1
   edgeCells: 1.5
   staticOpenAreas: []
 --- !u!4 &676769917
@@ -27258,6 +27253,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::FogController
   registry: {fileID: 1862994567}
   openDuration: 1.2
+  fogEnabled: 1
   edgeCells: 1.5
   staticOpenAreas: []
 --- !u!1 &676811881
@@ -51346,7 +51342,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: c2b1e98eb262d794cb482f2df8f004b6, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 4b0b403689ed00440aae5a9b6111b346, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1

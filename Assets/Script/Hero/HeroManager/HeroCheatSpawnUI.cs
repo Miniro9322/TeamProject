@@ -1,7 +1,8 @@
 using UnityEngine;
 
 // 테스트/치트 전용: HeroRegistry에 등록된 모든 영웅을 아이콘 리스트로 보여주고,
-// 클릭한 영웅을 시민/자원 비용 없이 즉시 로스터에 추가한다(정상 생성 흐름인 HeroCreateManager.TryRollHero 우회).
+// 클릭한 영웅을 자원 비용 없이 즉시 로스터에 추가한다(정상 생성 흐름인 HeroCreateManager.TryRollHero 우회).
+// 인구수는 실제 티어만큼 차감하며, 남은 인구수를 넘어도 스폰은 막지 않고 음수로 내려간다.
 public class HeroCheatSpawnUI : MonoBehaviour
 {
     [SerializeField] private HeroRegistry registry;
@@ -74,7 +75,8 @@ public class HeroCheatSpawnUI : MonoBehaviour
             prefab = picked.HeroPrefab,
             kind = kind,
         };
-        game.HeroRoster.Add(slot, picked);
+        game.CitizenManager.UseCitizenForHero(picked.PopulationCost);
+        game.HeroRoster.Add(slot, picked, picked.PopulationCost);
         if (!rosterPanel.activeSelf) rosterPanel.SetActive(true);
     }
 }

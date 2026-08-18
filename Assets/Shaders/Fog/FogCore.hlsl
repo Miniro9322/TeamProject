@@ -178,7 +178,10 @@ void FogFinal_float(
 
         mask = max(mask, inside * (1.0 - open));   // 개방될수록 걷힌다
         // 열린 모듈의 발자국 안(노이즈 없는 원래 사각형)은 이웃 안개가 넘어오지 못하게 지킨다.
-        opened = max(opened, open * (1.0 - smoothstep(-soft, soft, raw)));
+        // 사각형 안(raw<=0)은 전부 보호하고, 밖으로만 soft만큼 풀린다. 경계에서 반만 지키면 테두리가 뿌옇게 남는다.
+        // 보호 경계도 노이즈로 허문다. 빼기만 하므로 구멍은 밖으로만 커지고 발자국 안은 절대 안 먹힌다.
+        float wob = raw - edgeNoise * _EdgeRough;
+        opened = max(opened, open * (1.0 - smoothstep(0.0, soft, wob)));
     }
     mask *= 1.0 - opened;
 

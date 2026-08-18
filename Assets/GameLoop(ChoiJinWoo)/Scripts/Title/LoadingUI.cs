@@ -15,10 +15,12 @@ public class LoadingUI : MonoBehaviour
 
     private void OnEnable()
     {
-        for(int i = 0; i < spawnPositions.Count; i++)
+        var animation = animatorTriggers[UnityEngine.Random.Range(0, animatorTriggers.Length)];
+
+        for (int i = 0; i < spawnPositions.Count; i++)
         {
             var go = Instantiate(loadingHeros[UnityEngine.Random.Range(0, loadingHeros.Count)], spawnPositions[i]);
-            go.GetComponent<Animator>().SetTrigger(animatorTriggers[UnityEngine.Random.Range(0, animatorTriggers.Length)]);
+            go.GetComponent<Animator>().SetTrigger(animation);
         }
 
         dotsCts = new CancellationTokenSource();

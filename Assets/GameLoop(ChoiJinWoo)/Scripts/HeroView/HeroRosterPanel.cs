@@ -68,7 +68,6 @@ public class HeroRosterPanel : MonoBehaviour
     // 로스터 아이콘을 더블클릭하면(배치 여부 상관없이) 그 영웅의 MergeKey로 바로 합성을 시도한다.
     private void OnIconDoubleClicked(HeroRosterEntry entry)
     {
-        if (!entry.TryGetMergeKey(out MergeKey key)) return;
-        combineManager.TryCombine(key);
+        combineManager.TryCombine(entry);
     }
 }

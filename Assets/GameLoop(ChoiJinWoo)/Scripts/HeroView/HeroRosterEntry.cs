@@ -13,17 +13,19 @@ public class HeroRosterEntry
     public readonly Guid Id;
     public readonly Placeable Slot;
     public readonly HeroData Data;
+    public readonly int CitizenCost;
     public HeroRosterState State { get; private set; } = HeroRosterState.Available;
     public GameObject PlacedUnit { get; private set; }
 
     public Sprite Icon => Data.Icon;
     public int Tier => Data.Tier;
 
-    public HeroRosterEntry(Placeable slot, HeroData data)
+    public HeroRosterEntry(Placeable slot, HeroData data, int citizenCost = 0)
     {
         Id = Guid.NewGuid();
         Slot = slot;
         Data = data;
+        CitizenCost = citizenCost;
     }
 
     public void MarkPlaced(GameObject unit)

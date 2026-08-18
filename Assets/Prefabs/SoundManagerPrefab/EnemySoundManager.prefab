@@ -438,16 +438,11 @@ MonoBehaviour:
   sfxSource: {fileID: 7035240511410778658}
   bgmSource: {fileID: 9110070584376718513}
   systemSource: {fileID: 376266905465753854}
-  masterSlider: {fileID: 0}
-  bgmSlider: {fileID: 0}
-  sfxSlider: {fileID: 0}
-  systemSlider: {fileID: 0}
   mixer: {fileID: 24100000, guid: 2c9e2cd8a3ed13245a3dea3437270331, type: 2}
   masterParam: MasterVolume
   sfxParam: SfxVolume
   bgmParam: BgmVolume
   systemParam: System
-  masterVolume: 1
-  sfxVolume: 1
-  bgmVolume: 1
-  systemVolume: 1
+  sfxGroup: {fileID: -7033615790429585393, guid: 2c9e2cd8a3ed13245a3dea3437270331, type: 2}
+  bgmGroup: {fileID: -4311578250631035521, guid: 2c9e2cd8a3ed13245a3dea3437270331, type: 2}
+  systemGroup: {fileID: 3809148806851132749, guid: 2c9e2cd8a3ed13245a3dea3437270331, type: 2}

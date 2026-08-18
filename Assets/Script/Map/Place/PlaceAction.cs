@@ -42,7 +42,10 @@ public class PlaceAction
 
         if (isDoubleClick)
         {
-            combineManager.TryCombine(hero.MergeKey);
+            if (hero.TryGetComponent(out HeroRosterLink link) && link.Entry != null)
+            {
+                combineManager.TryCombine(link.Entry);
+            }
             lastClickedHero = null; // 연속 트리거 방지, 성공/실패 상관없이 한 번만 시도
         }
     }
@@ -129,7 +132,8 @@ public class PlaceAction
 
     public void PickUpUnit(Tile tile)
     {
-        bool hasHero = TryGetHero(tile, out Hero hero);   // 집으면 칸이 비므로 미리 본다
+        if (IsNightTime()) return; 
+        bool hasHero = TryGetHero(tile, out Hero hero); 
         if (!replace.PickUp(tile)) return;
         view.Select(tile);
 

@@ -2,10 +2,10 @@ using System.Collections.Generic;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
-// 같은 영웅 3개를 합성해 다음 티어 영웅 1개를 만드는 담당.
-// 위치·Kind는 이어받지 않는다 — 결과 영웅은 HeroRoster에 Available 엔트리로만 추가되고,
-// 실제 배치는 플레이어가 로스터에서 골라 타일을 클릭하는 기존 흐름(UnitPlacer.TryPlace)이 그대로 처리한다.
-// 합성 후보/다음 티어 프리팹 정보는 HeroRegistry에서 받아오고, 여긴 합성 실행(제거/파괴/로스터 갱신)만 한다.
+// 같은 영웅 3개를 합성해 다음 티어 영웅 1개를 만드는 담당. 결과는 항상 원본과 같은 종류(근접/원거리)다.
+// 더블클릭한 대상(pinnedEntry)이 필드에 배치돼 있었다면 결과 영웅을 그 자리에 그대로 배치하고,
+// 아니라면 기존처럼 HeroRoster에 Available 엔트리로만 추가한다(배치는 플레이어가 직접).
+// 합성 후보/다음 티어 프리팹 정보는 HeroRegistry에서 받아오고, 여긴 합성 실행(제거/파괴/로스터 갱신/배치)만 한다.
 public class HeroCombineManager : MonoBehaviour
 {
     [SerializeField] private HeroRegistry heroRegistry;
@@ -17,11 +17,22 @@ public class HeroCombineManager : MonoBehaviour
         return heroRegistry.TryGetCombinable(key, out candidates);
     }
 
-    // Key로 바로 합성 시도 — 그 Key로 모인 것 중 앞의 3개를 쓴다(로스터 전용 사본이 먼저 오도록 정렬돼 있음).
-    public bool TryCombine(MergeKey key)
+    // 더블클릭된 특정 엔트리를 반드시 포함해 합성 시도 — 나머지 2개는 기존과 같은 순서(로스터 전용 사본 우선)로 채운다.
+    public bool TryCombine(HeroRosterEntry pinnedEntry)
     {
+        if (pinnedEntry == null || !pinnedEntry.TryGetMergeKey(out MergeKey key)) return false;
         if (!TryGetCombinable(key, out List<HeroRosterEntry> candidates)) return false;
-        return Combine(candidates.GetRange(0, 3));
+        if (!candidates.Contains(pinnedEntry)) return false;
+
+        List<HeroRosterEntry> entries = new List<HeroRosterEntry>(3) { pinnedEntry };
+        foreach (HeroRosterEntry candidate in candidates)
+        {
+            if (entries.Count == 3) break;
+            if (candidate == pinnedEntry) continue;
+            entries.Add(candidate);
+        }
+
+        return Combine(entries, pinnedEntry);
     }
 
     // 정확히 이 3개로 합성 시도(테스트 UI용) — 맵에서 선택된 배치 영웅만 다루므로 MergeKey는 인스턴스에서 바로 읽는다.
@@ -38,30 +49,49 @@ public class HeroCombineManager : MonoBehaviour
             entries.Add(link.Entry);
         }
 
-        return Combine(entries);
+        return Combine(entries, null);
     }
 
-    private bool Combine(List<HeroRosterEntry> entries)
+    private bool Combine(List<HeroRosterEntry> entries, HeroRosterEntry pinnedEntry)
     {
         if (game.Rule != null && !game.Rule.CanBuild) return false; // 밤에는 합성 불가
         if (!entries[0].TryGetMergeKey(out MergeKey key)) return false;
 
         int tier = key.Tier;
-        if (!heroRegistry.TryGetNextTierHeroDatas(tier, out List<HeroData> nextTierDatas))
-            return false; // 최고 티어거나 매핑 데이터 없음
+        OccupantKind kind = entries[0].Data.HeroType == 1 ? OccupantKind.RangedHero : OccupantKind.MeleeHero;
+        if (!heroRegistry.TryGetNextTierHeroDatas(tier, kind, out List<HeroData> nextTierDatas))
+            return false; // 최고 티어거나, 같은 종류의 다음 티어 데이터 없음
 
         HeroData nextTierData = nextTierDatas[Random.Range(0, nextTierDatas.Count)];
         GameObject nextTierPrefab = nextTierData.HeroPrefab;
 
+        // 합성 결과는 결과 티어만큼 인구수를 차지 — 원본 3개가 쓰던 인구수는 여기서 정산해 반환한다.
+        int mergedHeroCitizenCost = nextTierData.PopulationCost;
+        int refund = 0;
+        PlacementArea pinnedArea = null;
+        Vector3 pinnedPosition = default;
+
         foreach (HeroRosterEntry entry in entries)
         {
+            refund += entry.CitizenCost;
+
             GameObject unit = entry.PlacedUnit;
             if (unit != null)
             {
-                if (unit.TryGetComponent(out Hero hero)) HeroSelectionService.ClearIfSelected(hero);
+                if (unit.TryGetComponent(out Hero hero))
+                {
+                    HeroSelectionService.ClearIfSelected(hero);
+                    game.Placer.zoneEffectApplier.ExitZone(hero); // 파괴 전 지대 효과 추적에서 해제
+                }
 
                 if (game.Units.TryGetArea(unit, out PlacementArea area))
                 {
+                    if (entry == pinnedEntry)
+                    {
+                        pinnedArea = area;
+                        pinnedPosition = unit.transform.position;
+                    }
+
                     AreaPlace.Remove(area);
                     game.Units.Remove(unit);
                 }
@@ -72,13 +102,29 @@ public class HeroCombineManager : MonoBehaviour
             game.HeroRoster.Remove(entry);
         }
 
+        game.CitizenManager.FreeCitizenForHero(refund);
+        game.CitizenManager.UseCitizenForHero(mergedHeroCitizenCost);
+
         Placeable newSlot = new Placeable
         {
             label = nextTierPrefab.name,
             prefab = nextTierPrefab,
             kind = nextTierPrefab.GetComponent<Hero>().OccupantKind,
         };
-        game.HeroRoster.Add(newSlot, nextTierData);
+
+        HeroRosterEntry newEntry = game.HeroRoster.Add(newSlot, nextTierData, mergedHeroCitizenCost);
+
+        // 더블클릭한 대상이 필드에 배치돼 있었다면, 결과 영웅을 그 자리에 그대로 배치한다.
+        if (pinnedArea != null && AreaPlace.CanPlace(pinnedArea, newSlot.kind))
+        {
+            PlaceData placeData = new PlaceData(pinnedArea, pinnedPosition, true);
+            if (game.Placer.TryPlace(placeData, newSlot, out GameObject placedUnit))
+            {
+                newEntry.MarkPlaced(placedUnit);
+                placedUnit.AddComponent<HeroRosterLink>().Entry = newEntry;
+                game.HeroRoster.NotifyStateChanged();
+            }
+        }
 
         return true;
     }
