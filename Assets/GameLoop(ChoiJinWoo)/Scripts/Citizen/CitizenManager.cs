@@ -15,6 +15,7 @@ public class CitizenManager : MonoBehaviour
     public int CurrentCitizen => currentCitizen;
     public int UsedCitizen => usedCitizen + heroUsedCitizen;
     public int HeroUsedCitizen => heroUsedCitizen;
+    public int FacilityUsedCitizen => usedCitizen;
     public int CanUseCitizen => currentCitizen - UsedCitizen;
 
     public event Action CitizenChanged;

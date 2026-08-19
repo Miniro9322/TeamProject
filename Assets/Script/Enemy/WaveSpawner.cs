@@ -211,34 +211,23 @@ public class WaveSpawner : MonoBehaviour
     // 저장된 스폰 칸 좌표들을 그대로 활성화한다 (NightReady 로드 전용)
     public int ActivateSpawnsAt(IReadOnlyList<Vector2Int> savedCoords)
     {
+        // 길 목록이 아직 안 만들어졌으면 만든다
         EnsurePaths();
+        // 지금까지 켜져 있던 길·번호를 비우고, 저작 누락 경고도 다시 낼 수 있게 한다
         _activePaths.Clear();
         _activeSpawns.Clear();
         _warnedKinds.Clear();
 
+        // 저장된 좌표 하나마다
         for (int i = 0; i < savedCoords.Count; i++)
         {
+            // 그 좌표가 몇 번 스폰 칸인지 찾는다
             int spawn = FindSpawnIndex(savedCoords[i]);
-            if (spawn < 0 || _allPaths == null || spawn >= _allPaths.Count) continue;
+            // 지금 맵에 없는 좌표면 건너뛴다 (저장 당시와 맵이 다를 때만 생김)
+            if (spawn < 0) continue;
+            // 그 번호의 길과 번호를 활성 목록에 넣는다
             _activePaths.Add(_allPaths[spawn]);
             _activeSpawns.Add(spawn);
-        }
-
-        return _activePaths.Count;
-    }
-
-    // 레인 정보 없는 폴백 경로를 그대로 활성화한다 (NightReady 로드 전용, PortalSave.IsFallback 대응)
-    public int ActivateFallback()
-    {
-        EnsurePaths();
-        _activePaths.Clear();
-        _activeSpawns.Clear();
-        _warnedKinds.Clear();
-
-        if (waypoints != null && waypoints.Count > 0)
-        {
-            _activePaths.Add(waypoints);
-            _activeSpawns.Add(NoSpawn);
         }
 
         return _activePaths.Count;

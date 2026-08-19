@@ -124,14 +124,8 @@ public class House : IUpgradableOccupant
         (ProductionType Type, int Amount)[] savedConstructPaid,
         (ProductionType Type, int Amount)[] savedUpgradeSpent)
     {
-        // RestoreState는 항상 막 생성한 새 객체에서만 불려서 upgradeCount가 이미 C# 기본값 0이다.
-        citizenManager.IncreaseMaxCitizen(config.MaxCitizenAmount);
-
-        while (upgradeCount < savedUpgradeCount)
-        {
-            upgradeCount++;
-            citizenManager.IncreaseMaxCitizen(config.CitizenPerUpgrade);
-        }
+        upgradeCount = savedUpgradeCount;
+        citizenManager.IncreaseMaxCitizen(config.MaxCitizenAmount + config.CitizenPerUpgrade * savedUpgradeCount);
 
         constructCostPaid = savedConstructPaid;
         totalUpgradeSpent = savedUpgradeSpent;

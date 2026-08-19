@@ -67,11 +67,7 @@ public class SaveRestore
         RestoreTiers(data);
         RestoreHeroes(data, heroDataByUnitId, restoredEntries);
         RestorePlacements(data, restoredEntries);
-
-        if (data.savePhase == SavePhase.NightReady)
-        {
-            RestorePortals(data);
-        }
+        RestorePortals(data);
     }
 
     // 일차·체력·해금영웅 넣기        → GameManager
@@ -122,12 +118,7 @@ public class SaveRestore
             RegionFacilitySlots region = FindRegion(save.moduleId);
             if (region == null) continue;
 
-            baseConstructor.RestoreBuild(
-                option, region, save.slotIndex,
-                save.upgradeCount, save.workerAmount,
-                save.productAmount, save.maxWorker,
-                save.amountUpgrade, save.citizenUpgrade, save.nextUpgradeInfo,
-                ToPairs(save.constructPaid), ToPairs(save.upgradePaid));
+            baseConstructor.RestoreBuild(option, region, save);
         }
     }
 
@@ -195,13 +186,13 @@ public class SaveRestore
         resourcesManager.GetSpecial();
     }
 
-    // 활성 포탈 재구성 (NightReady만) → SpawnerManager
+    // 활성 포탈 재구성 (NightReady 저장본만 목록이 차 있다) → SpawnerManager
     private void RestorePortals(SaveData data)
     {
         for (int i = 0; i < data.portalList.Length; i++)
         {
             PortalSave save = data.portalList[i];
-            spawnerManager.RestorePortal(save.regionId, save.spawnCells, save.isFallback);
+            spawnerManager.RestorePortal(save.regionId, save.spawnCells);
         }
     }
 
@@ -251,16 +242,5 @@ public class SaveRestore
         Vector2 mid = new Vector2(origin.x + size.x * 0.5f, origin.y + size.y * 0.5f);
         Vector3 center = board.CellPointToWorld(mid);
         return new PlacementArea(board, origin, size, cells, center);
-    }
-
-    // CostSave 배열을 ProductionFacility/House가 쓰는 튜플 배열로 바꾼다
-    private static (ProductionType Type, int Amount)[] ToPairs(CostSave[] costs)
-    {
-        (ProductionType Type, int Amount)[] pairs = new (ProductionType, int)[costs.Length];
-        for (int i = 0; i < costs.Length; i++)
-        {
-            pairs[i] = (costs[i].costType, costs[i].costAmount);
-        }
-        return pairs;
     }
 }

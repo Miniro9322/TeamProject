@@ -55,7 +55,7 @@ public class SaveCapture
         data.stoneAmount = resourcesManager.Stone;
         data.specialAmount = resourcesManager.Special;
         data.currentCitizen = citizenManager.CurrentCitizen;
-        data.usedCitizen = citizenManager.UsedCitizen - citizenManager.HeroUsedCitizen;
+        data.usedCitizen = citizenManager.FacilityUsedCitizen;
         data.heroUsedCitizen = citizenManager.HeroUsedCitizen;
         data.regionList = CaptureRegions();
         data.buildList = CaptureBuilds();
@@ -209,11 +209,10 @@ public class SaveCapture
         for (int i = 0; i < unlocked.Count; i++)
         {
             int region = unlocked[i];
-            if (!spawnerManager.TryGetActiveSpawnCoords(region, out Vector2Int[] coords, out bool isFallback)) continue;
+            if (!spawnerManager.TryGetActiveSpawnCoords(region, out Vector2Int[] coords)) continue;
 
             PortalSave save = new PortalSave();
             save.regionId = region;
-            save.isFallback = isFallback;
             save.spawnCells = coords;
             result.Add(save);
         }

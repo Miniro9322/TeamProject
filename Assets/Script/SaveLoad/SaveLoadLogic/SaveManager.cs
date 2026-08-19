@@ -61,7 +61,6 @@ public class SaveManager : ITickable, IStartable
     // 새 일차로 전환된 직후(생산 전) 상태를 저장한다
     private void OnDayTransitioned()
     {
-        spawnerManager.PrepareOffsets();
         TrySave(SavePhase.DayStart);
     }
 
