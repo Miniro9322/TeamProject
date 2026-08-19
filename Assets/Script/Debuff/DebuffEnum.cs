@@ -21,4 +21,5 @@ public enum DebuffType
     Exhaust = 1 << 9, //탈진 (공속 이속 데미지 감소)
     Silence = 1 << 10, //침묵 (잠시 스킬 사용불가)
     Frost = 1 << 11, //빙결 (이속 공속 감소)
+    SandStom = 1 << 12,// 모래폭풍 (사막 지형으로 인한 데미지)
 }

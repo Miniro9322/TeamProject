@@ -24,7 +24,7 @@ public class DotDebuffSO : DebuffSO
     [Min(0f)] public float atkPercent = 0f;
 
     public override DebuffType AllowedTypes =>
-        DebuffType.Poison | DebuffType.Ignite | DebuffType.Bleed;
+        DebuffType.Poison | DebuffType.Ignite | DebuffType.Bleed|DebuffType.SandStom;
 
     // 이펙트 표시는 DotRegistry가 전담한다 — 매 프레임 살아있는 목록을 DebuffEffectView에 밀어 주고,
     // 만료·사망·낮 전환으로 일찍 끊기는 경우까지 그쪽이 챙긴다. DebuffSO.Apply가 또 기록하면 시계가 둘이 된다.
