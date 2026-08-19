@@ -85,8 +85,8 @@ public class CitizenManager : MonoBehaviour
         UpdateCitizen();
     }
 
-    // 시설·영웅 사용 시민 합계로 파생값을 다시 맞춘다 (기반시설·로스터 복원 후 1회, 로드 복원 전용)
-    public void RecalculateUsedCitizen(int facilityUsed, int heroUsed)
+    // 시민 사용량을 저장된 값 그대로 지정한다 (로드 복원 전용)
+    public void RestoreUsedCitizen(int facilityUsed, int heroUsed)
     {
         usedCitizen = facilityUsed;
         heroUsedCitizen = heroUsed;

@@ -20,7 +20,9 @@ public class SaveData
     public int stoneAmount;     // 석재
     public int specialAmount;   // 특수자원
 
-    public int currentCitizen;   // 현재 시민 수 (나머지 시민 값은 로드 후 재계산)
+    public int currentCitizen;    // 현재 시민 수
+    public int usedCitizen;       // 기반시설에 배치된 일꾼 수 합계
+    public int heroUsedCitizen;   // 로스터 영웅들의 시민 비용 합계
 
     public RegionSave[] regionList;   // 지역들의 상태
     public BuildSave[] buildList;     // 지어진 기반시설들

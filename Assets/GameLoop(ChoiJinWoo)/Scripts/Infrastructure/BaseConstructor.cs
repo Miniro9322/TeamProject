@@ -72,11 +72,16 @@ public class BaseConstructor
         int slotIndex,
         int savedUpgradeCount,
         int savedWorkerAmount,
+        int savedProductAmount,
+        int savedMaxWorker,
+        int savedAmountUpgrade,
+        int savedCitizenUpgrade,
+        string savedNextUpgradeInfo,
         (ProductionType Type, int Amount)[] savedConstructPaid,
         (ProductionType Type, int Amount)[] savedUpgradeSpent)
     {
         object built = option.kind == OccupantKind.Resource
-            ? RestoreFacility(option, savedUpgradeCount, savedWorkerAmount, savedConstructPaid, savedUpgradeSpent)
+            ? RestoreFacility(option, savedUpgradeCount, savedWorkerAmount, savedProductAmount, savedMaxWorker, savedAmountUpgrade, savedCitizenUpgrade, savedNextUpgradeInfo, savedConstructPaid, savedUpgradeSpent)
             : RestoreHouse(option, savedUpgradeCount, savedConstructPaid, savedUpgradeSpent);
 
         region.TryAssign(slotIndex, built, option.icon, option.DisplayName);
@@ -87,11 +92,16 @@ public class BaseConstructor
         BuildableFacility option,
         int savedUpgradeCount,
         int savedWorkerAmount,
+        int savedProductAmount,
+        int savedMaxWorker,
+        int savedAmountUpgrade,
+        int savedCitizenUpgrade,
+        string savedNextUpgradeInfo,
         (ProductionType Type, int Amount)[] savedConstructPaid,
         (ProductionType Type, int Amount)[] savedUpgradeSpent)
     {
         var facility = new ProductionFacility(option.facilityValue, economyConfig, resourcesManager, citizenManager, facilityManager, upgradeState);
-        facility.RestoreState(savedUpgradeCount, savedWorkerAmount, savedConstructPaid, savedUpgradeSpent);
+        facility.RestoreState(savedUpgradeCount, savedWorkerAmount, savedProductAmount, savedMaxWorker, savedAmountUpgrade, savedCitizenUpgrade, savedNextUpgradeInfo, savedConstructPaid, savedUpgradeSpent);
         return facility;
     }
 

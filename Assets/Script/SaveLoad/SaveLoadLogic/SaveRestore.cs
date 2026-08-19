@@ -67,7 +67,6 @@ public class SaveRestore
         RestoreTiers(data);
         RestoreHeroes(data, heroDataByUnitId, restoredEntries);
         RestorePlacements(data, restoredEntries);
-        RecalculateCitizenDerived(data);
 
         if (data.savePhase == SavePhase.NightReady)
         {
@@ -105,10 +104,11 @@ public class SaveRestore
             data.ironAmount, data.stoneAmount, data.specialAmount);
     }
 
-    // 현재 시민 지정                 → CitizenManager (파생값 재계산은 RecalculateCitizenDerived에서 마지막에)
+    // 시민 값 그대로 지정             → CitizenManager
     private void RestoreCitizen(SaveData data)
     {
         citizenManager.RestoreCitizen(data.currentCitizen);
+        citizenManager.RestoreUsedCitizen(data.usedCitizen, data.heroUsedCitizen);
     }
 
     // 기반시설 비용 없이 짓기        → BaseConstructor
@@ -125,6 +125,8 @@ public class SaveRestore
             baseConstructor.RestoreBuild(
                 option, region, save.slotIndex,
                 save.upgradeCount, save.workerAmount,
+                save.productAmount, save.maxWorker,
+                save.amountUpgrade, save.citizenUpgrade, save.nextUpgradeInfo,
                 ToPairs(save.constructPaid), ToPairs(save.upgradePaid));
         }
     }
@@ -177,24 +179,6 @@ public class SaveRestore
         }
 
         heroRoster.NotifyStateChanged();
-    }
-
-    // 시설·영웅 사용 시민 합계로 파생값을 다시 맞춘다 → CitizenManager (마지막 1회)
-    private void RecalculateCitizenDerived(SaveData data)
-    {
-        int facilityUsed = 0;
-        for (int i = 0; i < data.buildList.Length; i++)
-        {
-            facilityUsed += data.buildList[i].workerAmount;
-        }
-
-        int heroUsed = 0;
-        for (int i = 0; i < data.heroList.Length; i++)
-        {
-            heroUsed += data.heroList[i].citizenCost;
-        }
-
-        citizenManager.RecalculateUsedCitizen(facilityUsed, heroUsed);
     }
 
     // 아래 둘은 SaveManager가 DayStart일 때만 골라서 부름 (여기선 조건문 없이 "실행만")

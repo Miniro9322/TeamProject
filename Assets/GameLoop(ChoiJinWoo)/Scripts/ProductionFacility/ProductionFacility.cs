@@ -42,6 +42,8 @@ public class ProductionFacility : IUpgradableOccupant
     public int WorkerAmount => workerAmount;
     public int MaxWorker => maxWorker;
     public int ProductAmount => productAmount;
+    public int AmountUpgrade => amountUpgrade;
+    public int CitizenUpgrade => citizenUpgrade;
     private (ProductionType Type, int Amount)[] upgradeCostCopy = Array.Empty<(ProductionType, int)>();
     private (ProductionType Type, int Amount)[] totalUpgradeSpent = Array.Empty<(ProductionType, int)>();
     private (ProductionType Type, int Amount)[] constructCostPaid = Array.Empty<(ProductionType, int)>();
@@ -214,19 +216,20 @@ public class ProductionFacility : IUpgradableOccupant
     public void RestoreState(
         int savedUpgradeCount,
         int savedWorkerAmount,
+        int savedProductAmount,
+        int savedMaxWorker,
+        int savedAmountUpgrade,
+        int savedCitizenUpgrade,
+        string savedNextUpgradeInfo,
         (ProductionType Type, int Amount)[] savedConstructPaid,
         (ProductionType Type, int Amount)[] savedUpgradeSpent)
     {
-        // RestoreState는 항상 막 생성한 새 객체에서만 불려서 upgradeCount·amountUpgrade·citizenUpgrade가
-        // 이미 C# 기본값 0이다 — 재사용 중인 객체를 리셋하는 경로가 없어 따로 초기화하지 않는다.
-        productAmount = basicValue.DefaultAmount + ProductAmountBonus;
-        maxWorker = basicValue.DefaultMaxWorker;
-
-        while (upgradeCount < savedUpgradeCount)
-        {
-            ReplayUpgradeStep();
-        }
-
+        upgradeCount = savedUpgradeCount;
+        productAmount = savedProductAmount;
+        maxWorker = savedMaxWorker;
+        amountUpgrade = savedAmountUpgrade;
+        citizenUpgrade = savedCitizenUpgrade;
+        nextUpgradeInfo = savedNextUpgradeInfo;
         workerAmount = savedWorkerAmount;
         constructCostPaid = savedConstructPaid;
         totalUpgradeSpent = savedUpgradeSpent;
@@ -240,32 +243,5 @@ public class ProductionFacility : IUpgradableOccupant
 
         facilityManager.AddFacility(this);
         UpdateInfo();
-    }
-
-    // Upgrade()의 생산량·최대 인력 규칙만 자원 차감 없이 그대로 재현한다 (RestoreState 전용)
-    private void ReplayUpgradeStep()
-    {
-        upgradeCount++;
-        if (upgradeCount % 5 == 0)
-        {
-            // 원본 Upgrade()도 이 분기는 로그만 남기고 생산량·인력 상태는 안 바꾼다 — 재현할 상태 변화가 없다.
-        }
-        else if (upgradeCount % 2 == 1)
-        {
-            amountUpgrade++;
-            productAmount += amountUpgrade * 10;
-            nextUpgradeInfo = "시민 배치 수 증가";
-        }
-        else
-        {
-            citizenUpgrade++;
-            maxWorker = basicValue.DefaultMaxWorker + citizenUpgrade;
-            nextUpgradeInfo = "자원 생산량 증가";
-        }
-
-        if (upgradeCount == maxUpgrade)
-        {
-            nextUpgradeInfo = "최대 업그레이드";
-        }
     }
 }

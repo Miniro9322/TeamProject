@@ -55,6 +55,8 @@ public class SaveCapture
         data.stoneAmount = resourcesManager.Stone;
         data.specialAmount = resourcesManager.Special;
         data.currentCitizen = citizenManager.CurrentCitizen;
+        data.usedCitizen = citizenManager.UsedCitizen - citizenManager.HeroUsedCitizen;
+        data.heroUsedCitizen = citizenManager.HeroUsedCitizen;
         data.regionList = CaptureRegions();
         data.buildList = CaptureBuilds();
         data.heroList = CaptureHeroes();
@@ -117,6 +119,11 @@ public class SaveCapture
             save.buildKey = facility.BasicValue.FacilityName;
             save.upgradeCount = facility.UpgradeCount;
             save.workerAmount = facility.WorkerAmount;
+            save.productAmount = facility.ProductAmount;
+            save.maxWorker = facility.MaxWorker;
+            save.amountUpgrade = facility.AmountUpgrade;
+            save.citizenUpgrade = facility.CitizenUpgrade;
+            save.nextUpgradeInfo = facility.NextUpgradeInfo;
             save.constructPaid = ToCostSave(facility.ConstructCostPaid);
             save.upgradePaid = ToCostSave(facility.TotalUpgradeSpent);
             return save;
