@@ -34,6 +34,9 @@ public class AttackDataSO : ScriptableObject
     [Tooltip("이 공격으로 공격할 수 없는 적 속성(비트 플래그) — 예: 비행/은신")]
     public EnemyAttribute unattackableTarget = EnemyAttribute.Fly | EnemyAttribute.Cloaking;
 
+    // AoE/장판 필터용 — 은신은 사양상 AoE에 그대로 맞아야 하므로 Cloaking 비트는 제외한다.
+    public EnemyAttribute AreaUnattackableTarget => unattackableTarget & ~EnemyAttribute.Cloaking;
+
     [Header("타격 형태")]
     public AttackType attackType = AttackType.Single;
     public float attackPer = 1f;

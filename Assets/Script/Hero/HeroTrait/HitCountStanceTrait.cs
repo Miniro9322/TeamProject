@@ -18,7 +18,7 @@ public class HitCountStanceTrait : HeroTrait
     private float stanceTimer;
     private AttackDataSO previousAttackData;
 
-    public override void OnAttackPerformed(AttackDataSO data)
+    public override void OnAttackResolved(AttackDataSO data)
     {
         if (stanceActive) return;
         if (watchedAttack != null && data != watchedAttack) return;

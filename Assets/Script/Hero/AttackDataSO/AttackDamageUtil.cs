@@ -40,7 +40,7 @@ public static class AttackDamageUtil
         {
             for (int i = 0; i < data.attackCount; i++)
             {
-                foreach (IDamageAble e in ctx.hero.GetEnemiesInLine(ctx.self.position, ctx.target.position, data.lineLength, data.areaRange))
+                foreach (IDamageAble e in ctx.hero.GetEnemiesInLine(ctx.self.position, ctx.target.position, data.lineLength, data.areaRange, data.AreaUnattackableTarget))
                 {
                     e.TakeDamage((int)baseDamage);
                     ctx.hero.NotifyHit((e as Component)?.gameObject, (int)baseDamage, false);
@@ -112,7 +112,7 @@ public static class AttackDamageUtil
             Vector3 aoeCenter = data.areaCenterOnTarget && ctx.target != null ? ctx.target.position : ctx.self.position;
             for (int i = 0; i < data.attackCount; i++)
             {
-                foreach (GameObject go in ctx.hero.GetObjectsInRange(aoeCenter, data.areaRange, aoeShape, RangeQueryAffinity.Enemy))
+                foreach (GameObject go in ctx.hero.GetObjectsInRange(aoeCenter, data.areaRange, aoeShape, RangeQueryAffinity.Enemy, data.AreaUnattackableTarget))
                 {
                     if (go.GetComponentInParent<IDamageAble>() is not IDamageAble e) continue;
                     e.TakeDamage((int)baseDamage);
@@ -131,7 +131,7 @@ public static class AttackDamageUtil
         List<GameObject> centers = AttackTargetSelector.SelectTargets(enemyObjects, data.attackCount, data.targetCount);
         await FireEach(centers, go =>
         {
-            foreach (GameObject hit in ctx.hero.GetObjectsInRange(go.transform.position, data.areaRange, aoeShape, RangeQueryAffinity.Enemy))
+            foreach (GameObject hit in ctx.hero.GetObjectsInRange(go.transform.position, data.areaRange, aoeShape, RangeQueryAffinity.Enemy, data.AreaUnattackableTarget))
             {
                 if (hit.GetComponentInParent<IDamageAble>() is not IDamageAble e) continue;
                 e.TakeDamage((int)baseDamage);
