@@ -62,6 +62,9 @@ public class PlayerSkillPanel : MonoBehaviour
         }
 
         foreach (Entry entry in entries)
+        {
             entry.button.interactable = mana.CurrentMana >= entry.skill.manaCost;
+            entry.button.transition = entry.button.interactable ? Selectable.Transition.ColorTint : Selectable.Transition.None;
+        }
     }
 }
