@@ -43,13 +43,6 @@ public class GameManager : MonoBehaviour
     public int todayHp;
     public bool perfactDefence = false;
 
-    public event Action GetSpecial;
-
-    // DayNightButton.Start()가 gameManager.DayCount를 읽는 시점이 이 초기화보다 먼저인지 나중인지는
-    // Unity의 Start() 호출 순서에 달려있어 불안정하다(둘 다 서로 다른 프리팹이 되면서 더 그렇다).
-    // Construct(=[Inject])는 VContainer가 씬의 어떤 오브젝트의 Start()보다도 먼저 끝내주는 지점이라
-    // - LifetimeScope.Awake()가 이 의존성 해석을 전부 동기로 마치고서야 Unity의 Start 단계로 넘어간다 -
-    // 여기서 첫 날 진입까지 끝내두면 DayNightButton.Start()가 언제 실행되든 DayCount가 이미 1이다.
     [Inject]
     private void Construct(UiManager uiManager, SpawnerManager waveSpawner, UpgradeState upgradeState)
     {
@@ -69,12 +62,6 @@ public class GameManager : MonoBehaviour
         waveSpawner.AllRegionsClear += OnResult;
         fsm.ChangeState(day);
         uiManager.UnlockChanged += UpdateUnlock;
-    }
-
-    private void Update()
-    {
-        if (Keyboard.current.cKey.wasPressedThisFrame)
-            requestSupport = true;
     }
 
     private void OnDestroy()
