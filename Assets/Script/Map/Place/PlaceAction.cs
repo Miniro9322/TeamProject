@@ -12,6 +12,7 @@ public class PlaceAction
     public MapView view;
     public HeroRoster heroRoster;
     public HeroSkillCastController skillCast;
+    public PlayerSkillCastController playerSkillCast;
     public HeroCombineManager combineManager;
     public HoverPlaceData hoverPlace;
 
@@ -22,6 +23,15 @@ public class PlaceAction
     public void SelectTile(Tile tile)
     {
         view.Select(tile);
+
+        // 플레이어 스킬이 무장돼 있으면 이 클릭은 전부 그쪽이 처리한다 — 영웅 시전자 선택 로직은 건드리지 않는다.
+        if (playerSkillCast != null && playerSkillCast.HandleClick(tile))
+        {
+            ShowOutline(tile);
+            TryDoubleClickCombine(tile);
+            return;
+        }
+
         skillCast?.HandleClick(tile);
         ShowOutline(tile);
         TryDoubleClickCombine(tile);

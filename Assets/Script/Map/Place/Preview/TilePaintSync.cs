@@ -6,6 +6,7 @@ public class TilePaintSync
 {
     private readonly PlaceHoverFinder hoverFinder;
     private readonly SkillTargetFinder skillFinder;
+    private readonly PlayerSkillTargetFinder playerSkillFinder;
     private readonly RangeCalc rangeCalc;
     private readonly RangeTileData rangeStore;
     private readonly TilePainter painter;
@@ -27,12 +28,14 @@ public class TilePaintSync
     public TilePaintSync(
         PlaceHoverFinder hoverFinder,
         SkillTargetFinder skillFinder,
+        PlayerSkillTargetFinder playerSkillFinder,
         RangeCalc rangeCalc,
         RangeTileData rangeStore,
         TilePainter painter)
     {
         this.hoverFinder = hoverFinder;
         this.skillFinder = skillFinder;
+        this.playerSkillFinder = playerSkillFinder;
         this.rangeCalc = rangeCalc;
         this.rangeStore = rangeStore;
         this.painter = painter;
@@ -45,18 +48,19 @@ public class TilePaintSync
         HoverMode mode = hoverFinder.FindHover(out PlaceData placeData, out GameObject unit, out OccupantKind kind);
         EdgeData = new PlaceEdgeData(mode, kind);
         skillFinder.TryFindTarget(out Hero caster, out HeroActiveSkill skill, out Tile skillOrigin);
+        playerSkillFinder.TryFindTarget(out PlayerSkillSlot armedSkill, out Tile playerSkillOrigin);
         int rangeVersion = ResolveRangeVersion(mode);
 
         TileDisplayData display = BuildDisplayKey(
             mode, placeData.Area, unit, kind, placeData.CanPlace, rangeVersion,
-            caster, skill, skillOrigin);
+            caster, skill, skillOrigin, armedSkill, playerSkillOrigin);
 
         if (IsSameDisplay(display))
         {
             return false;
         }
 
-        RebuildPlan(mode, placeData, unit, skill, skillOrigin);
+        RebuildPlan(mode, placeData, unit, skill, skillOrigin, armedSkill, playerSkillOrigin);
 
         lastDisplay = display;
         hasDisplay = true;
@@ -84,13 +88,15 @@ public class TilePaintSync
         int rangeVersion,
         Hero skillCaster,
         HeroActiveSkill skill,
-        Tile skillOrigin)
+        Tile skillOrigin,
+        PlayerSkillSlot armedSkill,
+        Tile playerSkillOrigin)
     {
         ResolveAreaOrigin(area, out MapBoard board, out Vector2Int origin);
 
         return new TileDisplayData(
             mode, board, origin, unit, kind, canPlace, rangeVersion,
-            skillCaster, skill, skillOrigin);
+            skillCaster, skill, skillOrigin, armedSkill, playerSkillOrigin);
     }
 
     private static void ResolveAreaOrigin(PlacementArea area, out MapBoard board, out Vector2Int origin)
@@ -122,13 +128,14 @@ public class TilePaintSync
 
     // ---- 칠할 목록 조립 ----
 
-    private void RebuildPlan(HoverMode mode, PlaceData data, GameObject unit, HeroActiveSkill skill, Tile skillOrigin)
+    private void RebuildPlan(HoverMode mode, PlaceData data, GameObject unit, HeroActiveSkill skill, Tile skillOrigin, PlayerSkillSlot armedSkill, Tile playerSkillOrigin)
     {
         plan.Clear();
         CampfireEdgeTiles = NoCampfireEdge;
         CampfireEdgeVersion = 0;
         AddHoverEntries(mode, data, unit);
         AddSkillEntries(skill, skillOrigin);
+        AddPlayerSkillEntries(armedSkill, playerSkillOrigin);
     }
 
     private void AddHoverEntries(HoverMode mode, PlaceData data, GameObject unit)
@@ -252,6 +259,15 @@ public class TilePaintSync
     private void AddSkillEntries(HeroActiveSkill skill, Tile origin)
     {
         if (HasTile(origin))
+        {
+            List<Tile> hitRange = SkillRangeCalc.BuildHitRange(skill, origin);
+            AddTileEntries(hitRange, painter.skillColor);
+        }
+    }
+
+    private void AddPlayerSkillEntries(PlayerSkillSlot skill, Tile origin)
+    {
+        if (skill != null && HasTile(origin))
         {
             List<Tile> hitRange = SkillRangeCalc.BuildHitRange(skill, origin);
             AddTileEntries(hitRange, painter.skillColor);

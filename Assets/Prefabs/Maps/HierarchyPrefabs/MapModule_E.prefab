@@ -10306,6 +10306,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PathTrail
   trailPrefab: {fileID: 7689584652585815418, guid: f8698a2a5b09bbc4ea4dcf9c230e43e4, type: 3}
+  palette: {fileID: 0}
   moveSpeed: 30
   trailLift: 0.15
   loopGap: 1.2
@@ -10500,7 +10501,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e313b63b1af2b61479cbc37ca8bae4a8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DesertZone
-  debuffs: []
+  debuffs:
+  - {fileID: 11400000, guid: c3fff4dd1518c4244834ed80dc4f40ba, type: 2}
   windDirection: {x: 1, y: 0}
   windwallReach: 2
   arrowSize: 0.75
