@@ -667,15 +667,18 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
         }
         else
         {
-            // 일차 성장분에 해금 지역 수 배율을 곱한다 — 지역을 더 열수록 같은 몹도 계단식으로 단단해진다.
+            // 체력은 매일, 공격력·방어력은 5일마다 한 단계 오른다(정수 나눗셈이라 1~4일차는 0단계).
+            // 체력·방어력에는 해금 지역 수 배율을 곱한다 — 지역을 더 열수록 같은 몹도 계단식으로 단단해진다.
+            int fiveDayStep = gameManager.DayCount / 5;
             float scaledHp  = (data.Health + (gameManager.DayCount * data.UpHealthScale)) * RegionHpScale();
-            float scaledDef = (data.Defense + (data.UpDefenseScale * (gameManager.DayCount / 5))) * RegionDefenseScale();
+            float scaledAtk = data.Attack + (data.UpAttackScale * fiveDayStep);
+            float scaledDef = (data.Defense + (data.UpDefenseScale * fiveDayStep)) * RegionDefenseScale();
             sc.SetBaseValue(StatType.HP,scaledHp);
-            sc.SetBaseValue(StatType.ATK,data.Attack);
+            sc.SetBaseValue(StatType.ATK,scaledAtk);
             sc.SetBaseValue(StatType.AS,data.AttackSpeed);
             sc.SetBaseValue(StatType.DEF,scaledDef);
             sc.SetBaseValue(StatType.SPD,data.MoveSpeed);
-            RecordBaseStats(scaledHp, data.Attack, data.AttackSpeed, scaledDef, data.MoveSpeed);
+            RecordBaseStats(scaledHp, scaledAtk, data.AttackSpeed, scaledDef, data.MoveSpeed);
         }
         Range = data.Range;
         Hp = sc[StatType.HP];
@@ -683,7 +686,8 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
         IsDead = false;
         // 확인용 임시 로그. bossName 가드 아래에 두면 보스가 아닌 몹은 그 return에 걸려 안 찍히므로 가드보다 위에 둔다.
         string dayInfo = gameManager != null ? $"{gameManager.DayCount}일차" : "gameManager 미주입 → 일차·지역 배율 미적용";
-        Debug.Log($"[{enemyKey}] 체력 {Hp} · 해금 {SpawnerManager.UnlockedRegionCount}개(×{RegionHpScale()}) · {dayInfo}", this);
+        Debug.Log($"[{enemyKey}] 체력 {Hp} · 공격 {AttackPower} · 방어 {Defense} · " +
+            $"해금 {SpawnerManager.UnlockedRegionCount}개(체력×{RegionHpScale()}, 방어×{RegionDefenseScale()}) · {dayInfo}", this);
         if(bossName == null)return;
         bossName.text = DataTableManager.StringTable.Get(data.Name);
         //MoveSpeed = data.MoveSpeed;
