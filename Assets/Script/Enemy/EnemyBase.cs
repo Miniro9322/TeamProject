@@ -367,6 +367,7 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
             if (Keyboard.current.numpad6Key.wasPressedThisFrame) ApplyDebuff(DebuffLoader.Get("Bleed_Basic"));
             if (Keyboard.current.numpad7Key.wasPressedThisFrame) ApplyDebuff(DebuffLoader.Get("ArmorBreak_Basic"));
             if (Keyboard.current.numpad8Key.wasPressedThisFrame) ApplyDebuff(DebuffLoader.Get("Frost_Basic"));
+            if (Keyboard.current.numpad9Key.wasPressedThisFrame) ApplyDebuff(DebuffLoader.Get("SandStom_Map"));
    
         }
     }
