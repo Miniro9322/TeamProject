@@ -1,6 +1,8 @@
 using UnityEngine;
 
-// Resources/AnalyticsSettings 에셋(선택 사항)으로 배치. 없으면 AnalyticsRecorder가 기본값(원격 전송 비활성화)으로 동작한다.
+// Resources에 두 벌 둔다 — 에디터 플레이용 Resources/Test, 빌드용 Resources/Build.
+// AnalyticsRecorder.EnsureInit이 #if UNITY_EDITOR로 둘 중 하나를 집는다.
+// 해당 에셋이 없으면 기본값(원격 전송 비활성화)으로 로컬 파일에만 기록한다.
 [CreateAssetMenu(fileName = "AnalyticsSettings", menuName = "Analytics/AnalyticsSettings")]
 public class AnalyticsSettings : ScriptableObject
 {

@@ -138,7 +138,8 @@ public class EnemyMovement
             if (Flying && src.Count > 0)
             {
                 Vector3 startW = snapToStart ? src[0] : _tf.position;
-                var flying = FlyingPathfinder.BuildWaypoints(board, startW, src[src.Count - 1], 0.5f);
+                var flying = FlyingPathfinder.BuildWaypoints(
+                    board, startW, src[src.Count - 1], EnemyRoutePath.FlightHeight);
                 if (flying.Count > 0) src = flying;
             }
             // 수영 적은 저작 경로(EnemyRouteSet)가 있으면 그걸 타고, 없으면 지상 적과 같은 일반 레인 경로를

@@ -10,6 +10,7 @@ public class GameLifeTimeScope : LifetimeScope
     [SerializeField] private UiManager UiManagerPrefab;
     [SerializeField] private EnviromentManager EnviromentManagerPrefab;
     [SerializeField] private GameManager GameManagerPrefab;
+    [SerializeField] private PlayerManaManager playerManaManagerPrefab;
     [SerializeField] private FacilityManager FacilityManager;
     [SerializeField] private ProductionEconomyConfig economyConfig;
     [SerializeField] private ResourceIconSet resourceIconSet;
@@ -35,6 +36,7 @@ public class GameLifeTimeScope : LifetimeScope
         builder.RegisterComponentInNewPrefab(UiManagerPrefab, Lifetime.Singleton).AsSelf();
         builder.RegisterComponentInNewPrefab(EnviromentManagerPrefab, Lifetime.Singleton).AsSelf();
         builder.RegisterComponentInNewPrefab(GameManagerPrefab, Lifetime.Singleton).AsSelf();
+        builder.RegisterComponentInNewPrefab(playerManaManagerPrefab, Lifetime.Singleton).AsSelf();
         builder.RegisterInstance(economyConfig);
         builder.RegisterInstance(resourceIconSet);
         builder.RegisterInstance(heroUpgradeConfig);
@@ -68,6 +70,7 @@ public class GameLifeTimeScope : LifetimeScope
 
         builder.RegisterComponentInHierarchy<TopBar>();
         builder.RegisterComponentInHierarchy<DayNightButton>();
+        builder.RegisterComponentInHierarchy<PlayerSkillPanel>();
         builder.RegisterComponentInHierarchy<MapGame>();
         builder.RegisterComponentInHierarchy<AddCitizen>();
         builder.RegisterComponentInHierarchy<SpawnerManager>().AsSelf();

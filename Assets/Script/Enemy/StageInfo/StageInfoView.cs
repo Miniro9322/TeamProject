@@ -15,6 +15,18 @@ public class StageInfoView : MonoBehaviour
     [SerializeField] private Transform rowContainer;
     [Tooltip("적 한 줄 프리팹 (StageEnemyRow 붙은 것)")]
     [SerializeField] private StageEnemyRow rowPrefab;
+    [Tooltip("행 목록을 담은 ScrollRect. 비워두면 자식에서 자동으로 찾는다. 없으면 행 맞춤 로직 전체가 no-op.")]
+    [SerializeField] private ScrollRect scroll;
+
+    [Header("행 맞춤")]
+    [Tooltip("행이 창에 다 들어오도록 목록 전체를 축소한다. 끄면 넘칠 때 스크롤한다.")]
+    [SerializeField] private bool fitAllRows = true;
+    [Tooltip("행 하나의 기준 높이(축소 배율 1일 때). 행 프리팹 높이와 같게 둔다.")]
+    [SerializeField] private float rowHeight = 50f;
+    [Tooltip("축소 하한. 이보다 작아지면 글자를 못 읽으므로 여기서 멈추고, 남는 만큼만 스크롤한다.")]
+    [SerializeField] private float minFitScale = 0.35f;
+    [Tooltip("행을 배치하는 Grid Layout Group. 비워두면 rowContainer에서 찾는다.")]
+    [SerializeField] private GridLayoutGroup rowGrid;
 
     [Header("툴팁")]
     [Tooltip("툴팁 패널 (켜고 끔). 행 위에 겹치지 않게 offset으로 밀어준다.")]
@@ -52,6 +64,9 @@ public class StageInfoView : MonoBehaviour
 
     void Awake()
     {
+        // 인스펙터에 안 꽂아도 동작하게 자식에서 찾아둔다(프리팹 구조가 바뀌어도 조용히 죽지 않는다).
+        if (scroll == null) scroll = GetComponentInChildren<ScrollRect>(true);
+        if (rowGrid == null && rowContainer != null) rowContainer.TryGetComponent(out rowGrid);
         HideTooltip();
         DisableContainerRaycast();
         CacheTooltipRects();
@@ -128,13 +143,19 @@ public class StageInfoView : MonoBehaviour
         // 이 팝업 문구는 코드가 직접 채우므로 LocalizeText가 붙지 않는다.
         // 언어를 바꿔도 갱신되지 않으니 여기서 직접 구독한다. (EnemyInfo와 같은 이유)
         LocalizeTextManager.OnLanguageChanged += Relocalize;
+        // LateUpdate 하나로는 부족하다 — ScrollRect와 이 스크립트의 LateUpdate 순서는 보장되지 않아
+        // 우리 쪽이 먼저 돌면 그 프레임의 밀림이 한 번 그려진다. 위치가 바뀌는 즉시 잘라 준다.
+        if (scroll != null) scroll.onValueChanged.AddListener(OnScrollMoved);
     }
 
     void OnDisable()
     {
         LocalizeTextManager.OnLanguageChanged -= Relocalize;
+        if (scroll != null) scroll.onValueChanged.RemoveListener(OnScrollMoved);
         ResetHover();
     }
+
+    private void OnScrollMoved(Vector2 _) => ClampContentPosition();
 
     void Update()
     {
@@ -176,15 +197,113 @@ public class StageInfoView : MonoBehaviour
     // 팝업 패널은 StageInfoFollow가 매 프레임 포탈의 스크린 좌표로 옮긴다.
     // 툴팁은 그 패널의 자식이라 같이 밀려나므로, 화면 밖 보정도 매 프레임 다시 해줘야 한다.
     // (Follow가 없는 구성이나 Follow보다 먼저 도는 경우까지 커버하는 안전망 — 계산은 멱등하다)
-    void LateUpdate() => RefreshTooltipPosition();
+    void LateUpdate()
+    {
+        RefreshTooltipPosition();
+        UpdateScrollLock();
+    }
+
+    // 행 수가 바뀌었다는 표시. ContentSizeFitter가 반영되기 전에 재면 첫 프레임 판정이 틀리므로,
+    // 바뀐 프레임에만 레이아웃을 강제로 밀어 다시 잰다(매 프레임 밀면 팝업이 떠 있는 동안 계속 재계산된다).
+    private bool rowsDirty;
+
+    // 행을 창에 맞춰 줄이고, 다 들어오면 스크롤을 잠근다.
+    // 잠그지 않으면 Clamped라도 내용이 뷰포트보다 작을 때 남는 여백만큼 드래그로 밀려 다닌다
+    // (Clamped는 "내용이 창보다 클 때" 경계를 잡아주는 설정이다).
+    private void UpdateScrollLock()
+    {
+        if (scroll == null || scroll.content == null || scroll.viewport == null) return;
+
+        float view = scroll.viewport.rect.height;
+        float scale = 1f;
+        if (fitAllRows && used > 0 && rowHeight > 0f && view > 0f)
+        {
+            float natural = used * rowHeight;                     // 축소 없이 필요한 높이
+            if (natural > view) scale = Mathf.Max(minFitScale, view / natural);
+        }
+        ApplyFitScale(scale);
+
+        if (rowsDirty)
+        {
+            rowsDirty = false;
+            LayoutRebuilder.ForceRebuildLayoutImmediate(scroll.content);
+        }
+
+        // 줄인 뒤에도 넘치면(minFitScale에 걸린 경우) 그때만 스크롤을 살린다.
+        // 1px 여유 — 딱 맞을 때 부동소수 오차로 잠금이 깜빡이지 않게 한다.
+        bool overflow = scroll.content.rect.height * scale > view + 1f;
+        scroll.vertical = overflow;
+        ClampContentPosition();
+    }
+
+    // 지금 적용된 축소 배율. onValueChanged 콜백에서도 같은 값으로 잘라야 하므로 들고 있는다.
+    private float fitScale = 1f;
+
+    // 첫 줄은 위에, 마지막 줄은 아래에 딱 붙여 고정한다 — 그 범위를 넘어가는 위치를 잘라낸다.
+    //
+    // ScrollRect의 Clamped에 맡길 수 없는 이유: 그쪽 경계 계산(GetBounds)은 Content의 rect
+    // 네 꼭짓점만 본다. 우리는 Content를 축소해 두고 셀 폭을 rect 밖으로 키워 쓰기 때문에
+    // 그 사각형이 실제로 그려지는 범위와 어긋나고, 그래서 끝을 지나쳐 밀려 버린다.
+    private void ClampContentPosition()
+    {
+        if (scroll == null || scroll.content == null || scroll.viewport == null) return;
+
+        RectTransform content = scroll.content;
+        // anchoredPosition은 부모(Viewport) 좌표라 Content 자신의 localScale에 안 곱해진다.
+        // 반면 화면에서 차지하는 높이는 배율이 곱해진 값이다 — 둘을 섞지 않게 따로 계산한다.
+        float visible = content.rect.height * fitScale;
+        float max = Mathf.Max(0f, visible - scroll.viewport.rect.height);
+
+        Vector2 p = content.anchoredPosition;
+        // Content는 pivot·anchor가 위쪽이라 y=0이 "첫 줄이 창 맨 위", y=max가 "마지막 줄이 창 맨 아래".
+        float y = Mathf.Clamp(p.y, 0f, max);
+        if (p.x == 0f && Mathf.Approximately(p.y, y)) return;
+
+        content.anchoredPosition = new Vector2(0f, y);
+        // 끝에 닿았는데 관성이 남아 있으면 매 프레임 밀었다 잘리며 떨린다 — 여기서 같이 죽인다.
+        scroll.velocity = Vector2.zero;
+    }
+
+    // 목록 전체를 한 배율로 줄인다.
+    // 셀 높이만 줄이면 안 되는 이유: 행 프리팹 안의 아이콘·글자는 앵커로 고정돼 있어
+    // 셀이 낮아져도 그대로 남아 아래 행과 겹친다. 스케일이면 내용까지 같이 작아진다.
+    // 셀 폭은 배율의 역수로 키워, 줄인 뒤의 폭이 창을 정확히 채우게 한다
+    // (안 하면 배율만큼 오른쪽에 빈 띠가 남는다).
+    private void ApplyFitScale(float scale)
+    {
+        fitScale = scale;
+        RectTransform content = scroll.content;
+        if (!Mathf.Approximately(content.localScale.x, scale))
+        {
+            content.localScale = new Vector3(scale, scale, 1f);
+            rowsDirty = true;
+        }
+
+        if (rowGrid == null) return;
+        var cell = new Vector2(scroll.viewport.rect.width / scale, rowHeight);
+        if ((rowGrid.cellSize - cell).sqrMagnitude > 0.01f)
+        {
+            rowGrid.cellSize = cell;
+            rowsDirty = true;
+        }
+    }
 
     // 새 스테이지 정보를 그리기 시작. 떠 있던 행/툴팁을 먼저 정리한다.
     // 팝업 오브젝트는 풀에서 재사용되므로(Despawn해도 자식이 남는다) 매번 반드시 초기화해야 한다.
     public void Begin()
     {
         used = 0;
+        rowsDirty = true;
         ResetHover();
         HideAllRows();
+        // 새 스테이지는 늘 맨 위부터. 풀 재사용이라 안 되돌리면 지난번 스크롤 위치에서 시작한다.
+        // verticalNormalizedPosition이 아니라 anchoredPosition을 쓰는 이유는 ClampContentPosition 주석 참고
+        // (축소한 Content에서는 ScrollRect의 정규화 좌표가 실제 위치와 어긋난다).
+        if (scroll != null && scroll.content != null)
+        {
+            scroll.content.anchoredPosition = Vector2.zero;
+            scroll.velocity = Vector2.zero;
+        }
     }
 
     // 적 한 줄 추가. badgeKey는 "Ui_Add"(증원) / "Ui_Boss"(보스), 일반 웨이브는 null.
@@ -201,12 +320,14 @@ public class StageInfoView : MonoBehaviour
         StageEnemyRow row = GetRow(used++);
         row.gameObject.SetActive(true);
         row.Set(data, count, badgeKey, OnRowHover, OnRowExit, OnRowClick);
+        rowsDirty = true;   // 높이가 바뀌었다 — 다음 LateUpdate에서 스크롤 잠금을 다시 판정한다
     }
 
     // 팝업을 비운다(밤 전환/다른 칸 클릭 등).
     public void Clear()
     {
         used = 0;
+        rowsDirty = true;
         ResetHover();
         HideAllRows();
     }

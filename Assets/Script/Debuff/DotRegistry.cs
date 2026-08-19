@@ -218,12 +218,12 @@ public static class DotRegistry
             // 공격력 몫(AtkDamage)은 걸 때 확정된 값이라 여기서 더하기만 한다.
             float maxHp = MaxHp(e.Unit);
             int tick = TickDamage(e);
-            // 방어력을 도로 더해 상쇄한다 — TakeDamage가 빼므로, 안 그러면 지속 피해에 방어력이 먹혀
-            // 표에 적은 %와 공격력 몫이 그만큼 깎여 들어간다(지속 피해는 방어력을 무시하는 게 규칙이다).
+            // 방어무시로 때린다 — 그냥 부르면 지속 피해에 방어력이 먹혀 표에 적은 %와 공격력 몫이
+            // 그만큼 깎여 들어간다(지속 피해는 방어력을 무시하는 게 규칙이다). 실드 감소량은 그대로 적용된다.
             // 두 몫을 합쳐 한 번만 때리는 이유: 나눠 부르면 폭주 발동선과 사망 판정이 두 번 걸리고,
             // 최소 1 피해 보장도 두 번 붙는다.
             float hpBefore = e.Target.Hp;
-            e.Target.TakeDamage(tick + e.Target.Defense);
+            e.Target.TakeDamage(tick,true);
             DebuffDebug.Log($"DotRegistry {e.Host.name} {e.Type} 틱 최대체력 {e.Percent:F2}%" +
                 $"(={ToDamage(maxHp, e.Percent)}) + 공격력몫 {e.AtkDamage:F0} = {tick}피해" +
                 $"(최대 {maxHp:F0}) — Hp {hpBefore:F0}→{e.Target.Hp:F0}," +

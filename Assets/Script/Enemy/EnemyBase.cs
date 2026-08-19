@@ -111,14 +111,17 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
     private PoolManager _pool;
     private GameManager gameManager;
     public GameManager GameManager => gameManager;
+    private ResourcesManager resourceManager;
     private bool firstEnable =false;
     [Inject]
-    public void Construct(PoolManager pool,WaveSpawner waveSpawner,GameManager gameManager,BuffManager buffManager)
+    public void Construct(PoolManager pool,WaveSpawner waveSpawner,GameManager gameManager,BuffManager buffManager,ResourcesManager resourceManager)
     {
         _pool = pool;
         this.waveSpawner = waveSpawner;
         this.gameManager = gameManager;
         this.buffManager = buffManager;
+        this.resourceManager = resourceManager;
+
     }
     // 영웅이 건 디버프(둔화 등)를 풀 반납 시 벗기기 위해 필요하다 — 자세한 이유는 OnDisable 주석 참조.
     // GameLifeTimeScope가 .AsSelf()로 등록하므로 위 Construct에서 해석된다.
@@ -323,8 +326,9 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
     // 보스는 기절 면역이 기본이다 — 스턴 한 번으로 무력화되면 보스 구실을 못 한다.
     // Class는 CSV(EnemyTable)에서 오므로 새 보스를 추가해도 데이터 작업 없이 적용된다.
     // 프리팹의 immuneDebuffs는 여기에 더해진다(빼지는 못한다 — 보스인데 기절이 걸려야 하는 예외가 생기면 그때 방식을 바꾼다).
+    public bool isImmuneDebuffs => BossStunImmunity && Class != EnemyClass.Normal;
     public DebuffType ImmuneDebuffs =>
-        immuneDebuffs | (BossStunImmunity && Class == EnemyClass.Boss ? DebuffType.Stun : DebuffType.None)|(IsFlame?DebuffType.Ignite:DebuffType.None);
+        immuneDebuffs | (isImmuneDebuffs ? DebuffType.Stun : DebuffType.None)|(IsFlame?DebuffType.Ignite:DebuffType.None);
 
     public bool IsImmuneTo(DebuffType mask) => (ImmuneDebuffs & mask) != 0;
         
@@ -356,13 +360,13 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
         if (Keyboard.current != null)
         {
             if (Keyboard.current.numpad1Key.wasPressedThisFrame) Stun(3f);
-            // 속박: 제자리에 멈추되 평타와 일반 스킬은 계속 나가야 정상. 대시만 막힌다.
             if (Keyboard.current.numpad2Key.wasPressedThisFrame) ApplyDebuff(DebuffLoader.Get("Root_Basic"));
-            // 침묵: 걸어오면서 평타는 하지만 스킬을 하나도 안 써야 정상.
             if (Keyboard.current.numpad3Key.wasPressedThisFrame) ApplyDebuff(DebuffLoader.Get("Silence_Basic"));
-            // 점화 비교 테스트. 4 = 시전자 없이(최대 체력 비율만), 5 = 이 적이 시전자(공격력 몫까지).
-            // 번갈아 누르고 콘솔의 "틱 ... = N피해"를 견주면 공격력 몫이 실제로 더해지는지 바로 보인다.
             if (Keyboard.current.numpad4Key.wasPressedThisFrame) ApplyDebuff(DebuffLoader.Get("Ignite_Basic"));
+            if (Keyboard.current.numpad5Key.wasPressedThisFrame) ApplyDebuff(DebuffLoader.Get("Exhaust_Basic"));
+            if (Keyboard.current.numpad6Key.wasPressedThisFrame) ApplyDebuff(DebuffLoader.Get("Bleed_Basic"));
+            if (Keyboard.current.numpad7Key.wasPressedThisFrame) ApplyDebuff(DebuffLoader.Get("ArmorBreak_Basic"));
+            if (Keyboard.current.numpad8Key.wasPressedThisFrame) ApplyDebuff(DebuffLoader.Get("Frost_Basic"));
    
         }
     }
@@ -696,7 +700,7 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
             return value;
         return fallback;
     }
-    private static EnemyAttribute ParseAttribute(string raw)
+    internal static EnemyAttribute ParseAttribute(string raw)
     {
         if (string.IsNullOrEmpty(raw)) return EnemyAttribute.None;
         EnemyAttribute result = EnemyAttribute.None;
@@ -714,11 +718,13 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
         Debug.Log($"[Shield] 쉴드 부여 시점 t={Time.time:F2} block={_damageBlock} expiry={_shieldExpiry:F2}", this);
     }
 
-    public void TakeDamage(int damage)
+    public void TakeDamage(int damage,bool ignore = false)
     {
         if(IsDead)return;
         if(IsSpawnInvincible)return;
-        int reduce = Defense + (IsShielded ? Mathf.RoundToInt(_damageBlock) : 0);
+        // 방어무시(ignore)는 방어력만 걷어낸다 — 실드 감소량(_damageBlock)은 그대로 남는다.
+        // 둘을 같이 0으로 만들면 지속 피해가 실드까지 뚫는다.
+        int reduce = (ignore ? 0 : Defense) + (IsShielded ? Mathf.RoundToInt(_damageBlock) : 0);
         int hitDamage = Mathf.Max(1, damage - reduce);
         if(IsHitsShield)
         {
@@ -878,13 +884,55 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
             if (animator != null) animator.SetTrigger("Die");
             await WaitForDeathAnim("Die", 5f, token);
         }
-
+        // 취소(비활성·씬 언로드)는 정상 경로다 — 여기서 삼키지 않으면 .Forget()이 미처리 예외로 남긴다.
+        // return이 아래를 건너뛰지는 않는다: finally는 return 전에 반드시 돈다.
+        // 어떤 경로로 끝나든 적을 판에서 치워야 하므로 일부러 그렇게 둔 것이다.
         catch (OperationCanceledException) { return; }
+        finally
+        {
+            // 한 단계가 던져도 나머지를 계속한다. 중간에 예외가 새면 Despawn이 통째로 날아가,
+            // Enemycount만 내려간 채 적은 판에 남아 EnemyAllClear가 산 적을 두고 터진다.
+            // 자원을 사망 통보보다 먼저 주는 이유: SendDieEvent가 라운드 종료까지 이어질 수 있어서,
+            // 뒤에 두면 결과 집계가 이번 킬의 자원을 놓친다.
+            DeathStep(TriggerDeathSkills, "죽음 스킬 발동");
+            DeathStep(GetSpecial, "특수 자원 지급");
+            DeathStep(SendDieEvent, "사망 통보");
+            DeathStep(Despawn, "디스폰");
+        }
+    }
 
-        TriggerDeathSkills();
-        SendDieEvent();
-        Despawn();
+    // 사망 처리 한 단계를 감싼다. 실패해도 다음 단계로 넘어가되, 무슨 단계가 왜 깨졌는지는 남긴다.
+    private void DeathStep(Action step, string what)
+    {
+        try { step(); }
+        catch (Exception e) { Debug.LogError($"[{name}] 사망 처리 '{what}' 실패 — {e}", this); }
+    }
 
+    // 등급별 특수 자원 지급량. ResourcesManager.GetSpecial()이 한 번에 1개씩만 주므로 횟수로 준다.
+    private const int EliteSpecialDrop = 1;
+    private const int BossSpecialDrop = 5;
+    // 주입 누락 경고는 한 번만 — 적이 죽을 때마다 찍으면 콘솔이 잠긴다.
+    private static bool _warnedNoResourceManager;
+
+    private void GetSpecial()
+    {
+        if (Class == EnemyClass.Normal) return;
+
+        // 주입이 안 된 경우(테스트 씬, 씬에 직접 배치한 적)엔 자원만 못 줄 뿐,
+        // 사망 처리는 그대로 이어져야 한다.
+        if (resourceManager == null)
+        {
+            if (!_warnedNoResourceManager)
+            {
+                _warnedNoResourceManager = true;
+                Debug.LogWarning($"[{name}] ResourcesManager가 주입되지 않아 특수 자원을 주지 못했습니다 " +
+                    "(이 경고는 한 번만 표시됩니다).", this);
+            }
+            return;
+        }
+
+        int amount = Class == EnemyClass.Boss ? BossSpecialDrop : EliteSpecialDrop;
+        for (int i = 0; i < amount; i++) resourceManager.GetSpecial();
     }
     private async UniTask WaitForDeathAnim(string stateName, float timeout, CancellationToken token)
     {
