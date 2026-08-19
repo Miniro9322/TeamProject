@@ -22,6 +22,18 @@ public class GuideUI : MonoBehaviour
     {
         outsideCloser = new ClickOutsideCloser((RectTransform)transform, openButton != null ? openButton.transform : null);
     }
+
+    private void OnEnable()
+    {
+        OnGamePlayGuide();
+        activatedButtons[0].GuideButton.onClick?.Invoke();
+    }
+
+    private void OnDisable()
+    {
+        DisableButtons();
+    }
+
     private void Update()
     {
         if (outsideCloser.ClickedOutside()) OnCloseButton();
@@ -51,6 +63,7 @@ public class GuideUI : MonoBehaviour
         foreach (var guide in heroGuides)
         {
             guide.gameObject.SetActive(true);
+            guide.GuideButton.onClick.AddListener(() => ShowSpecificGuide(guide));
             activatedButtons.Add(guide);
         }
     }
@@ -62,6 +75,7 @@ public class GuideUI : MonoBehaviour
         foreach (var guide in baseGuides)
         {
             guide.gameObject.SetActive(true);
+            guide.GuideButton.onClick.AddListener(() => ShowSpecificGuide(guide));
             activatedButtons.Add(guide);
         }
     }
@@ -73,6 +87,7 @@ public class GuideUI : MonoBehaviour
         foreach (var guide in enemyGuides)
         {
             guide.gameObject.SetActive(true);
+            guide.GuideButton.onClick.AddListener(() => ShowSpecificGuide(guide));
             activatedButtons.Add(guide);
         }
     }
@@ -94,7 +109,7 @@ public class GuideUI : MonoBehaviour
             guideImage.gameObject.SetActive(false);
         else
         {
-            guideImage = guide.GuideImage;
+            guideImage.sprite = guide.GuideImage;
             guideImage.gameObject.SetActive(true);
         }
         guideText.text = DataTableManager.StringTable.Get(guide.GuideInfo);
