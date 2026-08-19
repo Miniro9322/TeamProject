@@ -68,6 +68,8 @@ public class TitleUI : MonoBehaviour
             await UniTask.Yield();
         }
 
+        await UniTask.WaitForSeconds(1.5f);
+
         op.allowSceneActivation = true;
         await op;
     }

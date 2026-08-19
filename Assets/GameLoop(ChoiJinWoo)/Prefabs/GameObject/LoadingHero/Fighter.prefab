@@ -16720,8 +16720,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 9086372608877228962}
-  - component: {fileID: 1585343957921750248}
-  - component: {fileID: 6231468561908436456}
   m_Layer: 6
   m_Name: Model
   m_TagString: Untagged
@@ -16768,40 +16766,6 @@ Transform:
   - {fileID: 9195969397568838069}
   m_Father: {fileID: 8355756397094962037}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!95 &1585343957921750248
-Animator:
-  serializedVersion: 7
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6744561576974658373}
-  m_Enabled: 1
-  m_Avatar: {fileID: 9000000, guid: d9b155d656a64f02adc39213c8d11c86, type: 3}
-  m_Controller: {fileID: 9100000, guid: ad0d445568b39504cbcac70dafe5b4f3, type: 2}
-  m_CullingMode: 1
-  m_UpdateMode: 0
-  m_ApplyRootMotion: 0
-  m_LinearVelocityBlending: 0
-  m_StabilizeFeet: 0
-  m_AnimatePhysics: 0
-  m_WarningMessage: 
-  m_HasTransformHierarchy: 1
-  m_AllowConstantClipSamplingOptimization: 1
-  m_KeepAnimatorStateOnDisable: 0
-  m_WriteDefaultValuesOnDisable: 0
---- !u!114 &6231468561908436456
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6744561576974658373}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 29b2d2c0053c8074295862698f683e4c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::HeroAnimEvents
 --- !u!1 &6834595351779752837
 GameObject:
   m_ObjectHideFlags: 0
@@ -17370,7 +17334,7 @@ Animator:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6909807917171716251}
   m_Enabled: 1
-  m_Avatar: {fileID: 0}
+  m_Avatar: {fileID: 9000000, guid: d9b155d656a64f02adc39213c8d11c86, type: 3}
   m_Controller: {fileID: 9100000, guid: decf65c6647983a469f47eea2be5dd69, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0

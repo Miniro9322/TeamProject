@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Reflection;
 using UnityEngine;
 using UnityEngine.Pool;
 using VContainer;
@@ -28,6 +30,55 @@ public class PoolManager : MonoBehaviour
     private readonly Dictionary<GameObject, ObjectPool<GameObject>> pools = new();
     // 프리팹 → 비활성 인스턴스가 모이는 컨테이너(reparent 회수 기준점)
     private readonly Dictionary<GameObject, Transform> roots = new();
+    // 프리팹 → 그 계층에 [Inject] 대상이 있는지(프리팹당 한 번만 리플렉션으로 검사해 캐싱).
+    // 없으면 resolver.Instantiate의 전체 자식 계층 재귀 스캔(스켈레톤 본까지 다 훑음)을 건너뛴다 —
+    // 시민/이펙트처럼 순수 시각 프리팹인 경우 인스턴스당 스캔 비용이 그대로 낭비였다.
+    private readonly Dictionary<GameObject, bool> injectionRequired = new();
+
+    private bool RequiresInjection(GameObject prefab)
+    {
+        if (injectionRequired.TryGetValue(prefab, out bool cached)) return cached;
+
+        // Transform/Renderer/NavMeshAgent 같은 엔진 내장 컴포넌트는 [Inject] 대상이 될 수 없다.
+        // 특히 캐릭터 리그는 본(Transform)만 수십 개라, Component 전체를 훑으면 리플렉션 비용이
+        // 그 본 개수만큼 낭비된다 — MonoBehaviour(커스텀 스크립트)만 검사 대상으로 좁힌다.
+        bool required = false;
+        foreach (MonoBehaviour behaviour in prefab.GetComponentsInChildren<MonoBehaviour>(true))
+        {
+            if (behaviour == null) continue;
+            if (HasInjectMember(behaviour.GetType()))
+            {
+                required = true;
+                break;
+            }
+        }
+
+        injectionRequired[prefab] = required;
+        return required;
+    }
+
+    // [Inject]가 부모 클래스(예: EnemyBase)에 선언되고 실제로는 자식 클래스가 붙는 경우가 있어
+    // private 멤버까지 잡으려면 상속 체인을 타입별로 직접 걸어야 한다(BindingFlags.NonPublic은
+    // 조회한 타입에 "직접 선언된" 멤버만 반환하고 부모의 private 멤버는 안 준다).
+    private const BindingFlags InjectMemberFlags =
+        BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly;
+
+    private static bool HasInjectMember(Type type)
+    {
+        for (Type t = type; t != null && t != typeof(MonoBehaviour); t = t.BaseType)
+        {
+            foreach (MethodInfo m in t.GetMethods(InjectMemberFlags))
+                if (m.IsDefined(typeof(InjectAttribute), false)) return true;
+
+            foreach (FieldInfo f in t.GetFields(InjectMemberFlags))
+                if (f.IsDefined(typeof(InjectAttribute), false)) return true;
+
+            foreach (PropertyInfo p in t.GetProperties(InjectMemberFlags))
+                if (p.IsDefined(typeof(InjectAttribute), false)) return true;
+        }
+
+        return false;
+    }
 
     void Awake()
     {
@@ -43,11 +94,15 @@ public class PoolManager : MonoBehaviour
         root.SetParent(transform);
         roots[prefab] = root;
 
+        bool needsInjection = RequiresInjection(prefab);
+
         pool = new ObjectPool<GameObject>(
             createFunc: () =>
             {
-                // resolver가 있으면 그걸로 생성 → 스폰된 적의 [Inject]가 채워진다. 없으면 폴백.
-                var go = _resolver != null
+                // resolver가 있고 실제로 [Inject] 대상이 있을 때만 VContainer로 생성 → 스폰된 적의
+                // [Inject]가 채워진다. 주입 대상이 없으면(순수 시각 프리팹) 전체 계층 재귀 스캔을
+                // 건너뛰고 일반 Instantiate로 생성해 스폰 비용을 줄인다.
+                var go = needsInjection && _resolver != null
                     ? _resolver.Instantiate(prefab, root)
                     : Instantiate(prefab, root);
                 var po = go.GetComponent<PooledObject>();

@@ -1,5 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.AI;
 using VContainer;
@@ -54,6 +56,7 @@ public class CitizenWanderManager : MonoBehaviour
 
     private readonly List<GameObject> activeCitizens = new();
     private bool isNight;
+    private CancellationTokenSource lifetimeCts;
 
     [Inject]
     private void Construct(CitizenManager citizenManager, GameManager gameManager, PoolManager poolManager)
@@ -65,10 +68,13 @@ public class CitizenWanderManager : MonoBehaviour
 
     private void Awake()
     {
-        citizenManager.CitizenChanged += SyncVisibleCount;
+        lifetimeCts = new CancellationTokenSource();
+        citizenManager.CitizenChanged += OnCitizenChanged;
         gameManager.ChangeToNight += OnNight;
         gameManager.ChangeToDay += OnDay;
     }
+
+    private void OnCitizenChanged() => SyncVisibleCountAsync(lifetimeCts.Token).Forget();
 
     private void Start()
     {
@@ -85,8 +91,15 @@ public class CitizenWanderManager : MonoBehaviour
         }
 
         hubGroundPosition = ResolveHubGroundPosition();
-        WarmPool();
-        SyncVisibleCount();
+        InitializeAsync(lifetimeCts.Token).Forget();
+    }
+
+    // 워밍업 스폰과 초기 표시 스폰을 한 프레임에 몰아서 하면 씬 로딩 직후 그 프레임에 스파이크가 생긴다
+    // (MainScene 활성화 렉의 주범이었음) — 여러 프레임에 나눠 처리해 스파이크를 없앤다.
+    private async UniTaskVoid InitializeAsync(CancellationToken token)
+    {
+        await WarmPoolAsync(token);
+        await SyncVisibleCountAsync(token);
     }
 
     // hubPoint가 NavMesh 위/근처에 있지 않으면 NavMeshAgent를 그 자리에 활성화하는 순간
@@ -116,7 +129,9 @@ public class CitizenWanderManager : MonoBehaviour
 
     private void OnDestroy()
     {
-        citizenManager.CitizenChanged -= SyncVisibleCount;
+        lifetimeCts?.Cancel();
+        lifetimeCts?.Dispose();
+        citizenManager.CitizenChanged -= OnCitizenChanged;
         gameManager.ChangeToNight -= OnNight;
         gameManager.ChangeToDay -= OnDay;
     }
@@ -258,16 +273,38 @@ public class CitizenWanderManager : MonoBehaviour
     // 모델별로 visibleCap을 다 채우면 프리팹이 늘수록 낭비가 커지므로, 랜덤 선택이 대략 고르게
     // 퍼진다고 보고 프리팹 개수로 나눈 만큼만 워밍업한다(한쪽으로 심하게 쏠리면 그 초과분만 그때
     // 즉석 Instantiate되지만, 전체 재스폰 대비 극소수라 체감되는 스파이크는 아니다).
-    private void WarmPool()
+    //
+    // WarmPoolBatchSize개마다 한 프레임 양보한다 — 안 그러면 이 워밍업 자체가 씬 로딩 직후
+    // 한 프레임에 최대 visibleCap개의 Instantiate/Despawn을 몰아서 하는 스파이크가 된다.
+    private const int WarmPoolBatchSize = 5;
+
+    private async UniTask WarmPoolAsync(CancellationToken token)
     {
         int perPrefab = Mathf.CeilToInt((float)visibleCap / citizenPrefabs.Length);
+        int sinceYield = 0;
+
         foreach (var prefab in citizenPrefabs)
         {
             var warm = new GameObject[perPrefab];
             for (int i = 0; i < perPrefab; i++)
+            {
                 warm[i] = poolManager.Spawn(prefab, hubGroundPosition, Quaternion.identity);
+                if (++sinceYield >= WarmPoolBatchSize)
+                {
+                    sinceYield = 0;
+                    await UniTask.Yield(token);
+                }
+            }
+
             for (int i = 0; i < perPrefab; i++)
+            {
                 poolManager.Despawn(warm[i]);
+                if (++sinceYield >= WarmPoolBatchSize)
+                {
+                    sinceYield = 0;
+                    await UniTask.Yield(token);
+                }
+            }
         }
     }
 
@@ -278,17 +315,32 @@ public class CitizenWanderManager : MonoBehaviour
         return Mathf.Clamp(Mathf.RoundToInt(Mathf.Clamp01(ratio) * visibleCap), 0, visibleCap);
     }
 
-    private void SyncVisibleCount()
+    private async UniTask SyncVisibleCountAsync(CancellationToken token)
     {
         if (isNight) return; // 밤에는 전부 집에 들어가 있어야 하므로 낮에만 동기화
 
         int target = CalculateTargetCount();
+        int sinceYield = 0;
 
         while (activeCitizens.Count < target)
+        {
             SpawnOne();
+            if (++sinceYield >= WarmPoolBatchSize)
+            {
+                sinceYield = 0;
+                await UniTask.Yield(token);
+            }
+        }
 
         while (activeCitizens.Count > target)
+        {
             DespawnOne(activeCitizens[^1]);
+            if (++sinceYield >= WarmPoolBatchSize)
+            {
+                sinceYield = 0;
+                await UniTask.Yield(token);
+            }
+        }
     }
 
     private void SpawnOne()
@@ -337,6 +389,6 @@ public class CitizenWanderManager : MonoBehaviour
     private void OnDay()
     {
         isNight = false;
-        SyncVisibleCount();
+        SyncVisibleCountAsync(lifetimeCts.Token).Forget();
     }
 }
