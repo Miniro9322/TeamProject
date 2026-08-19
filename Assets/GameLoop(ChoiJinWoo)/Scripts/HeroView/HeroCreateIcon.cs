@@ -31,4 +31,11 @@ public class HeroCreateIcon : MonoBehaviour
     {
         button.interactable = interactable;
     }
+
+    // 할인 적용 후 실제 소모량으로 툴팁 가격 표시를 갱신한다 - Awake에서 한 번 넣은 원가 그대로면
+    // 업그레이드를 해금해도 화면엔 계속 원가가 뜬다.
+    public void RefreshCostDisplay(List<ResourceCost> discountedCost)
+    {
+        if (toolTipTrigger != null) toolTipTrigger.SetData(createName, discountedCost, resourceIcons);
+    }
 }
