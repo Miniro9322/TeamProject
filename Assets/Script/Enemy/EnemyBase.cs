@@ -700,7 +700,7 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
             return value;
         return fallback;
     }
-    private static EnemyAttribute ParseAttribute(string raw)
+    internal static EnemyAttribute ParseAttribute(string raw)
     {
         if (string.IsNullOrEmpty(raw)) return EnemyAttribute.None;
         EnemyAttribute result = EnemyAttribute.None;

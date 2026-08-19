@@ -34,7 +34,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Runtime::UnityEngine.Rendering.Universal.RenderObjects
   m_Active: 1
   settings:
-    passTag: RenderObjectsFeature
+    passTag: FogVillageStencilOpaque
     Event: 500
     filterSettings:
       RenderQueueType: 0
@@ -160,7 +160,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Runtime::UnityEngine.Rendering.Universal.RenderObjects
   m_Active: 1
   settings:
-    passTag: RenderObjectsFeature
+    passTag: FogVillageStencilTransparent
     Event: 500
     filterSettings:
       RenderQueueType: 1

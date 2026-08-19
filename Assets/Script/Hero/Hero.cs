@@ -350,6 +350,7 @@ public class Hero : MonoBehaviour, IDamageAble, IUnit, IStunAble, IDebuffCarrier
         SetCurrentTile();
         ApplyStatUpgradeBonus();
         ApplyTierLevelBonus();
+        currentHp = sc[StatType.HP]; // 티어 업그레이드로 늘어난 최대체력을 스폰 시점부터 반영
         tierUpgradeState.LevelChanged += OnTierLevelChanged;
         if (gameManager != null)
         {
@@ -419,6 +420,11 @@ public class Hero : MonoBehaviour, IDamageAble, IUnit, IStunAble, IDebuffCarrier
     public void NotifyAttackPerformed(AttackDataSO data)
     {
         for (int i = 0; i < traits.Length; i++) traits[i]?.OnAttackPerformed(data);
+    }
+
+    public void NotifyAttackResolved(AttackDataSO data)
+    {
+        for (int i = 0; i < traits.Length; i++) traits[i]?.OnAttackResolved(data);
     }
 
     public void NotifyHit(GameObject hitTarget, int amount, bool isCrit)
@@ -565,14 +571,25 @@ public class Hero : MonoBehaviour, IDamageAble, IUnit, IStunAble, IDebuffCarrier
         return eb != null && !eb.IsDead && (eb.Attribute & (CurrentAttackData?.unattackableTarget ?? EnemyAttribute.None)) == 0;
     }
 
-    // Enemy = 필터 없음(AOE 스플래시용 — 의도적으로 unattackableTarget을 타지 않음).
+    // AoE/장판 경로 전용 필터. mask가 None(기본값, 인자를 안 넘긴 호출부)이면 항상 통과 — 기존 동작 유지.
+    // 그 외엔 AttackDataSO.AreaUnattackableTarget(Cloaking은 이미 빠진 마스크)과 적 속성을 대조한다.
+    private static bool PassesAreaMask(GameObject enemy, EnemyAttribute mask)
+    {
+        if (mask == EnemyAttribute.None) return true;
+        var eb = enemy.GetComponent<EnemyBase>();
+        return eb == null || (eb.Attribute & mask) == 0;
+    }
+
+    // Enemy = AOE 스플래시용. areaUnattackableMask로 넘어온 속성(예: Fly)만 걸러내고, 그 외(은신 등)는
+    // 그대로 맞는다 — 의도적으로 unattackableTarget 전체가 아니라 AreaUnattackableTarget만 적용한다.
     // TargetableEnemy = unattackableTarget 필터 적용(체인/멀티샷처럼 "특정 적을 타겟으로 선정"할 때).
     // Ally = 타일 점유자(OccupantObject) 기준 아군 조회. 영웅은 EnemyRegistry 같은 전역 리스트가
     // 없고 이미 타일당 1개 점유자 모델을 쓰고 있으므로 그 점유자를 훑는다(힐/피흡/힐 장판/오라용).
     // List + "이미 본 것" HashSet을 함께 써서 중복은 제거하되 타일 순회 순서는 유지한다 —
     // AttackTargetSelector.SelectTargets가 결과 리스트의 순서(pool[i % poolSize])에 의존하므로
     // HashSet 하나로만 중복 제거하면(순서 미보장) 멀티샷 대상 선정이 매 프레임 흔들릴 수 있다.
-    public List<GameObject> GetObjectsInRange(Vector3 originWorld, int range, RangeShape shape, RangeQueryAffinity affinity = RangeQueryAffinity.Enemy)
+    public List<GameObject> GetObjectsInRange(Vector3 originWorld, int range, RangeShape shape,
+        RangeQueryAffinity affinity = RangeQueryAffinity.Enemy, EnemyAttribute areaUnattackableMask = EnemyAttribute.None)
     {
         Vector2Int originCell = Board.WorldToCell(originWorld);
         var found = new List<GameObject>();
@@ -591,13 +608,18 @@ public class Hero : MonoBehaviour, IDamageAble, IUnit, IStunAble, IDebuffCarrier
 
         foreach (Tile tile in TileShapeQuery.GetTiles(Board, originCell, range, shape))
             foreach (GameObject enemy in tile.Enemies)
-                if (enemy != null && (affinity == RangeQueryAffinity.Enemy || IsTargetable(enemy)) && seen.Add(enemy))
-                    found.Add(enemy);
+            {
+                if (enemy == null || !seen.Add(enemy)) continue;
+                bool passes = affinity == RangeQueryAffinity.TargetableEnemy
+                    ? IsTargetable(enemy)
+                    : PassesAreaMask(enemy, areaUnattackableMask);
+                if (passes) found.Add(enemy);
+            }
 
         return found;
     }
 
-    public List<IDamageAble> GetEnemiesInLine(Vector3 originWorld, Vector3 towardWorld, int length, int width = 0)
+    public List<IDamageAble> GetEnemiesInLine(Vector3 originWorld, Vector3 towardWorld, int length, int width = 0, EnemyAttribute areaUnattackableMask = EnemyAttribute.None)
     {
         Vector2Int originCell = Board.WorldToCell(originWorld);
         Vector2Int dir = GridCalculator.CardinalToward(originCell, Board.WorldToCell(towardWorld));
@@ -606,12 +628,12 @@ public class Hero : MonoBehaviour, IDamageAble, IUnit, IStunAble, IDebuffCarrier
 
         if (Board.TryGetCell(originCell, out Tile originTile))
             foreach (GameObject enemy in originTile.Enemies)
-                if (enemy != null && enemy.GetComponentInParent<IDamageAble>() is IDamageAble d)
+                if (enemy != null && PassesAreaMask(enemy, areaUnattackableMask) && enemy.GetComponentInParent<IDamageAble>() is IDamageAble d)
                     found.Add(d);
 
         foreach (Tile tile in TileShapeQuery.GetLineTiles(Board, originCell, dir, length, width))
             foreach (GameObject enemy in tile.Enemies)
-                if (enemy != null && enemy.GetComponentInParent<IDamageAble>() is IDamageAble d)
+                if (enemy != null && PassesAreaMask(enemy, areaUnattackableMask) && enemy.GetComponentInParent<IDamageAble>() is IDamageAble d)
                     found.Add(d);
 
         return new List<IDamageAble>(found);

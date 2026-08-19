@@ -15,6 +15,7 @@ public struct ProjectileAoEConfig
     public BuffManager buffManager;
     public object source; // 보통 발사한 AttackDataSO 인스턴스
     public GameObject groundZonePrefab;
+    public EnemyAttribute areaUnattackableTarget;
     public StatContainer attackerStats;
     public Vector3 casterPos;
     public Hero hero;
@@ -37,6 +38,7 @@ public struct ProjectileAoEConfig
         buffManager = buffManager,
         source = data,
         groundZonePrefab = data.groundZonePrefab,
+        areaUnattackableTarget = data.AreaUnattackableTarget,
         attackerStats = attackerStats,
         hero = hero,
     };
@@ -159,7 +161,7 @@ public class Projectile : MonoBehaviour
         }
         else if (cfg.attackType == AttackType.Area)
         {
-            foreach (GameObject go in cfg.hero.GetObjectsInRange(transform.position, cfg.areaRange, aoeShape, RangeQueryAffinity.Enemy))
+            foreach (GameObject go in cfg.hero.GetObjectsInRange(transform.position, cfg.areaRange, aoeShape, RangeQueryAffinity.Enemy, cfg.areaUnattackableTarget))
             {
                 if (go.GetComponentInParent<IDamageAble>() is not IDamageAble enemy) continue;
                 enemy.TakeDamage((int)damage);
