@@ -7930,6 +7930,7 @@ Transform:
   - {fileID: 4996523958526741496}
   - {fileID: 3245053034648909114}
   - {fileID: 5162144952034475521}
+  - {fileID: 2011927123937804955}
   m_Father: {fileID: 4730586149953611958}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &6623894289300389904
@@ -10306,8 +10307,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PathTrail
   trailPrefab: {fileID: 7689584652585815418, guid: f8698a2a5b09bbc4ea4dcf9c230e43e4, type: 3}
-  palette: {fileID: 0}
-  moveSpeed: 30
+  palette: {fileID: 11400000, guid: 2446272fe55019e438d66170d0708835, type: 2}
+  moveSpeed: 100
   trailLift: 0.15
   loopGap: 1.2
   isAutoPlay: 1
@@ -10502,7 +10503,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DesertZone
   debuffs:
-  - {fileID: 11400000, guid: c3fff4dd1518c4244834ed80dc4f40ba, type: 2}
+  - {fileID: 11400000, guid: b370de2b5c8010149ab165f5d3bf75e2, type: 2}
   windDirection: {x: 1, y: 0}
   windwallReach: 2
   arrowSize: 0.75
@@ -15951,6 +15952,68 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 7600284934147181330, guid: b5753fa2f84f06641bf665793a626019, type: 3}
   m_PrefabInstance: {fileID: 2066075863248978093}
   m_PrefabAsset: {fileID: 0}
+--- !u!1001 &2216629500339553078
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 4918206563899087803}
+    m_Modifications:
+    - target: {fileID: 371760025643598253, guid: a48300a66a2bbe548a5660799567241a, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 22
+      objectReference: {fileID: 0}
+    - target: {fileID: 371760025643598253, guid: a48300a66a2bbe548a5660799567241a, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 3.000001
+      objectReference: {fileID: 0}
+    - target: {fileID: 371760025643598253, guid: a48300a66a2bbe548a5660799567241a, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 371760025643598253, guid: a48300a66a2bbe548a5660799567241a, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 371760025643598253, guid: a48300a66a2bbe548a5660799567241a, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 371760025643598253, guid: a48300a66a2bbe548a5660799567241a, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 371760025643598253, guid: a48300a66a2bbe548a5660799567241a, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 371760025643598253, guid: a48300a66a2bbe548a5660799567241a, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 371760025643598253, guid: a48300a66a2bbe548a5660799567241a, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 371760025643598253, guid: a48300a66a2bbe548a5660799567241a, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 945129869230518089, guid: a48300a66a2bbe548a5660799567241a, type: 3}
+      propertyPath: m_Name
+      value: WIndWall
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: a48300a66a2bbe548a5660799567241a, type: 3}
+--- !u!4 &2011927123937804955 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 371760025643598253, guid: a48300a66a2bbe548a5660799567241a, type: 3}
+  m_PrefabInstance: {fileID: 2216629500339553078}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &2603011153180386180
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -16696,7 +16759,7 @@ MonoBehaviour:
     Row: 4
     Terrain: 2
     Pass: 0
-    Gimmick: 0
+    Gimmick: 3
     EnemyLane: 0
     CanMelee: 0
     CanRanged: 1
