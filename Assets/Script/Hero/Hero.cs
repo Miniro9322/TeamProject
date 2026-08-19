@@ -377,8 +377,8 @@ public class Hero : MonoBehaviour, IDamageAble, IUnit, IStunAble, IDebuffCarrier
         float bonus = upgradeState.GetTotalEffect(statUpgrades);
         if (bonus == 0f) return;
 
-        sc.AddModifier(StatType.ATK, new Modifier(ModifierType.Flat, bonus, 0f, StatLayer.Equip, this));
-        sc.AddModifier(StatType.DEF, new Modifier(ModifierType.Flat, bonus, 0f, StatLayer.Equip, this));
+        sc.AddModifier(StatType.ATK, new Modifier(ModifierType.Additive, bonus, 0f, StatLayer.Equip, this));
+        sc.AddModifier(StatType.DEF, new Modifier(ModifierType.Additive, bonus, 0f, StatLayer.Equip, this));
     }
 
     private static readonly object TierLevelBonusSource = new object();
