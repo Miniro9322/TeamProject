@@ -181,11 +181,12 @@ public class FireZoneSO : AttackSkillDataSO
                         if (tile.OccupantObject.GetComponentInParent<IDamageAble>() is IDamageAble dmg)
                             // 비율 피해라 피해값이 대상마다 다르다 — 여기서 그 영웅의 최대 체력으로 환산하고,
                             // 시전자 공격력 몫을 더한다. 점화(DotRegistry)와 같은 식이라 불 칸과 오라의 체감이 어긋나지 않는다.
+                            // 방어무시(true)도 같은 이유다 — 점화 틱이 방어력을 무시하므로 여기서만 먹히면 둘이 갈라진다.
                             // 공격력은 매 틱 owner에서 다시 읽는다 — 오라는 시전자가 살아 있는 동안만 도는 것이라
                             // 지속 피해와 달리 시전자가 사라진 뒤를 걱정할 필요가 없다.
                             dmg.TakeDamage(DotRegistry.TickDamage(
                                 DotRegistry.MaxHp(tile.OccupantObject.GetComponentInParent<IUnit>()),
-                                percentPerTick, owner.AttackPower * atkPercent * 0.01f));
+                                percentPerTick, owner.AttackPower * atkPercent * 0.01f), true);
                     }
                 }
                 await UniTask.Yield(token);

@@ -134,7 +134,7 @@ public class PathTrailCalc
         for (int i = 0; i < unlockedRegions.Count; i++)
         {
             if (unlockedRegions[i] == region) continue;
-            CollectKindsFromWave(DataTableManager.WaveTable.GetWave(unlockedRegions[i], WaveSpawner.ReinforceId), ref hasGround, ref hasAir, ref hasSwim);
+            CollectKindsFromWave(DataTableManager.WaveTable.GetWave(unlockedRegions[i], WaveSpawner.ReinforceBaseId), ref hasGround, ref hasAir, ref hasSwim);
         }
     }
 
