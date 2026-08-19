@@ -41,13 +41,16 @@ public class PlayerGroundZoneEffect : MonoBehaviour
     private CancellationTokenSource cts;
     private GameObject selfEffectInstance;
     private readonly HashSet<Hero> buffedAllies = new();
+    private GameManager gameManager;
 
     // 스폰 직후 호출한다. release가 null이면 만료 시 스스로 Destroy된다(풀링 없음).
-    public void Init(MapBoard board, BuffManager buffManager, Action<GameObject> release = null)
+    public void Init(MapBoard board, BuffManager buffManager, Action<GameObject> release = null, GameManager gameManager = null)
     {
         this.board = board;
         this.buffManager = buffManager;
         this.release = release;
+        this.gameManager = gameManager;
+        if (this.gameManager != null) this.gameManager.ChangeToDay += ForceEnd;
         ApplyVisualScale();
         SpawnSelfEffect();
         if (duration > 0f) FitParticlesToDuration(duration);
@@ -61,10 +64,14 @@ public class PlayerGroundZoneEffect : MonoBehaviour
 
     private void OnDisable()
     {
+        if (gameManager != null) gameManager.ChangeToDay -= ForceEnd;
         cts?.Cancel();
         cts?.Dispose();
         cts = null;
     }
+
+    // 밤이 끝나면(ChangeToDay) 남은 duration과 무관하게 즉시 만료 처리한다.
+    private void ForceEnd() => cts?.Cancel();
 
     private async UniTask RunLifetime(CancellationToken token)
     {
@@ -85,6 +92,7 @@ public class PlayerGroundZoneEffect : MonoBehaviour
         {
             if (mode == GroundZoneMode.Buff)
                 ClearAllyBuffs();
+            DespawnSelfEffect();
 
             if (this != null)
             {
@@ -92,6 +100,14 @@ public class PlayerGroundZoneEffect : MonoBehaviour
                 else Destroy(gameObject);
             }
         }
+    }
+
+    // 장판이 어떤 경로로 끝나든(자연 만료/ForceEnd 강제 종료) 로직과 시각 이펙트를 같은 타이밍에 정리한다.
+    private void DespawnSelfEffect()
+    {
+        if (selfEffectInstance == null) return;
+        Destroy(selfEffectInstance);
+        selfEffectInstance = null;
     }
 
     // Buff 모드 장판이 사라질 때(정상 만료/파괴) 아직 범위 안에 있던 아군의 버프도 정리한다.
@@ -214,7 +230,6 @@ public class PlayerGroundZoneEffect : MonoBehaviour
         // 마찬가지로 직접 Play()를 걸어줘야 실제로 재생된다(안 그러면 스폰만 되고 안 보인다).
         foreach (ParticleSystem ps in selfEffectInstance.GetComponentsInChildren<ParticleSystem>(true))
             ps.Play(true);
-        if (duration > 0f) Destroy(selfEffectInstance, duration);
         if (selfEffectVisualRadius > 0f)
             selfEffectInstance.transform.localScale = Vector3.one * (radius / selfEffectVisualRadius);
     }

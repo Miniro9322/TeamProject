@@ -64,12 +64,6 @@ public class GameManager : MonoBehaviour
         uiManager.UnlockChanged += UpdateUnlock;
     }
 
-    private void Update()
-    {
-        if (Keyboard.current.cKey.wasPressedThisFrame)
-            requestSupport = true;
-    }
-
     private void OnDestroy()
     {
         waveSpawner.AllRegionsClear -= OnResult;

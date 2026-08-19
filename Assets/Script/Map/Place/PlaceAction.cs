@@ -68,8 +68,8 @@ public class PlaceAction
             HeroSelectionService.Select(hero);
             //유닛 확인용 로그
             Debug.Log(
-            $"{hero.HeroName} - 체력 {hero.StatData.maxHp} · 공격 {hero.StatData.attackPower} · " +
-            $"방어 {hero.StatData.defence} · 저지 {hero.StatData.blockCount}");
+            $"{hero.HeroName} - 체력 {hero.SC[StatType.HP]} · 공격 {hero.SC[StatType.ATK]} · " +
+            $"방어 {hero.SC[StatType.DEF]} · 저지 {hero.SC[StatType.BLK]}");
             
             return;
         }
