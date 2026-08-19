@@ -21,7 +21,22 @@ public class PlayerManaManager : MonoBehaviour
     {
         this.gameManager = gameManager;
     }
+    private void OnEnable()
+    {
+        if (gameManager != null)
+        {
+            gameManager.ChangeToDay += RefillMana;
+        }
+    }
 
+    private void OnDisable()
+    {
+        if (gameManager != null)
+        {
+            gameManager.ChangeToDay -= RefillMana;
+        }
+
+    }
     private void Awake()
     {
         currentMana = maxMana;
@@ -43,5 +58,11 @@ public class PlayerManaManager : MonoBehaviour
         currentMana -= amount;
         ManaChanged?.Invoke();
         return true;
+    }
+
+    public void RefillMana()
+    {
+        currentMana = maxMana;
+        ManaChanged?.Invoke();
     }
 }

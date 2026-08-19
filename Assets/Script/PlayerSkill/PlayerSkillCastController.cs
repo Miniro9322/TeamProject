@@ -33,7 +33,7 @@ public class PlayerSkillCastController
 
         GameObject go = Object.Instantiate(armed.zonePrefab, tile.WorldTop + Vector3.up * GroundZoneLift, Quaternion.identity);
         if (go.TryGetComponent(out PlayerGroundZoneEffect zone))
-            zone.Init(tile.Board, buffManager);
+            zone.Init(tile.Board, buffManager, gameManager: dayNightRule?.rule);
 
         armed = null;
         return true;

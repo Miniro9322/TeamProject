@@ -1059,6 +1059,12 @@ MonoBehaviour:
   meleeIcon: {fileID: 865059035}
   rangedIcon: {fileID: 1619923858}
   rosterPanel: {fileID: 991506362}
+  costUpgrades:
+  - {fileID: 11400000, guid: e06a86098db530f4084708555433e321, type: 2}
+  - {fileID: 11400000, guid: 4a34aabb6d5e1fc4394e6c321d35969a, type: 2}
+  - {fileID: 11400000, guid: a797476802101c248bc6f4d14cda8a76, type: 2}
+  - {fileID: 11400000, guid: 319a68eaa38fba140998c4902f0ca409, type: 2}
+  - {fileID: 11400000, guid: be1333e8b5f9bdf46b5101ca5176204a, type: 2}
 --- !u!114 &39460966
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -15429,7 +15435,7 @@ MonoBehaviour:
   maxPitch: 90
   minDistance: 15
   maxDistance: 90
-  fillH: 0.6
+  fillH: 0.8
   fillV: 0.8
   smoothTime: 0.141
 --- !u!114 &755029711

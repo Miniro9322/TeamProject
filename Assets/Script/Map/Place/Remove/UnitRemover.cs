@@ -38,18 +38,25 @@ public class UnitRemover
         return unit;
     }
 
-    // 영웅(로스터 출신)이면 로스터로 되돌리고 파괴.
+    // 영웅(로스터 출신)이면 로스터로 되돌리고 풀에 반납(PrepareForDespawn 후 PoolManager.Despawn).
     // 생산 시설·집은 기반시설 UI(BaseConstructor.Demolish)로 옮겨가 더 이상 맵 유닛으로 존재하지 않는다.
     private void DestroyOrReturnToPool(GameObject unit)
     {
         HeroRosterLink link = unit.GetComponent<HeroRosterLink>();
         if (link != null && link.Entry != null)
         {
-            if (unit.TryGetComponent(out Hero hero))
-                HeroSelectionService.ClearIfSelected(hero);
             link.Entry.MarkAvailable();
             _heroRoster.NotifyStateChanged();
         }
-        Object.Destroy(unit);
+
+        if (unit.TryGetComponent(out Hero hero))
+        {
+            hero.PrepareForDespawn();
+            PoolManager.Instance.Despawn(unit);
+        }
+        else
+        {
+            Object.Destroy(unit);
+        }
     }
 }

@@ -13,9 +13,10 @@ using UnityEngine.SceneManagement;
 public class UiManager : MonoBehaviour
 {
     [SerializeField] private RequestSupportUi requestSupportUi;
-    [SerializeField] private GameObject GamaOverUi;
-    [SerializeField] private GameObject GameSpeedUi;
-    [SerializeField] private GameObject MenuPanel;
+    [SerializeField] private GameObject gamaOverUi;
+    [SerializeField] private GameObject gameSpeedUi;
+    [SerializeField] private GameObject menuPanel;
+    [SerializeField] private GameObject guidePanel;
     [SerializeField] private TextMeshProUGUI dayText;
     [SerializeField] private TextMeshProUGUI upgradeResourceText;
     [SerializeField] private Key MenuKey = Key.T;
@@ -29,9 +30,10 @@ public class UiManager : MonoBehaviour
     private void Awake()
     {
         requestSupportUi.gameObject.SetActive(false);
-        GamaOverUi.SetActive(false);
-        GameSpeedUi.SetActive(false);
-        MenuPanel.SetActive(false);
+        gamaOverUi.SetActive(false);
+        gameSpeedUi.SetActive(false);
+        menuPanel.SetActive(false);
+        guidePanel.SetActive(false);
         requestSupportUi.OnUnlock += UpdateUnlock;
         keyboard = Keyboard.current;
     }
@@ -43,24 +45,24 @@ public class UiManager : MonoBehaviour
         if (keyboard.escapeKey.wasPressedThisFrame)
         {
 
-            if (MenuPanel.activeSelf)
+            if (menuPanel.activeSelf)
             {
-                MenuPanel.SetActive(false);
+                menuPanel.SetActive(false);
             }
         }
 
         if (keyboard[MenuKey].wasPressedThisFrame)
         {
-            if(MenuPanel.activeSelf)
-                MenuPanel.SetActive(false);
+            if(menuPanel.activeSelf)
+                menuPanel.SetActive(false);
             else
-                MenuPanel.SetActive(true);
+                menuPanel.SetActive(true);
         }
     }
 
     public void ToggleGameSpeedUi(bool value)
     {
-        GameSpeedUi.SetActive(value);
+        gameSpeedUi.SetActive(value);
     }
 
     public async UniTask OpenRequestSupportUi()
@@ -79,7 +81,7 @@ public class UiManager : MonoBehaviour
     {
         dayText.text = $"Survive Day : {daycount}";
         upgradeResourceText.text = $"{point}";
-        GamaOverUi.SetActive(true);
+        gamaOverUi.SetActive(true);
     }
 
     public void OnTitle()
@@ -99,9 +101,17 @@ public class UiManager : MonoBehaviour
 
     public void OpenMenuPanel()
     {
-        if(MenuPanel.activeSelf == false)
-            MenuPanel.SetActive(true);
+        if(menuPanel.activeSelf == false)
+            menuPanel.SetActive(true);
         else
-            MenuPanel.SetActive(false);
+            menuPanel.SetActive(false);
+    }
+
+    public void OpenGuide()
+    {
+        if (guidePanel.activeSelf == false)
+            guidePanel.SetActive(true);
+        else
+            guidePanel.SetActive(false);
     }
 }

@@ -89,7 +89,15 @@ public class UnitReplace
     // 집은 유닛을 파괴하고 집은 상태를 해제한다.
     public void CancelHeldAndDestroy()
     {
-        UnityEngine.Object.Destroy(held.Unit);
+        if (held.Unit.TryGetComponent(out Hero hero))
+        {
+            hero.PrepareForDespawn();
+            PoolManager.Instance.Despawn(held.Unit);
+        }
+        else
+        {
+            UnityEngine.Object.Destroy(held.Unit);
+        }
         ClearHeld();
     }
 
