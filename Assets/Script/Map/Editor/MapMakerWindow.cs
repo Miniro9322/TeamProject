@@ -36,7 +36,8 @@ public class MapMakerWindow : EditorWindow
         Prefab,
         Lane,
         Problem,
-        Wave
+        Wave,
+        Hero
     }
 
     private Grid[] _modules = System.Array.Empty<Grid>();
@@ -67,6 +68,9 @@ public class MapMakerWindow : EditorWindow
     private int _waveRound = 1;
     // 고른 웨이브 행. Entry가 아니라 WaveTable.Data로 들고 있어야 다음 프레임에도 선택이 유지된다.
     private WaveTable.Data _waveChosen;
+    // 아군 탭 데이터. HeroData·StatDataSO는 프로젝트 전역 값이라 모듈이 바뀌어도 다시 모을 필요가 없다.
+    private List<HeroReadout.Group> _heroGroups;
+    private HeroData _heroChosen;
     private readonly Dictionary<MapBrush, GameObject> _lastPicks = new();
     private int _themeModule = -1;
     private readonly HashSet<Vector2Int> _swapped = new();
@@ -129,6 +133,7 @@ public class MapMakerWindow : EditorWindow
         _themes = null;    // 편집 대상이 바뀌었다 — 테마도 다시 모으고 모듈에 맞춰 다시 고른다
         _themeModule = -1;
         _rangeAnchor = null; // 대상이 바뀌면 기준 칸도 남의 모듈 좌표가 된다
+        _heroGroups = null; // 새로고침을 누르면 새로 추가한 HeroData·StatDataSO도 다시 읽는다
 
         List<Grid> found = ModuleScan.FindModules();
         _modules = found.ToArray();
@@ -175,6 +180,7 @@ public class MapMakerWindow : EditorWindow
         }
 
         EnsureThemes(module);
+        EnsureHeroGroups();
         SyncRoute();
         DrawToolRow();
         SyncPick();
@@ -605,6 +611,17 @@ public class MapMakerWindow : EditorWindow
         }
 
         return $"○ 씬 «{ModuleScan.TargetName()}» — 오버라이드로 남음";
+    }
+
+    // ---- 아군 ----
+
+    // 아군 유닛 데이터를 한 번만 모아 둔다 — HeroData·StatDataSO는 프로젝트 전역 값이라 모듈이 바뀌어도 다시 모을 필요가 없다.
+    private void EnsureHeroGroups()
+    {
+        if (_heroGroups == null)
+        {
+            _heroGroups = HeroReadout.Collect();
+        }
     }
 
     // ---- 왼쪽: 지형(큰 분류) ----
@@ -1696,6 +1713,7 @@ public class MapMakerWindow : EditorWindow
             ShelfButton(ShelfTab.Lane, $"경로 {ValidLanes(lanes)}/{lanes.Count}");
             ShelfButton(ShelfTab.Problem, $"문제 {problems.Count}");
             ShelfButton(ShelfTab.Wave, $"적 {waveGroups.Total}종");
+            ShelfButton(ShelfTab.Hero, $"아군 {HeroTotal()}종");
 
             GUILayout.FlexibleSpace();
             bool open = GUILayout.Toggle(
@@ -1731,6 +1749,10 @@ public class MapMakerWindow : EditorWindow
                     DrawWaveShelf(waveGroups);
                     break;
 
+                case ShelfTab.Hero:
+                    _heroChosen = HeroList.DrawCards(_heroGroups, _heroChosen);
+                    break;
+
                 default:
                     DrawPrefabShelf(module);
                     break;
@@ -1742,6 +1764,11 @@ public class MapMakerWindow : EditorWindow
         if (_shelf == ShelfTab.Wave)
         {
             SpawnWaveList.DrawDetail(waveGroups, _waveChosen);
+        }
+
+        if (_shelf == ShelfTab.Hero)
+        {
+            HeroList.DrawDetail(_heroGroups, _heroChosen);
         }
     }
 
@@ -1896,6 +1923,17 @@ public class MapMakerWindow : EditorWindow
         }
 
         return valid;
+    }
+
+    private int HeroTotal()
+    {
+        int total = 0;
+        for (int i = 0; i < _heroGroups.Count; i++)
+        {
+            total += _heroGroups[i].Melee.Count + _heroGroups[i].Ranged.Count;
+        }
+
+        return total;
     }
 
     private void DrawProblems(List<string> problems)

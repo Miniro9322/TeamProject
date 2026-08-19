@@ -35,6 +35,10 @@ public class WaveSpawner : MonoBehaviour
     [Tooltip("공중·수영 적이 따라갈 저작 경로(Tools/Enemy/Enemy Route Maker로 그린다). " +
              "이 board의 모듈에 맞는 에셋을 꽂는다. 비워 두면 지금까지처럼 자동 길찾기로만 움직인다.")]
     [SerializeField] private EnemyRouteSet enemyRoutes;
+    public EnemyRouteSet EnemyRoutes => enemyRoutes;
+
+    // 스폰 번호가 가리키는 실제 스폰 칸 좌표. 트레일 미리보기가 실제 스폰과 같은 기준으로 저작 경로를 찾을 때 쓴다.
+    public Vector2Int SpawnCoord(int spawnIndex) => _spawnTiles[spawnIndex].Coord;
 
     // 스폰 타일별 전체 경로(날짜가 바뀌기 전까지 캐시). GetPaths가 스폰당 1경로를 준다.
     private IReadOnlyList<IReadOnlyList<Vector3>> _allPaths;

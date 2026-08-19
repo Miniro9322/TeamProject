@@ -56,6 +56,11 @@ public class PlaceAction
         if (TryGetHero(tile, out Hero hero))
         {
             HeroSelectionService.Select(hero);
+            //유닛 확인용 로그
+            Debug.Log(
+            $"{hero.HeroName} - 체력 {hero.StatData.maxHp} · 공격 {hero.StatData.attackPower} · " +
+            $"방어 {hero.StatData.defence} · 저지 {hero.StatData.blockCount}");
+            
             return;
         }
 
