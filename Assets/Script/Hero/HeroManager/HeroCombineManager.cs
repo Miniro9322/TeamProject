@@ -78,11 +78,8 @@ public class HeroCombineManager : MonoBehaviour
             GameObject unit = entry.PlacedUnit;
             if (unit != null)
             {
-                if (unit.TryGetComponent(out Hero hero))
-                {
-                    HeroSelectionService.ClearIfSelected(hero);
-                    //game.Placer.zoneEffectApplier.ExitZone(hero); // 파괴 전 지대 효과 추적에서 해제
-                }
+                unit.TryGetComponent(out Hero hero);
+                //game.Placer.zoneEffectApplier.ExitZone(hero); // 파괴 전 지대 효과 추적에서 해제
 
                 if (game.Units.TryGetArea(unit, out PlacementArea area))
                 {
@@ -96,7 +93,15 @@ public class HeroCombineManager : MonoBehaviour
                     game.Units.Remove(unit);
                 }
 
-                Destroy(unit);
+                if (hero != null)
+                {
+                    hero.PrepareForDespawn();
+                    PoolManager.Instance.Despawn(unit);
+                }
+                else
+                {
+                    Destroy(unit);
+                }
             }
 
             game.HeroRoster.Remove(entry);

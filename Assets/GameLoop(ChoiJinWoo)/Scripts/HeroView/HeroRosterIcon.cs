@@ -1,6 +1,7 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -23,7 +24,28 @@ public class HeroRosterIcon : MonoBehaviour, IPointerClickHandler
     private HeroRosterEntry entry;
     private Action<HeroRosterEntry, HeroRosterIcon> onClick;
     private Action<HeroRosterEntry> onDoubleClick;
-    private Coroutine pendingSingleClick;
+    private CancellationTokenSource pendingSingleClickCts;
+
+    // 풀로 반납되기 직전 호출. entry/콜백을 비워둬야 재활성화 직후(Set() 호출 전) 낡은 값을
+    // 참조할 여지가 없다.
+    public void PrepareForReuse()
+    {
+        CancelPendingSingleClick();
+        entry = null;
+        onClick = null;
+        onDoubleClick = null;
+    }
+
+    // Coroutine과 달리 UniTask.Delay는 GameObject 비활성화로 자동 취소되지 않으므로, 풀 반납이 아닌
+    // 경로(패널 자체가 꺼지는 등)로 비활성화되는 경우까지 커버하려면 여기서도 명시적으로 취소해야 한다.
+    private void OnDisable() => CancelPendingSingleClick();
+
+    private void CancelPendingSingleClick()
+    {
+        pendingSingleClickCts?.Cancel();
+        pendingSingleClickCts?.Dispose();
+        pendingSingleClickCts = null;
+    }
 
     public void Set(HeroRosterEntry entry, Action<HeroRosterEntry, HeroRosterIcon> onClick, Action<HeroRosterEntry> onDoubleClick = null)
     {
@@ -74,23 +96,27 @@ public class HeroRosterIcon : MonoBehaviour, IPointerClickHandler
     {
         if (eventData.clickCount >= 2)
         {
-            if (pendingSingleClick != null)
-            {
-                StopCoroutine(pendingSingleClick);
-                pendingSingleClick = null;
-            }
+            CancelPendingSingleClick();
             onDoubleClick?.Invoke(entry);
             return;
         }
 
-        if (pendingSingleClick != null) StopCoroutine(pendingSingleClick);
-        pendingSingleClick = StartCoroutine(FireSingleClickAfterDelay());
+        CancelPendingSingleClick();
+        pendingSingleClickCts = new CancellationTokenSource();
+        FireSingleClickAfterDelay(pendingSingleClickCts.Token).Forget();
     }
 
-    private IEnumerator FireSingleClickAfterDelay()
+    private async UniTaskVoid FireSingleClickAfterDelay(CancellationToken token)
     {
-        yield return new WaitForSeconds(DoubleClickWindow);
-        pendingSingleClick = null;
+        try
+        {
+            await UniTask.Delay(TimeSpan.FromSeconds(DoubleClickWindow), cancellationToken: token);
+        }
+        catch (OperationCanceledException)
+        {
+            return;
+        }
+        pendingSingleClickCts = null;
         onClick?.Invoke(entry, this);
     }
 }
