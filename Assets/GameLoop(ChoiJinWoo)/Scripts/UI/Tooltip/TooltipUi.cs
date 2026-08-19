@@ -25,20 +25,11 @@ public class TooltipUi : MonoBehaviour
         Instance = this;
         canvasRect = canvas.transform as RectTransform;
 
-        // panel이 마우스 밑에 뜨면서 자기가 레이캐스트를 가로채면, 밑에 있던 버튼이 PointerExit ->
-        // 패널 사라짐 -> 버튼 PointerEnter -> 패널 다시 뜸 순으로 매 프레임 깜빡인다.
-        // CanvasGroup으로 패널이 절대 레이캐스트를 막지 않게 고정해서 이 루프 자체를 없앤다.
         canvasGroup = panel.GetComponent<CanvasGroup>();
         if (canvasGroup == null) canvasGroup = panel.gameObject.AddComponent<CanvasGroup>();
         canvasGroup.blocksRaycasts = false;
         canvasGroup.interactable = false;
         canvasGroup.alpha = 0f;
-
-        // pivot이 인스펙터 설정값(예: 센터)에 따라 달라지면 offset을 줘도 커서가 패널 안쪽에 걸릴 수 있다.
-        // 좌하단(0,0)으로 고정해서 "커서 지점에서 오른쪽 위로 offset만큼 벌어진 자리"가 항상
-        // 패널의 시작 모서리가 되게 하고, 패널 전체가 커서 위쪽으로만 펼쳐지게 한다(화살표 커서는
-        // 보통 tip에서 오른쪽 아래로 향하므로, 위로 띄우면 커서 모양과 안 겹친다).
-        panel.pivot = new Vector2(0f, 0f);
 
         panel.gameObject.SetActive(false);
     }
@@ -55,9 +46,6 @@ public class TooltipUi : MonoBehaviour
         text.text = DataTableManager.StringTable.Get(message);
         panel.gameObject.SetActive(true);
 
-        // text.text를 바꿔도 ContentSizeFitter/레이아웃은 다음 갱신 때야 반영되므로, 그 상태로 바로
-        // 클램핑하면 panel.rect.size가 이전 텍스트 기준 크기라 화면 밖으로 새는 계산이 나온다.
-        // 여기서 강제로 즉시 재계산시켜서 SetPosition이 최신 크기를 보게 한다.
         LayoutRebuilder.ForceRebuildLayoutImmediate(panel);
         SetPosition(screenPosition);
 
@@ -102,7 +90,12 @@ public class TooltipUi : MonoBehaviour
     {
         var cam = canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : canvas.worldCamera;
         RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, screenPosition, cam, out var localPoint);
-        panel.anchoredPosition = ClampToCanvas(localPoint + offset);
+
+        bool isRightHalf = localPoint.x > canvasRect.rect.center.x;
+        panel.pivot = new Vector2(isRightHalf ? 1f : 0f, 0f);
+        float offsetX = isRightHalf ? -offset.x : offset.x;
+
+        panel.anchoredPosition = ClampToCanvas(localPoint + new Vector2(offsetX, offset.y));
     }
 
     // 패널이 화면(캔버스) 밖으로 잘려나가지 않도록 anchoredPosition을 캔버스 경계 안으로 눌러 담는다.
