@@ -102,6 +102,7 @@ public class MapCommand : MonoBehaviour
     {
         if (rightDragDetect.MovedEnough()) return;
         action.skillCast?.ClearSelection();
+        action.playerSkillCast?.ClearArmed();
     }
 
     private void ReplacePress(Tile tile)

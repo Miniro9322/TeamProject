@@ -22,6 +22,7 @@ public class GroundZoneEffect : MonoBehaviour
     public float damagePer = 0.5f;
     [Tooltip("mode==Heal: 틱당 힐량 = 소유자 ATK * healPer (범위 내 최저 체력 아군 1명)")]
     public float healPer = 0f;
+    public float hpHealPer = 0f;
     [Tooltip("0 이하 = 오라(소유자가 죽을 때까지 유지). 공격/스킬 트리거형 장판은 반드시 양수로 설정.")]
     public float duration = 3f;
     public List<TargetDebuffRef> targetDebuffs = new();
@@ -127,6 +128,7 @@ public class GroundZoneEffect : MonoBehaviour
             if (heal <= 0f) return;
             Hero target = AttackDamageUtil.FindLowestHpAlly(owner.GetObjectsInRange(transform.position, radius, shape, RangeQueryAffinity.Ally));
             if (target == null) return;
+            heal = heal + target.SC[StatType.HP] * hpHealPer;
             target.Heal(heal);
             SpawnHitEffect(transform.position);
             return;

@@ -12,6 +12,10 @@ public class MapView : MonoBehaviour
     public CitizenManager citizenManager;
     public ResourcesManager resourcesManager;
 
+    // MapAssemble이 조립할 때 넣어준다 — ESC/우클릭 취소가 BuildModePanel/MapCommand에서 이 창구로 들어온다.
+    public HeroSkillCastController skillCast;
+    public PlayerSkillCastController playerSkillCast;
+
     private UnitReplace _replace;
     // MapAssemble이 대입하는 시점에 held 변경 이벤트를 걸어준다.
     public UnitReplace replace
@@ -113,4 +117,16 @@ public class MapView : MonoBehaviour
         }
     }
     public void SetBlock(bool value) => input.SetBlock(value);
+
+    // ---- 스킬 시전 취소(ESC가 BuildModePanel을 통해 부른다) ----
+
+    public bool HasArmedOrSelectedSkill =>
+        (skillCast != null && skillCast.SelectedCaster != null) ||
+        (playerSkillCast != null && playerSkillCast.Armed != null);
+
+    public void CancelSkillCasts()
+    {
+        skillCast?.ClearSelection();
+        playerSkillCast?.ClearArmed();
+    }
 }
