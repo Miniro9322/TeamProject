@@ -97,6 +97,6 @@ public class GuideUI : MonoBehaviour
             guideImage = guide.GuideImage;
             guideImage.gameObject.SetActive(true);
         }
-        guideText.text = guide.GuideInfo;
+        guideText.text = DataTableManager.StringTable.Get(guide.GuideInfo);
     }
 }
