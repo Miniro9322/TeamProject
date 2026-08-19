@@ -65,6 +65,47 @@ public class BaseConstructor
         return house;
     }
 
+    // 세이브 데이터로 기반시설을 자원 차감 없이 복원해 슬롯에 채운다 (로드 복원 전용)
+    public object RestoreBuild(
+        BuildableFacility option,
+        RegionFacilitySlots region,
+        int slotIndex,
+        int savedUpgradeCount,
+        int savedWorkerAmount,
+        (ProductionType Type, int Amount)[] savedConstructPaid,
+        (ProductionType Type, int Amount)[] savedUpgradeSpent)
+    {
+        object built = option.kind == OccupantKind.Resource
+            ? RestoreFacility(option, savedUpgradeCount, savedWorkerAmount, savedConstructPaid, savedUpgradeSpent)
+            : RestoreHouse(option, savedUpgradeCount, savedConstructPaid, savedUpgradeSpent);
+
+        region.TryAssign(slotIndex, built, option.icon, option.DisplayName);
+        return built;
+    }
+
+    private ProductionFacility RestoreFacility(
+        BuildableFacility option,
+        int savedUpgradeCount,
+        int savedWorkerAmount,
+        (ProductionType Type, int Amount)[] savedConstructPaid,
+        (ProductionType Type, int Amount)[] savedUpgradeSpent)
+    {
+        var facility = new ProductionFacility(option.facilityValue, economyConfig, resourcesManager, citizenManager, facilityManager, upgradeState);
+        facility.RestoreState(savedUpgradeCount, savedWorkerAmount, savedConstructPaid, savedUpgradeSpent);
+        return facility;
+    }
+
+    private House RestoreHouse(
+        BuildableFacility option,
+        int savedUpgradeCount,
+        (ProductionType Type, int Amount)[] savedConstructPaid,
+        (ProductionType Type, int Amount)[] savedUpgradeSpent)
+    {
+        var house = new House(option.houseConfig, citizenManager, resourcesManager, upgradeState, economyConfig);
+        house.RestoreState(savedUpgradeCount, savedConstructPaid, savedUpgradeSpent);
+        return house;
+    }
+
     public void Demolish(RegionFacilitySlots region, int slotIndex)
     {
         if (slotIndex < 0 || slotIndex >= region.Slots.Count) return;

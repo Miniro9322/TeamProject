@@ -375,4 +375,82 @@ public class SpawnerManager : MonoBehaviour
 
         AllRegionsClear?.Invoke();
     }
+
+    // 해금된 지역 중 아직 오프셋이 없는 곳만 CurrentDay - 1로 미리 만든다 (DayStart 저장 직전 전용)
+    public void PrepareOffsets()
+    {
+        foreach (var kv in IsUnlockregion)
+        {
+            if (kv.Value && !_unlockOffset.ContainsKey(kv.Key))
+            {
+                _unlockOffset[kv.Key] = CurrentDay - 1;
+            }
+        }
+    }
+
+    // 지역 오프셋 값을 그대로 읽는다 (세이브 전용 조회, 없으면 0)
+    public int GetOffset(int region)
+        => _unlockOffset.TryGetValue(region, out int off) ? off : 0;
+
+    // 세이브 데이터로 지역 오프셋을 그대로 지정한다 (로드 복원 전용)
+    public void RestoreOffset(int region, int offset)
+    {
+        _unlockOffset[region] = offset;
+    }
+
+    // 지역의 활성 포탈 스폰 칸 좌표를 그대로 읽는다 (NightReady 세이브 전용 조회)
+    public bool TryGetActiveSpawnCoords(int region, out Vector2Int[] coords, out bool isFallback)
+    {
+        coords = Array.Empty<Vector2Int>();
+        isFallback = false;
+        if (!_byRegion.TryGetValue(region, out var spawner) || spawner == null) return false;
+
+        IReadOnlyList<int> activeSpawns = spawner.ActiveSpawns;
+        if (activeSpawns.Count == 1 && activeSpawns[0] < 0)
+        {
+            isFallback = true;
+            return true;
+        }
+
+        coords = new Vector2Int[activeSpawns.Count];
+        for (int i = 0; i < activeSpawns.Count; i++)
+        {
+            coords[i] = spawner.SpawnCoord(activeSpawns[i]);
+        }
+        return true;
+    }
+
+    // 세이브 데이터로 활성 포탈을 그대로 재구성한다 (NightReady 로드 전용)
+    public void RestorePortal(int region, Vector2Int[] savedCoords, bool isFallback)
+    {
+        if (spawnPoint == null) return;
+        if (!_byRegion.TryGetValue(region, out var spawner) || spawner == null || spawner.Board == null) return;
+
+        ClearPortal(region);
+
+        int active = isFallback ? spawner.ActivateFallback() : spawner.ActivateSpawnsAt(savedCoords);
+        if (active == 0) return;
+
+        var paths = spawner.ActivePaths;
+        var portals = new List<GameObject>(paths.Count);
+        Vector3 lift = Vector3.up * yOffset;
+        foreach (var path in paths)
+        {
+            if (path == null || path.Count == 0) continue;
+            portals.Add(PoolManager.Instance.Spawn(spawnPoint, path[0] + lift, Quaternion.identity));
+        }
+        spawnPoints[region] = portals;
+    }
+
+    // RestorePortal 전용 — module.SetState()가 먼저 켠 포탈이 있으면 지우고 시작한다 (중복 생성 방지)
+    private void ClearPortal(int region)
+    {
+        if (!spawnPoints.TryGetValue(region, out var existing) || existing == null) return;
+
+        foreach (var portal in existing)
+        {
+            if (portal != null) PoolManager.Instance.Despawn(portal);
+        }
+        spawnPoints.Remove(region);
+    }
 }

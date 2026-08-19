@@ -52,6 +52,10 @@ public class ProductionFacility : IUpgradableOccupant
 
     public int MaxUpgrade => maxUpgrade;
 
+    // 실제로 낸 건설·강화 비용을 그대로 읽는다 (세이브 전용 조회)
+    public (ProductionType Type, int Amount)[] ConstructCostPaid => constructCostPaid;
+    public (ProductionType Type, int Amount)[] TotalUpgradeSpent => totalUpgradeSpent;
+
     private string nextUpgradeInfo = "자원 생산량 증가";
 
     public ProductionFacility(
@@ -204,5 +208,64 @@ public class ProductionFacility : IUpgradableOccupant
     public bool CheckCanUpgrade()
     {
         return upgradeCount < maxUpgrade && resourcesManager.CheckResources(upgradeCostCopy);
+    }
+
+    // 세이브 데이터로 건설·강화 상태를 자원 차감 없이 그대로 복원한다 (로드 복원 전용)
+    public void RestoreState(
+        int savedUpgradeCount,
+        int savedWorkerAmount,
+        (ProductionType Type, int Amount)[] savedConstructPaid,
+        (ProductionType Type, int Amount)[] savedUpgradeSpent)
+    {
+        // RestoreState는 항상 막 생성한 새 객체에서만 불려서 upgradeCount·amountUpgrade·citizenUpgrade가
+        // 이미 C# 기본값 0이다 — 재사용 중인 객체를 리셋하는 경로가 없어 따로 초기화하지 않는다.
+        productAmount = basicValue.DefaultAmount + ProductAmountBonus;
+        maxWorker = basicValue.DefaultMaxWorker;
+
+        while (upgradeCount < savedUpgradeCount)
+        {
+            ReplayUpgradeStep();
+        }
+
+        workerAmount = savedWorkerAmount;
+        constructCostPaid = savedConstructPaid;
+        totalUpgradeSpent = savedUpgradeSpent;
+
+        var baseCost = basicValue.UpgradeCost.ApplyDiscount(UpgradeCostDiscount);
+        upgradeCostCopy = new (ProductionType, int)[baseCost.Length];
+        for (int i = 0; i < upgradeCostCopy.Length; i++)
+        {
+            upgradeCostCopy[i] = (baseCost[i].Type, baseCost[i].Amount * (upgradeCount + 1));
+        }
+
+        facilityManager.AddFacility(this);
+        UpdateInfo();
+    }
+
+    // Upgrade()의 생산량·최대 인력 규칙만 자원 차감 없이 그대로 재현한다 (RestoreState 전용)
+    private void ReplayUpgradeStep()
+    {
+        upgradeCount++;
+        if (upgradeCount % 5 == 0)
+        {
+            // 원본 Upgrade()도 이 분기는 로그만 남기고 생산량·인력 상태는 안 바꾼다 — 재현할 상태 변화가 없다.
+        }
+        else if (upgradeCount % 2 == 1)
+        {
+            amountUpgrade++;
+            productAmount += amountUpgrade * 10;
+            nextUpgradeInfo = "시민 배치 수 증가";
+        }
+        else
+        {
+            citizenUpgrade++;
+            maxWorker = basicValue.DefaultMaxWorker + citizenUpgrade;
+            nextUpgradeInfo = "자원 생산량 증가";
+        }
+
+        if (upgradeCount == maxUpgrade)
+        {
+            nextUpgradeInfo = "최대 업그레이드";
+        }
     }
 }

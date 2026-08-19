@@ -31,6 +31,17 @@ public static class EnemyArchiveData
 
     public static IReadOnlyCollection<string> All => unlocked;
 
+    // 세이브 데이터로 도감 전체를 교체한다 (슬롯 JSON이 원본, 로드 복원 전용)
+    public static void RestoreAll(IReadOnlyList<string> savedKeys)
+    {
+        unlocked.Clear();
+        for (int i = 0; i < savedKeys.Count; i++)
+        {
+            if (!string.IsNullOrEmpty(savedKeys[i])) unlocked.Add(savedKeys[i]);
+        }
+        Save();
+    }
+
     // 디버그/테스트용 — 도감 전체 초기화
     public static void ResetAll()
     {

@@ -208,6 +208,52 @@ public class WaveSpawner : MonoBehaviour
     // 레인 정보 없이 켠 폴백 경로라 스폰 번호가 없다는 표시.
     private const int NoSpawn = -1;
 
+    // 저장된 스폰 칸 좌표들을 그대로 활성화한다 (NightReady 로드 전용)
+    public int ActivateSpawnsAt(IReadOnlyList<Vector2Int> savedCoords)
+    {
+        EnsurePaths();
+        _activePaths.Clear();
+        _activeSpawns.Clear();
+        _warnedKinds.Clear();
+
+        for (int i = 0; i < savedCoords.Count; i++)
+        {
+            int spawn = FindSpawnIndex(savedCoords[i]);
+            if (spawn < 0 || _allPaths == null || spawn >= _allPaths.Count) continue;
+            _activePaths.Add(_allPaths[spawn]);
+            _activeSpawns.Add(spawn);
+        }
+
+        return _activePaths.Count;
+    }
+
+    // 레인 정보 없는 폴백 경로를 그대로 활성화한다 (NightReady 로드 전용, PortalSave.IsFallback 대응)
+    public int ActivateFallback()
+    {
+        EnsurePaths();
+        _activePaths.Clear();
+        _activeSpawns.Clear();
+        _warnedKinds.Clear();
+
+        if (waypoints != null && waypoints.Count > 0)
+        {
+            _activePaths.Add(waypoints);
+            _activeSpawns.Add(NoSpawn);
+        }
+
+        return _activePaths.Count;
+    }
+
+    // 좌표와 같은 스폰 칸의 인덱스를 찾는다 (ActivateSpawnsAt 전용)
+    private int FindSpawnIndex(Vector2Int coord)
+    {
+        for (int i = 0; i < _spawnTiles.Count; i++)
+        {
+            if (_spawnTiles[i].Coord == coord) return i;
+        }
+        return -1;
+    }
+
     /// <summary>이 적이 따라갈 경로. authored=true면 사람이 그린 경로라 적이 재탐색하지 않는다.
     ///
     /// 공중·수영 적은 그 종류의 저작 경로가 있는 포탈에서만 나온다 — 여러 곳에 그려 뒀으면 그중 랜덤.

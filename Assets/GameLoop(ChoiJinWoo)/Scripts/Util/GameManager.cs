@@ -153,4 +153,24 @@ public class GameManager : MonoBehaviour
         unlockedHero = uiManager.UnlockedHero;
         unlockedEnemy = uiManager.UnlockedEnemy;
     }
+
+    // 세이브 데이터로 진행 일차를 그대로 덮어쓴다 (로드 복원 전용)
+    public void RestoreDayCount(int amount)
+    {
+        dayCount = amount;
+    }
+
+    // 세이브 데이터로 기지 체력을 그대로 덮어쓴다 (로드 복원 전용)
+    public void RestoreHp(int amount)
+    {
+        hp = amount;
+        HpChanged?.Invoke();
+    }
+
+    // 세이브 데이터로 해금된 영웅 목록을 그대로 덮어쓴다 (로드 복원 전용)
+    public void RestoreUnlockedHero(byte value)
+    {
+        unlockedHero = value;
+        uiManager.UnlockedHero = value;
+    }
 }

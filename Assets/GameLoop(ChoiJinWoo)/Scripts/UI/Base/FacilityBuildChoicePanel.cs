@@ -156,4 +156,29 @@ public class FacilityBuildChoicePanel : MonoBehaviour, IClosablePanel
             Close();
         }
     }
+
+    // 저장된 건물 이름(FacilityName/HouseName)으로 이 목록에서 원본 옵션을 찾는다 (로드 복원 전용)
+    // 새 필드를 추가하지 않고, 이미 각 SO에 채워져 있는 이름을 그대로 식별자로 재사용한다.
+    public bool TryFindOption(string buildKey, out BuildableFacility option)
+    {
+        for (int i = 0; i < options.Count; i++)
+        {
+            if (OptionKey(options[i]) == buildKey)
+            {
+                option = options[i];
+                return true;
+            }
+        }
+
+        option = null;
+        return false;
+    }
+
+    // 옵션 하나의 식별 키를 구한다 (facilityValue 또는 houseConfig의 이름)
+    private static string OptionKey(BuildableFacility option)
+    {
+        if (option.kind == OccupantKind.Resource && option.facilityValue != null) return option.facilityValue.FacilityName;
+        if (option.houseConfig != null) return option.houseConfig.HouseName;
+        return null;
+    }
 }

@@ -78,6 +78,21 @@ public class CitizenManager : MonoBehaviour
         UpdateCitizen();
     }
 
+    // 세이브 데이터로 현재 시민 수를 그대로 덮어쓴다 (로드 복원 전용)
+    public void RestoreCitizen(int amount)
+    {
+        currentCitizen = amount;
+        UpdateCitizen();
+    }
+
+    // 시설·영웅 사용 시민 합계로 파생값을 다시 맞춘다 (기반시설·로스터 복원 후 1회, 로드 복원 전용)
+    public void RecalculateUsedCitizen(int facilityUsed, int heroUsed)
+    {
+        usedCitizen = facilityUsed;
+        heroUsedCitizen = heroUsed;
+        UpdateCitizen();
+    }
+
     private void UpdateCitizen()
     {
         CitizenChanged?.Invoke();
