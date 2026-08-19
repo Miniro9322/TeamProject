@@ -337,6 +337,11 @@ public class SpawnerManager : MonoBehaviour
         return list;
     }
 
+    // 해금 지역 수를 스포너 밖(EnemyBase의 체력 배율 등)에서 읽기 위한 진입점.
+    // Instance 프로퍼티는 매니저가 없으면 빈 오브젝트를 새로 만들어버리므로 여기서는 쓰지 않는다 —
+    // 매니저가 없는 씬(적 단독 테스트 등)에서는 0을 돌려주고, 호출부가 배율 1배로 폴백하게 둔다.
+    public static int UnlockedRegionCount => instance != null ? instance.UnlockedCount() : 0;
+
     // 해금된 지역 수. 각 지역의 증원 단계(9001, 9002 …)를 정하는 값이라 스포너에 그대로 넘긴다.
     // 클릭할 때마다 불리므로 목록을 만들지 않고 세기만 한다.
     private int UnlockedCount()

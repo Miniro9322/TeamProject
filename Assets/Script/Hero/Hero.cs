@@ -370,15 +370,21 @@ public class Hero : MonoBehaviour, IDamageAble, IUnit, IStunAble, IDebuffCarrier
             SpawnGroundZone(prefab, transform.position, followOwner: true);
     }
 
+    private static readonly object StatUpgradeBonusSource = new object();
+
+    // ApplyTierLevelBonus와 같은 이유로 멱등해야 한다 — 풀링된 유닛을 재사용할 때(PrepareForSpawn)
+    // 다시 호출되므로, source를 인스턴스(this)가 아니라 고정 오브젝트로 둬 재호출 시 이전 modifier를
+    // 정확히 지우고 다시 얹을 수 있게 한다.
     private void ApplyStatUpgradeBonus()
     {
+        sc.RemoveModifier(StatUpgradeBonusSource);
         if (upgradeState == null) return;
 
         float bonus = upgradeState.GetTotalEffect(statUpgrades);
         if (bonus == 0f) return;
 
-        sc.AddModifier(StatType.ATK, new Modifier(ModifierType.Flat, bonus, 0f, StatLayer.Equip, this));
-        sc.AddModifier(StatType.DEF, new Modifier(ModifierType.Flat, bonus, 0f, StatLayer.Equip, this));
+        sc.AddModifier(StatType.ATK, new Modifier(ModifierType.Additive, bonus, 0f, StatLayer.Equip, this));
+        sc.AddModifier(StatType.DEF, new Modifier(ModifierType.Additive, bonus, 0f, StatLayer.Equip, this));
     }
 
     private static readonly object TierLevelBonusSource = new object();
@@ -682,6 +688,36 @@ public class Hero : MonoBehaviour, IDamageAble, IUnit, IStunAble, IDebuffCarrier
     public void HealFull()
     {
         Heal(sc[StatType.HP]);
+    }
+
+    // 풀에서 다시 꺼내 배치될 때 호출 — Awake/Start는 인스턴스 생애 최초 1회만 돌므로, 두 번째 이후
+    // "삶"에 필요한 런타임 상태 초기화는 여기서 명시적으로 다시 해준다.
+    public void PrepareForSpawn()
+    {
+        isDead = false;
+        stateMachine.ChangeState(idleState);
+        anim.SetBool(HeroAnimHash.idle, true);
+        ApplyStatUpgradeBonus();
+        ApplyTierLevelBonus();
+        currentHp = sc[StatType.HP];
+        _bar.ResetTo(currentHp, sc[StatType.HP]);
+        target = null;
+        context.target = null;
+        SpawnAuraZones();
+    }
+
+    // 풀로 돌려보내기 직전 호출 — 이번 삶에서 쌓인 상태를 걷어내 다음 삶으로 새어 들어가지 않게 한다.
+    public void PrepareForDespawn()
+    {
+        HeroSelectionService.ClearIfSelected(this);
+        SetSelected(false);
+        isDead = true; // 오라 장판(GroundZoneEffect)이 다음 tick에서 owner.IsDead를 보고 스스로 풀에 반납한다
+        buffManager.RemoveAllBuffs(this); // 다음 삶에 좀비 버프/디버프 수정자가 겹치지 않도록 정리
+        debuffTracker.Clear();
+        debuffEffects.Reset();
+        skillCts?.Cancel();
+        skillCts?.Dispose();
+        skillCts = null;
     }
 
     public void SetCurrentTile()

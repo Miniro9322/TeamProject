@@ -28,7 +28,7 @@ public class MapGame : MonoBehaviour
 
 
     [Inject]
-    private void Construct(IObjectResolver resolver, ResourcesManager resourcesManager, UiManager uiManager, GameManager gameManager, CitizenManager citizenManager, EnviromentManager enviromentManager, HeroRoster heroRoster, BuffManager buffManager, PlayerManaManager playerManaManager)
+    private void Construct(ResourcesManager resourcesManager, UiManager uiManager, GameManager gameManager, CitizenManager citizenManager, EnviromentManager enviromentManager, HeroRoster heroRoster, BuffManager buffManager, PlayerManaManager playerManaManager)
     {
         this.uiManager = uiManager;
         this.gameManager = gameManager;
@@ -40,6 +40,5 @@ public class MapGame : MonoBehaviour
         this.playerManaManager = playerManaManager;
         unitPlacer = new UnitPlacer();
         unitPlacer.unitList = unitList;
-        unitPlacer.resolver = resolver;
     }
 }
