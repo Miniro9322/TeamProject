@@ -15,6 +15,7 @@ public class EnemyTable : DataTable
         public float MoveSpeed {get ; set ;}
         public int UpHealthScale {get ; set ;}
         public int UpDefenseScale {get ; set ;}
+        public int UpAttackScale {get ; set ;}
         public string Skills {get ; set ;}   // 세미콜론(;)으로 구분된 SkillId 목록
         public string Type {get ; set ;}     // 공격 타입 (Melee, Ranged)
         public string Class {get ; set ;}     // 등급 (Normal, Elite, Boss)

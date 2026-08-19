@@ -667,8 +667,9 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
         }
         else
         {
-            float scaledHp  = data.Health  + (gameManager.DayCount * data.UpHealthScale);
-            float scaledDef = data.Defense + (data.UpDefenseScale * (gameManager.DayCount / 5));
+            // 일차 성장분에 해금 지역 수 배율을 곱한다 — 지역을 더 열수록 같은 몹도 계단식으로 단단해진다.
+            float scaledHp  = (data.Health + (gameManager.DayCount * data.UpHealthScale)) * RegionHpScale();
+            float scaledDef = (data.Defense + (data.UpDefenseScale * (gameManager.DayCount / 5))) * RegionDefenseScale();
             sc.SetBaseValue(StatType.HP,scaledHp);
             sc.SetBaseValue(StatType.ATK,data.Attack);
             sc.SetBaseValue(StatType.AS,data.AttackSpeed);
@@ -680,10 +681,36 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
         Hp = sc[StatType.HP];
         _bar.ResetTo(Hp, MaxHp); // 스폰 시 보간 없이 즉시 풀피로(풀 재사용 시 이전 값 잔상 제거)
         IsDead = false;
+        // 확인용 임시 로그. bossName 가드 아래에 두면 보스가 아닌 몹은 그 return에 걸려 안 찍히므로 가드보다 위에 둔다.
+        string dayInfo = gameManager != null ? $"{gameManager.DayCount}일차" : "gameManager 미주입 → 일차·지역 배율 미적용";
+        Debug.Log($"[{enemyKey}] 체력 {Hp} · 해금 {SpawnerManager.UnlockedRegionCount}개(×{RegionHpScale()}) · {dayInfo}", this);
         if(bossName == null)return;
-        bossName.text = DataTableManager.StringTable.Get(data.Name); 
+        bossName.text = DataTableManager.StringTable.Get(data.Name);
         //MoveSpeed = data.MoveSpeed;
     }
+
+    // 해금된 지역 수별 배율(인덱스 = 해금 수). 계산식이 아니라 디자이너가 정한 곡선이라 표로 둔다.
+    // 게임 시작 상태가 이미 1개 해금이므로 0·1 칸은 1배로 두고 2개째 해금부터 배율이 붙는다.
+    // 표 길이를 넘는 해금 수는 마지막 값으로 고정되므로, 지역이 늘면 칸을 추가하면 된다.
+    // 보스 전용 표를 따로 두고, Elite·Normal은 잡몹 표를 공유한다.
+    private static readonly float[] RegionHpScaleTable = { 1f, 1f ,1.25f, 1.6f, 2.15f, 3f, 4f };
+    private static readonly float[] RegionBossHpScaleTable = { 1f, 1f ,1.5f, 2.5f, 3.9f, 5.7f, 8f };
+    private static readonly float[] RegionDefenseScaleTable = { 1f, 1f ,1.15f, 1.3f, 1.5f, 1.75f, 2f };
+    private static readonly float[] RegionBossDefenseScaleTable = { 1f, 1f ,1.3f, 1.75f, 2.4f, 3.2f, 4f };
+
+    // 표는 모든 적이 공유하므로 static이지만, 아래 조회 메서드는 "이 개체가 보스냐"(Class)를 읽어야 하므로
+    // static일 수 없다 — 정적 메서드에서는 인스턴스 멤버에 접근할 수 없다(CS0120).
+    // 표 길이는 자기 표 기준으로 클램프한다(표마다 칸 수가 달라져도 안전하게).
+    private float RegionScale(float[] normalTable, float[] bossTable)
+    {
+        float[] table = Class == EnemyClass.Boss ? bossTable : normalTable;
+        int unlocked = SpawnerManager.UnlockedRegionCount;
+        if (unlocked <= 0) return table[0];
+        return table[Mathf.Min(unlocked, table.Length - 1)];
+    }
+
+    private float RegionHpScale() => RegionScale(RegionHpScaleTable, RegionBossHpScaleTable);
+    private float RegionDefenseScale() => RegionScale(RegionDefenseScaleTable, RegionBossDefenseScaleTable);
 
     private void RecordBaseStats(float hp, float atk, float attackSpeed, float def, float spd)
     {
