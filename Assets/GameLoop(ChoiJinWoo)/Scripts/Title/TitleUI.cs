@@ -33,8 +33,16 @@ public class TitleUI : MonoBehaviour
         QuitAlert.SetActive(false);
         upgradePanel.SetActive(false);
         slotSelectPanel.gameObject.SetActive(false);
-        loadButton.interactable = previewReader.HasAnySave();
         slotSelectPanel.SlotConfirmed += OnSlotConfirmed;
+        slotSelectPanel.SaveChanged += RefreshLoad;
+        RefreshLoad();
+    }
+
+    // 슬롯 패널 이벤트 구독을 해제한다.
+    private void OnDestroy()
+    {
+        slotSelectPanel.SlotConfirmed -= OnSlotConfirmed;
+        slotSelectPanel.SaveChanged -= RefreshLoad;
     }
 
     private async UniTaskVoid ApplyResolution()
@@ -82,6 +90,12 @@ public class TitleUI : MonoBehaviour
     {
         LoadingPanel.SetActive(true);
         LoadSceneAsync("MainScene").Forget();
+    }
+
+    // 저장 데이터 존재 여부에 맞춰 불러오기 버튼을 갱신한다.
+    private void RefreshLoad()
+    {
+        loadButton.interactable = previewReader.HasAnySave();
     }
 
     private async UniTaskVoid LoadSceneAsync(string sceneName)

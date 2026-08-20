@@ -1,80 +1,138 @@
- using System;
+using System;
+using System.Globalization;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-// 슬롯 한 줄의 표시 담당.
+// 슬롯 한 줄의 정보 표시와 선택·삭제 입력을 담당한다.
 public class SlotRowView : MonoBehaviour
 {
     private const int SecondsPerHour = 3600;
     private const int SecondsPerMinute = 60;
-    private const string SaveTimeDisplayFormat = "MM-dd HH:mm";
 
     [SerializeField] private Button rowButton;
+    [SerializeField] private Button deleteButton;
+    [SerializeField] private TMP_Text deleteText;
     [SerializeField] private TMP_Text slotText;
     [SerializeField] private TMP_Text dayText;
     [SerializeField] private TMP_Text playTimeText;
     [SerializeField] private TMP_Text saveTimeText;
 
     private int slotId;
+    private SlotPreviewInfo slotInfo;
     private Action<int> onRowClicked;
+    private Action<int> onDeleteClicked;
 
+    // 슬롯 버튼과 삭제 버튼에 실행 메서드를 연결한다.
     private void Awake()
     {
         rowButton.onClick.AddListener(OnClicked);
+        deleteButton.onClick.AddListener(OnDelete);
     }
 
-    // 슬롯 번호와 미리보기 정보를 받아 화면 문구를 채운다.
-    public void BindSlot(int slotId, SlotPreviewInfo info, Action<int> onRowClicked)
+    // 언어 변경 시 현재 슬롯 문구를 다시 표시한다.
+    private void OnEnable()
+    {
+        LocalizeTextManager.OnLanguageChanged += RefreshText;
+    }
+
+    // 비활성화된 행의 언어 변경 구독을 해제한다.
+    private void OnDisable()
+    {
+        LocalizeTextManager.OnLanguageChanged -= RefreshText;
+    }
+
+    // 슬롯 정보와 선택·삭제 동작을 받아 행을 준비한다.
+    public void BindSlot(
+        int slotId,
+        SlotPreviewInfo info,
+        bool canDelete,
+        Action<int> onRowClicked,
+        Action<int> onDeleteClicked)
     {
         this.slotId = slotId;
+        slotInfo = info;
         this.onRowClicked = onRowClicked;
+        this.onDeleteClicked = onDeleteClicked;
 
-        StringTable table = DataTableManager.StringTable;
-        slotText.text = string.Format(table.Get("Ui_SlotLabel"), slotId);
-
-        SetSaveInfo(info, table);
+        deleteButton.gameObject.SetActive(canDelete);
+        RefreshText();
     }
 
-    // 저장 여부에 따라 일차·플레이시간·저장시각 칸을 채우거나 "비어있음"으로 채운다.
-    private void SetSaveInfo(SlotPreviewInfo info, StringTable table)
+    // 현재 언어로 슬롯의 모든 표시 문구를 갱신한다.
+    private void RefreshText()
     {
-        if (!info.HasSave)
+        StringTable table = DataTableManager.StringTable;
+        slotText.text = string.Format(table.Get("Ui_SlotLabel"), slotId);
+        deleteText.text = table.Get("Ui_Delete");
+
+        if (!slotInfo.HasSave)
         {
-            dayText.text = table.Get("Ui_SlotEmpty");
-            playTimeText.text = string.Empty;
-            saveTimeText.text = string.Empty;
+            SetEmptyText(table);
             return;
         }
 
-        dayText.text = string.Format(table.Get("Ui_SlotDay"), info.DayCount);
-        playTimeText.text = string.Format(table.Get("Ui_PlayTimeFormat"), GetHours(info.PlayTime), GetMinutes(info.PlayTime));
-        saveTimeText.text = string.Format(table.Get("Ui_SlotSaveTime"), FormatSaveTime(info.SaveTime));
+        SetSaveText(table);
     }
 
-    // 저장된 라운드트립 시각 문자열("O" 포맷)을 화면 표시용 짧은 형식으로 바꾼다.
-    private string FormatSaveTime(string rawSaveTime)
+    // 빈 슬롯에 새 게임 시작 문구만 표시한다.
+    private void SetEmptyText(StringTable table)
     {
-        DateTime saveTime = DateTime.Parse(rawSaveTime, null, System.Globalization.DateTimeStyles.RoundtripKind);
-        return saveTime.ToString(SaveTimeDisplayFormat);
+        dayText.text = table.Get("Ui_SlotEmptyAction");
+        playTimeText.text = string.Empty;
+        saveTimeText.text = string.Empty;
     }
 
-    // 누적 플레이 시간(초)에서 시간 단위를 뽑는다.
-    private int GetHours(float playTimeSeconds)
+    // 저장된 슬롯의 진행도·플레이 시간·저장 시각을 표시한다.
+    private void SetSaveText(StringTable table)
     {
-        return (int)(playTimeSeconds / SecondsPerHour);
+        dayText.text = string.Format(table.Get("Ui_SlotDay"), slotInfo.DayCount);
+        playTimeText.text = string.Format(
+            table.Get("Ui_PlayTimeFormat"),
+            GetHours(slotInfo.PlayTime),
+            GetMinutes(slotInfo.PlayTime));
+        saveTimeText.text = string.Format(table.Get("Ui_SlotSaveTime"), GetSaveTime(slotInfo.SaveTime));
     }
 
-    // 누적 플레이 시간(초)에서 시간을 뺀 나머지 분 단위를 뽑는다.
-    private int GetMinutes(float playTimeSeconds)
+    // 누적 플레이 시간에서 시간 단위를 구한다.
+    private int GetHours(float playTime)
     {
-        int remainder = (int)playTimeSeconds % SecondsPerHour;
+        return (int)(playTime / SecondsPerHour);
+    }
+
+    // 누적 플레이 시간에서 분 단위를 구한다.
+    private int GetMinutes(float playTime)
+    {
+        int remainder = (int)playTime % SecondsPerHour;
         return remainder / SecondsPerMinute;
     }
 
-    // 버튼 클릭을 슬롯 번호와 함께 SlotSelectPanel로 전달한다.
+    // 저장 시각을 슬롯 화면용 짧은 형식으로 바꾼다.
+    private string GetSaveTime(string saveTime)
+    {
+        bool parsed = DateTime.TryParse(
+            saveTime,
+            CultureInfo.InvariantCulture,
+            DateTimeStyles.RoundtripKind,
+            out DateTime savedAt);
+
+        if (!parsed)
+        {
+            return "-";
+        }
+
+        return savedAt.ToString("MM-dd HH:mm", CultureInfo.InvariantCulture);
+    }
+
+    // 슬롯 선택을 슬롯 번호와 함께 전달한다.
     private void OnClicked()
     {
         onRowClicked.Invoke(slotId);
+    }
+
+    // 슬롯 삭제 요청을 슬롯 번호와 함께 전달한다.
+    private void OnDelete()
+    {
+        onDeleteClicked.Invoke(slotId);
     }
 }

@@ -1,4 +1,4 @@
- using System;
+using System;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -7,22 +7,24 @@ using UnityEngine.UI;
 public class ConfirmPopup : MonoBehaviour
 {
     [SerializeField] private TMP_Text messageText;
+    [SerializeField] private TMP_Text confirmText;
     [SerializeField] private Button confirmButton;
     [SerializeField] private Button cancelButton;
 
     private Action onConfirmed;
 
+    // 확인 버튼과 취소 버튼에 실행 메서드를 연결한다.
     private void Awake()
     {
         confirmButton.onClick.AddListener(OnConfirm);
         cancelButton.onClick.AddListener(OnCancel);
-        gameObject.SetActive(false);
     }
 
     // 문구와 확인 콜백을 갈아끼워 팝업을 띄운다.
-    public void ShowPopup(string message, Action onConfirmed)
+    public void ShowPopup(string message, string buttonLabel, Action onConfirmed)
     {
         messageText.text = message;
+        confirmText.text = buttonLabel;
         this.onConfirmed = onConfirmed;
         gameObject.SetActive(true);
     }
@@ -41,6 +43,7 @@ public class ConfirmPopup : MonoBehaviour
         HidePopup();
     }
 
+    // 저장된 동작을 비우고 팝업을 닫는다.
     private void HidePopup()
     {
         onConfirmed = null;

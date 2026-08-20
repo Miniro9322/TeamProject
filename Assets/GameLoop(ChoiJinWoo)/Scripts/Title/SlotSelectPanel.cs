@@ -4,14 +4,14 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-// 슬롯 패널의 진입 모드. 새 게임은 전체 슬롯, 불러오기는 채워진 슬롯만 보여준다.
+// 슬롯 패널에서 사용할 새 게임과 불러오기 모드를 구분한다.
 public enum SlotSelectMode
 {
     NewGame,
     Load
 }
 
-// SaveSlotConfig.SlotCount만큼 슬롯 행을 만들고, 모드에 맞는 목록·팝업 문구를 골라 보여준다.
+// 모드에 맞는 슬롯 목록과 확인·삭제 흐름을 관리한다.
 public class SlotSelectPanel : MonoBehaviour
 {
     [SerializeField] private TMP_Text titleText;
@@ -19,34 +19,41 @@ public class SlotSelectPanel : MonoBehaviour
     [SerializeField] private SlotRowView rowPrefab;
     [SerializeField] private Button closeButton;
     [SerializeField] private ConfirmPopup confirmPopup;
+    [SerializeField] private ScrollRect scrollRect;
 
     public event Action SlotConfirmed;
+    public event Action SaveChanged;
 
     private readonly SlotPreviewReader previewReader = new SlotPreviewReader();
+    private readonly SlotDelete slotDelete = new SlotDelete();
     private readonly List<SlotRowView> spawnedRows = new List<SlotRowView>();
+
     private SlotSelectMode mode;
 
+    // 닫기 버튼에 실행 메서드를 연결한다.
     private void Awake()
     {
         closeButton.onClick.AddListener(OnClose);
     }
 
-    // "start" 버튼에서 연다 — 빈 슬롯 포함 전체를 보여준다.
+    // 새 게임 모드로 전체 슬롯 목록을 연다.
     public void OpenForNewGame()
     {
         mode = SlotSelectMode.NewGame;
         titleText.text = DataTableManager.StringTable.Get("Ui_NewGamePanelTitle");
-        BuildRows(includeEmpty: true);
+        BuildRows(true);
         gameObject.SetActive(true);
+        ResetScroll();
     }
 
-    // "Load" 버튼에서 연다 — 채워진 슬롯만 보여준다.
+    // 불러오기 모드로 저장된 슬롯 목록만 연다.
     public void OpenForLoad()
     {
         mode = SlotSelectMode.Load;
         titleText.text = DataTableManager.StringTable.Get("Ui_LoadPanelTitle");
-        BuildRows(includeEmpty: false);
+        BuildRows(false);
         gameObject.SetActive(true);
+        ResetScroll();
     }
 
     // 슬롯을 고르지 않고 패널을 닫는다.
@@ -55,7 +62,7 @@ public class SlotSelectPanel : MonoBehaviour
         gameObject.SetActive(false);
     }
 
-    // 기존 행을 지우고 SaveSlotConfig.SlotCount만큼 다시 만든다(빈도가 낮아 풀링 없이 단순하게 처리).
+    // 현재 모드에 필요한 슬롯 행을 다시 만든다.
     private void BuildRows(bool includeEmpty)
     {
         ClearRows();
@@ -63,38 +70,50 @@ public class SlotSelectPanel : MonoBehaviour
         for (int slotId = 1; slotId <= SaveSlotConfig.SlotCount; slotId++)
         {
             SlotPreviewInfo info = previewReader.ReadSaveSlot(slotId);
-            if (!includeEmpty && !info.HasSave) continue;
+            if (!includeEmpty && !info.HasSave)
+            {
+                continue;
+            }
 
             SlotRowView row = Instantiate(rowPrefab, rowContainer);
-            row.BindSlot(slotId, info, OnRowClicked);
+            bool canDelete = mode == SlotSelectMode.Load;
+            row.BindSlot(slotId, info, canDelete, OnRowClicked, OnDeleteClicked);
             spawnedRows.Add(row);
         }
     }
 
-    // 다음 BuildRows 전에 이전 행을 전부 지운다.
+    // 이전에 생성한 모든 슬롯 행을 제거한다.
     private void ClearRows()
     {
-        for (int i = 0; i < spawnedRows.Count; i++)
+        for (int index = 0; index < spawnedRows.Count; index++)
         {
-            Destroy(spawnedRows[i].gameObject);
+            Destroy(spawnedRows[index].gameObject);
         }
+
         spawnedRows.Clear();
     }
 
-    // 행 클릭 시 모드에 맞는 확인 문구를 골라 팝업을 띄운다.
+    // 목록의 스크롤 위치를 가장 위로 되돌린다.
+    private void ResetScroll()
+    {
+        Canvas.ForceUpdateCanvases();
+        scrollRect.verticalNormalizedPosition = 1f;
+    }
+
+    // 슬롯 선택에 맞는 확인 팝업을 연다.
     private void OnRowClicked(int slotId)
     {
         SlotPreviewInfo info = previewReader.ReadSaveSlot(slotId);
-        string message = BuildConfirmMessage(slotId, info);
+        StringTable table = DataTableManager.StringTable;
+        string message = BuildConfirmMessage(slotId, info, table);
+        string buttonLabel = GetConfirmLabel(table);
 
-        confirmPopup.ShowPopup(message, () => ConfirmSlot(slotId));
+        confirmPopup.ShowPopup(message, buttonLabel, () => ConfirmSlot(slotId));
     }
 
-    // 모드·저장 여부 조합으로 팝업 문구를 고른다.
-    private string BuildConfirmMessage(int slotId, SlotPreviewInfo info)
+    // 선택 모드와 저장 여부에 맞는 확인 문구를 만든다.
+    private string BuildConfirmMessage(int slotId, SlotPreviewInfo info, StringTable table)
     {
-        StringTable table = DataTableManager.StringTable;
-
         if (mode == SlotSelectMode.Load)
         {
             return string.Format(table.Get("Ui_LoadConfirm"), slotId);
@@ -105,10 +124,52 @@ public class SlotSelectPanel : MonoBehaviour
             return string.Format(table.Get("Ui_OverwriteWarning"), slotId);
         }
 
-        return table.Get("Ui_NewGameConfirm");
+        return string.Format(table.Get("Ui_NewGameConfirm"), slotId);
     }
 
-    // 확인 팝업 통과 후 실제로 슬롯을 확정하고 상위(TitleUI)에 알린다.
+    // 현재 선택 모드에 맞는 확인 버튼 문구를 반환한다.
+    private string GetConfirmLabel(StringTable table)
+    {
+        if (mode == SlotSelectMode.Load)
+        {
+            return table.Get("Ui_Load");
+        }
+
+        return table.Get("Ui_Confirm");
+    }
+
+    // 슬롯 삭제 경고 팝업을 연다.
+    private void OnDeleteClicked(int slotId)
+    {
+        StringTable table = DataTableManager.StringTable;
+        string message = string.Format(table.Get("Ui_DeleteConfirm"), slotId);
+        string buttonLabel = table.Get("Ui_Delete");
+
+        confirmPopup.ShowPopup(message, buttonLabel, () => DeleteSlot(slotId));
+    }
+
+    // 선택한 슬롯을 삭제하고 불러오기 목록을 갱신한다.
+    private void DeleteSlot(int slotId)
+    {
+        if (!slotDelete.TryDelete(slotId))
+        {
+            Debug.LogError($"[SaveLoad] Slot {slotId} 삭제에 실패했습니다.");
+            return;
+        }
+
+        SaveChanged?.Invoke();
+
+        if (!previewReader.HasAnySave())
+        {
+            gameObject.SetActive(false);
+            return;
+        }
+
+        BuildRows(false);
+        ResetScroll();
+    }
+
+    // 확인된 슬롯을 새 게임 또는 불러오기 대상으로 저장한다.
     private void ConfirmSlot(int slotId)
     {
         if (mode == SlotSelectMode.Load)
