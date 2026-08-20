@@ -1,20 +1,18 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
 using Newtonsoft.Json;
 using UnityEngine;
 
-// 슬롯의 저장 경로·순번·파일 목록과 이전 저장본 정리를 관리한다.
+// 슬롯의 저장 경로를 관리하고, 세대 2개(Save_0/Save_1)를 번갈아 덮어써 손상에 대비한다.
 public class SaveSlot
 {
     private const string RootName = "Saves";
     private const string SlotPrefix = "Slot_";
     private const string SlotFormat = "D2";
     private const string FilePrefix = "Save_";
-    private const string OrderFormat = "D6";
     private const string TempExt = ".tmp";
     private const string SaveExt = ".sav";
-    private const int KeepCount = 2;
+    private const int GenerationCount = 2;
 
     private readonly SaveIO saveIO;
     private readonly SaveCheck saveCheck;
@@ -26,7 +24,7 @@ public class SaveSlot
         this.saveCheck = saveCheck;
     }
 
-    // 슬롯의 다음 순번으로 새 정상 저장본을 만든다.
+    // 두 세대 중 더 오래된 쪽에 새 저장본을 덮어쓴다.
     public bool TryWrite(int slotId, SaveFile saveFile)
     {
         string folder = SlotPath(slotId);
@@ -35,18 +33,15 @@ public class SaveSlot
         {
             Directory.CreateDirectory(folder);
 
-            int saveOrder = NextOrder(folder);
-            SaveFile output = CreateFile(slotId, saveOrder, saveFile);
-            string tempPath = SavePath(folder, saveOrder, TempExt);
-            string finalPath = SavePath(folder, saveOrder, SaveExt);
+            int latestOrder = LatestOrder(folder, out int latestGeneration);
+            int targetGeneration = OtherGeneration(latestGeneration);
+            int newOrder = latestOrder + 1;
 
-            if (!saveIO.TryWrite(tempPath, finalPath, output))
-            {
-                return false;
-            }
+            SaveFile output = CreateFile(slotId, newOrder, saveFile);
+            string tempPath = GenerationPath(folder, targetGeneration, TempExt);
+            string finalPath = GenerationPath(folder, targetGeneration, SaveExt);
 
-            CleanOld(folder);
-            return true;
+            return saveIO.TryWrite(tempPath, finalPath, output);
         }
         catch (IOException)
         {
@@ -62,34 +57,32 @@ public class SaveSlot
         }
     }
 
-    // 슬롯의 특정 순번 저장 파일을 읽는다.
-    public bool TryRead(int slotId, int saveOrder, out SaveFile saveFile)
+    // 두 세대 중 검증을 통과하는 가장 최신 저장본을 읽는다.
+    public bool TryReadLatest(int slotId, out SaveFile saveFile)
     {
         string folder = SlotPath(slotId);
-        string filePath = SavePath(folder, saveOrder, SaveExt);
-        return saveIO.TryRead(filePath, out saveFile);
+        SaveFile best = null;
+        int bestOrder = -1;
+
+        for (int generation = 0; generation < GenerationCount; generation++)
+        {
+            if (!TryReadValid(folder, slotId, generation, out SaveFile candidate)) continue;
+            if (candidate.saveOrder <= bestOrder) continue;
+
+            best = candidate;
+            bestOrder = candidate.saveOrder;
+        }
+
+        saveFile = best;
+        return best != null;
     }
 
-    // 슬롯의 저장 순번을 최신순으로 반환한다.
-    public bool TryOrders(int slotId, out int[] orders)
+    // 지정한 세대 파일을 읽고 검증까지 통과하는지 본다.
+    private bool TryReadValid(string folder, int slotId, int generation, out SaveFile saveFile)
     {
-        try
-        {
-            orders = ReadOrders(SlotPath(slotId));
-            Array.Sort(orders);
-            Array.Reverse(orders);
-            return true;
-        }
-        catch (IOException)
-        {
-            orders = Array.Empty<int>();
-            return false;
-        }
-        catch (UnauthorizedAccessException)
-        {
-            orders = Array.Empty<int>();
-            return false;
-        }
+        string filePath = GenerationPath(folder, generation, SaveExt);
+        if (!saveIO.TryRead(filePath, out saveFile)) return false;
+        return saveCheck.IsValidSave(saveFile, slotId, saveFile.saveOrder);
     }
 
     // 전달받은 값에 슬롯 정보와 체크섬을 붙인다.
@@ -106,67 +99,28 @@ public class SaveSlot
         };
     }
 
-    // 기존 저장 순번의 다음 번호를 계산한다.
-    private int NextOrder(string folder)
+    // 두 세대 파일 중 가장 높은 저장 순번과, 그 세대 번호를 찾는다 (둘 다 없으면 순번 0·세대 0).
+    private int LatestOrder(string folder, out int latestGeneration)
     {
-        int[] orders = ReadOrders(folder);
-        if (orders.Length == 0)
+        latestGeneration = 0;
+        int latestOrder = 0;
+
+        for (int generation = 0; generation < GenerationCount; generation++)
         {
-            return 1;
+            if (!saveIO.TryRead(GenerationPath(folder, generation, SaveExt), out SaveFile file)) continue;
+            if (file.saveOrder <= latestOrder) continue;
+
+            latestOrder = file.saveOrder;
+            latestGeneration = generation;
         }
 
-        Array.Sort(orders);
-        return orders[orders.Length - 1] + 1;
+        return latestOrder;
     }
 
-    // 슬롯 폴더의 정상 저장 파일 순번을 읽는다.
-    private int[] ReadOrders(string folder)
+    // 세대가 0·1 두 개뿐이므로 반대쪽 세대 번호를 돌려준다.
+    private int OtherGeneration(int generation)
     {
-        if (!Directory.Exists(folder))
-        {
-            return Array.Empty<int>();
-        }
-
-        string pattern = FilePrefix + "*" + SaveExt;
-        string[] files = Directory.GetFiles(folder, pattern);
-        List<int> orderList = new List<int>(files.Length);
-
-        foreach (string file in files)
-        {
-            string fileName = Path.GetFileNameWithoutExtension(file);
-            string orderText = fileName.Substring(FilePrefix.Length);
-            if (int.TryParse(orderText, out int order))
-            {
-                orderList.Add(order);
-            }
-        }
-
-        return orderList.ToArray();
-    }
-
-    // 정상 저장본 두 개를 남기고 오래된 파일을 지운다.
-    private void CleanOld(string folder)
-    {
-        try
-        {
-            int[] orders = ReadOrders(folder);
-            Array.Sort(orders);
-            int removeCount = Math.Max(0, orders.Length - KeepCount);
-
-            for (int index = 0; index < removeCount; index++)
-            {
-                string filePath = SavePath(folder, orders[index], SaveExt);
-                File.Delete(filePath);
-            }
-        }
-        catch (IOException error)
-        {
-            Debug.LogWarning($"오래된 세이브 파일을 정리하지 못했습니다: {error.Message}");
-        }
-        catch (UnauthorizedAccessException error)
-        {
-            Debug.LogWarning($"오래된 세이브 파일을 정리하지 못했습니다: {error.Message}");
-        }
+        return (GenerationCount - 1) - generation;
     }
 
     // 슬롯 번호에 맞는 폴더 경로를 만든다.
@@ -177,10 +131,10 @@ public class SaveSlot
         return Path.Combine(root, slotName);
     }
 
-    // 저장 순번과 확장자에 맞는 파일 경로를 만든다.
-    private string SavePath(string folder, int saveOrder, string extension)
+    // 세대 번호와 확장자에 맞는 파일 경로를 만든다.
+    private string GenerationPath(string folder, int generation, string extension)
     {
-        string fileName = FilePrefix + saveOrder.ToString(OrderFormat) + extension;
+        string fileName = FilePrefix + generation + extension;
         return Path.Combine(folder, fileName);
     }
 }

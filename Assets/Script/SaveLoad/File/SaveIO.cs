@@ -30,7 +30,7 @@ public class SaveIO
                 return false;
             }
 
-            File.Move(tempPath, finalPath);
+            MoveToFinal(tempPath, finalPath);
             return true;
         }
         catch (IOException)
@@ -70,6 +70,18 @@ public class SaveIO
             saveFile = null;
             return false;
         }
+    }
+
+    // 임시 파일을 최종 경로로 확정한다. 최종 경로에 이미 파일이 있으면(세대 재사용) 교체하고, 없으면 그대로 옮긴다.
+    private void MoveToFinal(string tempPath, string finalPath)
+    {
+        if (File.Exists(finalPath))
+        {
+            File.Replace(tempPath, finalPath, null);
+            return;
+        }
+
+        File.Move(tempPath, finalPath);
     }
 
     // JSON 문자열을 임시 파일에 쓰고 디스크까지 반영한다.

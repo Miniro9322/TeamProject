@@ -10,10 +10,8 @@ public class SaveManager : ITickable, IStartable
     private const int SlotId = 1;
 
     private readonly SaveSlot saveSlot;
-    private readonly SaveCheck saveCheck;
     private readonly SaveCapture saveCapture;
     private readonly SaveRestore saveRestore;
-    private readonly SpawnerManager spawnerManager;
     private readonly GameManager gameManager;
     private readonly DayNightButton dayNightButton;
 
@@ -21,18 +19,14 @@ public class SaveManager : ITickable, IStartable
 
     public SaveManager(
         SaveSlot saveSlot,
-        SaveCheck saveCheck,
         SaveCapture saveCapture,
         SaveRestore saveRestore,
-        SpawnerManager spawnerManager,
         GameManager gameManager,
         DayNightButton dayNightButton)
     {
         this.saveSlot = saveSlot;
-        this.saveCheck = saveCheck;
         this.saveCapture = saveCapture;
         this.saveRestore = saveRestore;
-        this.spawnerManager = spawnerManager;
         this.gameManager = gameManager;
         this.dayNightButton = dayNightButton;
 
@@ -80,29 +74,12 @@ public class SaveManager : ITickable, IStartable
         return saveSlot.TryWrite(SlotId, file);
     }
 
-    // 슬롯의 최신 정상 저장본부터 순서대로 검증해 처음 통과하는 세대를 적용한다.
+    // 슬롯의 두 세대 중 검증을 통과하는 최신 저장본을 적용한다.
     private bool TryLoad()
     {
-        if (!saveSlot.TryOrders(SlotId, out int[] orders)) return false;
+        if (!saveSlot.TryReadLatest(SlotId, out SaveFile file)) return false;
 
-        for (int i = 0; i < orders.Length; i++)
-        {
-            if (TryLoadOrder(orders[i], out SaveData data))
-            {
-                ApplyLoaded(data);
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private bool TryLoadOrder(int order, out SaveData data)
-    {
-        data = null;
-        if (!saveSlot.TryRead(SlotId, order, out SaveFile file)) return false;
-        if (!saveCheck.IsValidSave(file, SlotId, order)) return false;
-
-        data = file.saveData;
+        ApplyLoaded(file.saveData);
         return true;
     }
 

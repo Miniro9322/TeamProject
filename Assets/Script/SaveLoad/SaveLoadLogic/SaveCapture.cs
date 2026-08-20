@@ -100,7 +100,7 @@ public class SaveCapture
                 if (slot.IsEmpty) continue;
 
                 BuildSave save = CaptureBuild(region.ModuleId, s, slot.Occupant);
-                if (save != null) result.Add(save);
+                result.Add(save);
             }
         }
         return result.ToArray();
@@ -129,18 +129,13 @@ public class SaveCapture
             return save;
         }
 
-        if (occupant is House house)
-        {
-            save.buildKind = OccupantKind.Building;
-            save.buildKey = house.Config.HouseName;
-            save.upgradeCount = house.UpgradeCount;
-            save.workerAmount = 0;
-            save.constructPaid = ToCostSave(house.ConstructCostPaid);
-            save.upgradePaid = ToCostSave(house.TotalUpgradeSpent);
-            return save;
-        }
-
-        return null;
+        House house = (House)occupant;
+        save.buildKind = OccupantKind.Building;
+        save.buildKey = house.Config.HouseName;
+        save.upgradeCount = house.UpgradeCount;
+        save.constructPaid = ToCostSave(house.ConstructCostPaid);
+        save.upgradePaid = ToCostSave(house.TotalUpgradeSpent);
+        return save;
     }
 
     // 보유 영웅 로스터를 읽는다
