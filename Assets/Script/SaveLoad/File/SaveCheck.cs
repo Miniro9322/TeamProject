@@ -31,8 +31,8 @@ public class SaveCheck
         }
     }
 
-    // 저장 파일의 식별자·버전·슬롯·순번·체크섬을 검사한다.
-    public bool IsValidSave(SaveFile saveFile, int slotId, int saveOrder)
+    // 저장 파일의 식별자·버전·슬롯·체크섬을 검사한다 (순번은 보지 않음 — 읽을 때는 기대 순번이 없음).
+    public bool IsValidSave(SaveFile saveFile, int slotId)
     {
         if (IsMissing(saveFile))
         {
@@ -54,12 +54,18 @@ public class SaveCheck
             return false;
         }
 
-        if (HasWrongOrder(saveFile, saveOrder))
+        return HasWrongHash(saveFile) == false;
+    }
+
+    // 저장 파일의 식별자·버전·슬롯·순번·체크섬을 검사한다 (쓰기 직후 자기검증 전용 — 방금 쓰려던 순번과 비교).
+    public bool IsValidSave(SaveFile saveFile, int slotId, int saveOrder)
+    {
+        if (!IsValidSave(saveFile, slotId))
         {
             return false;
         }
 
-        return HasWrongHash(saveFile) == false;
+        return HasWrongOrder(saveFile, saveOrder) == false;
     }
 
     // 저장 파일이 비어 있는지 검사한다.

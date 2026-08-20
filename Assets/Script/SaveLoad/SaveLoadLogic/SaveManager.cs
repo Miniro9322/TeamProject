@@ -126,7 +126,7 @@ public class SaveManager : ITickable, IStartable
 #if UNITY_EDITOR
             return PlayerPrefs.GetInt(ToolKey, 0) == 1;
 #else
-            return false;
+            return true;
 #endif
         }
     }

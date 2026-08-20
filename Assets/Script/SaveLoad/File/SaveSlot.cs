@@ -74,7 +74,7 @@ public class SaveSlot
     private bool TryReadValid(string filePath, int slotId, out SaveFile saveFile)
     {
         if (!saveIO.TryRead(filePath, out saveFile)) return false;
-        return saveCheck.IsValidSave(saveFile, slotId, saveFile.saveOrder);
+        return saveCheck.IsValidSave(saveFile, slotId);
     }
 
     // 검증된 임시 파일을 정식 파일로 승격한다. 기존 정식 파일이 있으면 먼저 백업으로 밀어낸다.
