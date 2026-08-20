@@ -6,12 +6,14 @@ public readonly struct SlotPreviewInfo
     public readonly int DayCount;
     public readonly float PlayTime;
     public readonly string SaveTime;
+    public readonly int HeroCount;
 
-    public SlotPreviewInfo(bool hasSave, int dayCount, float playTime, string saveTime)
+    public SlotPreviewInfo(bool hasSave, int dayCount, float playTime, string saveTime, int heroCount)
     {
         HasSave = hasSave;
         DayCount = dayCount;
         PlayTime = playTime;
         SaveTime = saveTime;
+        HeroCount = heroCount;
     }
 }

@@ -16,10 +16,10 @@ public class SlotPreviewReader
     {
         if (!saveSlot.TryReadLatest(slotId, out SaveFile file))
         {
-            return new SlotPreviewInfo(false, 0, 0f, string.Empty);
+            return new SlotPreviewInfo(false, 0, 0f, string.Empty, 0);
         }
 
-        return new SlotPreviewInfo(true, file.saveData.dayCount, file.saveData.playTime, file.saveData.saveTime);
+        return new SlotPreviewInfo(true, file.saveData.dayCount, file.saveData.playTime, file.saveData.saveTime, file.saveData.heroList.Length);
     }
 
     // 슬롯이 1개라도 저장되어 있는지 확인한다 
