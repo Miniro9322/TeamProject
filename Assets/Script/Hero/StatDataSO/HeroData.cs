@@ -1,15 +1,18 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
+
+[Serializable]
+public struct AttackDescription
+{
+    public Sprite icon;
+    public string attackDescriptionKey;
+}
 
 [CreateAssetMenu(fileName = "HeroData", menuName = "HeroData/HeroData")]
 public class HeroData : ScriptableObject
 {
-    public struct AttackDescription
-    {
-        public Image icon;
-        public string attackDescriptionKey;
-    }
+
     public int UnitId;
     public int Tier;
     public string HeroName;

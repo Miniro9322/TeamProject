@@ -1,4 +1,5 @@
 using Cysharp.Threading.Tasks;
+using System.Collections.Generic;
 using System.Threading;
 using TMPro;
 using UnityEditor.Sprites;
@@ -8,6 +9,7 @@ using UnityEngine.UI;
 public class HeroArchiveUI : MonoBehaviour
 {
     [SerializeField] private HeroArchiveItem itemPrefab;
+    [SerializeField] private HeroDescItem descItemPrefab;
     [SerializeField] private HeroRegistry registry;
     [SerializeField] private Transform listContent;
 
@@ -21,6 +23,8 @@ public class HeroArchiveUI : MonoBehaviour
     private float fadeDuration = 0.35f;
     private CancellationTokenSource revealCts;
     private bool isBookOpening = false;
+    private readonly Dictionary<HeroData, List<HeroDescItem>> descItemGroups = new();
+    private HeroData currentHero;
 
     private void Awake()
     {
@@ -39,10 +43,40 @@ public class HeroArchiveUI : MonoBehaviour
             HeroArchiveItem item = Instantiate(itemPrefab, listContent);
             item.Setup(data, OnHeroArchiveClicked);
         }
+        foreach (HeroData data in registry.AllHeroDatas)
+            BuildDescItems(data);
+
         HeroData heroData = registry.AllHeroDatas[0];
         mainImage.sprite = heroData.Icon;
         nameText.text = DataTableManager.StringTable.Get(heroData.HeroNameKey);
         descText.text = DataTableManager.StringTable.Get(heroData.HeroDescriptionKey);
+        ShowDescItems(heroData);
+    }
+
+    private void BuildDescItems(HeroData data)
+    {
+        var items = new List<HeroDescItem>();
+        foreach (AttackDescription desc in data.AttackDescriptions)
+        {
+            HeroDescItem item = Instantiate(descItemPrefab, rightPanel.transform);
+            item.SetUp(desc);
+            item.gameObject.SetActive(false);
+            items.Add(item);
+        }
+        descItemGroups[data] = items;
+    }
+
+    private void ShowDescItems(HeroData data)
+    {
+        if (currentHero != null && descItemGroups.TryGetValue(currentHero, out var prevItems))
+            foreach (HeroDescItem item in prevItems)
+                item.gameObject.SetActive(false);
+
+        if (descItemGroups.TryGetValue(data, out var items))
+            foreach (HeroDescItem item in items)
+                item.gameObject.SetActive(true);
+
+        currentHero = data;
     }
 
     private void OnHeroArchiveClicked(HeroData picked)
@@ -51,6 +85,7 @@ public class HeroArchiveUI : MonoBehaviour
         mainImage.sprite = picked.Icon;
         nameText.text = DataTableManager.StringTable.Get(picked.HeroNameKey);
         descText.text = DataTableManager.StringTable.Get(picked.HeroDescriptionKey);
+        ShowDescItems(picked);
     }
 
     private void PlayOpenAndReveal()

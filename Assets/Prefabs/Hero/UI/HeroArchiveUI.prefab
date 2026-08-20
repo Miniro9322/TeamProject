@@ -361,6 +361,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HeroArchiveUI
   itemPrefab: {fileID: 4240659223196951748, guid: 20b09dac4d9045a439a68b11a690a738, type: 3}
+  descItemPrefab: {fileID: 6372893474539819734, guid: fa8c1bfa02e52e446a64f5833079e5b7, type: 3}
   registry: {fileID: 0}
   listContent: {fileID: 6057146806450339993}
   mainImage: {fileID: 8430594304459786676}
@@ -775,6 +776,7 @@ GameObject:
   m_Component:
   - component: {fileID: 6208885318183085919}
   - component: {fileID: 6683636643396846709}
+  - component: {fileID: 4554091426871065637}
   m_Layer: 5
   m_Name: Right
   m_TagString: Untagged
@@ -798,8 +800,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 274, y: -20}
-  m_SizeDelta: {x: 460, y: 570}
+  m_AnchoredPosition: {x: 274, y: -23.059}
+  m_SizeDelta: {x: 460, y: 540.2019}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!225 &6683636643396846709
 CanvasGroup:
@@ -813,6 +815,32 @@ CanvasGroup:
   m_Interactable: 1
   m_BlocksRaycasts: 1
   m_IgnoreParentGroups: 0
+--- !u!114 &4554091426871065637
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7912019224943615155}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 59f8146938fff824cb5fd77236b75775, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.VerticalLayoutGroup
+  m_Padding:
+    m_Left: 0
+    m_Right: 0
+    m_Top: 10
+    m_Bottom: 0
+  m_ChildAlignment: 0
+  m_Spacing: 20
+  m_ChildForceExpandWidth: 0
+  m_ChildForceExpandHeight: 0
+  m_ChildControlWidth: 0
+  m_ChildControlHeight: 0
+  m_ChildScaleWidth: 0
+  m_ChildScaleHeight: 0
+  m_ReverseArrangement: 0
 --- !u!1 &8061886506387200074
 GameObject:
   m_ObjectHideFlags: 0
