@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using UnityEngine.UI;
 using TMPro;
 
 #if UNITY_EDITOR
@@ -18,6 +19,11 @@ public class TitleUI : MonoBehaviour
     [SerializeField] private GameObject LoadingPanel;
     [SerializeField] private AudioMixer mixer;
 
+    [SerializeField] private Button loadButton;
+    [SerializeField] private SlotSelectPanel slotSelectPanel;
+ 
+    private readonly SlotPreviewReader previewReader = new SlotPreviewReader();
+
 
     private void Awake()
     {
@@ -26,6 +32,9 @@ public class TitleUI : MonoBehaviour
         settingPanel.SetActive(false);
         QuitAlert.SetActive(false);
         upgradePanel.SetActive(false);
+        slotSelectPanel.gameObject.SetActive(false);
+        loadButton.interactable = previewReader.HasAnySave();
+        slotSelectPanel.SlotConfirmed += OnSlotConfirmed;
     }
 
     private async UniTaskVoid ApplyResolution()
@@ -50,7 +59,26 @@ public class TitleUI : MonoBehaviour
         mixer.SetFloat("System", PlayerPrefs.GetFloat("System", 0f));
     }
 
-    public void OnStart()
+
+    // "새 게임 시작" 버튼: 슬롯 선택 패널을 새 게임 모드로 연다.
+    public void OnNewGame()
+    {
+        slotSelectPanel.OpenForNewGame();
+    }
+   // "불러오기" 버튼: 슬롯 선택 패널을 불러오기 모드로 연다.
+    public void OnLoad()
+    {
+        slotSelectPanel.OpenForLoad();
+    }
+
+    // SlotSelectPanel.SlotConfirmed 구독자: 슬롯이 확정되면 MainScene으로 넘어간다.
+    private void OnSlotConfirmed()
+    {
+        EnterMainScene();
+    }
+
+    // 로딩 화면을 띄우고 MainScene으로 넘어가는 본체(OnSlotConfirmed에서 재사용).
+    private void EnterMainScene()
     {
         LoadingPanel.SetActive(true);
         LoadSceneAsync("MainScene").Forget();

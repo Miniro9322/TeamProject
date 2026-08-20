@@ -6,8 +6,8 @@ using VContainer.Unity;
 // GameManager를 고치지 않기 위해, 이미 있는 ChangeToDay/ChangeToNight 이벤트를 구독만 해서 저장한다
 // (대가: 저장이 실패해도 낮·밤 전환 자체는 막지 않는다 — 직전 정상 저장본은 그대로 안전하게 남는다).
 public class SaveManager : ITickable, IStartable
-{
-    private const int SlotId = 1;
+{ 
+
 
     private readonly SaveSlot saveSlot;
     private readonly SaveCapture saveCapture;
@@ -41,6 +41,10 @@ public class SaveManager : ITickable, IStartable
         {
             return;
         }
+        if (SelectedSaveSlot.IsNewGame)
+        {
+             return;   // 새 게임이면 로드를 건너뛴다
+         }
 
         LoadDeferred().Forget();
     }
@@ -81,13 +85,13 @@ public class SaveManager : ITickable, IStartable
         file.fileTag = SaveCheck.FileTag;
         file.saveVersion = SaveCheck.SaveVersion;
         file.saveData = data;
-        return saveSlot.TryWrite(SlotId, file);
+        return saveSlot.TryWrite(SelectedSaveSlot.SlotId, file);
     }
 
     // 슬롯의 두 세대 중 검증을 통과하는 최신 저장본을 적용한다.
     private bool TryLoad()
     {
-        if (!saveSlot.TryReadLatest(SlotId, out SaveFile file)) return false;
+        if (!saveSlot.TryReadLatest(SelectedSaveSlot.SlotId, out SaveFile file)) return false;
 
         ApplyLoaded(file.saveData);
         return true;
