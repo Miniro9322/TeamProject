@@ -9,6 +9,8 @@ public class SlotRowView : MonoBehaviour
 {
     private const int SecondsPerHour = 3600;
     private const int SecondsPerMinute = 60;
+    private const float DeleteRight = 0.88f;
+    private const float FullRight = 1f;
 
     [SerializeField] private Button rowButton;
     [SerializeField] private Button deleteButton;
@@ -56,7 +58,21 @@ public class SlotRowView : MonoBehaviour
         this.onDeleteClicked = onDeleteClicked;
 
         deleteButton.gameObject.SetActive(canDelete);
+        float right = GetRight(canDelete);
+        dayText.rectTransform.anchorMax = new Vector2(right, dayText.rectTransform.anchorMax.y);
+        saveTimeText.rectTransform.anchorMax = new Vector2(right, saveTimeText.rectTransform.anchorMax.y);
         RefreshText();
+    }
+
+    // 삭제 버튼 표시 여부에 맞는 정보 영역의 오른쪽 끝을 반환한다.
+    private float GetRight(bool canDelete)
+    {
+        if (canDelete)
+        {
+            return DeleteRight;
+        }
+
+        return FullRight;
     }
 
     // 현재 언어로 슬롯의 모든 표시 문구를 갱신한다.
