@@ -689,9 +689,9 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
         _bar.ResetTo(Hp, MaxHp); // 스폰 시 보간 없이 즉시 풀피로(풀 재사용 시 이전 값 잔상 제거)
         IsDead = false;
         // 확인용 임시 로그. bossName 가드 아래에 두면 보스가 아닌 몹은 그 return에 걸려 안 찍히므로 가드보다 위에 둔다.
-        string dayInfo = gameManager != null ? $"{gameManager.DayCount}일차" : "gameManager 미주입 → 일차·지역 배율 미적용";
-        Debug.Log($"[{enemyKey}] 체력 {Hp} · 공격 {AttackPower} · 방어 {Defense} · " +
-            $"해금 {SpawnerManager.UnlockedRegionCount}개(체력×{RegionHpScale()}, 방어×{RegionDefenseScale()}) · {dayInfo}", this);
+        // string dayInfo = gameManager != null ? $"{gameManager.DayCount}일차" : "gameManager 미주입 → 일차·지역 배율 미적용";
+        // Debug.Log($"[{enemyKey}] 체력 {Hp} · 공격 {AttackPower} · 방어 {Defense} · " +
+        //     $"해금 {SpawnerManager.UnlockedRegionCount}개(체력×{RegionHpScale()}, 방어×{RegionDefenseScale()}) · {dayInfo}", this);
         if(bossName == null)return;
         bossName.text = DataTableManager.StringTable.Get(data.Name);
         //MoveSpeed = data.MoveSpeed;
