@@ -21247,7 +21247,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
+  m_Sprite: {fileID: 21300000, guid: b202826d1674df54fa62122408c554f1, type: 3}
   m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -21283,7 +21283,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 160, y: 30}
+  m_SizeDelta: {x: 160, y: 35}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1001 &972488183
 PrefabInstance:
@@ -28951,6 +28951,7 @@ GameObject:
   - component: {fileID: 1340301379}
   - component: {fileID: 1340301378}
   - component: {fileID: 1340301377}
+  - component: {fileID: 1340301380}
   m_Layer: 5
   m_Name: Text (TMP)
   m_TagString: Untagged
@@ -29072,11 +29073,25 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 207339974}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 200, y: 50}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 410, y: -30.11}
+  m_SizeDelta: {x: 800, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1340301380
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1340301376}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3245ec927659c4140ac4f8d17403cc18, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.ContentSizeFitter
+  m_HorizontalFit: 0
+  m_VerticalFit: 2
 --- !u!1 &1340857552
 GameObject:
   m_ObjectHideFlags: 0
@@ -32853,107 +32868,130 @@ MonoBehaviour:
     waypoints:
     - target: {fileID: 546744601}
       activationCheck: {fileID: 0}
-      messageKey: 
+      blockedWhile: {fileID: 0}
+      messageKey: Tutorial_Resource
     completesOnAcknowledge: 1
   - id: 3
     messageKey: 
     waypoints:
     - target: {fileID: 919017665}
       activationCheck: {fileID: 0}
-      messageKey: 
+      blockedWhile: {fileID: 0}
+      messageKey: Tutorial_AssignWorker_Step1
     - target: {fileID: 581258029}
       activationCheck: {fileID: 0}
-      messageKey: 
+      blockedWhile: {fileID: 0}
+      messageKey: Tutorial_AssignWorker_Step2
     - target: {fileID: 536869663}
       activationCheck: {fileID: 0}
-      messageKey: 
+      blockedWhile: {fileID: 0}
+      messageKey: Tutorial_AssignWorker_Step3
     - target: {fileID: 194466290}
       activationCheck: {fileID: 0}
-      messageKey: 
+      blockedWhile: {fileID: 0}
+      messageKey: Tutorial_AssignWorker_Step4
     - target: {fileID: 413260942}
       activationCheck: {fileID: 0}
-      messageKey: 
+      blockedWhile: {fileID: 0}
+      messageKey: Tutorial_AssignWorker_Step5
     - target: {fileID: 536869663}
       activationCheck: {fileID: 1247568828}
-      messageKey: 
+      blockedWhile: {fileID: 0}
+      messageKey: Tutorial_AssignWorker_Step6
     - target: {fileID: 285490483}
       activationCheck: {fileID: 0}
-      messageKey: 
+      blockedWhile: {fileID: 0}
+      messageKey: Tutorial_AssignWorker_Step7
     completesOnAcknowledge: 0
   - id: 4
     messageKey: 
     waypoints:
     - target: {fileID: 1710585587}
       activationCheck: {fileID: 0}
-      messageKey: 
+      blockedWhile: {fileID: 0}
+      messageKey: Tutorial_BuildingUpgrade
     completesOnAcknowledge: 1
   - id: 1
     messageKey: 
     waypoints:
     - target: {fileID: 787471839}
       activationCheck: {fileID: 0}
-      messageKey: 
+      blockedWhile: {fileID: 0}
+      messageKey: Tutorial_BuildHouse_Step1
     - target: {fileID: 2070114976}
       activationCheck: {fileID: 0}
-      messageKey: 
+      blockedWhile: {fileID: 0}
+      messageKey: Tutorial_BuildHouse_Step2
     - target: {fileID: 413260942}
       activationCheck: {fileID: 0}
-      messageKey: 
+      blockedWhile: {fileID: 0}
+      messageKey: Tutorial_BuildHouse_Step3
     completesOnAcknowledge: 0
   - id: 2
     messageKey: 
     waypoints:
-    - target: {fileID: 1103873879}
-      activationCheck: {fileID: 0}
-      messageKey: 
     - target: {fileID: 803446077}
       activationCheck: {fileID: 0}
-      messageKey: 
+      blockedWhile: {fileID: 0}
+      messageKey: Tutorial_AddCitizen_Step2
     - target: {fileID: 498625124}
       activationCheck: {fileID: 0}
-      messageKey: 
+      blockedWhile: {fileID: 0}
+      messageKey: Tutorial_AddCitizen_Step3
     - target: {fileID: 1181745799}
       activationCheck: {fileID: 0}
-      messageKey: 
+      blockedWhile: {fileID: 0}
+      messageKey: Tutorial_AddCitizen_Step4
+    - target: {fileID: 1103873879}
+      activationCheck: {fileID: 0}
+      blockedWhile: {fileID: 0}
+      messageKey: Tutorial_AddCitizen_Step1
     completesOnAcknowledge: 0
   - id: 5
-    messageKey: 
+    messageKey: Tutorial_PlaceHero_Step4
     waypoints:
-    - target: {fileID: 1415009881}
-      activationCheck: {fileID: 0}
-      messageKey: 
-    - target: {fileID: 865059033}
-      activationCheck: {fileID: 0}
-      messageKey: 
-    - target: {fileID: 991506367}
-      activationCheck: {fileID: 0}
-      messageKey: 
     - target: {fileID: 2127323373}
       activationCheck: {fileID: 0}
-      messageKey: 
+      blockedWhile: {fileID: 0}
+      messageKey: Tutorial_PlaceHero_Step1
+    - target: {fileID: 1415009881}
+      activationCheck: {fileID: 0}
+      blockedWhile: {fileID: 2127323372}
+      messageKey: Tutorial_PlaceHero_Step2
+    - target: {fileID: 39460964}
+      activationCheck: {fileID: 0}
+      blockedWhile: {fileID: 0}
+      messageKey: Tutorial_PlaceHero_Step3
+    - target: {fileID: 991506367}
+      activationCheck: {fileID: 0}
+      blockedWhile: {fileID: 0}
+      messageKey: Tutorial_PlaceHero_Step4
     completesOnAcknowledge: 0
   - id: 6
     messageKey: 
     waypoints:
     - target: {fileID: 1300243806}
       activationCheck: {fileID: 0}
-      messageKey: 
+      blockedWhile: {fileID: 0}
+      messageKey: Tutorial_HeroUpgrade
     completesOnAcknowledge: 1
   - id: 7
     messageKey: 
     waypoints:
     - target: {fileID: 991506367}
       activationCheck: {fileID: 0}
-      messageKey: 
+      blockedWhile: {fileID: 0}
+      messageKey: Tutorial_HeroMerge
     completesOnAcknowledge: 1
   - id: 8
     messageKey: 
     waypoints:
     - target: {fileID: 141211301}
       activationCheck: {fileID: 0}
-      messageKey: 
+      blockedWhile: {fileID: 0}
+      messageKey: Tutorial_NightButton
     completesOnAcknowledge: 1
-  placeHeroMapClickMessageKey: 
+  placeHeroMapClickMessageKey: Tutorial_PlaceHero_Step4
 --- !u!1 &1528366816
 GameObject:
   m_ObjectHideFlags: 0
@@ -34186,6 +34224,7 @@ GameObject:
   - component: {fileID: 1574875537}
   - component: {fileID: 1574875539}
   - component: {fileID: 1574875538}
+  - component: {fileID: 1574875540}
   m_Layer: 5
   m_Name: Text (TMP)
   m_TagString: Untagged
@@ -34241,8 +34280,8 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4281479730
-  m_fontColor: {r: 0.19607843, g: 0.19607843, b: 0.19607843, a: 1}
+    rgba: 4294967295
+  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -34266,8 +34305,8 @@ MonoBehaviour:
   m_fontSizeMin: 18
   m_fontSizeMax: 72
   m_fontStyle: 0
-  m_HorizontalAlignment: 2
-  m_VerticalAlignment: 512
+  m_HorizontalAlignment: 32
+  m_VerticalAlignment: 4096
   m_textAlignment: 65535
   m_characterSpacing: 0
   m_characterHorizontalScale: 1
@@ -34312,6 +34351,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1574875536}
   m_CullTransparentMesh: 1
+--- !u!114 &1574875540
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1574875536}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 49beb084dd5019e45a90f32e065ce6f6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LocalizeText
+  key: Tutorial_NextButton
 --- !u!114 &1578330295 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: -3547879118163182433, guid: a4025bf2052e78a4d9f330036d04bd34, type: 3}

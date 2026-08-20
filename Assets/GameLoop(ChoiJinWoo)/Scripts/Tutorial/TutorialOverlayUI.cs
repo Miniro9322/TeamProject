@@ -43,6 +43,10 @@ public class TutorialOverlayUI : MonoBehaviour
     public void SetMessage(string messageKey)
     {
         messageText.text = DataTableManager.StringTable.Get(messageKey);
+
+        // TooltipUi.Show()와 같은 이유 - 텍스트 길이가 바뀌면 Content Size Fitter가 다음 프레임에야
+        // 크기를 반영하는데, 이번 프레임에 곧장 messageBox.rect로 위치를 계산하니 즉시 반영해야 한다.
+        LayoutRebuilder.ForceRebuildLayoutImmediate(messageBox);
     }
 
     public void Hide()

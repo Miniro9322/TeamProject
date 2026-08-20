@@ -15,6 +15,11 @@ public class TutorialWaypoint
         "activationCheck는 그 안의 아이콘 오브젝트(지어진 뒤에만 켜짐)로 따로 지정한다.")]
     public GameObject activationCheck;
 
+    [Tooltip("이 오브젝트가 켜져 있는 동안엔 target이 활성 상태여도 이 waypoint를 건너뛴다. " +
+        "예: 거점 UI가 열려있는 동안엔 거점 밖 버튼들이 화면에 같이 떠있어도 아직 그 차례가 아니게 " +
+        "만들 때, 그 버튼들의 blockedWhile에 거점 패널을 지정한다.")]
+    public GameObject blockedWhile;
+
     [Tooltip("비워두면 이 단계의 기본 messageKey를 그대로 쓴다.")]
     public string messageKey;
 }

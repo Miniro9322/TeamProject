@@ -19,6 +19,7 @@ public class TutorialManager : MonoBehaviour
     private BaseConstructor baseConstructor;
     private HeroRoster heroRoster;
     private PlacePalette placePalette;
+    private BuildingPanel buildingPanel;
     private TutorialState state;
 
     private int currentIndex = -1;
@@ -29,12 +30,14 @@ public class TutorialManager : MonoBehaviour
 
     [Inject]
     private void Construct(CitizenManager citizenManager,
-        BaseConstructor baseConstructor, HeroRoster heroRoster, PlacePalette placePalette, TutorialState state)
+        BaseConstructor baseConstructor, HeroRoster heroRoster, PlacePalette placePalette,
+        BuildingPanel buildingPanel, TutorialState state)
     {
         this.citizenManager = citizenManager;
         this.baseConstructor = baseConstructor;
         this.heroRoster = heroRoster;
         this.placePalette = placePalette;
+        this.buildingPanel = buildingPanel;
         this.state = state;
     }
 
@@ -62,6 +65,7 @@ public class TutorialManager : MonoBehaviour
         citizenManager.CitizenChanged += OnCitizenChanged;
         baseConstructor.Built += OnBuilt;
         heroRoster.Changed += OnHeroRosterChanged;
+        buildingPanel.Upgraded += OnUpgraded;
         overlay.AcknowledgeClicked += OnAcknowledgeClicked;
     }
 
@@ -70,6 +74,7 @@ public class TutorialManager : MonoBehaviour
         citizenManager.CitizenChanged -= OnCitizenChanged;
         baseConstructor.Built -= OnBuilt;
         heroRoster.Changed -= OnHeroRosterChanged;
+        buildingPanel.Upgraded -= OnUpgraded;
         overlay.AcknowledgeClicked -= OnAcknowledgeClicked;
     }
 
@@ -116,6 +121,7 @@ public class TutorialManager : MonoBehaviour
         {
             var waypoint = waypoints[i];
             if (waypoint?.target == null) continue;
+            if (waypoint.blockedWhile != null && waypoint.blockedWhile.activeInHierarchy) continue;
 
             GameObject gate = waypoint.activationCheck != null ? waypoint.activationCheck : waypoint.target.gameObject;
             if (gate.activeInHierarchy) return waypoint;
@@ -214,6 +220,14 @@ public class TutorialManager : MonoBehaviour
         {
             if (citizenManager.UsedCitizen > usedCitizenSnapshot) CompleteStep();
         }
+    }
+
+    // 건물 업그레이드 언급 단계는 completesOnAcknowledge로 "다음"을 눌러도 넘어가지만,
+    // 실제로 업그레이드 버튼을 눌렀다면 굳이 "다음"을 또 누르게 하지 않고 그걸로 바로 완료한다.
+    private void OnUpgraded()
+    {
+        if (!IsActive(TutorialStepId.BuildingUpgradeMention)) return;
+        CompleteStep();
     }
 
     private void OnHeroRosterChanged()
