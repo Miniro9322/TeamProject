@@ -100,7 +100,9 @@ public class RushAttackSkillSO : AttackSkillDataSO
     private void ApplyHit(EnemyBase owner, Hero target)
     {
         if (target == null || target.IsDead) return;
-        int dmg = damage > 0f ? Mathf.RoundToInt(damage) : owner.AttackPower;
+        // 5일마다 한 단계(+10). 괄호가 없으면 (10*DayCount)/5 = 매일 +2가 되어 계단이 생기지 않는다.
+        int subDamage = 10 * (owner.GameManager.DayCount / 5);
+        int dmg = damage > 0f ? Mathf.RoundToInt(damage+subDamage) : owner.AttackPower+subDamage;
         EnemySoundManager.Play("RushAttack");
         EnemySoundManager.Play("RushAttackHit");
         target.TakeDamage(dmg);

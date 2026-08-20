@@ -122,4 +122,9 @@ public class BuildModePanel : MonoBehaviour
         else
             view.SetReplace();
     }
+
+    public void OnOffButton()
+    {
+        view.ClearMode();
+    }
 }
