@@ -146,9 +146,15 @@ public class BuildingPanel : MonoBehaviour, IClosablePanel
         house = null;
     }
 
+    // 튜토리얼이 "업그레이드 버튼을 실제로 눌렀는지"만 골라 판정할 수 있도록 알려준다.
+    public event System.Action Upgraded;
+
     public void OnUpgrade()
     {
-        Occupant?.Upgrade();
+        if (Occupant == null) return;
+
+        Occupant.Upgrade();
+        Upgraded?.Invoke();
     }
 
     public void OnDemolish()

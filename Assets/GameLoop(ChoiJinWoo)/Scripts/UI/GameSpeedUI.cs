@@ -77,10 +77,12 @@ public class GameSpeedUI : MonoBehaviour
         GameSpeed = Speed.Normal;
     }
 
+    // 밤마다 UiManager.ToggleGameSpeedUi(true)로 이 UI가 다시 켜질 때 호출된다. Normal로 강제
+    // 초기화하지 않고 지난 밤에 고른 속도를 그대로 이어간다 - ResultState.Exit()이 밤 사이
+    // Time.timeScale을 1로 되돌려놓으므로, 여기서 다시 적용해 표시와 실제 배속을 맞춰준다.
     private void OnEnable()
     {
-        beforeTimeSpeed = Speed.Normal;
-        GameSpeed = Speed.Normal;
+        GameSpeed = gameSpeed;
     }
 
     private void Update()
