@@ -717,7 +717,20 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
         return table[Mathf.Min(unlocked, table.Length - 1)];
     }
 
-    private float RegionHpScale() => RegionScale(RegionHpScaleTable, RegionBossHpScaleTable);
+    // 전 지역 해금이 끝나면 위 표가 마지막 칸에서 멈춘다 — 그 뒤로는 판이 더 길어져도 보스가 그 자리에 선다.
+    // 그래서 해금이 다 끝난 뒤부터 10라운드마다 배율에 +2를 더해 계속 오르게 한다.
+    // 기준점은 "전 지역 해금을 확인한 라운드"라 해금 직후엔 +0에서 시작한다(끊기지 않게).
+    // 보스만 적용한다 — 잡몹은 DayCount × UpHealthScale로 이미 매 라운드 오르고 있다.
+    private const int BossHpStepRounds = 10;
+    private const float BossHpStepScale = 2f;
+
+    private float BossFullUnlockHpBonus()
+    {
+        if (Class != EnemyClass.Boss) return 0f;
+        return SpawnerManager.RoundsSinceFullUnlock / BossHpStepRounds * BossHpStepScale;
+    }
+
+    private float RegionHpScale() => RegionScale(RegionHpScaleTable, RegionBossHpScaleTable) + BossFullUnlockHpBonus();
     private float RegionDefenseScale() => RegionScale(RegionDefenseScaleTable, RegionBossDefenseScaleTable);
 
     private void RecordBaseStats(float hp, float atk, float attackSpeed, float def, float spd)
