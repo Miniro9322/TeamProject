@@ -60,7 +60,6 @@ public abstract class DebuffSO : ScriptableObject
         }
 
         ctx.ledger?.Apply(type, dur);
-
         // 장부가 없는 대상 — 지금은 영웅 — 은 이펙트를 그려 줄 곳이 없다.
         // 적은 EnemyDebuffEffects가 장부를 보고 그리지만, 영웅엔 장부도 그 컴포넌트도 없다(Hero.cs는 팀원 소유).
         // 그래서 여기서 DebuffEffectView에 직접 알려 준다. 지속 피해는 DotRegistry가 자기 장부로
@@ -76,7 +75,7 @@ public abstract class DebuffSO : ScriptableObject
     /// 이 파생형이 장부 없는 대상의 이펙트 표시를 스스로 굴리는가.
     /// 지속 피해(DotDebuffSO)만 true — DotRegistry가 만료·사망·낮 전환까지 챙기며 매 프레임 DebuffEffectView에 밀어 준다.
     /// </summary>
-    protected virtual bool DrivesOwnEffectView => false;
+    protected virtual bool DrivesOwnEffectView => false;    
 
     /// <summary>
     /// 실제 효과를 건다. 대상이 이 디버프를 받을 통로가 없으면 false.
