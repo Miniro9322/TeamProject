@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3e63ecebd4cd6e044a8a127ea3df05bc, type: 3}
   m_Name: MageAttackData
   m_EditorClassIdentifier: Assembly-CSharp::AttackDataSO
-  range: 3
+  range: 2
   rangeShape: 0
   unattackableTarget: 1
   attackType: 0
@@ -24,6 +24,7 @@ MonoBehaviour:
   areaShape: 1
   areaRange: 0
   lineLength: 2
+  areaCenterOnTarget: 0
   chainRange: 2
   chainCount: 3
   chainFalloff: 0.8
@@ -40,6 +41,7 @@ MonoBehaviour:
   projectilePrefab: {fileID: 6807546537330266764, guid: 5c945ca2d40906c4fba022d3696c31d9, type: 3}
   clipLength: 0.53333336
   buffList: []
+  targetDebuffs: []
   groundZonePrefab: {fileID: 0}
   attackEffect: {fileID: 0}
   attackEffectLifetime: 1
