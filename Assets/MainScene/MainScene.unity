@@ -5649,7 +5649,7 @@ MonoBehaviour:
   rangeInput: {fileID: 314587633}
   combineManager: {fileID: 1508222711}
   desertZone: {fileID: 886515118}
-  playerSkillPanel: {fileID: 0}
+  playerSkillPanel: {fileID: 192604935}
 --- !u!114 &314587633
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -26891,6 +26891,63 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 471596, guid: a14248a984caa9d4c82af2fdba6fa409, type: 3}
   m_PrefabInstance: {fileID: 1348872629}
   m_PrefabAsset: {fileID: 0}
+--- !u!1001 &1350282879
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 215141906874007827, guid: e5fb5ad14a3b61545bbd7425c7545a7e, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 327.83893
+      objectReference: {fileID: 0}
+    - target: {fileID: 215141906874007827, guid: e5fb5ad14a3b61545bbd7425c7545a7e, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 424.25433
+      objectReference: {fileID: 0}
+    - target: {fileID: 215141906874007827, guid: e5fb5ad14a3b61545bbd7425c7545a7e, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 102.14011
+      objectReference: {fileID: 0}
+    - target: {fileID: 215141906874007827, guid: e5fb5ad14a3b61545bbd7425c7545a7e, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 215141906874007827, guid: e5fb5ad14a3b61545bbd7425c7545a7e, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 215141906874007827, guid: e5fb5ad14a3b61545bbd7425c7545a7e, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 215141906874007827, guid: e5fb5ad14a3b61545bbd7425c7545a7e, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 215141906874007827, guid: e5fb5ad14a3b61545bbd7425c7545a7e, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 215141906874007827, guid: e5fb5ad14a3b61545bbd7425c7545a7e, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 215141906874007827, guid: e5fb5ad14a3b61545bbd7425c7545a7e, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7244306132020136334, guid: e5fb5ad14a3b61545bbd7425c7545a7e, type: 3}
+      propertyPath: m_Name
+      value: EnemySoundManager
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: e5fb5ad14a3b61545bbd7425c7545a7e, type: 3}
 --- !u!1001 &1352914512
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -33465,8 +33522,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d728896267ef7ca42a722b23e25412f7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HeroCheatSpawnUI
-  registry: {fileID: 0}
-  game: {fileID: 0}
+  registry: {fileID: 1508222712}
+  game: {fileID: 314587623}
   listContent: {fileID: 1535291413}
   itemPrefab: {fileID: 2204017482995656447, guid: 2759a8bac2b4e3040a6775f2cdd341ce, type: 3}
   rosterPanel: {fileID: 1619204128}
@@ -44406,3 +44463,4 @@ SceneRoots:
   - {fileID: 931396756}
   - {fileID: 2075775772}
   - {fileID: 934245908}
+  - {fileID: 1350282879}
