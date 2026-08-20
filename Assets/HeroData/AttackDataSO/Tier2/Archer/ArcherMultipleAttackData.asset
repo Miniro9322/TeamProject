@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3e63ecebd4cd6e044a8a127ea3df05bc, type: 3}
   m_Name: ArcherMultipleAttackData
   m_EditorClassIdentifier: Assembly-CSharp::AttackDataSO
-  range: 5
+  range: 3
   rangeShape: 0
   unattackableTarget: 1
   attackType: 0
@@ -24,6 +24,7 @@ MonoBehaviour:
   areaShape: 0
   areaRange: 1
   lineLength: 2
+  areaCenterOnTarget: 0
   chainRange: 2
   chainCount: 3
   chainFalloff: 0.8
