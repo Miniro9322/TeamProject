@@ -22,7 +22,7 @@ public class HeroArchiveUI : MonoBehaviour
     [SerializeField] private CanvasGroup rightPanel;
     private float fadeDuration = 0.35f;
     private CancellationTokenSource revealCts;
-    private bool isBookOpening = false;
+    //private bool isBookOpening = false;
     private readonly Dictionary<HeroData, List<HeroDescItem>> descItemGroups = new();
     private HeroData currentHero;
 
@@ -97,7 +97,7 @@ public class HeroArchiveUI : MonoBehaviour
             bookAnimator.SetTrigger("Open");
         }
         SetRevealAlpha(0f);
-        isBookOpening = true;
+        //isBookOpening = true;
         revealCts = new CancellationTokenSource();
         RevealAfterOpen(revealCts).Forget();
     }
@@ -107,7 +107,7 @@ public class HeroArchiveUI : MonoBehaviour
         revealCts?.Cancel();
         revealCts?.Dispose();
         revealCts = null;
-        isBookOpening = false;
+        //isBookOpening = false;
     }
 
     private void SetRevealAlpha(float a)
@@ -129,7 +129,7 @@ public class HeroArchiveUI : MonoBehaviour
                 t += Time.unscaledDeltaTime;
                 await UniTask.Yield(token);
             }
-            isBookOpening = false;
+            //isBookOpening = false;
 
             t = 0f;
             while (t < fadeDuration)
@@ -144,7 +144,7 @@ public class HeroArchiveUI : MonoBehaviour
         {
             if (revealCts == own)
             {
-                isBookOpening = false;
+                //isBookOpening = false;
             }
         }
     }

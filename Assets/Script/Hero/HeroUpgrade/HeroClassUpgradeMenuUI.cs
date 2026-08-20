@@ -2,22 +2,12 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
-using System;
 using VContainer;
-using VContainer.Unity;
 
-[Serializable]
-public struct ResourceIcon
+public class HeroClassUpgradeMenuUI : MonoBehaviour
 {
-    public ProductionType type;
-    public Sprite icon;
-}
-
-public class HeroUpgradeMenuUI : MonoBehaviour
-{
-    private ClickOutsideCloser outsideCloser;
-    [SerializeField] private List<Sprite> panelImageList;
-    [SerializeField] private List<Sprite> upgradeIconList;
+    [SerializeField] private List<Sprite> panelImageList; // index = heroType (0=근거리, 1=원거리)
+    [SerializeField] private List<Sprite> upgradeIconList; // index = heroType
 
     [SerializeField] private Image banner;
     [SerializeField] private Image upgradeIcon;
@@ -28,14 +18,14 @@ public class HeroUpgradeMenuUI : MonoBehaviour
     [SerializeField] private TextMeshProUGUI upgradeTierText;
     [SerializeField] private TextMeshProUGUI currentLevelText;
 
-    private HeroTierUpgradeState upgradeState;
+    private HeroClassUpgradeState upgradeState;
     private ResourcesManager resourcesManager;
-    private int tier;
+    private int heroType;
     private Dictionary<ProductionType, HeroUpgradeResourcesUI> resourceInfoMap = new();
     private Dictionary<ProductionType, Sprite> resourceIconMap = new();
 
     [Inject]
-    private void Construct(HeroTierUpgradeState upgradeState, ResourcesManager resourcesManager)
+    private void Construct(HeroClassUpgradeState upgradeState, ResourcesManager resourcesManager)
     {
         this.upgradeState = upgradeState;
         this.resourcesManager = resourcesManager;
@@ -49,9 +39,9 @@ public class HeroUpgradeMenuUI : MonoBehaviour
         }
         upgradeButton.onClick.AddListener(() =>
         {
-            if (upgradeState.TryLevelUp(tier))
+            if (upgradeState.TryLevelUp(heroType))
             {
-                UpdateResourceInfo(upgradeState.GetLevel(tier));
+                UpdateResourceInfo(upgradeState.GetLevel(heroType));
                 RefreshUpgradeButton();
             }
         });
@@ -69,41 +59,35 @@ public class HeroUpgradeMenuUI : MonoBehaviour
         upgradeButton.onClick.RemoveAllListeners();
     }
 
-    public void Set(int tier)
+    public void Set(int heroType)
     {
-        this.tier = tier;
-        banner.sprite = panelImageList[tier - 1];
-        upgradeIcon.sprite = upgradeIconList[tier - 1];
-        upgradeTierText.text = $"Upgrade Tier {tier}";
-        UpdateResourceInfo(upgradeState.GetLevel(tier));
+        this.heroType = heroType;
+        banner.sprite = panelImageList[heroType];
+        upgradeIcon.sprite = upgradeIconList[heroType];
+        upgradeTierText.text = heroType == 0 ? "근거리 업그레이드" : "원거리 업그레이드";
+        UpdateResourceInfo(upgradeState.GetLevel(heroType));
         RefreshUpgradeButton();
     }
 
     private void RefreshUpgradeButton()
     {
-        upgradeButton.interactable = upgradeState.CanLevelUp(tier)
-            && resourcesManager.CheckResources(upgradeState.GetNextLevelCost(tier));
+        upgradeButton.interactable = upgradeState.CanLevelUp(heroType)
+            && resourcesManager.CheckResources(upgradeState.GetNextLevelCost(heroType));
     }
 
     public void UpdateResourceInfo(int currentLevel)
     {
-        var costs = upgradeState.GetCostForLevel(tier, currentLevel);
+        var costs = upgradeState.GetCostForLevel(heroType, currentLevel);
         currentLevelText.text = currentLevel >= upgradeState.MaxLevel - 1 ? "Max Level" : $"LV.{currentLevel + 1}";
-        //foreach (var resourceInfo in resourceInfoMap.Values)
-        //{
-        //    resourceInfo.gameObject.SetActive(false);
-        //}
         foreach (var cost in costs)
         {
             if (!resourceInfoMap.TryGetValue(cost.Type, out var resourceInfo))
             {
                 resourceInfo = Instantiate(resourceInfoPrefab, resourcePanel.transform);
-                //resourceInfo.SetIcon(ResourceIconProvider.GetIcon(cost.Type));
                 resourceInfo.SetIcon(resourceIconMap[cost.Type]);
                 resourceInfoMap[cost.Type] = resourceInfo;
             }
             resourceInfo.SetAmount(-cost.Amount);
-            // resourceInfo.gameObject.SetActive(true);
         }
     }
 }
