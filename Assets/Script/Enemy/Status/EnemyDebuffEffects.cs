@@ -101,7 +101,14 @@ public class EnemyDebuffEffects
             Vector3 pos = anchor.position + _entries[i].offset;
 
             if (_spawned[i] == null)
+            {
                 _spawned[i] = PoolManager.Instance.Spawn(_entries[i].prefab, pos, _entries[i].prefab.transform.rotation);
+
+                // 효과음은 이펙트가 "새로 뜨는 순간"에만 낸다 — 이펙트와 소리가 한 자리에서 갈리지 않게.
+                // 여기 두면 이펙트가 유지되는 동안(겹쳐 걸려 만료가 밀려도) 다시 울리지 않는다.
+                // 여러 적이 같은 프레임에 같이 걸려도 EnemySoundManager의 같은 키 스로틀이 한 번으로 묶는다.
+                if (!string.IsNullOrEmpty(_entries[i].soundKey)) EnemySoundManager.Play(_entries[i].soundKey);
+            }
             else
                 _spawned[i].transform.position = pos;   // 넉백·잠행 등으로 유닛이 움직여도 따라붙게
         }

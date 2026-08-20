@@ -26,6 +26,8 @@ public static class DotRegistry
         // 시전자를 참조로 들지 않는 이유는 클래스 주석의 "시전자가 죽어도 남는다"와 같다 —
         // 풀에서 재사용된 오브젝트를 통해 다른 적의 공격력을 읽어 오는 것을 막는다.
         public float AtkDamage;
+        // 틱 피해에 방어력을 먹일지. 표의 IgnoreGuard(비우면 false = 방어력 적용).
+        public bool IgnoreGuard;
         public float Interval;
         public float Expiry;
         public float TickTimer;
@@ -84,10 +86,13 @@ public static class DotRegistry
     ///
     /// atkDamage는 거기에 더할 시전자 몫이다(공격력 × atkPercent%를 호출부가 이미 환산해 넘긴다).
     /// 한 틱 피해 = 대상 최대 체력의 percentPerTick% + atkDamage. 안 넘기면 0이라 예전과 같이 비율 피해만 들어간다.
+    ///
+    /// ignoreGuard는 그 피해에 방어력을 먹일지다(표의 IgnoreGuard). 기본값 false = 방어력 적용 —
+    /// 방어무시가 필요한 디버프만 표에서 True로 켠다.
     /// </summary>
     /// <returns>장부에 올라갔으면 true. 거절되면 false — 호출부가 아이콘까지 취소할 수 있게 결과를 돌려준다.</returns>
     public static bool Apply(IDamageAble target, DebuffType type, float percentPerTick, float interval, float duration, GameManager gm,
-        float atkDamage = 0f)
+        float atkDamage = 0f, bool ignoreGuard = false)
     {
         if (target == null || percentPerTick <= 0f || duration <= 0f)
         {
@@ -138,12 +143,16 @@ public static class DotRegistry
         // 공격력 몫도 비율과 같은 규칙으로 갱신한다 — 센 쪽이 이긴다.
         // 비율과 따로 최댓값을 잡으므로, 약한 적의 독 위에 센 적이 덧걸면 각각의 최댓값을 합친 틱이 된다.
         e.AtkDamage = Mathf.Max(e.AtkDamage, Mathf.Max(0f, atkDamage));
+        // 비율·공격력 몫과 같은 규칙 — 센 쪽이 이긴다. 방어무시가 더 센 쪽이므로 한 번이라도 켜지면 유지된다.
+        // (같은 종류를 방어무시 버전과 아닌 버전이 겹쳐 걸면 한 항목으로 합쳐지는데, 그때 약한 쪽으로
+        //  내려가면 "센 독을 걸었는데 약해졌다"가 된다.)
+        e.IgnoreGuard |= ignoreGuard;
         e.Interval = Mathf.Max(0.05f, interval);
         e.Expiry = Mathf.Max(e.Expiry, Time.time + duration);
 
         DebuffDebug.Log($"DotRegistry {host.name} {type} {(isNew ? "신규" : "갱신")} — 최대체력 {e.Percent:F2}%" +
             $"(={ToDamage(MaxHp(e.Unit), e.Percent)}피해) + 공격력몫 {e.AtkDamage:F0} = {TickDamage(e)}피해/{e.Interval}초," +
-            $" {e.Expiry - Time.time:F1}초 남음 (진행중 {entries.Count}건)", host);
+            $" 방어무시 {(e.IgnoreGuard ? "O" : "X")}, {e.Expiry - Time.time:F1}초 남음 (진행중 {entries.Count}건)", host);
         return true;
     }
 
@@ -218,12 +227,14 @@ public static class DotRegistry
             // 공격력 몫(AtkDamage)은 걸 때 확정된 값이라 여기서 더하기만 한다.
             float maxHp = MaxHp(e.Unit);
             int tick = TickDamage(e);
-            // 방어무시로 때린다 — 그냥 부르면 지속 피해에 방어력이 먹혀 표에 적은 %와 공격력 몫이
-            // 그만큼 깎여 들어간다(지속 피해는 방어력을 무시하는 게 규칙이다). 실드 감소량은 그대로 적용된다.
+            // 방어무시 여부는 디버프가 정한다(표의 IgnoreGuard, 비우면 false = 방어력 적용).
+            // 방어무시를 켜도 실드 감소량은 그대로 적용된다(EnemyBase.TakeDamage가 방어력만 걷어낸다).
+            // 끈 경우 실제 피해는 Mathf.Max(1, tick - 방어력)이라, 방어력이 높은 적에겐 표에 적은 %와
+            // 공격력 몫이 그만큼 깎여 최소 1까지 내려갈 수 있다 — 그게 표에서 고른 값의 결과다.
             // 두 몫을 합쳐 한 번만 때리는 이유: 나눠 부르면 폭주 발동선과 사망 판정이 두 번 걸리고,
             // 최소 1 피해 보장도 두 번 붙는다.
             float hpBefore = e.Target.Hp;
-            e.Target.TakeDamage(tick,true);
+            e.Target.TakeDamage(tick, e.IgnoreGuard);
             DebuffDebug.Log($"DotRegistry {e.Host.name} {e.Type} 틱 최대체력 {e.Percent:F2}%" +
                 $"(={ToDamage(maxHp, e.Percent)}) + 공격력몫 {e.AtkDamage:F0} = {tick}피해" +
                 $"(최대 {maxHp:F0}) — Hp {hpBefore:F0}→{e.Target.Hp:F0}," +

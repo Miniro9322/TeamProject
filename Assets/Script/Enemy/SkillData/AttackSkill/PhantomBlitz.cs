@@ -90,7 +90,7 @@ public class PhantomBlitz : AttackSkillDataSO
         if (targets.Count == 0) return;
         Shuffle(targets);
 
-        int damageValue = damage > 0f ? Mathf.RoundToInt(damage) : owner.AttackPower;
+        int damageValue = Mathf.RoundToInt(owner.AttackPower*0.15f);
         // tickInterval이 0이면 한 프레임에 전부 나가 "동시 타격"이 된다 — 표에서 빠뜨렸을 때의 하한.
         float strikeInterval = Mathf.Max(0.02f, tickInterval);
 

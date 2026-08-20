@@ -98,6 +98,7 @@ public class EnemyArchiveManager : MonoBehaviour
         guardPanal.SetActive(true);
         float t = Progress01(archive.transform.localScale); // 현재 스케일에서 이어서 열기(연타 시 튐 방지)
         float speed = 5f;
+        EnemySoundManager.Play("BookOpen");
         while(t<1f)
         {
             t+=Time.unscaledDeltaTime*speed;
@@ -114,6 +115,7 @@ public class EnemyArchiveManager : MonoBehaviour
         hidePanal.gameObject.SetActive(false);
         float t = 1f - Progress01(archive.transform.localScale); 
         float speed = 5f;
+        EnemySoundManager.Play("BookClose");
         while(t<1f)
         {
             t+=Time.unscaledDeltaTime*speed;

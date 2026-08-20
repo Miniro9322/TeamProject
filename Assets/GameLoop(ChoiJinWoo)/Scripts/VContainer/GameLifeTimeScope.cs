@@ -51,6 +51,7 @@ public class GameLifeTimeScope : LifetimeScope
         builder.Register<HeroTierUpgradeState>(Lifetime.Singleton);
         builder.Register<HeroClassUpgradeState>(Lifetime.Singleton);
         builder.Register<UiPanelStack>(Lifetime.Singleton).AsSelf();
+        builder.Register<TutorialState>(Lifetime.Singleton).AsSelf();
 
         if (sunLight != null)
         {
@@ -85,6 +86,9 @@ public class GameLifeTimeScope : LifetimeScope
         builder.RegisterComponentInHierarchy<HeroTierUpgradeMenu>();
         builder.RegisterComponentInHierarchy<HeroClassUpgradeMenu>();
         builder.RegisterComponentInHierarchy<HeroSetPanel>();
+        builder.RegisterComponentInHierarchy<TutorialOverlayUI>();
+        builder.RegisterComponentInHierarchy<TutorialManager>();
+        builder.RegisterComponentInHierarchy<PlacePalette>(); // 튜토리얼이 배치 대기 상태(Mode)를 읽어 맵 클릭 순간 딤을 풀어주는 데 씀
 
         // PoolManager는 RegisterComponentOnNewGameObject라 아무도 Resolve하지 않으면 실제로 생성되지 않는다(lazy).
         // 여기서 강제로 한 번 Resolve해 _resolver가 붙은 상태로 즉시 만들어지게 한다.

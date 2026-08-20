@@ -12,7 +12,7 @@ public static class DebuffDebug
     // const가 아니라 static readonly인 이유 — const false로 두면 Log 본문이 도달 불가 코드가 되어 경고가 뜬다.
     // 지속 피해 틱 로그(DotRegistry)를 보려고 켜 둔 상태다. 확인이 끝나면 false로 내릴 것 — 켜 두면
     // 디버프가 걸릴 때마다 콘솔에 줄이 쌓여 다른 로그가 묻힌다.
-    public static readonly bool Enabled = true;
+    public static readonly bool Enabled = false;
 
     // context를 넘기면 콘솔에서 그 줄을 눌렀을 때 해당 오브젝트가 하이라이트된다.
     public static void Log(string message, Object context = null)

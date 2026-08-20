@@ -56,8 +56,10 @@ public class EnemyBurrow
         _timeout = timeout > 0f ? timeout : 3f;
     }
 
-    /// <summary>surface=true(저지/사망)면 솟아오르고, 아니면 파고든다. markerPos엔 보통 적의 현재 위치를 넘긴다.</summary>
-    public void Tick(bool surface, Vector3 markerPos)
+    /// <summary>surface=true(저지/사망)면 솟아오르고, 아니면 파고든다. markerPos엔 보통 적의 현재 위치를 넘긴다.
+    /// dead면 지면 마커만 거둔다 — 사망 애니가 도는 동안에도 Update는 계속 돌기 때문에,
+    /// 여기서 막지 않으면 죽은 몸 밑에 흙먼지가 계속 깔려 있다(EnemySwim의 물거품과 같은 문제).</summary>
+    public void Tick(bool surface, Vector3 markerPos, bool dead = false)
     {
         if (!IsSetup) return;
 
@@ -78,8 +80,20 @@ public class EnemyBurrow
             SetBurrowedBool(hide);
         }
 
+        // 사망 — 흙먼지를 끌고 가지 않는다(EnemySwim.Tick의 suppress와 같은 취지).
+        // 이 검사는 반드시 위 전이 블록 <b>뒤</b>에 와야 한다 — 앞에 두면 SetRenderers(true)가 안 돌아
+        // 땅속에서 죽은 적이 보이지 않는 채로 사망 애니를 재생한다(EnemySwim은 렌더러를 안 만지므로 맨 위에 둔 것이다).
+        // WatchPendingTransition도 건너뛴다 — 죽으면 솟아오르기 이벤트가 안 오는 게 정상이라 타임아웃 경고는 거짓 경보다.
+        if (dead) { DespawnMarker(); return; }
+
         WatchPendingTransition();
         UpdateMarker(markerPos);
+    }
+
+    // 지면 마커 반납은 Tick(사망)·Reset(디스폰)·UpdateMarker(솟아오름 완료) 세 곳에서 쓰므로 한 군데로 모아 둔다.
+    private void DespawnMarker()
+    {
+        if (_marker != null) { PoolManager.Instance.Despawn(_marker); _marker = null; }
     }
 
     /// <summary>파고들기 클립 마지막 프레임의 Animation Event → EnemyBase.AnimEvent_Burrowed가 호출.</summary>
@@ -102,7 +116,7 @@ public class EnemyBurrow
     public void Reset()
     {
         // 마커는 풀에서 꺼낸 오브젝트다. 여기서 반납하지 않으면 적이 풀로 돌아갈 때 딸려가 재사용 시 되살아난다.
-        if (_marker != null) { PoolManager.Instance.Despawn(_marker); _marker = null; }
+        DespawnMarker();
         if (!IsSetup) return;
 
         _hidden = true;
@@ -154,7 +168,7 @@ public class EnemyBurrow
             }
             return;
         }
-        if (_marker != null) { PoolManager.Instance.Despawn(_marker); _marker = null; }
+        DespawnMarker();
     }
 
     // SetActive가 아니라 Renderer.enabled를 쓴다 — 계층을 건드리지 않아 Animator/자식 스크립트가 그대로 돈다.

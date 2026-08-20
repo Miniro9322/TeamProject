@@ -16,6 +16,9 @@ public class AddCitizen : MonoBehaviour
     [SerializeField] private int costAmount;
     [SerializeField] private Key closeKey = Key.Escape;
     [SerializeField] private RectTransform openButtonRect; // 이 패널을 여닫는 토글 버튼 — 바깥 클릭 판정에서 제외
+    [SerializeField] private RectTransform createButtonRect; // "생성" 확인 버튼 - 튜토리얼 스포트라이트용 참조
+
+    public RectTransform CreateButtonRect => createButtonRect;
     private int amount = 0;
     private Keyboard keyboard;
     private Mouse mouse;
