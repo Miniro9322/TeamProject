@@ -2,7 +2,7 @@ using System;
 using System.IO;
 using Newtonsoft.Json;
 
-// 세이브 파일 하나를 임시로 쓰고 검증한 뒤 정상 파일로 확정하거나 읽는다.
+// 세이브 파일을 임시 경로에 쓰고 검증하거나, 검증된 파일을 목적지로 옮기거나, 읽는다.
 public class SaveIO
 {
     private readonly JsonSerializerSettings jsonSettings;
@@ -16,22 +16,16 @@ public class SaveIO
         jsonSettings.Converters.Add(new CellConverter());
     }
 
-    // 파일 하나를 임시로 쓰고 검증한 뒤 정상 파일로 확정한다.
-    public bool TryWrite(string tempPath, string finalPath, SaveFile saveFile)
+    // 파일을 임시 경로에 쓰고, 다시 읽어 검증까지 통과하는지 확인한다 (아직 정식 파일로 확정하지 않음).
+    public bool TryWriteTemp(string tempPath, SaveFile saveFile)
     {
         try
         {
             string json = JsonConvert.SerializeObject(saveFile, jsonSettings);
             WriteTemp(tempPath, json);
 
-            SaveFile verify = LoadFile(tempPath);
-            if (!saveCheck.IsValidSave(verify, saveFile.slotId, saveFile.saveOrder))
-            {
-                return false;
-            }
-
-            MoveToFinal(tempPath, finalPath);
-            return true;
+            SaveFile readBack = LoadFile(tempPath);
+            return saveCheck.IsValidSave(readBack, saveFile.slotId, saveFile.saveOrder);
         }
         catch (IOException)
         {
@@ -72,16 +66,16 @@ public class SaveIO
         }
     }
 
-    // 임시 파일을 최종 경로로 확정한다. 최종 경로에 이미 파일이 있으면(세대 재사용) 교체하고, 없으면 그대로 옮긴다.
-    private void MoveToFinal(string tempPath, string finalPath)
+    // 파일을 목적지 경로로 옮긴다. 목적지에 이미 파일이 있으면 교체하고, 없으면 그대로 옮긴다.
+    public void MoveOverwrite(string sourcePath, string destinationPath)
     {
-        if (File.Exists(finalPath))
+        if (File.Exists(destinationPath))
         {
-            File.Replace(tempPath, finalPath, null);
+            File.Replace(sourcePath, destinationPath, null);
             return;
         }
 
-        File.Move(tempPath, finalPath);
+        File.Move(sourcePath, destinationPath);
     }
 
     // JSON 문자열을 임시 파일에 쓰고 디스크까지 반영한다.

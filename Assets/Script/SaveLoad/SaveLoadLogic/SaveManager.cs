@@ -37,6 +37,11 @@ public class SaveManager : ITickable, IStartable
     // 모든 Start()가 끝난 다음 프레임에 한 번만 로드한다(GameManager.Start의 초기값을 로드값으로 덮어쓰기 위함).
     public void Start()
     {
+        if (!ToolEnabled)
+        {
+            return;
+        }
+
         LoadDeferred().Forget();
     }
 
@@ -66,6 +71,11 @@ public class SaveManager : ITickable, IStartable
 
     private bool TrySave(SavePhase phase)
     {
+        if (!ToolEnabled)
+        {
+            return false;
+        }
+
         SaveData data = saveCapture.CaptureSaveData(phase, playTime);
         SaveFile file = new SaveFile();
         file.fileTag = SaveCheck.FileTag;
@@ -99,4 +109,23 @@ public class SaveManager : ITickable, IStartable
             saveRestore.ApplyPerfectDefenseReward();
         }
     }
+
+    #region Save Tools
+
+    public const string ToolKey = "SaveLoad.ToolEnabled";
+
+    // 개발자 Tools 메뉴에서 지정한 세이브 활성 상태를 반환한다.
+    public static bool ToolEnabled
+    {
+        get
+        {
+#if UNITY_EDITOR
+            return PlayerPrefs.GetInt(ToolKey, 0) == 1;
+#else
+            return false;
+#endif
+        }
+    }
+
+    #endregion
 }
