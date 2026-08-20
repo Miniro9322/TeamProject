@@ -350,9 +350,13 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
         if (!gameObject.activeInHierarchy) return;
         UpdateExposedAttribute();       // 저지 상태에 따라 Hero가 보는 Attribute를 갱신
         _cloak.Tick(CloakClear);
-        _burrow.Tick(CloakClear, transform.position); // 은신과 같은 트리거(저지/사망) — 저지되면 솟아오른다
+        // 은신과 같은 트리거(저지/사망) — 저지되면 솟아오른다. 사망은 CloakClear에 섞여 있어 구분이 안 되므로
+        // 흙먼지를 거둘지 판단할 IsDead를 따로 넘긴다(솟아오르는 연출은 그대로 두고 마커만 거둔다).
+        _burrow.Tick(CloakClear, transform.position, IsDead);
         // 이동이 끝난 뒤에 불러야 이번 프레임 위치로 칸을 판정한다(물칸 진입/이탈 감지).
-        _swim.Tick(Board, transform.position);
+        // 죽으면 물거품을 끌고 가지 않는다(_debuffEffects.Tick의 IsDead와 같은 취지 — 사망이 연출을 이긴다).
+        // 사망 애니가 도는 동안에도 이 Update는 계속 돌기 때문에, 여기서 안 넘기면 거품이 사망 내내 남는다.
+        _swim.Tick(Board, transform.position, IsDead);
         // 불 칸 점화는 Map 쪽 FireReceiver가 타일 진입/이탈로 걸어 준다(적·영웅 공용) —
         // 여기서 위치를 폴링하던 EnemyFireTile은 그것과 중복이라 걷어냈다.
         // 화염족 처리(ImmuneDebuffs로 막고 OnDebuffBlocked가 재생·오라 창을 여는 것)는 누가 걸든 그대로 동작한다.
@@ -667,23 +671,27 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
         }
         else
         {
-            // 일차 성장분에 해금 지역 수 배율을 곱한다 — 지역을 더 열수록 같은 몹도 계단식으로 단단해진다.
+            // 체력은 매일, 공격력·방어력은 5일마다 한 단계 오른다(정수 나눗셈이라 1~4일차는 0단계).
+            // 체력·방어력에는 해금 지역 수 배율을 곱한다 — 지역을 더 열수록 같은 몹도 계단식으로 단단해진다.
+            int fiveDayStep = gameManager.DayCount / 5;
             float scaledHp  = (data.Health + (gameManager.DayCount * data.UpHealthScale)) * RegionHpScale();
-            float scaledDef = (data.Defense + (data.UpDefenseScale * (gameManager.DayCount / 5))) * RegionDefenseScale();
+            float scaledAtk = data.Attack + (data.UpAttackScale * fiveDayStep);
+            float scaledDef = (data.Defense + (data.UpDefenseScale * fiveDayStep)) * RegionDefenseScale();
             sc.SetBaseValue(StatType.HP,scaledHp);
-            sc.SetBaseValue(StatType.ATK,data.Attack);
+            sc.SetBaseValue(StatType.ATK,scaledAtk);
             sc.SetBaseValue(StatType.AS,data.AttackSpeed);
             sc.SetBaseValue(StatType.DEF,scaledDef);
             sc.SetBaseValue(StatType.SPD,data.MoveSpeed);
-            RecordBaseStats(scaledHp, data.Attack, data.AttackSpeed, scaledDef, data.MoveSpeed);
+            RecordBaseStats(scaledHp, scaledAtk, data.AttackSpeed, scaledDef, data.MoveSpeed);
         }
         Range = data.Range;
         Hp = sc[StatType.HP];
         _bar.ResetTo(Hp, MaxHp); // 스폰 시 보간 없이 즉시 풀피로(풀 재사용 시 이전 값 잔상 제거)
         IsDead = false;
         // 확인용 임시 로그. bossName 가드 아래에 두면 보스가 아닌 몹은 그 return에 걸려 안 찍히므로 가드보다 위에 둔다.
-        string dayInfo = gameManager != null ? $"{gameManager.DayCount}일차" : "gameManager 미주입 → 일차·지역 배율 미적용";
-        Debug.Log($"[{enemyKey}] 체력 {Hp} · 해금 {SpawnerManager.UnlockedRegionCount}개(×{RegionHpScale()}) · {dayInfo}", this);
+        // string dayInfo = gameManager != null ? $"{gameManager.DayCount}일차" : "gameManager 미주입 → 일차·지역 배율 미적용";
+        // Debug.Log($"[{enemyKey}] 체력 {Hp} · 공격 {AttackPower} · 방어 {Defense} · " +
+        //     $"해금 {SpawnerManager.UnlockedRegionCount}개(체력×{RegionHpScale()}, 방어×{RegionDefenseScale()}) · {dayInfo}", this);
         if(bossName == null)return;
         bossName.text = DataTableManager.StringTable.Get(data.Name);
         //MoveSpeed = data.MoveSpeed;
@@ -709,7 +717,20 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
         return table[Mathf.Min(unlocked, table.Length - 1)];
     }
 
-    private float RegionHpScale() => RegionScale(RegionHpScaleTable, RegionBossHpScaleTable);
+    // 전 지역 해금이 끝나면 위 표가 마지막 칸에서 멈춘다 — 그 뒤로는 판이 더 길어져도 보스가 그 자리에 선다.
+    // 그래서 해금이 다 끝난 뒤부터 10라운드마다 배율에 +2를 더해 계속 오르게 한다.
+    // 기준점은 "전 지역 해금을 확인한 라운드"라 해금 직후엔 +0에서 시작한다(끊기지 않게).
+    // 보스만 적용한다 — 잡몹은 DayCount × UpHealthScale로 이미 매 라운드 오르고 있다.
+    private const int BossHpStepRounds = 10;
+    private const float BossHpStepScale = 2f;
+
+    private float BossFullUnlockHpBonus()
+    {
+        if (Class != EnemyClass.Boss) return 0f;
+        return SpawnerManager.RoundsSinceFullUnlock / BossHpStepRounds * BossHpStepScale;
+    }
+
+    private float RegionHpScale() => RegionScale(RegionHpScaleTable, RegionBossHpScaleTable) + BossFullUnlockHpBonus();
     private float RegionDefenseScale() => RegionScale(RegionDefenseScaleTable, RegionBossDefenseScaleTable);
 
     private void RecordBaseStats(float hp, float atk, float attackSpeed, float def, float spd)

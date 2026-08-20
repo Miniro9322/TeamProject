@@ -129,6 +129,12 @@ public static class DebuffTableImporter
         so.type = type;
         so.duration = duration;
 
+        // 방어무시는 피해를 넣는 디버프(Dot)에만 의미가 있다. 스탯·상태이상 줄에 True를 적어 두면
+        // 조용히 무시되어 "켰는데 왜 안 되지"가 되므로, 막지는 않고 알려만 준다.
+        if (so is not DotDebuffSO && (FirstValue(rows, r => r.IgnoreGuard) ?? false))
+            Debug.LogWarning($"DebuffTableImporter: '{id}'의 IgnoreGuard=True는 무시된다 — " +
+                $"방어무시는 피해를 넣는 Category=Dot에만 적용된다({so.GetType().Name}은 피해를 넣지 않는다)");
+
         switch (so)
         {
             case StatDebuffSO stat:
@@ -139,6 +145,8 @@ public static class DebuffTableImporter
                 dot.interval = FirstValue(rows, r => r.Interval) ?? 1f;
                 // 공격력 몫은 선택 칸이다 — 비우면 0이라 최대 체력 비율 피해만 들어간다(기존 거동).
                 dot.atkPercent = Mathf.Max(0f, FirstValue(rows, r => r.AtkPercent) ?? 0f);
+                // 방어무시도 선택 칸이다 — 비우면 false라 방어력이 적용된 피해로 들어간다.
+                dot.ignoreGuard = FirstValue(rows, r => r.IgnoreGuard) ?? false;
                 if (dot.percentPerTick <= 0f)
                 {
                     Debug.LogWarning($"DebuffTableImporter: '{id}'의 PercentPerTick이 비었거나 0 이하다 (대상 최대 체력의 %, 0.5 = 0.5%)");

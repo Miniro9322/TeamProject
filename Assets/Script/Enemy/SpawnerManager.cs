@@ -352,6 +352,29 @@ public class SpawnerManager : MonoBehaviour
         return count;
     }
 
+    // 전 지역 해금을 처음 확인한 라운드(=DayCount). 아직이면 -1.
+    // 해금되는 순간(UnlockRegion)에 잡지 않고 처음 조회되는 시점에 확정하는 이유는 _unlockOffset과 같다 —
+    // UnlockNextModule()이 OnDay()로 DayCount가 오르기 "직전"에 불리는 경로가 있어서,
+    // 그때 잡으면 아직 안 오른 DayCount로 굳어 기준이 영구히 하루 밀린다.
+    private int _fullUnlockDay = -1;
+
+    /// <summary>
+    /// 전 지역이 해금된 뒤 지난 라운드 수(=DayCount 차이). 아직 다 안 열렸으면 0.
+    /// 지역 해금 배율이 표 마지막 칸에서 멈춘 뒤에도 보스가 계속 세지게 하는 데 쓴다
+    /// (EnemyBase.BossFullUnlockHpBonus). 매니저가 없는 씬에서는 0이라 호출부가 보너스 없이 폴백한다.
+    /// </summary>
+    public static int RoundsSinceFullUnlock => instance != null ? instance.RoundsSinceFullUnlockInternal() : 0;
+
+    private int RoundsSinceFullUnlockInternal()
+    {
+        // 스포너가 아직 안 모였으면 "전부 해금"을 0개 중 0개로 착각해 참이 되어버린다 — 그 전엔 0을 돌려준다.
+        if (_byRegion.Count == 0) return 0;
+        if (UnlockedCount() < _byRegion.Count) return 0;
+
+        if (_fullUnlockDay < 0) _fullUnlockDay = CurrentDay;
+        return Mathf.Max(0, CurrentDay - _fullUnlockDay);
+    }
+
     public void SpawnWave(int round) //해당라운드 전체소환 (round는 GameManager.DayCount와 항상 같음 — 지역별 진행도는 LocalStage로 따로 계산)
     {
         var unlocked = UnlockedRegions();
