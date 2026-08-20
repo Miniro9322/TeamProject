@@ -12,6 +12,8 @@ public class HeroTierUpgradeState
 
     public event Action<int> LevelChanged; // 인자: 티어
 
+    public int MaxLevel => config.maxLevel;
+
     private float CostDiscount => upgradeState.GetTotalEffect(config.UpgradeCostUpgrades);
 
     public HeroTierUpgradeState(HeroUpgradeConfig config, ResourcesManager resourcesManager, UpgradeState upgradeState)
@@ -26,7 +28,7 @@ public class HeroTierUpgradeState
     public bool CanLevelUp(int tier)
     {
         var entry = config.GetEntry(tier);
-        return entry != null && GetLevel(tier) < config.maxLevel;
+        return entry != null && GetLevel(tier) < config.maxLevel - 1;
     }
 
     public (ProductionType Type, int Amount)[] GetNextLevelCost(int tier)

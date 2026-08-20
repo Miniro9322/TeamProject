@@ -15,6 +15,7 @@ public class GameLifeTimeScope : LifetimeScope
     [SerializeField] private ProductionEconomyConfig economyConfig;
     [SerializeField] private ResourceIconSet resourceIconSet;
     [SerializeField] private HeroUpgradeConfig heroUpgradeConfig;
+    [SerializeField] private HeroClassUpgradeConfig heroClassUpgradeConfig;
     [SerializeField] private Light sunLight;
     [SerializeField] private Transform citizenHubPoint;
     [SerializeField] private Transform[] citizenHomePoints; // 밤에 귀가할 목적지 후보들(여러 개면 시민마다 랜덤 선택)
@@ -40,6 +41,7 @@ public class GameLifeTimeScope : LifetimeScope
         builder.RegisterInstance(economyConfig);
         builder.RegisterInstance(resourceIconSet);
         builder.RegisterInstance(heroUpgradeConfig);
+        builder.RegisterInstance(heroClassUpgradeConfig);
         builder.RegisterComponentOnNewGameObject<PoolManager>(Lifetime.Singleton).AsSelf();
         builder.Register<FacilityManager>(Lifetime.Singleton).AsSelf();
         builder.Register<BaseConstructor>(Lifetime.Singleton).AsSelf();
@@ -47,6 +49,7 @@ public class GameLifeTimeScope : LifetimeScope
         builder.Register<HeroRoster>(Lifetime.Singleton).AsSelf();
         builder.Register<UpgradeState>(Lifetime.Singleton);
         builder.Register<HeroTierUpgradeState>(Lifetime.Singleton);
+        builder.Register<HeroClassUpgradeState>(Lifetime.Singleton);
         builder.Register<UiPanelStack>(Lifetime.Singleton).AsSelf();
         builder.Register<TutorialState>(Lifetime.Singleton).AsSelf();
 
@@ -81,6 +84,7 @@ public class GameLifeTimeScope : LifetimeScope
         builder.RegisterComponentInHierarchy<RegionDetailPanel>();
         builder.RegisterComponentInHierarchy<BuildingPanel>();
         builder.RegisterComponentInHierarchy<HeroTierUpgradeMenu>();
+        builder.RegisterComponentInHierarchy<HeroClassUpgradeMenu>();
         builder.RegisterComponentInHierarchy<HeroSetPanel>();
         builder.RegisterComponentInHierarchy<TutorialOverlayUI>();
         builder.RegisterComponentInHierarchy<TutorialManager>();

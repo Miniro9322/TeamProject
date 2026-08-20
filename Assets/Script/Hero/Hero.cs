@@ -17,9 +17,12 @@ public class Hero : MonoBehaviour, IDamageAble, IUnit, IStunAble, IDebuffCarrier
     public int UnitId => heroData.UnitId;
     public string HeroName => heroData.HeroName;
     public MergeKey MergeKey => heroData.MergeKey;
+    public int HeroType => heroData.HeroType;
 
     // 티어 단위로 공유되는 업그레이드 레벨(개체별로 갖지 않음) — HeroTierUpgradeState 참고.
     public int Level => tierUpgradeState.GetLevel(Tier) + 1;
+    // 클래스(근거리/원거리) 단위로 공유되는 업그레이드 레벨 — HeroClassUpgradeState 참고.
+    public int ClassLevel => classUpgradeState.GetLevel(HeroType) + 1;
 
     private UpgradeState UpgradeStateOrFallback => upgradeState ?? new UpgradeState();
 
@@ -260,15 +263,17 @@ public class Hero : MonoBehaviour, IDamageAble, IUnit, IStunAble, IDebuffCarrier
     public BuffManager Buffs => buffManager;
     private UpgradeState upgradeState;
     private HeroTierUpgradeState tierUpgradeState;
+    private HeroClassUpgradeState classUpgradeState;
 
     [Inject]
-    private void Construct(GameManager gameManager, BuffManager buffManager, ResourcesManager resourcesManager, UpgradeState upgradeState, HeroTierUpgradeState tierUpgradeState)
+    private void Construct(GameManager gameManager, BuffManager buffManager, ResourcesManager resourcesManager, UpgradeState upgradeState, HeroTierUpgradeState tierUpgradeState, HeroClassUpgradeState classUpgradeState)
     {
         this.gameManager = gameManager;
         this.buffManager = buffManager;
         this.resourcesManager = resourcesManager;
         this.upgradeState = upgradeState;
         this.tierUpgradeState = tierUpgradeState;
+        this.classUpgradeState = classUpgradeState;
     }
 
     public void Die()
@@ -350,8 +355,10 @@ public class Hero : MonoBehaviour, IDamageAble, IUnit, IStunAble, IDebuffCarrier
         SetCurrentTile();
         ApplyStatUpgradeBonus();
         ApplyTierLevelBonus();
-        currentHp = sc[StatType.HP]; // 티어 업그레이드로 늘어난 최대체력을 스폰 시점부터 반영
+        ApplyClassLevelBonus();
+        currentHp = sc[StatType.HP]; // 티어/클래스 업그레이드로 늘어난 최대체력을 스폰 시점부터 반영
         tierUpgradeState.LevelChanged += OnTierLevelChanged;
+        classUpgradeState.LevelChanged += OnClassLevelChanged;
         if (gameManager != null)
         {
             gameManager.ChangeToDay += Resurrection;
@@ -406,6 +413,25 @@ public class Hero : MonoBehaviour, IDamageAble, IUnit, IStunAble, IDebuffCarrier
         if (!isDead) currentHp = sc[StatType.HP]; // 업그레이드로 최대체력이 늘어난 만큼 낮이니 그냥 전부 채운다
     }
 
+    private static readonly object ClassLevelBonusSource = new object();
+
+    private void ApplyClassLevelBonus()
+    {
+        sc.RemoveModifier(ClassLevelBonusSource);
+        int extraLevels = classUpgradeState.GetLevel(HeroType);
+        if (extraLevels <= 0) return;
+
+        foreach (var gain in classUpgradeState.GetStatGains(HeroType))
+            sc.AddModifier(gain.statType, new Modifier(gain.modifierType, gain.amountPerLevel * extraLevels, 0f, StatLayer.Equip, ClassLevelBonusSource));
+    }
+
+    private void OnClassLevelChanged(int changedHeroType)
+    {
+        if (changedHeroType != HeroType) return;
+        ApplyClassLevelBonus();
+        if (!isDead) currentHp = sc[StatType.HP]; // 업그레이드로 최대체력이 늘어난 만큼 낮이니 그냥 전부 채운다
+    }
+
     protected virtual void OnDestroy()
     {
         if (gameManager != null)
@@ -416,6 +442,7 @@ public class Hero : MonoBehaviour, IDamageAble, IUnit, IStunAble, IDebuffCarrier
             gameManager.ChangeToDay -= NotifyDayStart;
         }
         tierUpgradeState.LevelChanged -= OnTierLevelChanged;
+        classUpgradeState.LevelChanged -= OnClassLevelChanged;
         debuffEffects.Reset();
         skillCts?.Cancel();
         skillCts?.Dispose();
@@ -699,6 +726,7 @@ public class Hero : MonoBehaviour, IDamageAble, IUnit, IStunAble, IDebuffCarrier
         anim.SetBool(HeroAnimHash.idle, true);
         ApplyStatUpgradeBonus();
         ApplyTierLevelBonus();
+        ApplyClassLevelBonus();
         currentHp = sc[StatType.HP];
         _bar.ResetTo(currentHp, sc[StatType.HP]);
         target = null;
