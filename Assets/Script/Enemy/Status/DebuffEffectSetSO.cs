@@ -40,6 +40,10 @@ public struct DebuffEffect
     [Tooltip("어느 자리에서 나올지. Head·Body는 프리팹에 앵커를 꽂아야 뜨고, Foot은 유닛 원점이라 앵커가 필요 없다.")]
     public DebuffEffectAnchor anchor;
 
+    [Tooltip("이펙트가 뜨는 순간 같이 낼 효과음 키(EnemySoundDataBase의 key). 비우면 소리 없이 이펙트만 뜬다.\n" +
+             "이펙트가 도는 동안 계속이 아니라 걸린 순간 한 번만 난다 — 겹쳐 걸려 이펙트가 유지되는 동안엔 다시 나지 않는다.")]
+    public string soundKey;
+
     [Tooltip("앵커 기준 추가 오프셋(월드). 이 에셋은 모든 유닛이 공유하므로 유닛 크기 차이는 여기서 못 메운다 " +
              "— 크기 보정은 프리팹 앵커로 하고, 여기선 모든 유닛에 공통으로 줄 미세 조정만 넣을 것.")]
     public Vector3 offset;

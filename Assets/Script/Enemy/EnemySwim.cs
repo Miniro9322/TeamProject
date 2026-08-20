@@ -63,10 +63,18 @@ public class EnemySwim
         _markerPrefab = Resources.Load<GameObject>("EnemyEffectPrefab/Bubble");
     }
 
-    /// <summary>매 프레임 호출. 이동(EnemyMovement.Tick)이 끝난 뒤에 불러야 이번 프레임 위치로 칸을 판정한다.</summary>
-    public void Tick(MapBoard board, Vector3 position)
+    /// <summary>매 프레임 호출. 이동(EnemyMovement.Tick)이 끝난 뒤에 불러야 이번 프레임 위치로 칸을 판정한다.
+    /// suppress(사망)면 물거품만 거둔다 — 사망 애니가 도는 동안에도 Update는 계속 돌기 때문에,
+    /// 여기서 막지 않으면 밖에서 반납한 거품을 다음 프레임에 이 함수가 다시 꺼낸다.</summary>
+    public void Tick(MapBoard board, Vector3 position, bool suppress)
     {
         if (!IsSetup) return;
+
+        // Reset()을 부르지 않는 이유 — _phase를 Ground로 되돌리면 UseSwimAnim이 꺾여 사망 애니 도중에
+        // IsSwim bool이 내려간다. 물에서 죽었다는 상태는 그대로 두고 연출만 거둔다
+        // (_debuffEffects.Tick의 suppress와 같은 취지 — 사망이 연출을 이긴다).
+        if (suppress) { DespawnMarker(); return; }
+
         CheckParams();
 
         if (board != null)
@@ -81,6 +89,11 @@ public class EnemySwim
 
         WatchPendingTransition();
         UpdateMarker(position);
+    }
+    // 물거품 반납은 Tick(사망)·Reset(디스폰)·UpdateMarker(상승) 세 곳에서 쓰므로 한 군데로 모아 둔다.
+    private void DespawnMarker()
+    {
+        if (_marker != null) { PoolManager.Instance.Despawn(_marker); _marker = null; }
     }
 
     /// <summary>Pool(잠수) 클립 마지막 프레임의 Animation Event → EnemyBase.AnimEvent_Dived가 호출.</summary>
@@ -99,9 +112,12 @@ public class EnemySwim
         _pending = 0f;
     }
 
-    /// <summary>풀 재사용/디스폰 — 지상 상태로 되돌린다. bool은 EnemyMovement가 쥐고 있어 여기서 안 건드린다.</summary>
+    /// <summary>풀 재사용/디스폰 — 물거품을 반납하고 지상 상태로 되돌린다. bool은 EnemyMovement가 쥐고 있어 여기서 안 건드린다.</summary>
     public void Reset()
     {
+        // 물거품은 풀에서 꺼낸 오브젝트다. 여기서 반납하지 않으면 적이 풀로 돌아갈 때 딸려가 재사용 시 되살아난다
+        // (EnemyBurrow.Reset과 같은 처리 — 이 한 줄이 빠져 물에서 죽은 적의 거품이 판에 남았다).
+        DespawnMarker();
         _phase = Phase.Ground;
         _pending = 0f;
         // 다음 스폰의 첫 Tick이 반드시 칸을 재판정하게 한다(물 위에 스폰되면 바로 잠수).
@@ -131,7 +147,7 @@ public class EnemySwim
             }
             return;
         }
-        if (_marker != null) { PoolManager.Instance.Despawn(_marker); _marker = null; }
+        DespawnMarker();
     }
     private void Begin(Phase phase, string trigger)
     {

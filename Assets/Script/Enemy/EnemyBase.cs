@@ -350,9 +350,13 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
         if (!gameObject.activeInHierarchy) return;
         UpdateExposedAttribute();       // 저지 상태에 따라 Hero가 보는 Attribute를 갱신
         _cloak.Tick(CloakClear);
-        _burrow.Tick(CloakClear, transform.position); // 은신과 같은 트리거(저지/사망) — 저지되면 솟아오른다
+        // 은신과 같은 트리거(저지/사망) — 저지되면 솟아오른다. 사망은 CloakClear에 섞여 있어 구분이 안 되므로
+        // 흙먼지를 거둘지 판단할 IsDead를 따로 넘긴다(솟아오르는 연출은 그대로 두고 마커만 거둔다).
+        _burrow.Tick(CloakClear, transform.position, IsDead);
         // 이동이 끝난 뒤에 불러야 이번 프레임 위치로 칸을 판정한다(물칸 진입/이탈 감지).
-        _swim.Tick(Board, transform.position);
+        // 죽으면 물거품을 끌고 가지 않는다(_debuffEffects.Tick의 IsDead와 같은 취지 — 사망이 연출을 이긴다).
+        // 사망 애니가 도는 동안에도 이 Update는 계속 돌기 때문에, 여기서 안 넘기면 거품이 사망 내내 남는다.
+        _swim.Tick(Board, transform.position, IsDead);
         // 불 칸 점화는 Map 쪽 FireReceiver가 타일 진입/이탈로 걸어 준다(적·영웅 공용) —
         // 여기서 위치를 폴링하던 EnemyFireTile은 그것과 중복이라 걷어냈다.
         // 화염족 처리(ImmuneDebuffs로 막고 OnDebuffBlocked가 재생·오라 창을 여는 것)는 누가 걸든 그대로 동작한다.
