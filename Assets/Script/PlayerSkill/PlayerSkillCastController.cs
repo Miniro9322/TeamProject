@@ -31,7 +31,7 @@ public class PlayerSkillCastController
         if (dayNightRule.CanBuild()) return true; // 낮: 무장은 유지하되 아무 일도 하지 않는다
         if (!mana.TryConsume(armed.manaCost)) return true; // 마나 부족: 무장은 유지한다
 
-        GameObject go = Object.Instantiate(armed.zonePrefab, tile.WorldTop + Vector3.up * GroundZoneLift, Quaternion.identity);
+        GameObject go = Object.Instantiate(armed.zonePrefab, tile.WorldTop + Vector3.up * GroundZoneLift, armed.zonePrefab.transform.localRotation);
         if (go.TryGetComponent(out PlayerGroundZoneEffect zone))
             zone.Init(tile.Board, buffManager, gameManager: dayNightRule?.rule);
 

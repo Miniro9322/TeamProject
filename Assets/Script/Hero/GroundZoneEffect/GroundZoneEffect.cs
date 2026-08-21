@@ -174,7 +174,7 @@ public class GroundZoneEffect : MonoBehaviour
         }
     }
 
-    private void SpawnHitEffect(Vector3 pos) => owner.SpawnEffect(hitEffect, pos, Quaternion.identity, hitEffectLifetime);
+    private void SpawnHitEffect(Vector3 pos) => owner.SpawnEffect(hitEffect, pos, hitEffectLifetime);
 
     private void SpawnSelfEffect()
     {
@@ -201,6 +201,10 @@ public class GroundZoneEffect : MonoBehaviour
     {
         foreach (ParticleSystem ps in GetComponentsInChildren<ParticleSystem>(true))
         {
+            // hitEffect가 장판의 자식으로 박혀있는 프리팹(FireMageZone 등)이 있어, 이 스캔이
+            // 장판 자신의 연출용 자식뿐 아니라 hitEffect까지 잘못 건드려 재생 속도를 깎을 수 있다.
+            // hitEffect(및 그 하위)는 부모가 손댈 수 없도록 애초에 순회 대상에서 제외한다.
+            if (hitEffect != null && ps.transform.IsChildOf(hitEffect.transform)) continue;
             ParticleSystem.MainModule main = ps.main;
             if (main.loop || main.duration <= 0f) continue;
             main.simulationSpeed = main.duration / targetDuration;

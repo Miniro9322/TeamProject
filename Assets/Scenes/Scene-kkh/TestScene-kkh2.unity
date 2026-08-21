@@ -3771,7 +3771,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 1
+  m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
@@ -10251,7 +10251,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 882612956, guid: 42eca34bb05eb054a97d4bf4eebcbed1, type: 3}
+  m_Sprite: {fileID: -504412426, guid: 42eca34bb05eb054a97d4bf4eebcbed1, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -14670,7 +14670,7 @@ MonoBehaviour:
   maxPitch: 90
   minDistance: 15
   maxDistance: 90
-  fillH: 0.6
+  fillH: 0.8
   fillV: 0.8
   smoothTime: 0.141
 --- !u!114 &755029711
@@ -16194,7 +16194,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &823824406
 RectTransform:
   m_ObjectHideFlags: 0
@@ -16210,9 +16210,9 @@ RectTransform:
   - {fileID: 124519157}
   m_Father: {fileID: 2084934172}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 1}
-  m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 35, y: -245}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 70, y: 70}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &823824407

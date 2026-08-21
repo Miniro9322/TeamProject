@@ -90,7 +90,7 @@ public class RangedAttackExecutor : IAttackExecutor
                 AttackDamageUtil.ApplyTargetDebuffs(e as Component, data.targetDebuffs, ctx.buffManager, data);
                 AttackDamageUtil.ApplyHealOptions(data, ctx.self.position, ctx.hero.Heal,
                     (p, r, s) => ctx.hero.GetObjectsInRange(p, r, s, RangeQueryAffinity.Ally), damage, ctx.sc[StatType.ATK]);
-                ctx.hero.SpawnEffect(data.hitEffect, AttackDamageUtil.EffectPosition(e as Component), Quaternion.identity, data.hitEffectLifetime);
+                ctx.hero.SpawnEffect(data.hitEffect, AttackDamageUtil.EffectPosition(e as Component), data.hitEffectLifetime);
             }
             if (data.groundZonePrefab != null)
                 ctx.hero.SpawnGroundZone(data.groundZonePrefab, target.position);

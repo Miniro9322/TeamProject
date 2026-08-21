@@ -207,7 +207,7 @@ public class Projectile : MonoBehaviour
     private void SpawnHitEffect(Vector3 pos)
     {
         if (hitEffectPrefab != null)
-            hero.SpawnEffect(hitEffectPrefab, pos, Quaternion.identity, hitEffectLifetime);
+            hero.SpawnEffect(hitEffectPrefab, pos, hitEffectLifetime);
     }
 
     private void ApplyHealOptions(float damageDealt)
