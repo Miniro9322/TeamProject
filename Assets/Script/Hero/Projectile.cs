@@ -120,18 +120,28 @@ public class Projectile : MonoBehaviour
         }
 
         Vector3 dest = visualOnly ? destination : AttackDamageUtil.EffectPosition(target.gameObject);
-        Vector3 toTarget = dest - transform.position;
-        if (toTarget.sqrMagnitude <= hitDistance * hitDistance)
+        Vector3 oldPos = transform.position;
+        Vector3 toTarget = dest - oldPos;
+
+        if (TryLook(toTarget, out Quaternion desired))
+            transform.rotation = Quaternion.RotateTowards(transform.rotation, desired, turnSpeed * Time.deltaTime);
+
+        Vector3 newPos = oldPos + transform.forward * speed * Time.deltaTime;
+
+        // 고배속/프레임드랍으로 한 프레임 이동거리가 hitDistance를 넘으면 목표를 관통하거나
+        // 옆으로 스쳐 지나갈 수 있다. 이번 프레임 이동 경로(선분) 기준으로 판정해 그런 경우도 잡는다.
+        Vector3 closest = ClosestPointOnSegment(dest, oldPos, newPos);
+        if ((dest - closest).sqrMagnitude <= hitDistance * hitDistance)
         {
+            // Hit()의 범위 공격/장판 스폰이 transform.position을 기준으로 하므로,
+            // 관통/스쳐 지나간 경우에도 실제 명중 지점(선분상 최근접점)으로 스냅해 둔다.
+            transform.position = closest;
             if (visualOnly) { SpawnHitEffect(dest); Return(); }
             else Hit();
             return;
         }
 
-        if (TryLook(toTarget, out Quaternion desired))
-            transform.rotation = Quaternion.RotateTowards(transform.rotation, desired, turnSpeed * Time.deltaTime);
-
-        transform.position += transform.forward * speed * Time.deltaTime;
+        transform.position = newPos;
     }
 
     private static bool TryLook(Vector3 dir, out Quaternion rot)
@@ -142,6 +152,14 @@ public class Projectile : MonoBehaviour
             ? Vector3.forward : Vector3.up;
         rot = Quaternion.LookRotation(dir, up);
         return true;
+    }
+
+    private static Vector3 ClosestPointOnSegment(Vector3 point, Vector3 a, Vector3 b)
+    {
+        Vector3 ab = b - a;
+        float abLenSqr = ab.sqrMagnitude;
+        float t = abLenSqr > 1e-9f ? Mathf.Clamp01(Vector3.Dot(point - a, ab) / abLenSqr) : 0f;
+        return a + ab * t;
     }
 
     private void Hit()
