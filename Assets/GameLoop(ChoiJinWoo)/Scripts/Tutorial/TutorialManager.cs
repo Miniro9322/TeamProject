@@ -62,6 +62,7 @@ public class TutorialManager : MonoBehaviour
 
     private void OnEnable()
     {
+        TutorialInputGate.BlockEscapeClose = true;
         citizenManager.CitizenChanged += OnCitizenChanged;
         baseConstructor.Built += OnBuilt;
         heroRoster.Changed += OnHeroRosterChanged;
@@ -71,6 +72,7 @@ public class TutorialManager : MonoBehaviour
 
     private void OnDisable()
     {
+        TutorialInputGate.BlockEscapeClose = false;
         citizenManager.CitizenChanged -= OnCitizenChanged;
         baseConstructor.Built -= OnBuilt;
         heroRoster.Changed -= OnHeroRosterChanged;
