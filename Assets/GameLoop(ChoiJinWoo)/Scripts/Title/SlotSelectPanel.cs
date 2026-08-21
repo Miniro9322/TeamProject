@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 // 슬롯 패널에서 사용할 새 게임과 불러오기 모드를 구분한다.
@@ -29,11 +30,28 @@ public class SlotSelectPanel : MonoBehaviour
     private readonly List<SlotRowView> spawnedRows = new List<SlotRowView>();
 
     private SlotSelectMode mode;
+    private Keyboard keyboard;
 
     // 닫기 버튼에 실행 메서드를 연결한다.
     private void Awake()
     {
         closeButton.onClick.AddListener(OnClose);
+        keyboard = Keyboard.current;
+    }
+
+    // ESC: 확인 팝업이 열려있으면 팝업만 취소하고, 아니면 패널 자체를 닫는다.
+    private void Update()
+    {
+        if (keyboard == null) return;
+        if (!keyboard.escapeKey.wasPressedThisFrame) return;
+
+        if (confirmPopup.gameObject.activeSelf)
+        {
+            confirmPopup.Cancel();
+            return;
+        }
+
+        OnClose();
     }
 
     // 새 게임 모드로 전체 슬롯 목록을 연다.

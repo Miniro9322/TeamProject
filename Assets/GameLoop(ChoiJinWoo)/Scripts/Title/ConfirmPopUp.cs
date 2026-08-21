@@ -43,6 +43,12 @@ public class ConfirmPopup : MonoBehaviour
         HidePopup();
     }
 
+    // ESC로도 취소 버튼과 동일하게 취소할 수 있게 외부에 열어준다.
+    public void Cancel()
+    {
+        OnCancel();
+    }
+
     // 저장된 동작을 비우고 팝업을 닫는다.
     private void HidePopup()
     {
