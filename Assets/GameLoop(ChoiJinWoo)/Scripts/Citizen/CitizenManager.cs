@@ -19,12 +19,30 @@ public class CitizenManager : MonoBehaviour
 
     public event Action CitizenChanged;
 
+    // 0일차 튜토리얼 리셋용 스냅샷 - 보너스 적용 직후 값을 그대로 기억해뒀다가 Reset()에서 되돌린다.
+    private int initialMaxCitizen;
+    private int initialCurrentCitizen;
+
     [Inject]
     private void Construct(UpgradeState upgradeState)
     {
         int bonus = (int)upgradeState.GetTotalEffect(maxCitizenUpgrades);
         maxCitizen += bonus;
         currentCitizen += bonus;
+
+        initialMaxCitizen = maxCitizen;
+        initialCurrentCitizen = currentCitizen;
+    }
+
+    // 0일차 튜토리얼에서 지은 집/모집한 시민/일꾼 배치를 전부 시작 상태로 되돌린다.
+    public void Reset()
+    {
+        maxCitizen = initialMaxCitizen;
+        currentCitizen = initialCurrentCitizen;
+        usedCitizen = 0;
+        heroUsedCitizen = 0;
+
+        UpdateCitizen();
     }
 
     public void IncreaseMaxCitizen(int amount)

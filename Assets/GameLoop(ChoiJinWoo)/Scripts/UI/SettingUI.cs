@@ -47,9 +47,9 @@ public class SettingUI : MonoBehaviour
 
         var options = new List<string>
         {
-            "전체 화면",
-            "테두리 없는 창",
-            "창 모드",
+            DataTableManager.StringTable.Get("UI_Setting_FullScreen"),
+            DataTableManager.StringTable.Get("UI_Setting_BorderlessWindow"),
+            DataTableManager.StringTable.Get("UI_Setting_Window"),
         };
         screenMode.AddOptions(options);
 
@@ -59,6 +59,8 @@ public class SettingUI : MonoBehaviour
         screenMode.RefreshShownValue();
 
         screenMode.onValueChanged.AddListener(ChangeScreenMode);
+
+        LocalizeTextManager.OnLanguageChanged += RefreshDropdown;
 
         //오디오
         foreach (var (slider, param) in VolumeSliders)
@@ -153,5 +155,18 @@ public class SettingUI : MonoBehaviour
     {
         float dB = sliderValue > 0.0001f ? Mathf.Log10(sliderValue) * 20f : -80f;
         gameAudioMixer.SetFloat(paramName, dB);
+    }
+
+    private void RefreshDropdown()
+    {
+        screenMode.ClearOptions();
+
+        var options = new List<string>
+        {
+            DataTableManager.StringTable.Get("UI_Setting_FullScreen"),
+            DataTableManager.StringTable.Get("UI_Setting_BorderlessWindow"),
+            DataTableManager.StringTable.Get("UI_Setting_Window"),
+        };
+        screenMode.AddOptions(options);
     }
 }

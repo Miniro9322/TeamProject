@@ -19,8 +19,9 @@ public class GameManager : MonoBehaviour
     public UiManager UiManager => uiManager;
     private SpawnerManager waveSpawner;
     private UpgradeState upgradeState;
-    [SerializeField] private int dayCount = 0;
+    [SerializeField] private int dayCount; // Construct()에서 튜토리얼 진행 여부에 따라 -1 또는 0으로 초기화
     [SerializeField] private int hp = 20;
+    private int initialHp; // 0일차 튜토리얼 리셋용 스냅샷
     [SerializeField] private List<BaseUpgradeData> hpUpgrades;
     private bool requestSupport = false;
     public int DayCount => dayCount;
@@ -44,7 +45,7 @@ public class GameManager : MonoBehaviour
     public bool perfactDefence = false;
 
     [Inject]
-    private void Construct(UiManager uiManager, SpawnerManager waveSpawner, UpgradeState upgradeState)
+    private void Construct(UiManager uiManager, SpawnerManager waveSpawner, UpgradeState upgradeState, TutorialState tutorialState)
     {
         this.uiManager = uiManager;
         this.waveSpawner = waveSpawner;
@@ -54,6 +55,10 @@ public class GameManager : MonoBehaviour
         uiManager.UnlockedHero = unlockedHero;
 
         hp += (int)upgradeState.GetTotalEffect(hpUpgrades);
+        initialHp = hp;
+
+        // 튜토리얼을 이번 세션에서 처음 보는 거면 0일차(연습)부터, 이미 본 적 있으면 0일차 없이 곧장 1일차부터.
+        dayCount = tutorialState.Seen ? 0 : -1;
 
         day = new DayState(this);
         night = new NightState(this);
@@ -152,5 +157,12 @@ public class GameManager : MonoBehaviour
     {
         unlockedHero = uiManager.UnlockedHero;
         unlockedEnemy = uiManager.UnlockedEnemy;
+    }
+
+    // 0일차 튜토리얼 밤 전투에서 입은 데미지를 되돌린다.
+    public void ResetHpToFull()
+    {
+        hp = initialHp;
+        HpChanged?.Invoke();
     }
 }

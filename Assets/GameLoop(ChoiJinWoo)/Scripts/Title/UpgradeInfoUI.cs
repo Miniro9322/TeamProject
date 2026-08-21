@@ -20,11 +20,18 @@ public class UpgradeInfoUI : MonoBehaviour
         confirmButton.onClick.AddListener(() => ConfirmClicked?.Invoke(current));
     }
 
+    private void OnEnable()
+    {
+        if (current == null) return;
+        nameText.text = DataTableManager.StringTable.Get(current.displayName);
+        descText.text = DataTableManager.StringTable.Get(current.description);
+    }
+
     public void Show(BaseUpgradeData data, bool canUnlockNow)
     {
         current = data;
-        nameText.text = data.displayName;
-        descText.text = data.description;
+        nameText.text = DataTableManager.StringTable.Get(data.displayName);
+        descText.text = DataTableManager.StringTable.Get(data.description);
         costText.text = data.cost.ToString();
         icon.sprite = data.icon;
         confirmButton.gameObject.SetActive(canUnlockNow); // 여기서만 잠금 여부가 반영됨

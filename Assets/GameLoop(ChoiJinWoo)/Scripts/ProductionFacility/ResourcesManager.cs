@@ -25,6 +25,9 @@ public class ResourcesManager : MonoBehaviour
 
     public event Action ProductUpdate;
 
+    // 0일차 튜토리얼 리셋용 스냅샷 - 보너스 적용 직후 값을 그대로 기억해뒀다가 Reset()에서 되돌린다.
+    private int initialWood, initialFood, initialGold, initialIron, initialStone, initialSpecial;
+
     [Inject]
     private void Construct(UpgradeState upgradeState)
     {
@@ -34,6 +37,26 @@ public class ResourcesManager : MonoBehaviour
         gold += bonus;
         iron += bonus;
         stone += bonus;
+
+        initialWood = wood;
+        initialFood = food;
+        initialGold = gold;
+        initialIron = iron;
+        initialStone = stone;
+        initialSpecial = special;
+    }
+
+    // 0일차 튜토리얼에서 쌓은 자원을 전부 시작값으로 되돌린다.
+    public void Reset()
+    {
+        wood = initialWood;
+        food = initialFood;
+        gold = initialGold;
+        iron = initialIron;
+        stone = initialStone;
+        special = initialSpecial;
+
+        ProductUpdate?.Invoke();
     }
 
     private void Start()

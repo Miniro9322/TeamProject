@@ -27,6 +27,10 @@ public class EnviromentManager : MonoBehaviour
 
     public event Action OnDay;
 
+    // 튜토리얼이 밤 전환이 다 끝난 시점(적이 스폰될 수 있게 된 바로 그 시점)에 플레이어 스킬을
+    // 설명하려고 구독한다 - OnDay와 대칭.
+    public event Action OnNight;
+
     [Inject]
     private void Construct(GameManager gameManager, ResourcesManager resourcesManager)
     {
@@ -107,6 +111,7 @@ public class EnviromentManager : MonoBehaviour
         {
             SetNight();
             gameManager.ChangeCanSpawnEnemy(true);
+            OnNight?.Invoke();
         }
         else
         {
