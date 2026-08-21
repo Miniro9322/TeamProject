@@ -16,6 +16,7 @@ public class SaveRestore
     private readonly HeroRoster heroRoster;
     private readonly HeroRegistry heroRegistry;
     private readonly HeroTierUpgradeState tierState;
+    private readonly HeroClassUpgradeState classState;
     private readonly MapGame mapGame;
     private readonly MapAssemble mapAssemble;
     private readonly FacilityManager facilityManager;
@@ -32,6 +33,7 @@ public class SaveRestore
         HeroRoster heroRoster,
         HeroRegistry heroRegistry,
         HeroTierUpgradeState tierState,
+        HeroClassUpgradeState classState,
         MapGame mapGame,
         MapAssemble mapAssemble,
         FacilityManager facilityManager)
@@ -47,6 +49,7 @@ public class SaveRestore
         this.heroRoster = heroRoster;
         this.heroRegistry = heroRegistry;
         this.tierState = tierState;
+        this.classState = classState;
         this.mapGame = mapGame;
         this.mapAssemble = mapAssemble;
         this.facilityManager = facilityManager;
@@ -65,6 +68,7 @@ public class SaveRestore
         RestoreCitizen(data);
         RestoreBuilds(data);
         RestoreTiers(data);
+        RestoreClasses(data);
         RestoreHeroes(data, heroDataByUnitId, restoredEntries);
         RestorePlacements(data, restoredEntries);
         RestorePortals(data);
@@ -129,6 +133,16 @@ public class SaveRestore
         {
             TierSave save = data.tierList[i];
             tierState.RestoreLevel(save.heroTier, save.tierLevel);
+        }
+    }
+
+    // 클래스별 레벨 넣기             → HeroClassUpgradeState
+    private void RestoreClasses(SaveData data)
+    {
+        for (int i = 0; i < data.classList.Length; i++)
+        {
+            ClassSave save = data.classList[i];
+            classState.RestoreLevel(save.heroType, save.classLevel);
         }
     }
 

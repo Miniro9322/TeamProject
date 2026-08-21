@@ -13,6 +13,7 @@ public class SaveCapture
     private readonly SpawnerManager spawnerManager;
     private readonly HeroRoster heroRoster;
     private readonly HeroTierUpgradeState tierState;
+    private readonly HeroClassUpgradeState classState;
     private readonly MapGame mapGame;
 
     public SaveCapture(
@@ -24,6 +25,7 @@ public class SaveCapture
         SpawnerManager spawnerManager,
         HeroRoster heroRoster,
         HeroTierUpgradeState tierState,
+        HeroClassUpgradeState classState,
         MapGame mapGame)
     {
         this.gameManager = gameManager;
@@ -34,6 +36,7 @@ public class SaveCapture
         this.spawnerManager = spawnerManager;
         this.heroRoster = heroRoster;
         this.tierState = tierState;
+        this.classState = classState;
         this.mapGame = mapGame;
     }
 
@@ -62,6 +65,7 @@ public class SaveCapture
         data.heroList = CaptureHeroes();
         data.placeList = CapturePlacements();
         data.tierList = CaptureTiers();
+        data.classList = CaptureClasses();
         data.portalList = CapturePortals(phase);
         data.archiveList = CaptureArchive();
         return data;
@@ -188,6 +192,23 @@ public class SaveCapture
             TierSave save = new TierSave();
             save.heroTier = pair.Key;
             save.tierLevel = pair.Value;
+            result[index] = save;
+            index++;
+        }
+        return result;
+    }
+
+    // 클래스별 강화 레벨을 읽는다 (강화된 클래스만)
+    private ClassSave[] CaptureClasses()
+    {
+        IReadOnlyDictionary<int, int> levels = classState.ClassLevels;
+        ClassSave[] result = new ClassSave[levels.Count];
+        int index = 0;
+        foreach (KeyValuePair<int, int> pair in levels)
+        {
+            ClassSave save = new ClassSave();
+            save.heroType = pair.Key;
+            save.classLevel = pair.Value;
             result[index] = save;
             index++;
         }

@@ -29,6 +29,7 @@ public class SaveData
     public HeroSave[] heroList;       // 보유 영웅 로스터
     public PlaceSave[] placeList;     // 맵에 배치된 영웅들
     public TierSave[] tierList;       // 티어별 강화 레벨
+    public ClassSave[] classList;     // 클래스별 강화 레벨
     public PortalSave[] portalList;   // NightReady일 때만 채워지는 활성 포탈
     public string[] archiveList;      // 발견한 적 도감 ID 목록
 }
