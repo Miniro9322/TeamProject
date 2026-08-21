@@ -15,6 +15,6 @@ public class BuildSave
     public int amountUpgrade;          // 생산량 강화 누적 횟수 (시설만 사용)
     public int citizenUpgrade;         // 인력 강화 누적 횟수 (시설만 사용)
     public string nextUpgradeInfo;     // 다음 강화 안내 문구 (시설만 사용)
-    public CostSave[] constructPaid;   // 지을 때 실제로 낸 자원
-    public CostSave[] upgradePaid;     // 강화하며 지금까지 낸 자원 총합
+    public CostSave[] constructPaid = Array.Empty<CostSave>();   // 지을 때 실제로 낸 자원
+    public CostSave[] upgradePaid = Array.Empty<CostSave>();     // 강화하며 지금까지 낸 자원 총합
 }

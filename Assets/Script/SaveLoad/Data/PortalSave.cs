@@ -6,5 +6,5 @@ using UnityEngine;
 public class PortalSave
 {
     public int regionId;             // 어느 지역의 포탈인지
-    public Vector2Int[] spawnCells;  // 이번 라운드에 켜진 포탈들의 칸 좌표
+    public Vector2Int[] spawnCells = Array.Empty<Vector2Int>();  // 이번 라운드에 켜진 포탈들의 칸 좌표
 }
