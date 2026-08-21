@@ -6,11 +6,13 @@ public class BuildModePanel : MonoBehaviour
 {
     [SerializeField] private GameObject heroPanel;
     [SerializeField] private GameObject rosterPanel;
+    [SerializeField] private GameObject heroInventory;
     [SerializeField] private MapView view;
     [SerializeField] private MapGame game;
     [SerializeField] private Key closeKey = Key.Escape;
     private Keyboard keyboard;
     private ClickOutsideCloser heroPanelCloser;
+    private ClickOutsideCloser inventoryCloser;
 
     private void Awake()
     {
@@ -21,6 +23,7 @@ public class BuildModePanel : MonoBehaviour
         // alsoSelf로 이 패널 전체(빌드모드 버튼들)를 넘겨서, 다른 버튼(예: 로스터)을 눌렀을 때
         // 그 클릭이 "바깥 클릭"으로 잡혀 heroPanel이 먼저 닫혔다가 onClick이 다시 여는 깜빡임을 막는다.
         heroPanelCloser = new ClickOutsideCloser((RectTransform)heroPanel.transform, transform);
+        inventoryCloser = new ClickOutsideCloser((RectTransform)heroInventory.transform, transform);
     }
 
     private void Start()
@@ -40,6 +43,10 @@ public class BuildModePanel : MonoBehaviour
         if (heroPanel.activeSelf && heroPanelCloser.ClickedOutside())
         {
             heroPanel.SetActive(false);
+        }
+        if (heroInventory.activeSelf && view.IsOff && inventoryCloser.ClickedOutside())
+        {
+            heroInventory.SetActive(false);
         }
 
         if (keyboard == null) return;
@@ -71,6 +78,10 @@ public class BuildModePanel : MonoBehaviour
         if (heroPanel.activeSelf)
         {
             heroPanel.SetActive(false);
+        }
+        if (heroInventory.activeSelf)
+        {
+            heroInventory.SetActive(false);
         }
         gameObject.SetActive(false);
     }
@@ -121,6 +132,19 @@ public class BuildModePanel : MonoBehaviour
             view.ClearMode();
         else
             view.SetReplace();
+    }
+
+    public void OnInventoryButton()
+    {
+        if (heroInventory.activeSelf)
+        {
+            heroInventory.SetActive(false);
+        }
+        else
+        {
+            heroInventory.SetActive(true);
+            inventoryCloser.MarkOpened();
+        }
     }
 
     public void OnOffButton()
