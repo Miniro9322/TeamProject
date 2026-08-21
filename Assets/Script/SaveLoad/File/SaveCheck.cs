@@ -7,7 +7,7 @@ using Newtonsoft.Json;
 public class SaveCheck
 {
     public const string FileTag = "GYARK_SAVE";
-    public const int SaveVersion = 1;
+    public const int SaveVersion = 2;
 
     private readonly JsonSerializerSettings jsonSettings;
 

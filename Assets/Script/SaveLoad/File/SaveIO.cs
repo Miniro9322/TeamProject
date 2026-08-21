@@ -21,7 +21,7 @@ public class SaveIO
     {
         try
         {
-            string json = JsonConvert.SerializeObject(saveFile, jsonSettings);
+            string json = JsonConvert.SerializeObject(saveFile, Formatting.Indented, jsonSettings);
             WriteTemp(tempPath, json);
 
             SaveFile readBack = LoadFile(tempPath);
