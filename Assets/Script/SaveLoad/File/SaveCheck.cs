@@ -51,7 +51,7 @@ public class SaveCheck
     // 저장 구조 버전이 다른지 검사한다.
     private bool HasWrongVersion(SaveFile saveFile)
     {
-        return saveFile.saveVersion != SaveVersion;
+        return saveFile.saveVersion > SaveVersion;
     }
 
     // 요청한 슬롯 번호와 다른지 검사한다.
