@@ -42,7 +42,7 @@ public class UiManager : MonoBehaviour
     {
         if (keyboard == null) return;
 
-        if (keyboard.escapeKey.wasPressedThisFrame)
+        if (!TutorialInputGate.BlockEscapeClose && keyboard.escapeKey.wasPressedThisFrame)
         {
 
             if (menuPanel.activeSelf)
