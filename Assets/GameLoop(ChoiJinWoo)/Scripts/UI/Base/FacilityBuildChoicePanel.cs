@@ -15,6 +15,9 @@ public class FacilityBuildChoicePanel : MonoBehaviour, IClosablePanel
     [SerializeField] private Image infoIcon;
     [SerializeField] private TextMeshProUGUI infoText;
     [SerializeField] private RegionDetailPanel parentPanel; // 이 패널을 여는 쪽 - 그 안의 슬롯 버튼 클릭은 "바깥 클릭"이 아니다
+    [SerializeField] private RectTransform buildButtonRect; // "건설" 버튼 - 튜토리얼 스포트라이트용 참조
+
+    public RectTransform BuildButtonRect => buildButtonRect;
 
     private BaseConstructor constructor;
     private ResourcesManager resourcesManager;

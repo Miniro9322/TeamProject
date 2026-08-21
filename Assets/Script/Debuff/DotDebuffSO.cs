@@ -12,7 +12,7 @@ using UnityEngine;
 public class DotDebuffSO : DebuffSO
 {
     [Tooltip("한 번 틱에 들어가는 피해 — 대상 최대 체력의 몇 %인가(2 = 2%, 0.5 = 0.5%). " +
-             "방어력은 적용되지 않는다. 실제 피해값은 틱마다 대상의 현재 최대 체력으로 다시 계산된다.")]
+             "방어력을 무시할지는 아래 ignoreGuard가 정한다. 실제 피해값은 틱마다 대상의 현재 최대 체력으로 다시 계산된다.")]
     [Min(0.01f)] public float percentPerTick = 1f;
 
     [Tooltip("틱 간격(초). 0.05초 미만은 DotRegistry가 0.05로 보정한다.")]
@@ -22,6 +22,12 @@ public class DotDebuffSO : DebuffSO
              "위 %가 '맞는 쪽 최대 체력에 비례하는 몫'이라면 이건 '때린 쪽 공격력에 비례하는 몫'이고, 둘을 더한 값이 한 틱 피해다. " +
              "0이면 기존처럼 최대 체력 비율만 들어간다. 공격력을 안 넘겨주는 경로(불 칸 등)에서 걸리면 이 몫은 0이다.")]
     [Min(0f)] public float atkPercent = 0f;
+
+    [Tooltip("체크하면 틱 피해에 방어력이 안 먹는다(표의 IgnoreGuard=True). " +
+             "끄면 방어력이 적용된 피해로 들어간다 — 표에서 비워 두면 이쪽이 기본값이다.\n" +
+             "끌 때 주의: 실제 피해는 Mathf.Max(1, 피해 - 방어력)이라 방어력이 높은 적에게는 " +
+             "틱이 1까지 깎일 수 있다. 방어력 무시 여부와 무관하게 실드 감소량은 항상 적용된다.")]
+    public bool ignoreGuard = false;
 
     public override DebuffType AllowedTypes =>
         DebuffType.Poison | DebuffType.Ignite | DebuffType.Bleed|DebuffType.SandStom;
@@ -47,6 +53,7 @@ public class DotDebuffSO : DebuffSO
         // 여기선 비율만 넘기므로 반올림할 것이 없다.
         // Apply의 결과를 그대로 돌려준다. 최대 체력을 못 읽어 거절당한 경우까지 true를 주면
         // 아무 피해도 안 들어가는 디버프가 장부와 아이콘에만 남는다("보이는 것 == 걸린 것"이 깨진다).
-        return DotRegistry.Apply(ctx.damageable, type, percentPerTick * scale, interval, duration, ctx.gameManager, atkDamage);
+        return DotRegistry.Apply(ctx.damageable, type, percentPerTick * scale, interval, duration, ctx.gameManager,
+            atkDamage, ignoreGuard);
     }
 }

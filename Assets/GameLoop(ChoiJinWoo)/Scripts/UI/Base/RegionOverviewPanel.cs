@@ -191,7 +191,7 @@ public class RegionOverviewPanel : MonoBehaviour, IClosablePanel
 
     private void Update()
     {
-        if (Keyboard.current.escapeKey.wasPressedThisFrame)
+        if (!TutorialInputGate.BlockEscapeClose && Keyboard.current.escapeKey.wasPressedThisFrame)
         {
             panelStack.CloseTop();
         }

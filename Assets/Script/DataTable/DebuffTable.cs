@@ -35,6 +35,10 @@ public class DebuffTable : DataTable
         // 최대 체력 비율만으로는 "누가 걸었든 같은 독"이라 공격력을 올린 보람이 없어서, 때린 쪽 몫을 여기에 더한다.
         // 곱할 공격력은 걸리는 순간의 값을 찍어 둔다 — 시전자가 죽거나 풀에 반납돼도 남은 독은 계속 굴러야 하므로.
         public float? AtkPercent { get; set; }
+        // true면 틱 피해에 방어력이 안 먹는다. 비우면 false = 방어력이 적용된 피해로 들어간다.
+        // bool?로 두는 이유 — bool이면 빈 칸에서 CsvHelper가 형변환 실패로 던지고, 그러면 이 표 전체가 안 읽힌다.
+        // Category=Dot에서만 의미가 있다(스탯·상태이상은 피해를 안 넣는다). 임포터가 그걸 검사해 알려 준다.
+        public bool? IgnoreGuard { get; set; }
     }
 
     private readonly Dictionary<string, List<Data>> table = new();

@@ -15,6 +15,7 @@ public class GameLifeTimeScope : LifetimeScope
     [SerializeField] private ProductionEconomyConfig economyConfig;
     [SerializeField] private ResourceIconSet resourceIconSet;
     [SerializeField] private HeroUpgradeConfig heroUpgradeConfig;
+    [SerializeField] private HeroClassUpgradeConfig heroClassUpgradeConfig;
     [SerializeField] private Light sunLight;
     [SerializeField] private Transform citizenHubPoint;
     [SerializeField] private Transform[] citizenHomePoints; // 밤에 귀가할 목적지 후보들(여러 개면 시민마다 랜덤 선택)
@@ -40,6 +41,7 @@ public class GameLifeTimeScope : LifetimeScope
         builder.RegisterInstance(economyConfig);
         builder.RegisterInstance(resourceIconSet);
         builder.RegisterInstance(heroUpgradeConfig);
+        builder.RegisterInstance(heroClassUpgradeConfig);
         builder.RegisterComponentOnNewGameObject<PoolManager>(Lifetime.Singleton).AsSelf();
         builder.Register<FacilityManager>(Lifetime.Singleton).AsSelf();
         builder.Register<BaseConstructor>(Lifetime.Singleton).AsSelf();
@@ -47,7 +49,9 @@ public class GameLifeTimeScope : LifetimeScope
         builder.Register<HeroRoster>(Lifetime.Singleton).AsSelf();
         builder.Register<UpgradeState>(Lifetime.Singleton);
         builder.Register<HeroTierUpgradeState>(Lifetime.Singleton);
+        builder.Register<HeroClassUpgradeState>(Lifetime.Singleton);
         builder.Register<UiPanelStack>(Lifetime.Singleton).AsSelf();
+        builder.Register<TutorialState>(Lifetime.Singleton).AsSelf();
 
         // 세이브·로드 담당들. File/은 서로 의존하고, Logic/은 씬의 각 매니저를 읽고 쓴다.
         builder.Register<SaveCheck>(Lifetime.Singleton).AsSelf();
@@ -91,7 +95,11 @@ public class GameLifeTimeScope : LifetimeScope
         builder.RegisterComponentInHierarchy<RegionDetailPanel>();
         builder.RegisterComponentInHierarchy<BuildingPanel>();
         builder.RegisterComponentInHierarchy<HeroTierUpgradeMenu>();
+        builder.RegisterComponentInHierarchy<HeroClassUpgradeMenu>();
         builder.RegisterComponentInHierarchy<HeroSetPanel>();
+        builder.RegisterComponentInHierarchy<TutorialOverlayUI>();
+        builder.RegisterComponentInHierarchy<TutorialManager>();
+        builder.RegisterComponentInHierarchy<PlacePalette>(); // 튜토리얼이 배치 대기 상태(Mode)를 읽어 맵 클릭 순간 딤을 풀어주는 데 씀
 
         // PoolManager는 RegisterComponentOnNewGameObject라 아무도 Resolve하지 않으면 실제로 생성되지 않는다(lazy).
         // 여기서 강제로 한 번 Resolve해 _resolver가 붙은 상태로 즉시 만들어지게 한다.

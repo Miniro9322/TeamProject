@@ -12,6 +12,8 @@ public class HeroTierUpgradeState
 
     public event Action<int> LevelChanged; // 인자: 티어
 
+    public int MaxLevel => config.maxLevel;
+
     private float CostDiscount => upgradeState.GetTotalEffect(config.UpgradeCostUpgrades);
 
     // 강화된 티어와 레벨을 그대로 열거한다 (세이브 전용 조회)
@@ -29,7 +31,7 @@ public class HeroTierUpgradeState
     public bool CanLevelUp(int tier)
     {
         var entry = config.GetEntry(tier);
-        return entry != null && GetLevel(tier) < config.maxLevel;
+        return entry != null && GetLevel(tier) < config.maxLevel - 1;
     }
 
     public (ProductionType Type, int Amount)[] GetNextLevelCost(int tier)

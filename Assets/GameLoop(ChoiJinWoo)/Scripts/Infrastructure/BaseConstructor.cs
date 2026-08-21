@@ -9,6 +9,9 @@ public class BaseConstructor
     private readonly UpgradeState upgradeState;
     private readonly ProductionEconomyConfig economyConfig;
 
+    // 튜토리얼이 "집을 지었는지"만 골라 판정할 수 있도록(built is House) 건설 성공 시 결과물을 그대로 흘려보낸다.
+    public event System.Action<object> Built;
+
     public BaseConstructor(
         ResourcesManager resourcesManager,
         CitizenManager citizenManager,
@@ -48,6 +51,7 @@ public class BaseConstructor
         if (built == null) return false;
 
         region.TryAssign(slotIndex, built, option.icon, option.DisplayName);
+        Built?.Invoke(built);
         return true;
     }
 
