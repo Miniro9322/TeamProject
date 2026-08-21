@@ -1,7 +1,5 @@
 using System.Collections.Generic;
-using UnityEditor.Rendering;
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.Pool;
 
 public class HeroInventory : MonoBehaviour
