@@ -17,16 +17,16 @@ MonoBehaviour:
   - heroType: 0
     baseCost:
     - Type: 0
-      Amount: 50
+      Amount: 10
     - Type: 4
-      Amount: 50
+      Amount: 10
     - Type: 3
-      Amount: 50
+      Amount: 10
     - Type: 2
-      Amount: 50
-    costGrowthPerLevel: 25
+      Amount: 10
+    costGrowthPerLevel: 10
     milestoneLevelInterval: 5
-    milestoneGrowthMultiplier: 2
+    milestoneGrowthMultiplier: 2.5
     statGains:
     - statType: 0
       modifierType: 1
@@ -43,16 +43,16 @@ MonoBehaviour:
   - heroType: 1
     baseCost:
     - Type: 0
-      Amount: 80
+      Amount: 10
     - Type: 4
-      Amount: 80
+      Amount: 10
     - Type: 3
-      Amount: 80
+      Amount: 10
     - Type: 2
-      Amount: 80
-    costGrowthPerLevel: 40
+      Amount: 10
+    costGrowthPerLevel: 15
     milestoneLevelInterval: 5
-    milestoneGrowthMultiplier: 2
+    milestoneGrowthMultiplier: 2.5
     statGains:
     - statType: 0
       modifierType: 1
