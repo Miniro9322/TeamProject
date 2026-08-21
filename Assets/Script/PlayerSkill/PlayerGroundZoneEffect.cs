@@ -133,6 +133,7 @@ public class PlayerGroundZoneEffect : MonoBehaviour
             Hero target = AttackDamageUtil.FindLowestHpAlly(QueryAllies());
             if (target == null) return;
             float heal = healAmount + target.SC[StatType.HP] * hpHealPer;
+            Debug.Log(heal);
             if (heal <= 0f) return;
             target.Heal(heal);
             SpawnHitEffect(transform.position);

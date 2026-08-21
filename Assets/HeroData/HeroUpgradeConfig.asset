@@ -25,6 +25,8 @@ MonoBehaviour:
     - Type: 4
       Amount: 10
     costGrowthPerLevel: 10
+    milestoneLevelInterval: 5
+    milestoneGrowthMultiplier: 2
     statGains:
     - statType: 0
       modifierType: 1
@@ -48,7 +50,9 @@ MonoBehaviour:
       Amount: 30
     - Type: 4
       Amount: 30
-    costGrowthPerLevel: 20
+    costGrowthPerLevel: 25
+    milestoneLevelInterval: 5
+    milestoneGrowthMultiplier: 2.5
     statGains:
     - statType: 0
       modifierType: 1
@@ -72,7 +76,9 @@ MonoBehaviour:
       Amount: 100
     - Type: 4
       Amount: 100
-    costGrowthPerLevel: 40
+    costGrowthPerLevel: 50
+    milestoneLevelInterval: 5
+    milestoneGrowthMultiplier: 2.5
     statGains:
     - statType: 0
       modifierType: 1
@@ -97,6 +103,8 @@ MonoBehaviour:
     - Type: 4
       Amount: 300
     costGrowthPerLevel: 80
+    milestoneLevelInterval: 5
+    milestoneGrowthMultiplier: 2.5
     statGains:
     - statType: 0
       modifierType: 1
