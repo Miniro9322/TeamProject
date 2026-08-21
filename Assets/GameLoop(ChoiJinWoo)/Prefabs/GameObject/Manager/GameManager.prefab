@@ -44,6 +44,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 647209ff08fb0534c978daac32c5db19, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameManager
+  dayCount: 0
   hp: 100
   hpUpgrades:
   - {fileID: 11400000, guid: e990e3fd7f55b234e8bfe60656a1b13c, type: 2}
@@ -53,3 +54,5 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 6a6e03dc6af41c94ea5924055ae6a415, type: 2}
   initialUnlockedHero: 3
   isGameOver: 0
+  todayHp: 0
+  perfactDefence: 0
