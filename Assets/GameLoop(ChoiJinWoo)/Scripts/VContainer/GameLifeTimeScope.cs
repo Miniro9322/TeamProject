@@ -60,6 +60,8 @@ public class GameLifeTimeScope : LifetimeScope
         builder.Register<SaveCapture>(Lifetime.Singleton).AsSelf();
         builder.Register<SaveRestore>(Lifetime.Singleton).AsSelf();
         builder.Register<SaveManager>(Lifetime.Singleton).As<ITickable>().As<IStartable>().AsSelf();
+        builder.Register<SaveKey>(Lifetime.Singleton).AsSelf();
+        builder.Register<SaveCipher>(Lifetime.Singleton).AsSelf();
 
         if (sunLight != null)
         {

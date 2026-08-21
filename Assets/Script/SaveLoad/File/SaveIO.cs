@@ -1,5 +1,7 @@
 using System;
 using System.IO;
+using System.Security.Cryptography;
+using System.Text;
 using Newtonsoft.Json;
 
 // 세이브 파일을 임시 경로에 쓰고 검증하거나, 검증된 파일을 목적지로 옮기거나, 읽는다.
@@ -7,11 +9,13 @@ public class SaveIO
 {
     private readonly JsonSerializerSettings jsonSettings;
     private readonly SaveCheck saveCheck;
+    private readonly SaveCipher saveCipher;
 
-    // JSON 변환 규칙과 저장 파일 검사기를 받는다.
-    public SaveIO(SaveCheck saveCheck)
+    // JSON 변환 규칙과 저장 파일 검사기, 암호화·서명 담당을 받는다.
+    public SaveIO(SaveCheck saveCheck, SaveCipher saveCipher)
     {
         this.saveCheck = saveCheck;
+        this.saveCipher = saveCipher;
         jsonSettings = new JsonSerializerSettings();
         jsonSettings.Converters.Add(new CellConverter());
     }
@@ -22,7 +26,8 @@ public class SaveIO
         try
         {
             string json = JsonConvert.SerializeObject(saveFile, Formatting.Indented, jsonSettings);
-            WriteTemp(tempPath, json);
+            byte[] fileBytes = saveCipher.ToFileBytes(json);
+            WriteTemp(tempPath, fileBytes);
 
             SaveFile readBack = LoadFile(tempPath);
             return saveCheck.IsValidSave(readBack, saveFile.slotId, saveFile.saveOrder);
@@ -78,22 +83,34 @@ public class SaveIO
         File.Move(sourcePath, destinationPath);
     }
 
-    // JSON 문자열을 임시 파일에 쓰고 디스크까지 반영한다.
-    private void WriteTemp(string filePath, string json)
+    // 파일 바이트를 임시 파일에 쓰고 디스크까지 반영한다.
+    private void WriteTemp(string filePath, byte[] fileBytes)
     {
         using (FileStream stream = new FileStream(filePath, FileMode.Create, FileAccess.Write))
-        using (StreamWriter writer = new StreamWriter(stream))
         {
-            writer.Write(json);
-            writer.Flush();
+            stream.Write(fileBytes, 0, fileBytes.Length);
             stream.Flush(true);
         }
     }
 
-    // 저장 파일을 JSON에서 복원한다.
+    // 저장 파일을 JSON에서 복원한다. 서명이 안 맞으면 예전 평문 파일로 보고 그대로 파싱한다.
     private SaveFile LoadFile(string filePath)
     {
-        string json = File.ReadAllText(filePath);
+        byte[] fileBytes = File.ReadAllBytes(filePath);
+        string json = ToJsonWithLegacyFallback(fileBytes);
         return JsonConvert.DeserializeObject<SaveFile>(json, jsonSettings);
+    }
+
+    // 파일 바이트의 서명을 검사하고 복호화한다. 서명이 안 맞으면 암호화 이전의 평문 파일로 보고 UTF-8 그대로 읽는다.
+    private string ToJsonWithLegacyFallback(byte[] fileBytes)
+    {
+        try
+        {
+            return saveCipher.ToJson(fileBytes);
+        }
+        catch (CryptographicException)
+        {
+            return Encoding.UTF8.GetString(fileBytes);
+        }
     }
 }

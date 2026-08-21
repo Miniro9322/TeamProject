@@ -17,7 +17,9 @@ public static class SaveLoadRepeatSaveTest
     public static void RunRepeatSaveTest()
     {
         SaveCheck saveCheck = new SaveCheck();
-        SaveIO saveIO = new SaveIO(saveCheck);
+        SaveKey saveKey = new SaveKey();
+        SaveCipher saveCipher = new SaveCipher(saveKey);
+        SaveIO saveIO = new SaveIO(saveCheck, saveCipher);
         SaveSlot saveSlot = new SaveSlot(saveIO, saveCheck);
 
         CleanTestFolder();

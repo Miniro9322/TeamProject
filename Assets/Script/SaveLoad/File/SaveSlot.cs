@@ -88,7 +88,7 @@ public class SaveSlot
         saveIO.MoveOverwrite(tempPath, currentPath);
     }
 
-    // 전달받은 값에 슬롯 정보와 체크섬을 붙인다.
+    // 전달받은 값에 슬롯 정보를 붙인다.
     private SaveFile CreateFile(int slotId, int saveOrder, SaveFile saveFile)
     {
         return new SaveFile
@@ -97,7 +97,6 @@ public class SaveSlot
             saveVersion = saveFile.saveVersion,
             slotId = slotId,
             saveOrder = saveOrder,
-            checkSum = saveCheck.GetHash(saveFile.saveData),
             saveData = saveFile.saveData
         };
     }
