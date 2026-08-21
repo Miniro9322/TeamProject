@@ -525,7 +525,10 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
 
     protected virtual void OnArrivedAtCore()
     {
-        SendDieEvent();
+        // HpDamage를 SendDieEvent보다 먼저 호출한다 — 보스가 본진에 도달해 게임오버가 걸리는 경우,
+        // isGameOver 플래그가 켜진 뒤에 SendDieEvent(→EnemyAllClear→OnResult)가 돌아야
+        // OnResult의 isGameOver 가드가 먹혀서 다음날로 안 넘어간다. 순서가 반대면
+        // 이 적이 마지막 남은 적일 때 게임오버 전에 이미 결과(다음날) 상태로 전환돼버린다.
         var gm = gameManager;
         if (gm == null)
             Debug.LogWarning($"[{name}] GameManager를 찾을 수 없음 — HpDamage 스킵.", this);
@@ -536,6 +539,7 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
             int region = waveSpawner != null ? waveSpawner.Region : -1;
             AnalyticsRecorder.EnemyLeaked(enemyKey, Class.ToString(), region, gm.DayCount, before - gm.Hp, gm.Hp);
         }
+        SendDieEvent();
         if (Board != null) Board.RemoveEnemy(gameObject);
     }
     private async UniTask RunSkillLoop(CancellationToken token)
