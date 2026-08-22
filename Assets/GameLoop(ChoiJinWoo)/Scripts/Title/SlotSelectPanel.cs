@@ -25,7 +25,7 @@ public class SlotSelectPanel : MonoBehaviour
     public event Action SlotConfirmed;
     public event Action SaveChanged;
 
-    private readonly SlotPreviewReader previewReader = new SlotPreviewReader();
+    private SlotPreviewReader previewReader;
     private readonly SlotDelete slotDelete = new SlotDelete();
     private readonly List<SlotRowView> spawnedRows = new List<SlotRowView>();
 
@@ -37,6 +37,12 @@ public class SlotSelectPanel : MonoBehaviour
     {
         closeButton.onClick.AddListener(OnClose);
         keyboard = Keyboard.current;
+    }
+
+    // TitleUI가 만든 리더를 그대로 받아 쓴다 (자기 것을 새로 안 만듦).
+    public void SetPreviewReader(SlotPreviewReader reader)
+    {
+        previewReader = reader;
     }
 
     // ESC: 확인 팝업이 열려있으면 팝업만 취소하고, 아니면 패널 자체를 닫는다.
@@ -174,6 +180,7 @@ public class SlotSelectPanel : MonoBehaviour
             return;
         }
 
+        previewReader.ClearCache();
         SaveChanged?.Invoke();
         BuildRows(false);
 

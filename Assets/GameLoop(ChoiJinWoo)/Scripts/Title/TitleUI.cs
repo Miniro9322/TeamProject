@@ -35,6 +35,7 @@ public class TitleUI : MonoBehaviour
         slotSelectPanel.gameObject.SetActive(false);
         slotSelectPanel.SlotConfirmed += OnSlotConfirmed;
         slotSelectPanel.SaveChanged += RefreshLoad;
+        slotSelectPanel.SetPreviewReader(previewReader);
         RefreshLoad();
     }
 
