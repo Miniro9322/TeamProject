@@ -41,12 +41,13 @@ public class SaveCapture
     }
 
     // 저장 단계에 맞는 전체 세이브 데이터를 한 번에 만든다
-    public SaveData CaptureSaveData(SavePhase phase, float playTime)
+    public SaveData CaptureSaveData(SavePhase phase, float playTime, int[] savedDayList)
     {
         SaveData data = new SaveData();
         data.savePhase = phase;
         data.saveTime = DateTime.Now.ToString("O");
         data.playTime = playTime;
+        data.savedDayList = savedDayList;
         data.dayCount = gameManager.DayCount;
         data.baseHp = gameManager.Hp;
         data.heroUnlock = gameManager.UnlockHero;

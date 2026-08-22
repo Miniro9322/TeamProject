@@ -32,4 +32,5 @@ public class SaveData
     public ClassSave[] classList = Array.Empty<ClassSave>();     // 클래스별 강화 레벨
     public PortalSave[] portalList = Array.Empty<PortalSave>();   // NightReady일 때만 채워지는 활성 포탈
     public string[] archiveList = Array.Empty<string>();      // 발견한 적 도감 ID 목록
+    public int[] savedDayList = Array.Empty<int>();           // 지금까지 저장된 일차 번호 목록
 }

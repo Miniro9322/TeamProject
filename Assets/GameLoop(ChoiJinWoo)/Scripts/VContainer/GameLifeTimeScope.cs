@@ -59,7 +59,15 @@ public class GameLifeTimeScope : LifetimeScope
         builder.Register<SaveSlot>(Lifetime.Singleton).AsSelf();
         builder.Register<SaveCapture>(Lifetime.Singleton).AsSelf();
         builder.Register<SaveRestore>(Lifetime.Singleton).AsSelf();
-        builder.Register<SaveManager>(Lifetime.Singleton).As<ITickable>().As<IStartable>().AsSelf();
+        builder.Register<SaveTimeData>(Lifetime.Singleton).As<ITickable>().AsSelf();
+        builder.Register<SaveManager>(Lifetime.Singleton).AsSelf();
+        builder.Register<LoadManager>(Lifetime.Singleton).As<IStartable>().AsSelf();
+
+        // SaveManager는 주입받는 곳이 없어 안 만들어지므로, 여기서 강제로 Resolve해 이벤트 구독을 걸리게 한다.
+        builder.RegisterBuildCallback(resolver =>
+        {
+            resolver.Resolve<SaveManager>();
+        });
         builder.Register<SaveKey>(Lifetime.Singleton).AsSelf();
         builder.Register<SaveCipher>(Lifetime.Singleton).AsSelf();
 
