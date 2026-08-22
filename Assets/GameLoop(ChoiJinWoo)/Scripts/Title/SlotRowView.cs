@@ -27,7 +27,7 @@ public class SlotRowView : MonoBehaviour
 
     private int slotId;
     private SlotPreviewInfo slotInfo;
-    private Action<int> onRowClicked;
+    private Action<int, SlotPreviewInfo> onRowClicked;
     private Action<int> onDeleteClicked;
 
     // 슬롯 버튼과 삭제 버튼에 실행 메서드를 연결한다.
@@ -54,7 +54,7 @@ public class SlotRowView : MonoBehaviour
         int slotId,
         SlotPreviewInfo info,
         bool canDelete,
-        Action<int> onRowClicked,
+        Action<int, SlotPreviewInfo> onRowClicked,
         Action<int> onDeleteClicked)
     {
         this.slotId = slotId;
@@ -188,7 +188,7 @@ public class SlotRowView : MonoBehaviour
     // 슬롯 선택을 슬롯 번호와 함께 전달한다.
     private void OnClicked()
     {
-        onRowClicked.Invoke(slotId);
+        onRowClicked.Invoke(slotId, slotInfo);
     }
 
     // 슬롯 삭제 요청을 슬롯 번호와 함께 전달한다.

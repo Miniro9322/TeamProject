@@ -119,9 +119,8 @@ public class SlotSelectPanel : MonoBehaviour
     }
 
     // 슬롯 선택에 맞는 확인 팝업을 연다.
-    private void OnRowClicked(int slotId)
+    private void OnRowClicked(int slotId, SlotPreviewInfo info)
     {
-        SlotPreviewInfo info = previewReader.ReadSaveSlot(slotId);
         StringTable table = DataTableManager.StringTable;
         string message = BuildConfirmMessage(slotId, info, table);
         string buttonLabel = GetConfirmLabel(table);
@@ -176,14 +175,14 @@ public class SlotSelectPanel : MonoBehaviour
         }
 
         SaveChanged?.Invoke();
+        BuildRows(false);
 
-        if (!previewReader.HasAnySave())
+        if (spawnedRows.Count == 0)
         {
             gameObject.SetActive(false);
             return;
         }
 
-        BuildRows(false);
         ResetScroll();
     }
 

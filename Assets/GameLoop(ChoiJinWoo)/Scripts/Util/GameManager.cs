@@ -167,6 +167,12 @@ public class GameManager : MonoBehaviour
         HpChanged?.Invoke();
     }
 
+    // 세이브 데이터로 오늘 아침 기준 체력을 그대로 덮어쓴다 (로드 복원 전용)
+    public void RestoreTodayHp(int amount)
+    {
+        todayHp = amount;
+    }
+
     // 세이브 데이터로 해금된 영웅 목록을 그대로 덮어쓴다 (로드 복원 전용)
     public void RestoreUnlockedHero(byte value)
     {

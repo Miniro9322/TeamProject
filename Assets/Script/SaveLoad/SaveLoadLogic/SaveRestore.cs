@@ -74,11 +74,12 @@ public class SaveRestore
         RestorePortals(data);
     }
 
-    // 일차·체력·해금영웅 넣기        → GameManager
+    // 일차·체력·아침체력·해금영웅 넣기   → GameManager
     private void RestoreProgress(SaveData data)
     {
         gameManager.RestoreDayCount(data.dayCount);
         gameManager.RestoreHp(data.baseHp);
+        gameManager.RestoreTodayHp(data.baseHp);
         gameManager.RestoreUnlockedHero(data.heroUnlock);
     }
 
