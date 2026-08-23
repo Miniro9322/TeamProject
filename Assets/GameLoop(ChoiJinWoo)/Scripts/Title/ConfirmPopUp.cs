@@ -20,12 +20,13 @@ public class ConfirmPopup : MonoBehaviour
         cancelButton.onClick.AddListener(OnCancel);
     }
 
-    // 문구와 확인 콜백을 갈아끼워 팝업을 띄운다.
+    // 문구와 확인 콜백을 갈아끼워 팝업을 띄운다 (호출한 패널보다 항상 위에 보이게 그리기 순서를 맨 뒤로 보낸다).
     public void ShowPopup(string message, string buttonLabel, Action onConfirmed)
     {
         messageText.text = message;
         confirmText.text = buttonLabel;
         this.onConfirmed = onConfirmed;
+        transform.SetAsLastSibling();
         gameObject.SetActive(true);
     }
 

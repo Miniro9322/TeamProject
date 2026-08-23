@@ -58,6 +58,6 @@ public class SlotPreviewReader
             return SlotPreviewInfo.Empty;
         }
 
-        return new SlotPreviewInfo(true, file.saveData.dayCount, file.saveData.playTime, file.saveData.saveTime, file.saveData.heroList.Length);
+        return new SlotPreviewInfo(true, file.saveData.dayCount, file.saveData.playTime, file.saveData.saveTime, file.saveData.heroList.Length, file.saveData.savePhase);
     }
 }

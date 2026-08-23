@@ -145,13 +145,24 @@ public class SlotRowView : MonoBehaviour
     // 저장된 슬롯의 진행도·플레이 시간·저장 시각을 표시한다.
     private void SetSaveText(StringTable table)
     {
-        dayText.text = string.Format(table.Get("Ui_SlotDay"), slotInfo.DayCount);
+        dayText.text = string.Format(table.Get("Ui_SlotDay"), slotInfo.DayCount, GetPhaseText(table));
         playTimeText.text = string.Format(
             table.Get("Ui_PlayTimeFormat"),
             GetHours(slotInfo.PlayTime),
             GetMinutes(slotInfo.PlayTime));
         saveTimeText.text = string.Format(table.Get("Ui_SlotSaveTime"), SaveTimeCalc.FormatSaveTime(slotInfo.SaveTime));
         heroCountText.text = string.Format(table.Get("Ui_HeroCount"), slotInfo.HeroCount);
+    }
+
+    // 저장 단계에 맞는 낮/밤 문구를 반환한다.
+    private string GetPhaseText(StringTable table)
+    {
+        if (slotInfo.SavePhase == SavePhase.NightReady)
+        {
+            return table.Get("Ui_PhaseNight");
+        }
+
+        return table.Get("Ui_PhaseDay");
     }
 
     // 누적 플레이 시간에서 시간 단위를 구한다.

@@ -21,6 +21,8 @@ public class SlotSelectPanel : MonoBehaviour
     [SerializeField] private Button closeButton;
     [SerializeField] private ConfirmPopup confirmPopup;
     [SerializeField] private ScrollRect scrollRect;
+    [SerializeField] private LoadOptionPopup loadOptionPopup;
+    [SerializeField] private DaySelectPanel daySelectPanel;
 
     public event Action SlotConfirmed;
     public event Action SaveChanged;
@@ -45,7 +47,7 @@ public class SlotSelectPanel : MonoBehaviour
         previewReader = reader;
     }
 
-    // ESC: 확인 팝업이 열려있으면 팝업만 취소하고, 아니면 패널 자체를 닫는다.
+    // ESC: 가장 위에 떠 있는 창 한 겹만 닫는다 (확인 팝업 > 불러오기 방식 팝업 > 일차 선택 패널 > 슬롯 선택 패널 순).
     private void Update()
     {
         if (keyboard == null) return;
@@ -54,6 +56,18 @@ public class SlotSelectPanel : MonoBehaviour
         if (confirmPopup.gameObject.activeSelf)
         {
             confirmPopup.Cancel();
+            return;
+        }
+
+        if (loadOptionPopup.gameObject.activeSelf)
+        {
+            loadOptionPopup.Cancel();
+            return;
+        }
+
+        if (daySelectPanel.gameObject.activeSelf)
+        {
+            daySelectPanel.gameObject.SetActive(false);
             return;
         }
 
@@ -80,9 +94,12 @@ public class SlotSelectPanel : MonoBehaviour
         ResetScroll();
     }
 
-    // 슬롯을 고르지 않고 패널을 닫는다.
+    // 슬롯을 고르지 않고 패널과 열려있는 팝업을 모두 닫는다.
     private void OnClose()
     {
+        confirmPopup.gameObject.SetActive(false);
+        loadOptionPopup.gameObject.SetActive(false);
+        daySelectPanel.gameObject.SetActive(false);
         gameObject.SetActive(false);
     }
 
@@ -127,38 +144,40 @@ public class SlotSelectPanel : MonoBehaviour
     // 슬롯 선택에 맞는 확인 팝업을 연다.
     private void OnRowClicked(int slotId, SlotPreviewInfo info)
     {
-        StringTable table = DataTableManager.StringTable;
-        string message = BuildConfirmMessage(slotId, info, table);
-        string buttonLabel = GetConfirmLabel(table);
-
-        confirmPopup.ShowPopup(message, buttonLabel, () => ConfirmSlot(slotId));
-    }
-
-    // 선택 모드와 저장 여부에 맞는 확인 문구를 만든다.
-    private string BuildConfirmMessage(int slotId, SlotPreviewInfo info, StringTable table)
-    {
         if (mode == SlotSelectMode.Load)
         {
-            return string.Format(table.Get("Ui_LoadConfirm"), slotId);
+            loadOptionPopup.ShowPopup(() => ConfirmContinueLoad(slotId), () => OpenDaySelect(slotId));
+            return;
         }
 
+        StringTable table = DataTableManager.StringTable;
+        string message = BuildConfirmMessage(slotId, info, table);
+        confirmPopup.ShowPopup(message, table.Get("Ui_Confirm"), () => ConfirmSlot(slotId));
+    }
+
+    // 선택한 슬롯의 일차 목록 패널을 연다.
+    private void OpenDaySelect(int slotId)
+    {
+        daySelectPanel.Open(slotId);
+    }
+
+    // 이어하기 선택 시 최종 확인 팝업을 연다.
+    private void ConfirmContinueLoad(int slotId)
+    {
+        StringTable table = DataTableManager.StringTable;
+        string message = string.Format(table.Get("Ui_LoadConfirm"), slotId);
+        confirmPopup.ShowPopup(message, table.Get("Ui_Load"), () => ConfirmSlot(slotId));
+    }
+
+    // 새 게임 모드의 저장 여부에 맞는 확인 문구를 만든다.
+    private string BuildConfirmMessage(int slotId, SlotPreviewInfo info, StringTable table)
+    {
         if (info.HasSave)
         {
             return string.Format(table.Get("Ui_OverwriteWarning"), slotId);
         }
 
         return string.Format(table.Get("Ui_NewGameConfirm"), slotId);
-    }
-
-    // 현재 선택 모드에 맞는 확인 버튼 문구를 반환한다.
-    private string GetConfirmLabel(StringTable table)
-    {
-        if (mode == SlotSelectMode.Load)
-        {
-            return table.Get("Ui_Load");
-        }
-
-        return table.Get("Ui_Confirm");
     }
 
     // 슬롯 삭제 경고 팝업을 연다.

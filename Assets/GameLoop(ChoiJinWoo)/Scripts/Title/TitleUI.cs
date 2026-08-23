@@ -21,7 +21,8 @@ public class TitleUI : MonoBehaviour
 
     [SerializeField] private Button loadButton;
     [SerializeField] private SlotSelectPanel slotSelectPanel;
- 
+    [SerializeField] private DaySelectPanel daySelectPanel;
+
     private readonly SlotPreviewReader previewReader = new SlotPreviewReader();
 
 
@@ -33,9 +34,11 @@ public class TitleUI : MonoBehaviour
         QuitAlert.SetActive(false);
         upgradePanel.SetActive(false);
         slotSelectPanel.gameObject.SetActive(false);
+        daySelectPanel.gameObject.SetActive(false);
         slotSelectPanel.SlotConfirmed += OnSlotConfirmed;
         slotSelectPanel.SaveChanged += RefreshLoad;
         slotSelectPanel.SetPreviewReader(previewReader);
+        daySelectPanel.SlotConfirmed += OnSlotConfirmed;
         RefreshLoad();
     }
 
@@ -44,6 +47,7 @@ public class TitleUI : MonoBehaviour
     {
         slotSelectPanel.SlotConfirmed -= OnSlotConfirmed;
         slotSelectPanel.SaveChanged -= RefreshLoad;
+        daySelectPanel.SlotConfirmed -= OnSlotConfirmed;
     }
 
     private async UniTaskVoid ApplyResolution()
@@ -89,6 +93,8 @@ public class TitleUI : MonoBehaviour
     // 로딩 화면을 띄우고 MainScene으로 넘어가는 본체(OnSlotConfirmed에서 재사용).
     private void EnterMainScene()
     {
+        slotSelectPanel.gameObject.SetActive(false);
+        daySelectPanel.gameObject.SetActive(false);
         LoadingPanel.SetActive(true);
         LoadSceneAsync("MainScene").Forget();
     }
