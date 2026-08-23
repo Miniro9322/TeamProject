@@ -41,7 +41,10 @@ MonoBehaviour:
   projectilePrefab: {fileID: 0}
   clipLength: 0.5
   buffList: []
-  targetDebuffs: []
+  targetDebuffs:
+  - debuff: {fileID: 11400000, guid: bb2920d47f46b7d408e21f17834b3954, type: 2}
+    durationOverride: 2
+    scale: 1
   groundZonePrefab: {fileID: 0}
   attackEffect: {fileID: 0}
   attackEffectLifetime: 1

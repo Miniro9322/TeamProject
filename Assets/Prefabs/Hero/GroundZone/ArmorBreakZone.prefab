@@ -14609,9 +14609,10 @@ MonoBehaviour:
   tickInterval: 0.1
   damagePer: 0
   healPer: 0
+  hpHealPer: 0
   duration: 999
   targetDebuffs:
-  - debuff: {fileID: 11400000, guid: 6a2850864c5f94c43bb41dc18173b783, type: 2}
+  - debuff: {fileID: 11400000, guid: dd1b98d8e5a0a7645b822fcca4660a27, type: 2}
     durationOverride: 0.2
     scale: 1
   hitEffect: {fileID: 0}
