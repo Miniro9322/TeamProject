@@ -50,7 +50,7 @@ public class DayRowView : MonoBehaviour
         StringTable table = DataTableManager.StringTable;
         dayText.text = string.Format(table.Get("Ui_DaySelectRow"), dayInfo.DayCount);
         playTimeText.text = string.Format(
-            table.Get("Ui_DayPlayTimeFormat"),
+            table.Get("Ui_PlayTimeFormat"),
             GetHours(dayInfo.PlayTime),
             GetMinutes(dayInfo.PlayTime));
         saveTimeText.text = string.Format(table.Get("Ui_SlotSaveTime"), SaveTimeCalc.FormatSaveTime(dayInfo.SaveTime));
