@@ -6925,6 +6925,7 @@ GameObject:
   - component: {fileID: 314587631}
   - component: {fileID: 314587632}
   - component: {fileID: 314587633}
+  - component: {fileID: 314587634}
   m_Layer: 0
   m_Name: TileSystem
   m_TagString: Untagged
@@ -7073,6 +7074,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RangeInput
   input: {fileID: 314587630}
+--- !u!114 &314587634
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 314587622}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4113f2e1d83410c478ea8e844466648d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HeroFieldStatTooltipTrigger
+  mapView: {fileID: 314587628}
 --- !u!1 &322001199
 GameObject:
   m_ObjectHideFlags: 0
