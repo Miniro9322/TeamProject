@@ -396,17 +396,17 @@ public class WaveSpawner : MonoBehaviour
 
         if (region == 1 && currentStage > 10 && currentStage % 10 == 0)
         {
-            foreach (var w in waveTable.GetWave(1, 10))
+            foreach (var w in waveTable.GetWave(1, 5001))
             {
                 SpawnWaveRout(w, w.Count, bossSpawnDelay).Forget();
                 Enemycount += w.Count;
             }
         }
-
         _roundStartTime = Time.time;
         _roundDayCount = currentStage;
         AnalyticsRecorder.RoundStart(region, currentStage, Enemycount);
     }
+
 
     private async UniTask SpawnWaveRout(WaveTable.Data wave, int count, float startDelay = 0f)
     {
