@@ -71,8 +71,8 @@ public class SaveIO
         }
     }
 
-    // 파일을 목적지 경로로 옮긴다. 목적지에 이미 파일이 있으면 교체하고, 없으면 그대로 옮긴다.
-    public void MoveOverwrite(string sourcePath, string destinationPath)
+    // 파일을 목적지 경로로 옮기며, 이미 있으면 덮어쓴다.
+    public void MoveFileToPath(string sourcePath, string destinationPath)
     {
         if (File.Exists(destinationPath))
         {
@@ -81,6 +81,12 @@ public class SaveIO
         }
 
         File.Move(sourcePath, destinationPath);
+    }
+
+    // 파일을 목적지 경로로 복사하며, 이미 있으면 덮어쓴다.
+    public void CopyFileToPath(string sourcePath, string destinationPath)
+    {
+        File.Copy(sourcePath, destinationPath, true);
     }
 
     // 파일 바이트를 임시 파일에 쓰고 디스크까지 반영한다.

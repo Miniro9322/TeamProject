@@ -13,6 +13,8 @@ public class SaveSlot
     private const string BackupName = "Save_Backup";
     private const string SaveExt = ".sav";
     private const string TempExt = ".tmp";
+    private const string DayPrefix = "Save_Day_";
+    private const string DayFormat = "D2";
 
     private readonly SaveIO saveIO;
     private readonly SaveCheck saveCheck;
@@ -77,15 +79,47 @@ public class SaveSlot
         return saveCheck.IsValidSave(saveFile, slotId);
     }
 
+    // 정식 파일을 지정한 일차 전용 파일로 복사한다.
+    public bool TryWriteDayArchive(int slotId, int dayCount)
+    {
+        string folder = SlotPath(slotId);
+
+        try
+        {
+            saveIO.CopyFileToPath(NamedPath(folder, CurrentName, SaveExt), DayPath(folder, dayCount));
+            return true;
+        }
+        catch (IOException)
+        {
+            return false;
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return false;
+        }
+    }
+
+    // 지정한 일차 파일을 읽고 검증까지 통과하는지 본다.
+    public bool TryReadDay(int slotId, int dayCount, out SaveFile saveFile)
+    {
+        return TryReadValid(DayPath(SlotPath(slotId), dayCount), slotId, out saveFile);
+    }
+
+    // 일차 번호에 맞는 일차 전용 파일 경로를 만든다.
+    private string DayPath(string folder, int dayCount)
+    {
+        return NamedPath(folder, DayPrefix + dayCount.ToString(DayFormat), SaveExt);
+    }
+
     // 검증된 임시 파일을 정식 파일로 승격한다. 기존 정식 파일이 있으면 먼저 백업으로 밀어낸다.
     private void PromoteToCurrent(string currentPath, string backupPath, string tempPath)
     {
         if (File.Exists(currentPath))
         {
-            saveIO.MoveOverwrite(currentPath, backupPath);
+            saveIO.MoveFileToPath(currentPath, backupPath);
         }
 
-        saveIO.MoveOverwrite(tempPath, currentPath);
+        saveIO.MoveFileToPath(tempPath, currentPath);
     }
 
     // 전달받은 값에 슬롯 정보를 붙인다.

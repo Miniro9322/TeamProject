@@ -2,7 +2,7 @@
 public class SaveCheck
 {
     public const string FileTag = "GYARK_SAVE";
-    public const int SaveVersion = 2;
+    public const int SaveVersion = 3;
 
     // 저장 파일의 식별자·버전·슬롯을 검사한다 (순번은 보지 않음 — 읽을 때는 기대 순번이 없음).
     public bool IsValidSave(SaveFile saveFile, int slotId)

@@ -38,13 +38,24 @@ public class LoadManager : IStartable
         TryLoad();
     }
 
-    // 슬롯의 두 세대 중 검증을 통과하는 최신 저장본을 적용한다.
+    // 선택 상태에 맞는 저장본을 읽어 적용한다.
     private bool TryLoad()
     {
-        if (!saveSlot.TryReadLatest(SelectedSaveSlot.SlotId, out SaveFile file)) return false;
+        if (!TryReadSelectedSave(out SaveFile saveFile)) return false;
 
-        ApplyLoaded(file.saveData);
+        ApplyLoaded(saveFile.saveData);
         return true;
+    }
+
+    // 선택된 일차가 있으면 그 일차 파일을, 없으면 최신 저장본을 읽는다.
+    private bool TryReadSelectedSave(out SaveFile saveFile)
+    {
+        if (SelectedSaveSlot.SelectedDay == SelectedSaveSlot.NoSelectedDay)
+        {
+            return saveSlot.TryReadLatest(SelectedSaveSlot.SlotId, out saveFile);
+        }
+
+        return saveSlot.TryReadDay(SelectedSaveSlot.SlotId, SelectedSaveSlot.SelectedDay, out saveFile);
     }
 
     // 검증된 데이터를 적용하고, DayStart면 생산·완벽방어 보상을 정확히 1회 더 실행한다.

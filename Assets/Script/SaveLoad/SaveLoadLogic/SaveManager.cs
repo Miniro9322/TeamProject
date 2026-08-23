@@ -27,43 +27,51 @@ public class SaveManager
         gameManager.ChangeToNight += OnNightTransitioned;
     }
 
-    // 새 일차로 전환된 직후(생산 전) 상태를 저장한다
+    // 새 일차로 전환된 직후(생산 전) 상태를 저장하고 일차 전용 파일까지 남긴다
     private void OnDayTransitioned()
     {
-        TrySave(SavePhase.DayStart);
+        int currentDayCount = gameManager.DayCount;
+        int[] appendedDayList = DayListCalc.AppendDay(saveTimeData.DayList, currentDayCount);
+
+        if (!TrySave(SavePhase.DayStart, currentDayCount, appendedDayList))
+        {
+            return;
+        }
+
+        saveTimeData.SetDayList(appendedDayList);
+
+        bool archived = saveSlot.TryWriteDayArchive(SelectedSaveSlot.SlotId, currentDayCount);
+        LogFailure(archived, currentDayCount);
     }
 
     // 밤으로 전환된 직후(낮 준비가 끝난 최종) 상태를 저장한다
     private void OnNightTransitioned()
     {
-        TrySave(SavePhase.NightReady);
+        TrySave(SavePhase.NightReady, gameManager.DayCount, saveTimeData.DayList);
     }
 
-    private bool TrySave(SavePhase phase)
+    private bool TrySave(SavePhase phase, int dayCount, int[] savedDayList)
     {
         if (!ToolEnabled)
         {
             return false;
         }
 
-        int[] savedDayList = saveTimeData.DayList;
-        if (phase == SavePhase.DayStart)
-        {
-            savedDayList = DayListCalc.AppendDay(saveTimeData.DayList, gameManager.DayCount);
-        }
-
-        SaveData data = saveCapture.CaptureSaveData(phase, saveTimeData.PlayTime, savedDayList);
+        SaveData data = saveCapture.CaptureSaveData(phase, dayCount, saveTimeData.PlayTime, savedDayList);
         SaveFile file = new SaveFile();
         file.fileTag = SaveCheck.FileTag;
         file.saveVersion = SaveCheck.SaveVersion;
         file.saveData = data;
 
-        bool written = saveSlot.TryWrite(SelectedSaveSlot.SlotId, file);
-        if (written)
-        {
-            saveTimeData.SetDayList(savedDayList);
-        }
-        return written;
+        return saveSlot.TryWrite(SelectedSaveSlot.SlotId, file);
+    }
+
+    // 일차 파일 복사 실패를 로그로 알린다
+    private void LogFailure(bool archived, int dayCount)
+    {
+        if (archived) return;
+
+        Debug.LogError($"[SaveLoad] {dayCount}일차 파일 복사에 실패했습니다.");
     }
 
     #region Save Tools

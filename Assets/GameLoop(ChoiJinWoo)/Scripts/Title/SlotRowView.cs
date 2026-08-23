@@ -1,5 +1,4 @@
 using System;
-using System.Globalization;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -151,7 +150,7 @@ public class SlotRowView : MonoBehaviour
             table.Get("Ui_PlayTimeFormat"),
             GetHours(slotInfo.PlayTime),
             GetMinutes(slotInfo.PlayTime));
-        saveTimeText.text = string.Format(table.Get("Ui_SlotSaveTime"), GetSaveTime(slotInfo.SaveTime));
+        saveTimeText.text = string.Format(table.Get("Ui_SlotSaveTime"), SaveTimeCalc.FormatSaveTime(slotInfo.SaveTime));
         heroCountText.text = string.Format(table.Get("Ui_HeroCount"), slotInfo.HeroCount);
     }
 
@@ -166,23 +165,6 @@ public class SlotRowView : MonoBehaviour
     {
         int remainder = (int)playTime % SecondsPerHour;
         return remainder / SecondsPerMinute;
-    }
-
-    // 저장 시각을 슬롯 화면용 짧은 형식으로 바꾼다.
-    private string GetSaveTime(string saveTime)
-    {
-        bool parsed = DateTime.TryParse(
-            saveTime,
-            CultureInfo.InvariantCulture,
-            DateTimeStyles.RoundtripKind,
-            out DateTime savedAt);
-
-        if (!parsed)
-        {
-            return "-";
-        }
-
-        return savedAt.ToString("MM-dd HH:mm", CultureInfo.InvariantCulture);
     }
 
     // 슬롯 선택을 슬롯 번호와 함께 전달한다.
