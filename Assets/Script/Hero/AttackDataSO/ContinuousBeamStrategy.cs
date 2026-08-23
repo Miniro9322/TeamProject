@@ -46,7 +46,7 @@ public class ContinuousBeamStrategy : IAttackDeliveryStrategy
             Transform muzzle = ctx.MuzzleOrSelf;
             foreach (GameObject t in ResolveBeamTargets(hero, data, ctx))
             {
-                GameObject beamGo = hero.SpawnPersistentEffect(data.beamEffectPrefab, muzzle.position, Quaternion.identity);
+                GameObject beamGo = hero.SpawnPersistentEffect(data.beamEffectPrefab, muzzle.position);
                 Hero.TrackLinkEndpoints(beamGo, () => muzzle.position, BeamTargetProvider(hero, data, t, muzzle));
                 beamSlots.Add((t, beamGo));
             }
@@ -55,7 +55,7 @@ public class ContinuousBeamStrategy : IAttackDeliveryStrategy
         // SelfArea 전용 — 캐스터→타겟 라인이 아니라 캐스터 위치에 붙는 단일 이펙트(회전 이펙트 등)이므로
         // 빔 슬롯처럼 여러 개/UpdateLinkEndpoints가 필요 없다. 매 틱 self 위치로만 갱신한다.
         GameObject selfEffectGo = isSelfArea && data.beamEffectPrefab != null
-            ? hero.SpawnPersistentEffect(data.beamEffectPrefab, ctx.self.position, Quaternion.identity)
+            ? hero.SpawnPersistentEffect(data.beamEffectPrefab, ctx.self.position)
             : null;
 
         try
@@ -151,7 +151,7 @@ public class ContinuousBeamStrategy : IAttackDeliveryStrategy
                 for (int i = 0; i < need; i++)
                 {
                     GameObject t = pool[i % pool.Count];
-                    GameObject beamGo = hero.SpawnPersistentEffect(data.beamEffectPrefab, ctx.MuzzleOrSelf.position, Quaternion.identity);
+                    GameObject beamGo = hero.SpawnPersistentEffect(data.beamEffectPrefab, ctx.MuzzleOrSelf.position);
                     Hero.TrackLinkEndpoints(beamGo, () => ctx.MuzzleOrSelf.position, AttackDamageUtil.TrackingPosition(t));
                     slots.Add((t, beamGo));
                 }
