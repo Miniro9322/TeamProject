@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 2433276867650012285}
   - component: {fileID: 249323212370029468}
   - component: {fileID: 518169462295036758}
-  - component: {fileID: 8451366133515459206}
+  - component: {fileID: 680008849528660200}
   m_Layer: 5
   m_Name: Button
   m_TagString: Untagged
@@ -146,9 +146,9 @@ MonoBehaviour:
   - {fileID: -330922682, guid: 97674d34c3046274f9cee23fa0f2aec1, type: 3}
   - {fileID: 1509108586, guid: 97674d34c3046274f9cee23fa0f2aec1, type: 3}
   classIcon: {fileID: 6450941674479744560}
-  toolTip: {fileID: 8451366133515459206}
   hpSlider: {fileID: 8903739794554861252}
---- !u!114 &8451366133515459206
+  statToolTipTrigger: {fileID: 680008849528660200}
+--- !u!114 &680008849528660200
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -157,10 +157,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 1271542963576726607}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a884c86289546db44934b5714235468e, type: 3}
+  m_Script: {fileID: 11500000, guid: b0bd7c1843e62d34c811bb6d8f7dff47, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::TooltipTrigger
-  message: 
+  m_EditorClassIdentifier: Assembly-CSharp::HeroStatToolTipTrigger
 --- !u!1 &1414971722991370166
 GameObject:
   m_ObjectHideFlags: 0
