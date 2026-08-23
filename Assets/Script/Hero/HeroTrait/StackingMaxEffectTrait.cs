@@ -15,6 +15,6 @@ public class StackingMaxEffectTrait : HeroTrait
     {
         hero.Buffs.ApplyStackingModifier(hero, stat, modifierType, valuePerStack, duration, maxStacks, this);
         if (maxStackEffectPrefab != null && hero.Buffs.GetStacks(hero, this) == maxStacks)
-            hero.SpawnEffect(maxStackEffectPrefab, hero.transform.position, Quaternion.identity, maxStackEffectLifetime);
+            hero.SpawnEffect(maxStackEffectPrefab, hero.transform.position, maxStackEffectLifetime);
     }
 }

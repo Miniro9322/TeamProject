@@ -141,6 +141,17 @@ public class Hero : MonoBehaviour, IDamageAble, IUnit, IStunAble, IDebuffCarrier
         return go;
     }
 
+    // 회전을 생략하면 identity가 아니라 프리팹 자신에게 구워둔 회전을 쓴다 — Quaternion.identity를
+    // 넘기면 눕혀두거나 특정 방향을 보게 만든 프리팹의 로컬 회전이 스폰 때마다 지워지기 때문.
+    // localRotation을 쓰는 이유: hitEffect 필드가 (일부 장판 프리팹처럼) 스폰된 다른 오브젝트의
+    // 자식 Transform을 직접 가리키는 경우가 있는데, 그때 rotation(월드)을 읽으면 부모(장판 루트 등)의
+    // 런타임 회전과 합성되어 버린다. 진짜 프리팹 애셋 루트는 parent가 없어 local==world라 안전하다.
+    public GameObject SpawnEffect(GameObject prefab, Vector3 pos, float lifetime)
+        => SpawnEffect(prefab, pos, prefab != null ? prefab.transform.localRotation : Quaternion.identity, lifetime);
+
+    public GameObject SpawnPersistentEffect(GameObject prefab, Vector3 pos)
+        => SpawnPersistentEffect(prefab, pos, prefab != null ? prefab.transform.localRotation : Quaternion.identity);
+
     public GameObject SpawnPersistentEffect(GameObject prefab, Vector3 pos, Quaternion rot)
     {
         if (prefab == null) return null;
@@ -168,7 +179,7 @@ public class Hero : MonoBehaviour, IDamageAble, IUnit, IStunAble, IDebuffCarrier
     // TrackLinkEndpoints로 계속 그 대상들을 따라가게 한다(대상이 움직이는 동안 얼어붙지 않도록).
     public GameObject SpawnChainArc(GameObject prefab, GameObject fromTarget, GameObject toTarget, float lifetime)
     {
-        GameObject go = SpawnEffect(prefab, AttackDamageUtil.EffectPosition(fromTarget), Quaternion.identity, lifetime);
+        GameObject go = SpawnEffect(prefab, AttackDamageUtil.EffectPosition(fromTarget), lifetime);
         TrackLinkEndpoints(go, AttackDamageUtil.TrackingPosition(fromTarget), AttackDamageUtil.TrackingPosition(toTarget));
         return go;
     }

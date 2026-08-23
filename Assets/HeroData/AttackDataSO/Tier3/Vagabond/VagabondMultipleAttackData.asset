@@ -41,11 +41,14 @@ MonoBehaviour:
   projectilePrefab: {fileID: 0}
   clipLength: 0.6666667
   buffList: []
-  targetDebuffs: []
+  targetDebuffs:
+  - debuff: {fileID: 11400000, guid: 3d52c84596b792944bd198b861dd436a, type: 2}
+    durationOverride: 5
+    scale: 1
   groundZonePrefab: {fileID: 0}
-  attackEffect: {fileID: 1200950891393156, guid: 52a726355873f9443b626e837ef94008, type: 3}
+  attackEffect: {fileID: 1200950891393156, guid: d1c9f25c78f5df742bdedbbd8ef58ce3, type: 3}
   attackEffectLifetime: 1
-  hitEffect: {fileID: 8393927888780647174, guid: 0777bc22e9e6ace47a89e97740ea56e9, type: 3}
+  hitEffect: {fileID: 8393927888780647174, guid: 44d79a9dbfe76c5428d708a9e3be04e6, type: 3}
   hitEffectLifetime: 1
   lifestealPercent: 0
   allyHealAmount: 0

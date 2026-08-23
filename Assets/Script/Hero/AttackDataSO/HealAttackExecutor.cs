@@ -21,7 +21,7 @@ public class HealAttackExecutor : IAttackExecutor
             float windowDuration = AttackAnimSpeedUtil.ComputeWindowDuration(data, interval);
             await AttackEventWindow.RunHits(ctx.animEvents, windowDuration, async token =>
             {
-                ctx.hero.SpawnEffect(data.attackEffect, ctx.self.position, Quaternion.identity, data.attackEffectLifetime);
+                ctx.hero.SpawnEffect(data.attackEffect, ctx.self.position, data.attackEffectLifetime);
                 await AttackDamageUtil.ApplyInstantHeal(data, ctx, token);
             }, ct);
         }

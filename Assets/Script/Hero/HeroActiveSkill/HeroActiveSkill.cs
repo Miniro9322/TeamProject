@@ -48,7 +48,7 @@ public class HeroActiveSkill : MonoBehaviour
             foreach (GameObject enemy in hero.GetObjectsInRange(targetTile.WorldTop, 0, RangeShape.Diamond))
                 if (enemy.GetComponentInParent<IDamageAble>() is IDamageAble d)
                     d.TakeDamage(dmg);
-            hero.SpawnEffect(instantHitEffect, targetTile.WorldTop, Quaternion.identity, instantHitEffectLifetime);
+            hero.SpawnEffect(instantHitEffect, targetTile.WorldTop, instantHitEffectLifetime);
         }
 
         if (duration > 0f)
