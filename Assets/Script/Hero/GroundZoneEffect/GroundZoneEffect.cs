@@ -28,6 +28,11 @@ public class GroundZoneEffect : MonoBehaviour
     public List<TargetDebuffRef> targetDebuffs = new();
     public GameObject hitEffect;
     public float hitEffectLifetime = 0.5f;
+    [Tooltip("mode==Heal: 힐 받는 대상 발밑에 표시할 1회성 이펙트. null이면 안 스폰.")]
+    public GameObject healReceiveEffect;
+    public float healReceiveEffectLifetime = 0.5f;
+    [Tooltip("mode==Buff: 버프 받는 아군 발밑에 붙어 범위 안에 머무는 동안 유지되는 이펙트. null이면 안 스폰.")]
+    public GameObject buffReceiveEffect;
     [Tooltip("이 프리팹의 파티클/데칼이 기본 크기(localScale=1)로 나타내는 반경(타일 수). radius/이값만큼 자기 자신을 스케일한다. 0이면 스케일하지 않음.")]
     public float visualRadius = 0f;
     [Tooltip("장판이 살아있는 동안 자기 위치에 한 번 스폰해 유지하는 이펙트(범위 표시용). null이면 안 스폰.")]
@@ -44,6 +49,7 @@ public class GroundZoneEffect : MonoBehaviour
     private CancellationTokenSource cts;
     private GameObject selfEffectInstance;
     private readonly HashSet<Hero> buffedAllies = new();
+    private readonly Dictionary<Hero, GameObject> buffEffectInstances = new();
 
     // Hero.SpawnGroundZone이 풀에서 꺼낸 직후 호출한다. followOwner는 오라(소유자를 따라다녀야 하는
     // 장판)인지, 스킬/공격이 심어놓고 떠나는 장판인지를 호출부가 명시한다(duration 값으로는 구분 불가 —
@@ -114,8 +120,24 @@ public class GroundZoneEffect : MonoBehaviour
             if (ally == null) continue;
             foreach (BuffEffect effect in allyBuffs)
                 owner.Buffs.RemoveBuff(ally, effect.statType, this);
+            DespawnAllyBuffEffect(ally);
         }
         buffedAllies.Clear();
+    }
+
+    private void SpawnAllyBuffEffect(Hero ally)
+    {
+        if (buffReceiveEffect == null) return;
+        GameObject fx = owner.SpawnPersistentEffect(buffReceiveEffect, ally.transform.position);
+        if (fx == null) return;
+        fx.transform.SetParent(ally.transform, worldPositionStays: true);
+        buffEffectInstances[ally] = fx;
+    }
+
+    private void DespawnAllyBuffEffect(Hero ally)
+    {
+        if (!buffEffectInstances.Remove(ally, out GameObject fx)) return;
+        if (fx != null) owner.DespawnEffect(buffReceiveEffect, fx);
     }
 
     private void Tick()
@@ -131,6 +153,8 @@ public class GroundZoneEffect : MonoBehaviour
             heal = heal + target.SC[StatType.HP] * hpHealPer;
             target.Heal(heal);
             SpawnHitEffect(transform.position);
+            if (healReceiveEffect != null)
+                owner.SpawnEffect(healReceiveEffect, target.transform.position, healReceiveEffectLifetime);
             return;
         }
 
@@ -146,14 +170,18 @@ public class GroundZoneEffect : MonoBehaviour
                 if (!buffedAllies.Add(ally)) continue;
                 foreach (BuffEffect effect in allyBuffs)
                     owner.Buffs.ApplyStackingModifier(ally, effect.statType, effect.modifierType, effect.value, 0f, effect.maxStacks, this);
+                SpawnAllyBuffEffect(ally);
             }
 
             buffedAllies.RemoveWhere(ally =>
             {
                 if (ally != null && inRange.Contains(ally)) return false;
                 if (ally != null)
+                {
                     foreach (BuffEffect effect in allyBuffs)
                         owner.Buffs.RemoveBuff(ally, effect.statType, this);
+                    DespawnAllyBuffEffect(ally);
+                }
                 return true;
             });
             return;

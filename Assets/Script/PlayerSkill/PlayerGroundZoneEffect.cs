@@ -26,6 +26,11 @@ public class PlayerGroundZoneEffect : MonoBehaviour
     public List<TargetDebuffRef> targetDebuffs = new();
     public GameObject hitEffect;
     public float hitEffectLifetime = 0.5f;
+    [Tooltip("mode==Heal: 힐 받는 대상 발밑에 표시할 1회성 이펙트. null이면 안 스폰.")]
+    public GameObject healReceiveEffect;
+    public float healReceiveEffectLifetime = 0.5f;
+    [Tooltip("mode==Buff: 버프 받는 아군 발밑에 붙어 범위 안에 머무는 동안 유지되는 이펙트. null이면 안 스폰.")]
+    public GameObject buffReceiveEffect;
     [Tooltip("이 프리팹의 파티클/데칼이 기본 크기(localScale=1)로 나타내는 반경(타일 수). radius/이값만큼 자기 자신을 스케일한다. 0이면 스케일하지 않음.")]
     public float visualRadius = 0f;
     [Tooltip("장판이 살아있는 동안 자기 위치에 한 번 스폰해 유지하는 이펙트(범위 표시용). null이면 안 스폰.")]
@@ -41,6 +46,7 @@ public class PlayerGroundZoneEffect : MonoBehaviour
     private CancellationTokenSource cts;
     private GameObject selfEffectInstance;
     private readonly HashSet<Hero> buffedAllies = new();
+    private readonly Dictionary<Hero, GameObject> buffEffectInstances = new();
     private GameManager gameManager;
 
     // 스폰 직후 호출한다. release가 null이면 만료 시 스스로 Destroy된다(풀링 없음).
@@ -119,8 +125,31 @@ public class PlayerGroundZoneEffect : MonoBehaviour
             if (ally == null) continue;
             foreach (BuffEffect effect in allyBuffs)
                 buffManager.RemoveBuff(ally, effect.statType, this);
+            DespawnAllyBuffEffect(ally);
         }
         buffedAllies.Clear();
+    }
+
+    private void SpawnAllyBuffEffect(Hero ally)
+    {
+        if (buffReceiveEffect == null) return;
+        GameObject fx = Instantiate(buffReceiveEffect, ally.transform.position, buffReceiveEffect.transform.rotation, ally.transform);
+        foreach (ParticleSystem ps in fx.GetComponentsInChildren<ParticleSystem>(true))
+            ps.Play(true);
+        buffEffectInstances[ally] = fx;
+    }
+
+    private void DespawnAllyBuffEffect(Hero ally)
+    {
+        if (!buffEffectInstances.Remove(ally, out GameObject fx)) return;
+        if (fx != null) Destroy(fx);
+    }
+
+    private void SpawnHealReceiveEffect(Vector3 pos)
+    {
+        if (healReceiveEffect == null) return;
+        GameObject go = Instantiate(healReceiveEffect, pos, healReceiveEffect.transform.localRotation);
+        if (healReceiveEffectLifetime > 0f) Destroy(go, healReceiveEffectLifetime);
     }
 
     private void Tick()
@@ -137,6 +166,7 @@ public class PlayerGroundZoneEffect : MonoBehaviour
             if (heal <= 0f) return;
             target.Heal(heal);
             SpawnHitEffect(transform.position);
+            SpawnHealReceiveEffect(target.transform.position);
             return;
         }
 
@@ -152,14 +182,18 @@ public class PlayerGroundZoneEffect : MonoBehaviour
                 if (!buffedAllies.Add(ally)) continue;
                 foreach (BuffEffect effect in allyBuffs)
                     buffManager.ApplyStackingModifier(ally, effect.statType, effect.modifierType, effect.value, 0f, effect.maxStacks, this);
+                SpawnAllyBuffEffect(ally);
             }
 
             buffedAllies.RemoveWhere(ally =>
             {
                 if (ally != null && inRange.Contains(ally)) return false;
                 if (ally != null)
+                {
                     foreach (BuffEffect effect in allyBuffs)
                         buffManager.RemoveBuff(ally, effect.statType, this);
+                    DespawnAllyBuffEffect(ally);
+                }
                 return true;
             });
             return;
