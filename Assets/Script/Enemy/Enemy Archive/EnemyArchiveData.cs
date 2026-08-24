@@ -14,7 +14,22 @@ public static class EnemyArchiveData
     private const string PrefsKey = "EnemyArchive.Unlocked_Test1";
     private const char Separator = ';';
 
+    // 게임 시작부터 열려 있는 적. 도감을 처음 열었을 때 보여줄 게 하나는 있어야 한다.
+    // 저장본을 불러올 때(RestoreAll)와 초기화(ResetAll) 뒤에도 다시 넣어준다 —
+    // 이 기능이 생기기 전 세이브에는 목록에 없으므로 그대로 두면 잠긴 채로 뜬다.
+    public static readonly string[] DefaultUnlocked = { "Chicken" };
+
     static EnemyArchiveData() => Load();
+
+    // 기본 해금을 집합에 직접 넣는다. Unlock()을 거치지 않는 이유:
+    // 그쪽은 "새로 발견했다"는 뜻이라 로그를 찍고 OnUnlocked 이벤트까지 쏜다 — 기본값은 발견이 아니다.
+    private static bool SeedDefaults()
+    {
+        bool added = false;
+        for (int i = 0; i < DefaultUnlocked.Length; i++)
+            added |= unlocked.Add(DefaultUnlocked[i]);
+        return added;
+    }
 
     public static void Unlock(string enemyKey)
     {
@@ -39,15 +54,18 @@ public static class EnemyArchiveData
         {
             if (!string.IsNullOrEmpty(savedKeys[i])) unlocked.Add(savedKeys[i]);
         }
+        SeedDefaults();   // 기본 해금이 없던 시절의 세이브도 구제한다
         Save();
     }
 
-    // 디버그/테스트용 — 도감 전체 초기화
+    // 디버그/테스트용 — 도감 전체 초기화(기본 해금만 남는다)
     public static void ResetAll()
     {
         unlocked.Clear();
         PlayerPrefs.DeleteKey(PrefsKey);
         PlayerPrefs.Save();
+        SeedDefaults();
+        Save();
     }
 
     private static void Save()
@@ -60,8 +78,14 @@ public static class EnemyArchiveData
     {
         unlocked.Clear();
         var raw = PlayerPrefs.GetString(PrefsKey, string.Empty);
-        if (string.IsNullOrEmpty(raw)) return;
-        foreach (var k in raw.Split(Separator))
-            if (!string.IsNullOrEmpty(k)) unlocked.Add(k);
+        if (!string.IsNullOrEmpty(raw))
+        {
+            foreach (var k in raw.Split(Separator))
+                if (!string.IsNullOrEmpty(k)) unlocked.Add(k);
+        }
+
+        // 시드는 조기 return 안쪽이 아니라 여기서 무조건 돌려야 한다 —
+        // 이미 PlayerPrefs가 쌓인 사람은 위 파싱 경로를 타므로 그쪽에만 넣으면 영영 안 열린다.
+        if (SeedDefaults()) Save();
     }
 }

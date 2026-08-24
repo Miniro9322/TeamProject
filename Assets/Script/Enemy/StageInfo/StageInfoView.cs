@@ -18,9 +18,14 @@ public class StageInfoView : MonoBehaviour
     [Tooltip("행 목록을 담은 ScrollRect. 비워두면 자식에서 자동으로 찾는다. 없으면 행 맞춤 로직 전체가 no-op.")]
     [SerializeField] private ScrollRect scroll;
 
+    [Tooltip("패널을 닫는 버튼(선택). 없으면 스폰 칸 밖을 클릭하거나 밤이 되면 닫힌다.")]
+    [SerializeField] private Button closeButton;
+
     [Header("행 맞춤")]
-    [Tooltip("행이 창에 다 들어오도록 목록 전체를 축소한다. 끄면 넘칠 때 스크롤한다.")]
-    [SerializeField] private bool fitAllRows = true;
+    [Tooltip("행이 창에 다 들어오도록 목록 전체를 축소한다. 끄면 넘칠 때 스크롤한다. " +
+             "고정 UI 패널의 일반 ScrollView에서는 꺼두는 쪽이 맞다 — 켜면 셀 폭을 뷰포트에 맞춰 " +
+             "1열 목록으로 강제하고, 스크롤 대신 내용을 축소해 버린다.")]
+    [SerializeField] private bool fitAllRows = false;
     [Tooltip("행 하나의 기준 높이(축소 배율 1일 때). 행 프리팹 높이와 같게 둔다.")]
     [SerializeField] private float rowHeight = 50f;
     [Tooltip("축소 하한. 이보다 작아지면 글자를 못 읽으므로 여기서 멈추고, 남는 만큼만 스크롤한다.")]
@@ -31,10 +36,14 @@ public class StageInfoView : MonoBehaviour
     [Header("툴팁")]
     [Tooltip("툴팁 패널 (켜고 끔). 행 위에 겹치지 않게 offset으로 밀어준다.")]
     [SerializeField] private GameObject tooltip;
+    [Tooltip("툴팁에 띄울 적 아이콘(선택). 아이콘 PNG가 없는 적이면 자동으로 숨긴다.")]
+    [SerializeField] private Image tooltipIcon;
     [SerializeField] private TMP_Text tooltipNameText;
     [SerializeField] private TMP_Text tooltipDescText;
     [Tooltip("툴팁의 '도감 열기' 버튼. 누르면 도감이 열리고 그 적 페이지가 뜬다. 없어도 동작한다.")]
     [SerializeField] private Button archiveButton;
+    [Tooltip("특성 줄의 라벨 StringTable 키. Ui_Type=타입, Ui_Attribute=속성. 값은 EnemyTable.Attribute다.")]
+    [SerializeField] private string attributeLabelKey = "Ui_Attribute";
     [Tooltip("마우스를 몇 초 올리고 있으면 뜨는지. 클릭은 이 지연 없이 즉시 뜬다.")]
     [SerializeField] private float hoverDelay = 0.2f;
     [Tooltip("행·툴팁 어디에도 커서가 없을 때 툴팁을 닫기까지의 여유. " +
@@ -61,6 +70,10 @@ public class StageInfoView : MonoBehaviour
     private bool hidePending;
     private float hideTimer;
     private float zoomScale = 1f;            // StageInfoFollow가 넣어주는 줌 배율(1 = 기준 거리)
+    // 스탯 표시용 글로벌 일차. 패널을 켜는 SpawnerManager가 SetDay로 넣어준다.
+    // VContainer로 GameManager를 직접 받지 않는 이유: 이 패널은 GameLifeTimeScope에 등록돼 있지 않고
+    // (autoInjectGameObjects도 비어 있다) 비활성으로 시작하므로 [Inject]가 아예 호출되지 않는다.
+    private int dayCount;
 
     void Awake()
     {
@@ -71,6 +84,27 @@ public class StageInfoView : MonoBehaviour
         DisableContainerRaycast();
         CacheTooltipRects();
         SetupTooltipInteraction();
+
+        if (closeButton != null)
+        {
+            closeButton.onClick.RemoveListener(Hide);
+            closeButton.onClick.AddListener(Hide);
+        }
+    }
+    // 스탯 배율 계산에 쓸 글로벌 일차. Show() 직후 SpawnerManager가 호출한다.
+    public void SetDay(int day) => dayCount = day;
+
+    // 고정 UI 패널로 쓸 때의 열기/닫기. SpawnerManager가 부른다.
+    // 예전처럼 풀에서 스폰/회수하지 않으므로 상태 초기화는 Begin()/Clear()가 전부 맡는다.
+    public void Show()
+    {
+        if (!gameObject.activeSelf) gameObject.SetActive(true);
+    }
+
+    public void Hide()
+    {
+        Clear();                       // 켜져 있는 동안 정리해야 툴팁/행이 확실히 내려간다
+        if (gameObject.activeSelf) gameObject.SetActive(false);
     }
 
     // 툴팁을 '살아있게' 만드는 배선.
@@ -279,7 +313,9 @@ public class StageInfoView : MonoBehaviour
             rowsDirty = true;
         }
 
-        if (rowGrid == null) return;
+        // 셀 폭 보정은 축소를 쓸 때만 한다. 일반 ScrollView에서 이걸 켜두면 셀 폭이 뷰포트 폭으로
+        // 덮여 항상 1열이 되고, Grid의 열 수·셀 크기를 인스펙터에서 잡아둔 게 무시된다.
+        if (!fitAllRows || rowGrid == null) return;
         var cell = new Vector2(scroll.viewport.rect.width / scale, rowHeight);
         if ((rowGrid.cellSize - cell).sqrMagnitude > 0.01f)
         {
@@ -471,16 +507,42 @@ public class StageInfoView : MonoBehaviour
         bool unlocked = EnemyArchiveData.IsUnlocked(data.Name);
         bool masked = maskUnknownEnemy && !unlocked;
 
+        // 아이콘은 행이 이미 띄운 것을 그대로 재사용한다(Resources를 두 번 뒤지지 않게).
+        // 아이콘 PNG가 없는 적, 그리고 가려야 하는 적은 오브젝트째 끈다 —
+        // Image만 끄면 rect가 남아 MeasureTooltip이 빈 공간까지 툴팁 크기로 잡는다.
+        if (tooltipIcon != null)
+        {
+            Sprite sprite = masked ? null : row.IconSprite;
+            if (sprite != null) tooltipIcon.sprite = sprite;
+            tooltipIcon.gameObject.SetActive(sprite != null);
+        }
+
         if (tooltipNameText != null)
             tooltipNameText.text = masked ? unknownName : st.Get(data.Name);
+        // 설명 문장 대신 스탯 블록. 가려야 하는 적은 수치까지 새어 나가지 않게 통째로 ???.
         if (tooltipDescText != null)
-            tooltipDescText.text = masked ? unknownDesc : st.Get(data.Desc);
+            tooltipDescText.text = masked ? unknownDesc : BuildStatBlock(data);
 
         // 도감은 미해금 적을 ???로 띄우고 잠금 팝업까지 낸다(EnemyInfo.ShowLocked).
         // 눌러도 볼 게 없으니 버튼을 숨긴다 — '더 보기'가 덜 보여주는 상황을 막는다.
         if (archiveButton != null) archiveButton.gameObject.SetActive(unlocked);
     }
 
+    // 체력 / 공격력 / 방어력 / 특성 4줄.
+    // 특성 항목은 EnemyAttributeText가 <link>로 감싸주므로, 이 TMP를 보는 AttributeTooltip을
+    // 툴팁에 붙여두면 그 단어에 마우스를 올릴 때 특성 설명이 뜬다(도감과 같은 배선).
+    // 색은 입히지 않는다 — 좁은 툴팁이라 색보다 읽히는 게 중요하고, 도감 쪽 색 설정과 갈리지 않게.
+    private string BuildStatBlock(EnemyTable.Data data)
+    {
+        var st = DataTableManager.StringTable;
+        // 실제로 스폰될 때와 같은 식(EnemyStatScaling)을 쓴다 — 표시용으로 따로 계산하지 않는다.
+        var scaled = EnemyStatScaling.Compute(data, data.Class, dayCount);
+        // 실제 스탯은 float이지만 툴팁은 정수로 보여준다(1234.5 같은 표기 방지).
+        return $"{st.Get("Stat_Health")} : {Mathf.RoundToInt(scaled.Hp)}\n" +
+               $"{st.Get("Stat_Attack")} : {Mathf.RoundToInt(scaled.Attack)}\n" +
+               $"{st.Get("Stat_Defense")} : {Mathf.RoundToInt(scaled.Defense)}\n" +
+               $"{st.Get(attributeLabelKey)} : {EnemyAttributeText.Build(data.Attribute, context: this)}";
+    }
     private void ResetHover()
     {
         hoverRow = null;
