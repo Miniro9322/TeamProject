@@ -404,7 +404,7 @@ public class SpawnerManager : MonoBehaviour
     [SerializeField] private Animator directingUi;
     [SerializeField] private string directingStateName = "Directing";
     [SerializeField] private float directingTimeout = 5f;
-    
+    public bool isDirecting = false;
     public async UniTask BossOpeningDirecting(CancellationToken token, float bossDelay = 0f)
     {
         if (bossDelay > 0f)
@@ -416,6 +416,7 @@ public class SpawnerManager : MonoBehaviour
         {
             guardPanel?.SetActive(true);
             Time.timeScale = 0f;
+            isDirecting = true;
 
             if (directingUi != null)
             {
@@ -423,6 +424,7 @@ public class SpawnerManager : MonoBehaviour
                 directingUi.updateMode = AnimatorUpdateMode.UnscaledTime;
                 directingUi.Rebind();   // 재사용되는 오브젝트라 지난 연출 끝난 지점이 아니라 처음부터 다시 재생
                 directingUi.Update(0f);
+                directingUi.SetTrigger(directingStateName);
                 await WaitForDirectingAnim(directingUi, directingStateName, directingTimeout, token);
             }
         }
@@ -435,6 +437,7 @@ public class SpawnerManager : MonoBehaviour
             if (directingUi != null) directingUi.updateMode = savedUpdateMode;
             Time.timeScale = savedTimeScale;
             guardPanel?.SetActive(false);
+            isDirecting = false;
         }
     }
 
