@@ -20,6 +20,10 @@ public class GameManager : MonoBehaviour
     private SpawnerManager waveSpawner;
     private UpgradeState upgradeState;
     [SerializeField] private int dayCount; // Construct()에서 튜토리얼 진행 여부에 따라 -1 또는 0으로 초기화
+    [Tooltip("에디터에서 타이틀을 거치지 않고 MainScene을 바로 실행해 디버깅할 때 체크 - " +
+        "Construct()가 dayCount를 튜토리얼 진행 여부로 덮어쓰지 않고 위 인스펙터 값을 그대로 쓴다. " +
+        "DayState.Enter()가 진입하며 1 증가시키니, 원하는 날짜보다 1 작게 넣어야 한다.")]
+    [SerializeField] private bool debugKeepInspectorDayCount;
     [SerializeField] private int hp = 20;
     private int initialHp; // 0일차 튜토리얼 리셋용 스냅샷
     [SerializeField] private List<BaseUpgradeData> hpUpgrades;
@@ -58,7 +62,14 @@ public class GameManager : MonoBehaviour
         initialHp = hp;
 
         // 튜토리얼을 이번 세션에서 처음 보는 거면 0일차(연습)부터, 이미 본 적 있으면 0일차 없이 곧장 1일차부터.
+#if UNITY_EDITOR
+        if (!debugKeepInspectorDayCount)
+        {
+            dayCount = tutorialState.Seen ? 0 : -1;
+        }
+#else
         dayCount = tutorialState.Seen ? 0 : -1;
+#endif
 
         day = new DayState(this);
         night = new NightState(this);
@@ -168,6 +179,12 @@ public class GameManager : MonoBehaviour
     }
     public void RestoreDayCount(int amount)
     {
+        // 타이틀 없이 MainScene을 바로 실행해 디버깅할 때(debugKeepInspectorDayCount)는 세이브
+        // 로드(LoadManager)로도 dayCount를 덮어쓰지 않는다 - 안 그러면 Construct()에서 지켜낸
+        // 인스펙터 값을 로드가 곧바로 다시 덮어써버린다.
+#if UNITY_EDITOR
+        if (debugKeepInspectorDayCount) return;
+#endif
         dayCount = amount;
     }
 
