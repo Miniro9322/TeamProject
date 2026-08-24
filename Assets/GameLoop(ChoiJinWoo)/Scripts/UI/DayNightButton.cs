@@ -27,16 +27,11 @@ public class DayNightButton : MonoBehaviour
     private void Start()
     {
         button.onClick.AddListener(OnButton);
-        // EnviromentManager.OnDay는 낮 전환이 "끝난 뒤" 불리는 이벤트라(빛이 이미 다 바뀐 다음),
-        // 그걸 쓰면 아이콘 회전이 실제 빛 전환보다 한 박자 늦게 시작된다. GameManager.ChangeToDay는
-        // 전환이 "시작되는" 시점에 불리고 EnviromentManager도 이걸로 빛 전환을 시작하므로,
-        // 여기 구독하면 실제 빛 변화와 아이콘 회전이 동시에 시작된다.
         icon.transform.rotation = Quaternion.identity;
         gameManager.ChangeToDay += OnDayStart;
         dayText.text = $"Day {gameManager.DayCount}";
     }
 
-    // 낮 -> 밤: 버튼만 바로 비활성화한다. 아이콘은 계속 떠있는 채로 -180도만큼 돈다(안 숨김).
     private void OnButton()
     {
         gameManager.OnNight();
@@ -44,7 +39,6 @@ public class DayNightButton : MonoBehaviour
         RotateIconBy(180f, null).Forget();
     }
 
-    // 밤 -> 낮: 아이콘이 계속 같은 방향으로 -180도 더 돌고 나면 버튼을 다시 켠다(왕복 아니라 계속 한 방향).
     private void OnDayStart()
     {
         RotateIconBy(180f, () =>
@@ -54,7 +48,6 @@ public class DayNightButton : MonoBehaviour
         }).Forget();
     }
 
-    // EnviromentManager.TransitionRoutine과 같은 시간(TransitionDuration) 동안 아이콘을 deltaZ만큼 돌린다.
     private async UniTaskVoid RotateIconBy(float deltaZ, Action onComplete)
     {
         if (icon == null)

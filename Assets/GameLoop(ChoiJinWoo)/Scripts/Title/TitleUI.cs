@@ -17,6 +17,7 @@ public class TitleUI : MonoBehaviour
     [SerializeField] private GameObject upgradePanel;
     [SerializeField] private GameObject QuitAlert;
     [SerializeField] private GameObject LoadingPanel;
+    [SerializeField] private GameObject tutorialChoicePanel; // "튜토리얼 하기" / "건너뛰기" 선택지
     [SerializeField] private AudioMixer mixer;
 
     [SerializeField] private Button loadButton;
@@ -33,6 +34,7 @@ public class TitleUI : MonoBehaviour
         settingPanel.SetActive(false);
         QuitAlert.SetActive(false);
         upgradePanel.SetActive(false);
+        tutorialChoicePanel.SetActive(false);
         slotSelectPanel.gameObject.SetActive(false);
         //daySelectPanel.gameObject.SetActive(false);
         slotSelectPanel.SlotConfirmed += OnSlotConfirmed;
@@ -40,14 +42,6 @@ public class TitleUI : MonoBehaviour
         slotSelectPanel.SetPreviewReader(previewReader);
         //daySelectPanel.SlotConfirmed += OnSlotConfirmed;
         RefreshLoad();
-    }
-
-    // 슬롯 패널 이벤트 구독을 해제한다.
-    private void OnDestroy()
-    {
-        slotSelectPanel.SlotConfirmed -= OnSlotConfirmed;
-        slotSelectPanel.SaveChanged -= RefreshLoad;
-        //daySelectPanel.SlotConfirmed -= OnSlotConfirmed;
     }
 
     private async UniTaskVoid ApplyResolution()
@@ -72,8 +66,6 @@ public class TitleUI : MonoBehaviour
         mixer.SetFloat("System", PlayerPrefs.GetFloat("System", 0f));
     }
 
-
-    // "새 게임 시작" 버튼: 슬롯 선택 패널을 새 게임 모드로 연다.
     public void OnNewGame()
     {
         slotSelectPanel.OpenForNewGame();
@@ -84,7 +76,28 @@ public class TitleUI : MonoBehaviour
         slotSelectPanel.OpenForLoad();
     }
 
-    // SlotSelectPanel.SlotConfirmed 구독자: 슬롯이 확정되면 MainScene으로 넘어간다.
+    public void OnStartWithTutorial()
+    {
+        new TutorialState().Reset();
+        tutorialChoicePanel.SetActive(false);
+        StartGame();
+    }
+
+    // 튜토리얼 선택지의 "건너뛰기" 버튼 - TutorialState는 PlayerPrefs만 다루는 plain class라
+    // DI 없이 바로 만들어 써도 된다.
+    public void OnSkipTutorial()
+    {
+        new TutorialState().MarkSeen();
+        tutorialChoicePanel.SetActive(false);
+        StartGame();
+    }
+
+
+    public void OnStart()
+    {
+        tutorialChoicePanel.SetActive(true);
+    }
+
     private void OnSlotConfirmed()
     {
         EnterMainScene();
@@ -99,10 +112,16 @@ public class TitleUI : MonoBehaviour
         LoadSceneAsync("MainScene").Forget();
     }
 
+    private void StartGame()
+    {
+        LoadingPanel.SetActive(true);
+        LoadSceneAsync("MainScene").Forget();
+    }
+
     // 저장 데이터 존재 여부에 맞춰 불러오기 버튼을 갱신한다.
     private void RefreshLoad()
     {
-        loadButton.interactable = previewReader.HasAnySave();
+        loadButton.gameObject.SetActive(previewReader.HasAnySave());
     }
 
     private async UniTaskVoid LoadSceneAsync(string sceneName)

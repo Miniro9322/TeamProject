@@ -40,4 +40,8 @@ public class TutorialStepDefinition
 
     [Tooltip("게이팅할 게임 이벤트가 없는 단계(자원 확인)만 true - '다음' 버튼 클릭으로 완료 처리한다.")]
     public bool completesOnAcknowledge;
+
+    [Tooltip("이 단계가 활성인 동안 Time.timeScale을 0으로 멈춘다(예: 밤 전투 중 플레이어 스킬 설명). " +
+        "이 단계가 완료되면 자동으로 1로 되돌린다.")]
+    public bool pauseTimeWhileActive;
 }

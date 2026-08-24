@@ -26,6 +26,7 @@ public class EnviromentManager : MonoBehaviour
     private ResourcesManager resourcesManager;
 
     public event Action OnDay;
+    public event Action OnNight;
 
     [Inject]
     private void Construct(GameManager gameManager, ResourcesManager resourcesManager)
@@ -107,6 +108,7 @@ public class EnviromentManager : MonoBehaviour
         {
             SetNight();
             gameManager.ChangeCanSpawnEnemy(true);
+            OnNight?.Invoke();
         }
         else
         {

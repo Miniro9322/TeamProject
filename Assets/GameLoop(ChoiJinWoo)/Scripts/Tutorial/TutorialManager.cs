@@ -1,11 +1,8 @@
 using System.Collections.Generic;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 using VContainer;
 
-// 신규 플레이어를 실제 게임 화면에서 순서대로 강제로 안내하는 온보딩 튜토리얼.
-// 이벤트 버스가 없는 프로젝트 컨벤션을 따라, 각 매니저의 event Action을 직접 구독해 완료를 판정한다.
-// 씬의 RectTransform들을 인스펙터에 직접 연결해야 해서(스포트라이트 대상) plain class가 아니라
-// MonoBehaviour로 둔다 - 다른 오케스트레이션 패널들(RegionOverviewPanel 등)과 같은 패턴.
 public class TutorialManager : MonoBehaviour
 {
     [SerializeField] private TutorialOverlayUI overlay;
@@ -20,6 +17,12 @@ public class TutorialManager : MonoBehaviour
     private HeroRoster heroRoster;
     private PlacePalette placePalette;
     private BuildingPanel buildingPanel;
+    private GameManager gameManager;
+    private ResourcesManager resourcesManager;
+    private RegionOverviewPanel regionOverviewPanel;
+    private MapGame mapGame;
+    private UiManager uiManager;
+    private EnviromentManager enviromentManager;
     private TutorialState state;
 
     private int currentIndex = -1;
@@ -28,21 +31,38 @@ public class TutorialManager : MonoBehaviour
     private string lastShownMessageKey;
     private readonly HashSet<HeroRosterEntry> placedSnapshot = new();
 
+    private bool sequenceFinished;
+    private bool dayZeroResetDone;
+
+    [Tooltip("0일차 리셋이 끝난 뒤(진짜 1일차 시작) 한 번 보여줄 완료 메시지 키.")]
+    [SerializeField] private string completionMessageKey;
+    private bool showingCompletionMessage;
+
     [Inject]
     private void Construct(CitizenManager citizenManager,
         BaseConstructor baseConstructor, HeroRoster heroRoster, PlacePalette placePalette,
-        BuildingPanel buildingPanel, TutorialState state)
+        BuildingPanel buildingPanel, GameManager gameManager, ResourcesManager resourcesManager,
+        RegionOverviewPanel regionOverviewPanel, MapGame mapGame, UiManager uiManager,
+        EnviromentManager enviromentManager, TutorialState state)
     {
         this.citizenManager = citizenManager;
         this.baseConstructor = baseConstructor;
         this.heroRoster = heroRoster;
         this.placePalette = placePalette;
         this.buildingPanel = buildingPanel;
+        this.gameManager = gameManager;
+        this.resourcesManager = resourcesManager;
+        this.regionOverviewPanel = regionOverviewPanel;
+        this.mapGame = mapGame;
+        this.uiManager = uiManager;
+        this.enviromentManager = enviromentManager;
         this.state = state;
     }
 
     private void Start()
     {
+        WireRuntimeWaypoints();
+
         if (state.Seen || steps.Length == 0)
         {
             overlay.Hide();
@@ -50,14 +70,19 @@ public class TutorialManager : MonoBehaviour
             return;
         }
 
-        int startIndex = state.CurrentStepIndex;
-        if (startIndex >= steps.Length)
-        {
-            Finish();
-            return;
-        }
+        BeginStep(0);
+    }
 
-        BeginStep(startIndex);
+    private void WireRuntimeWaypoints()
+    {
+        foreach (var step in steps)
+        {
+            if (step.id != TutorialStepId.GameSpeedMention || step.waypoints == null) continue;
+            foreach (var waypoint in step.waypoints)
+            {
+                if (waypoint != null) waypoint.target = uiManager.GameSpeedUiRect;
+            }
+        }
     }
 
     private void OnEnable()
@@ -68,6 +93,8 @@ public class TutorialManager : MonoBehaviour
         heroRoster.Changed += OnHeroRosterChanged;
         buildingPanel.Upgraded += OnUpgraded;
         overlay.AcknowledgeClicked += OnAcknowledgeClicked;
+        gameManager.ChangeToNight += OnChangeToNight;
+        enviromentManager.OnDay += OnDayTransitionComplete;
     }
 
     private void OnDisable()
@@ -78,6 +105,8 @@ public class TutorialManager : MonoBehaviour
         heroRoster.Changed -= OnHeroRosterChanged;
         buildingPanel.Upgraded -= OnUpgraded;
         overlay.AcknowledgeClicked -= OnAcknowledgeClicked;
+        gameManager.ChangeToNight -= OnChangeToNight;
+        enviromentManager.OnDay -= OnDayTransitionComplete;
     }
 
     // 현재 단계의 waypoints 중 저작한 순서로 가장 깊이 들어간 활성 상태를 스포트라이트하고,
@@ -85,6 +114,8 @@ public class TutorialManager : MonoBehaviour
     // 단계가 바뀌지 않아도 매 프레임 다시 계산해야 한다.
     private void Update()
     {
+        if (sequenceFinished) return; // 스텝은 끝났고 0일차 리셋은 EnviromentManager.OnDay가 알아서 처리 - 더 그릴 것 없음
+
         // 로스터에서 영웅을 고르면(배치 대기 중) 다음 클릭은 UI가 아니라 3D 맵 타일이라 짚어줄
         // 사각형이 없다 - 이 순간만큼은 딤을 전부 끄고 맵을 자유롭게 클릭할 수 있게 한다.
         if (IsActive(TutorialStepId.PlaceHero) && placePalette.Mode == PlaceMode.Place)
@@ -108,10 +139,6 @@ public class TutorialManager : MonoBehaviour
         overlay.SetMessage(messageKey);
     }
 
-    // waypoints는 진입 버튼 -> 최종 액션 버튼 순으로 저작하지만, 뒤에서부터 훑어 "가장 깊이 들어간
-    // 활성 상태"를 스포트라이트한다. 거점 화면을 여는 버튼처럼 앞쪽 waypoint는 패널이 열린 뒤에도
-    // 계속 activeInHierarchy=true로 남아있는 경우가 많아서, 앞에서부터 훑으면 플레이어가 이미
-    // 다음 화면으로 넘어갔어도 스포트라이트가 그 버튼에서 멈춰버린다.
     private TutorialWaypoint ResolveWaypoint()
     {
         if (currentIndex < 0 || currentIndex >= steps.Length) return null;
@@ -149,6 +176,8 @@ public class TutorialManager : MonoBehaviour
         currentIndex = index;
 
         var step = steps[index];
+        if (step.pauseTimeWhileActive) uiManager.GameSpeedUi.OnButtonClick((int)Speed.Zero);
+
         citizenSnapshot = citizenManager.CurrentCitizen;
         usedCitizenSnapshot = citizenManager.UsedCitizen;
         SnapshotPlacedHeroes();
@@ -169,18 +198,25 @@ public class TutorialManager : MonoBehaviour
 
     private void CompleteStep()
     {
-        int next = currentIndex + 1;
-        state.SaveProgress(next);
+        if (steps[currentIndex].pauseTimeWhileActive) uiManager.GameSpeedUi.OnButtonClick((int)Speed.Normal);
 
-        if (next >= steps.Length) Finish();
+        int next = currentIndex + 1;
+
+        if (next >= steps.Length) FinishSequence();
         else BeginStep(next);
     }
 
-    private void Finish()
+    private void FinishSequence()
     {
         overlay.Hide();
-        state.MarkSeen();
-        enabled = false;
+        TutorialInputGate.BlockEscapeClose = false;
+        sequenceFinished = true;
+        TryFullyDisable();
+    }
+
+    private void TryFullyDisable()
+    {
+        if (sequenceFinished && dayZeroResetDone && !showingCompletionMessage) enabled = false;
     }
 
     // 테스트용 - 인스펙터에서 이 컴포넌트 헤더 우클릭 -> 실행하면 Play 모드 중에도 처음부터 다시 볼 수 있다.
@@ -191,7 +227,12 @@ public class TutorialManager : MonoBehaviour
         if (steps.Length == 0) return;
 
         state.Reset();
+        gameManager.ResetDayCountForTutorialReplay(); // 실제 진행 중이던 날짜를 다시 "0일차"로 맞춘다
         currentIndex = -1;
+        sequenceFinished = false;
+        dayZeroResetDone = false;
+        showingCompletionMessage = false;
+        uiManager.GameSpeedUi.OnButtonClick((int)Speed.Normal); // 재시작 시점에 정지 상태였을 수도 있으니 방어적으로 되돌린다
         enabled = true;
         BeginStep(0);
     }
@@ -200,6 +241,17 @@ public class TutorialManager : MonoBehaviour
 
     private void OnAcknowledgeClicked()
     {
+        if (showingCompletionMessage)
+        {
+            showingCompletionMessage = false;
+            overlay.Hide();
+            TutorialInputGate.BlockEscapeClose = false;
+            uiManager.GameSpeedUi.OnButtonClick((int)Speed.Normal);
+            TryFullyDisable();
+            return;
+        }
+
+        if (sequenceFinished) return; // 방어적 - 시퀀스 끝난 뒤엔 오버레이가 숨겨져 있어 이 경로로 안 와야 정상
         if (currentIndex < 0 || currentIndex >= steps.Length) return;
         if (steps[currentIndex].completesOnAcknowledge) CompleteStep();
     }
@@ -242,6 +294,94 @@ public class TutorialManager : MonoBehaviour
             {
                 CompleteStep();
                 return;
+            }
+        }
+    }
+
+    // NightMention 단계가 활성일 때 낮/밤 버튼을 실제로 눌러야(ChangeToNight 발생) 완료된다 -
+    // 다른 강제 단계들(OnBuilt, OnCitizenChanged 등)과 같은 패턴. 완료 즉시 다음 단계
+    // (PlayerSkillMention)로 넘어가지만, 그 스텝의 waypoint(PlayerSkillPanel)는 아직 안 켜져 있을 수
+    // 있다 - PlayerSkillPanel은 이제 ChangeToNight이 아니라 밤 전환이 실제로 다 끝나는
+    // EnviromentManager.OnNight에 맞춰 켜진다(PlayerSkillPanel.cs). GameSpeedMention과 마찬가지로
+    // Update()가 매 프레임 다시 스포트라이트를 계산하므로, 패널이 늦게 켜지면 그 순간 자동으로 잡힌다.
+    private void OnChangeToNight()
+    {
+        if (!IsActive(TutorialStepId.NightMention)) return;
+        CompleteStep();
+    }
+
+    private void OnDayTransitionComplete()
+    {
+        if (dayZeroResetDone) return;
+        dayZeroResetDone = true;
+        DeferredReset().Forget();
+    }
+
+    private async UniTaskVoid DeferredReset()
+    {
+        await UniTask.Yield();
+
+        ResetHeroes();
+        ResetBuildings();
+        resourcesManager.Reset();
+        citizenManager.Reset();
+        gameManager.ResetHpToFull();
+
+        state.MarkSeen();
+        ShowCompletionMessage();
+    }
+
+    // 0일차 리셋과 낮 전환까지 전부 끝난 뒤, 확인을 눌러야 넘어가는 완료 메시지를 한 번 보여준다.
+    // 이걸 확인해야(OnAcknowledgeClicked) 비로소 컴포넌트를 완전히 끈다.
+    private void ShowCompletionMessage()
+    {
+        showingCompletionMessage = true;
+        TutorialInputGate.BlockEscapeClose = true;
+        uiManager.GameSpeedUi.OnButtonClick((int)Speed.Zero);
+        overlay.Show(true);
+        overlay.SetSpotlight(null);
+        overlay.SetMessage(completionMessageKey);
+    }
+
+    // HeroCombineManager.Combine()의 제거 절차(영역 해제 -> 풀 반환 -> FreeCitizenForHero)를 그대로
+    // 따른다 - UnitRemover는 영웅이 소모한 인력을 제대로 안 돌려준다.
+    private void ResetHeroes()
+    {
+        foreach (var entry in new List<HeroRosterEntry>(heroRoster.Entries))
+        {
+            GameObject unit = entry.PlacedUnit;
+            if (unit != null)
+            {
+                if (mapGame.Units.TryGetArea(unit, out PlacementArea area))
+                {
+                    AreaPlace.Remove(area);
+                    mapGame.Units.Remove(unit);
+                }
+
+                if (unit.TryGetComponent(out Hero hero))
+                {
+                    hero.PrepareForDespawn();
+                    PoolManager.Instance.Despawn(unit);
+                }
+                else
+                {
+                    Destroy(unit);
+                }
+            }
+
+            citizenManager.FreeCitizenForHero(entry.CitizenCost);
+            heroRoster.Remove(entry);
+        }
+    }
+
+    // 모든 지역의 채워진 슬롯을 전부 철거한다 - RegionOverviewPanel.Regions가 전체 지역의 유일한 소스.
+    private void ResetBuildings()
+    {
+        foreach (var region in regionOverviewPanel.Regions)
+        {
+            for (int i = 0; i < region.Slots.Count; i++)
+            {
+                if (!region.Slots[i].IsEmpty) baseConstructor.Demolish(region, i);
             }
         }
     }

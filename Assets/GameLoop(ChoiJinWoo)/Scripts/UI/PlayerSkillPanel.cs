@@ -18,13 +18,15 @@ public class PlayerSkillPanel : MonoBehaviour
     [SerializeField] private Slider manaBar;
 
     private GameManager gameManager;
+    private EnviromentManager enviromentManager;
     private PlayerManaManager mana;
     private PlayerSkillCastController cast;
 
     [Inject]
-    private void Construct(GameManager gameManager, PlayerManaManager mana)
+    private void Construct(GameManager gameManager, EnviromentManager enviromentManager, PlayerManaManager mana)
     {
         this.gameManager = gameManager;
+        this.enviromentManager = enviromentManager;
         this.mana = mana;
     }
 
@@ -39,14 +41,17 @@ public class PlayerSkillPanel : MonoBehaviour
             entry.button.onClick.AddListener(() => cast?.ArmSkill(slot));
         }
 
-        gameManager.ChangeToNight += Show;
+        // ChangeToNight이 아니라 EnviromentManager.OnNight을 쓴다 - ChangeToNight은 밤 전환이
+        // "시작"되자마자 발동하는데, 그 순간엔 화면이 아직 밤으로 다 안 바뀌어 있다(빛/스카이박스
+        // 전환 애니메이션 진행 중). OnNight은 그 전환이 실제로 다 끝난 시점에 발동한다.
+        enviromentManager.OnNight += Show;
         gameManager.ChangeToDay += Hide;
         Hide(); // 시작은 낮이므로 꺼둔다
     }
 
     private void OnDestroy()
     {
-        gameManager.ChangeToNight -= Show;
+        enviromentManager.OnNight -= Show;
         gameManager.ChangeToDay -= Hide;
     }
 

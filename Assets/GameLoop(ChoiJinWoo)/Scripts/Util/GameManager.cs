@@ -19,8 +19,9 @@ public class GameManager : MonoBehaviour
     public UiManager UiManager => uiManager;
     private SpawnerManager waveSpawner;
     private UpgradeState upgradeState;
-    [SerializeField] private int dayCount = 0;
+    [SerializeField] private int dayCount; // Construct()에서 튜토리얼 진행 여부에 따라 -1 또는 0으로 초기화
     [SerializeField] private int hp = 20;
+    private int initialHp; // 0일차 튜토리얼 리셋용 스냅샷
     [SerializeField] private List<BaseUpgradeData> hpUpgrades;
     private bool requestSupport = false;
     public int DayCount => dayCount;
@@ -44,7 +45,7 @@ public class GameManager : MonoBehaviour
     public bool perfactDefence = false;
 
     [Inject]
-    private void Construct(UiManager uiManager, SpawnerManager waveSpawner, UpgradeState upgradeState)
+    private void Construct(UiManager uiManager, SpawnerManager waveSpawner, UpgradeState upgradeState, TutorialState tutorialState)
     {
         this.uiManager = uiManager;
         this.waveSpawner = waveSpawner;
@@ -54,6 +55,10 @@ public class GameManager : MonoBehaviour
         uiManager.UnlockedHero = unlockedHero;
 
         hp += (int)upgradeState.GetTotalEffect(hpUpgrades);
+        initialHp = hp;
+
+        // 튜토리얼을 이번 세션에서 처음 보는 거면 0일차(연습)부터, 이미 본 적 있으면 0일차 없이 곧장 1일차부터.
+        dayCount = tutorialState.Seen ? 0 : -1;
 
         day = new DayState(this);
         night = new NightState(this);
@@ -111,6 +116,14 @@ public class GameManager : MonoBehaviour
         dayCount++;
     }
 
+    // 테스트용 - TutorialManager.DebugRestart()가 0일차 흐름을 다시 재현할 때 쓴다. dayCount를
+    // 안 맞춰주면 이미 진행된 실제 날짜의 웨이브가 나가고, 밤이 끝난 뒤 0일차 리셋 타이밍도
+    // 어긋난다 - 지금 낮을 "0일차"로 다시 취급하도록 되돌린다.
+    public void ResetDayCountForTutorialReplay()
+    {
+        dayCount = 0;
+    }
+
     public void ChangeRequest(bool value)
     {
         requestSupport = value;
@@ -153,8 +166,6 @@ public class GameManager : MonoBehaviour
         unlockedHero = uiManager.UnlockedHero;
         unlockedEnemy = uiManager.UnlockedEnemy;
     }
-
-    // 세이브 데이터로 진행 일차를 그대로 덮어쓴다 (로드 복원 전용)
     public void RestoreDayCount(int amount)
     {
         dayCount = amount;
@@ -178,5 +189,11 @@ public class GameManager : MonoBehaviour
     {
         unlockedHero = value;
         uiManager.UnlockedHero = value;
+    }
+
+        public void ResetHpToFull()
+    {
+        hp = initialHp;
+        HpChanged?.Invoke();
     }
 }

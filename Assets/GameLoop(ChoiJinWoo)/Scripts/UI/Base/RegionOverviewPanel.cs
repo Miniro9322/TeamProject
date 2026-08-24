@@ -24,8 +24,6 @@ public class RegionOverviewPanel : MonoBehaviour, IClosablePanel
     // RegionDetailPanel이 자기 바깥-클릭 판정에서 지역 노드 버튼만 제외하는 데 쓴다
     // (오버뷰 전체가 아니라 노드들만 - 오버뷰는 화면 전체를 덮고 있어서 전체를 제외하면 바깥 클릭이 아예 안 잡힌다).
     public IReadOnlyList<RegionNodeView> Nodes => nodes;
-
-    // 지역 슬롯 목록을 그대로 열거한다 (세이브·로드 전용 통로)
     public IReadOnlyList<RegionFacilitySlots> Regions => regions;
 
     private UiPanelStack panelStack;

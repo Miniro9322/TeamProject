@@ -14,7 +14,7 @@ public class DayState : IState
         gameManager.UiManager.ToggleGameSpeedUi(false);
         gameManager.ChangeCanBuild(true);
         gameManager.IncreaseDayCount();
-        if (gameManager.DayCount % 10 == 0)
+        if (gameManager.DayCount > 0 && gameManager.DayCount % 10 == 0)
         {
             gameManager.ChangeRequest(true);
         }
