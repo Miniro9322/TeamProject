@@ -66,21 +66,27 @@ public class TitleUI : MonoBehaviour
         mixer.SetFloat("System", PlayerPrefs.GetFloat("System", 0f));
     }
 
+    // "시작" 버튼과 "새 게임" 버튼 모두 여기로 온다 - 슬롯을 먼저 고르게 한다.
+    public void OnStart() => OnNewGame();
+
     public void OnNewGame()
     {
         slotSelectPanel.OpenForNewGame();
     }
-   // "불러오기" 버튼: 슬롯 선택 패널을 불러오기 모드로 연다.
+
+    // "불러오기" 버튼: 슬롯 선택 패널을 불러오기 모드로 연다.
     public void OnLoad()
     {
         slotSelectPanel.OpenForLoad();
     }
 
+    // 튜토리얼 선택지의 "튜토리얼 하기" 버튼 - 명시적으로 다시 보겠다는 요청이니, 예전에 이미
+    // 끝까지 봐서 TutorialSeen이 true로 남아있더라도 여기서 강제로 초기화해 반드시 뜨게 한다.
     public void OnStartWithTutorial()
     {
         new TutorialState().Reset();
         tutorialChoicePanel.SetActive(false);
-        StartGame();
+        EnterMainScene();
     }
 
     // 튜토리얼 선택지의 "건너뛰기" 버튼 - TutorialState는 PlayerPrefs만 다루는 plain class라
@@ -89,30 +95,27 @@ public class TitleUI : MonoBehaviour
     {
         new TutorialState().MarkSeen();
         tutorialChoicePanel.SetActive(false);
-        StartGame();
-    }
-
-
-    public void OnStart()
-    {
-        tutorialChoicePanel.SetActive(true);
-    }
-
-    private void OnSlotConfirmed()
-    {
         EnterMainScene();
     }
 
-    // 로딩 화면을 띄우고 MainScene으로 넘어가는 본체(OnSlotConfirmed에서 재사용).
-    private void EnterMainScene()
+    // 슬롯 선택 확인 직후 - 새 게임일 때만 씬 전환 전에 튜토리얼 선택 화면을 끼워 넣는다.
+    // GameManager.Construct()가 TutorialState.Seen을 동기적으로 읽기 전에(씬 전환 전에) 확정돼야
+    // 해서 여기서 정한다. 불러오기는 이미 진행 중인 세이브라 물어볼 필요 없이 곧장 넘어간다.
+    private void OnSlotConfirmed(SlotSelectMode mode)
     {
         slotSelectPanel.gameObject.SetActive(false);
-        //daySelectPanel.gameObject.SetActive(false);
-        LoadingPanel.SetActive(true);
-        LoadSceneAsync("MainScene").Forget();
+
+        if (mode == SlotSelectMode.NewGame)
+        {
+            tutorialChoicePanel.SetActive(true);
+            return;
+        }
+
+        EnterMainScene();
     }
 
-    private void StartGame()
+    // 로딩 화면을 띄우고 MainScene으로 넘어간다.
+    private void EnterMainScene()
     {
         LoadingPanel.SetActive(true);
         LoadSceneAsync("MainScene").Forget();
