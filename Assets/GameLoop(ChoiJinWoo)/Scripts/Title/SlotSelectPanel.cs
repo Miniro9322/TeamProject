@@ -59,7 +59,8 @@ public class SlotSelectPanel : MonoBehaviour
         previewReader = reader;
     }
 
-    // ESC: 가장 위에 떠 있는 창 한 겹만 닫는다 (확인 팝업 > 불러오기 방식 팝업 > 일차 선택 패널 > 슬롯 선택 패널 순).
+    // ESC와 바깥 클릭을 같은 창구(ShouldClose)로 묶어서, 가장 위에 떠 있는 창 한 겹만 닫는다
+    // (확인 팝업이 떠 있으면 그것부터, 아니면 슬롯 선택 패널 자체를).
     private void Update()
     {
         if (outsideCloser.ClickedOutside())
@@ -75,12 +76,9 @@ public class SlotSelectPanel : MonoBehaviour
         if (!keyboard.escapeKey.wasPressedThisFrame) return;
 
         if (confirmPopup.gameObject.activeSelf)
-        {
             confirmPopup.Cancel();
-            return;
-        }
-
-        OnClose();
+        else
+            OnClose();
     }
 
     // 새 게임 모드로 전체 슬롯 목록을 연다.

@@ -15,6 +15,7 @@ public class LoadOptionPopup : MonoBehaviour
 
     private Action onContinue;
     private Action onPastDay;
+    private ClickOutsideCloser outsideCloser;
 
     // 버튼 3개에 실행 메서드를 연결한다.
     private void Awake()
@@ -23,18 +24,26 @@ public class LoadOptionPopup : MonoBehaviour
         pastDayButton.onClick.AddListener(OnPastDayClicked);
         cancelButton.onClick.AddListener(OnCancelClicked);
         pastDayButton.gameObject.SetActive(false);
+        outsideCloser = new ClickOutsideCloser((RectTransform)transform);
     }
 
     // 언어 변경 시 버튼 문구를 다시 표시한다.
     private void OnEnable()
     {
         LocalizeTextManager.OnLanguageChanged += RefreshText;
+        outsideCloser.MarkOpened();
     }
 
     // 비활성화 시 언어 변경 구독을 해제한다.
     private void OnDisable()
     {
         LocalizeTextManager.OnLanguageChanged -= RefreshText;
+    }
+
+    // ESC와 바깥 클릭 모두 취소 버튼과 동일하게 처리한다.
+    private void Update()
+    {
+        if (outsideCloser.ShouldClose()) Cancel();
     }
 
     // 이어하기·이전 일차 콜백을 갈아끼워 팝업을 띄운다.
@@ -44,6 +53,7 @@ public class LoadOptionPopup : MonoBehaviour
         this.onPastDay = onPastDay;
         RefreshText();
         gameObject.SetActive(true);
+        outsideCloser.MarkOpened();
     }
 
     // ESC로도 취소 버튼과 동일하게 닫을 수 있게 외부에 열어준다.

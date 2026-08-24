@@ -13,17 +13,18 @@ public class HeroSetPanel : MonoBehaviour
     [SerializeField] private HeroCreateManager createManager;
     [SerializeField] private HeroCreateIcon meleeIcon;
     [SerializeField] private HeroCreateIcon rangedIcon;
-    [SerializeField] private GameObject rosterPanel;
     [SerializeField] private HeroCreateAmountController amountPanel;
     [SerializeField] private List<BaseUpgradeData> costUpgrades; // 타이틀 업그레이드 트리의 HeroCostUpgrade1~5
     private UpgradeState upgradeState;
+    private BuildModePanel buildModePanel;
     private bool wasBlocked;
     private HeroCreateIcon openIcon; // amountPanel이 떠있는 동안 그 대상 아이콘 - RefreshInteractable에서 최대치 갱신용
 
     [Inject]
-    private void Construct(UpgradeState upgradeState)
+    private void Construct(UpgradeState upgradeState, BuildModePanel buildModePanel)
     {
         this.upgradeState = upgradeState;
+        this.buildModePanel = buildModePanel;
     }
 
     //모드 전환을 알리는 이벤트가 없어서 BuildModePanel의 Esc 감지처럼 매 프레임 폴링한다.
@@ -118,7 +119,7 @@ public class HeroSetPanel : MonoBehaviour
         int notCreated = amount - created;
         if (notCreated > 0) view.resourcesManager.ProductChanged(unitCost.Multiply(-notCreated));
 
-        if (created > 0 && !rosterPanel.activeSelf) rosterPanel.SetActive(true);
+        buildModePanel.OpenInventory();
     }
 
     // 인구수가 하나라도 남아있으면 생성은 허용한다 — 뽑힌 영웅의 실제 티어 비용이 남은 인구수를 넘으면

@@ -23,19 +23,18 @@ public class UpgradeUI : MonoBehaviour
     [SerializeField] private int cheatAddPointsAmount = 100;
 
     private UpgradeState upgradeState;
-    private RectTransform rectTransform;
-    private int openedFrame;
+    private ClickOutsideCloser outsideCloser;
     private readonly Dictionary<BaseUpgradeData, BaseUpgradeButton> nodes = new();
 
     private void Awake()
     {
         upgradeState = new UpgradeState();
-        rectTransform = (RectTransform)transform;
+        outsideCloser = new ClickOutsideCloser((RectTransform)transform, openButtonRect);
     }
 
     private void OnEnable()
     {
-        openedFrame = Time.frameCount;
+        outsideCloser.MarkOpened();
     }
 
     private void Update()
@@ -46,21 +45,7 @@ public class UpgradeUI : MonoBehaviour
             RefreshAll();
         }
 
-        if (Keyboard.current.escapeKey.wasPressedThisFrame)
-        {
-            gameObject.SetActive(false);
-            return;
-        }
-
-        if (Time.frameCount == openedFrame) return; // 패널이 열린 바로 그 프레임의 클릭은 무시
-        if (!Mouse.current.leftButton.wasPressedThisFrame) return;
-
-        var point = Mouse.current.position.ReadValue();
-        bool insidePanel = RectTransformUtility.RectangleContainsScreenPoint(rectTransform, point, null);
-        bool onOpenButton = openButtonRect != null &&
-            RectTransformUtility.RectangleContainsScreenPoint(openButtonRect, point, null);
-
-        if (!insidePanel && !onOpenButton)
+        if (outsideCloser.ShouldClose())
         {
             gameObject.SetActive(false);
         }

@@ -54,15 +54,8 @@ public class UiManager : MonoBehaviour
     {
         if (keyboard == null) return;
 
-        if (!TutorialInputGate.BlockEscapeClose && keyboard.escapeKey.wasPressedThisFrame)
-        {
-
-            if (menuPanel.activeSelf)
-            {
-                menuPanel.SetActive(false);
-            }
-        }
-
+        // ESC로 menuPanel/guidePanel을 닫는 건 각자 붙어있는 MenuUI/GuideUI가 자기 ClickOutsideCloser로
+        // 직접 담당한다(바깥 클릭과 같은 창구로 통일) - 여기서는 단축키 토글만 다룬다.
         if (keyboard[MenuKey].wasPressedThisFrame)
         {
             if(menuPanel.activeSelf)

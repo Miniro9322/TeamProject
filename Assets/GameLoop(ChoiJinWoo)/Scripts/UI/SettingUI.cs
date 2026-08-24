@@ -4,7 +4,6 @@ using System.Linq;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Audio;
-using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 public class SettingUI : MonoBehaviour
@@ -140,7 +139,12 @@ public class SettingUI : MonoBehaviour
 
     private void Update()
     {
-        if(Keyboard.current.escapeKey.wasPressedThisFrame)
+        if (outsideCloser.ShouldClose())
+        {
+            gameObject.SetActive(false);
+        }
+
+        if (outsideCloser.ClickedOutside())
         {
             gameObject.SetActive(false);
         }

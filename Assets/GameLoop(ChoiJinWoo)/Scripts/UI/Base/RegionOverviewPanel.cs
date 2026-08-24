@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
-using UnityEngine.InputSystem;
 using UnityEngine.UI;
 using VContainer;
 
@@ -9,8 +8,9 @@ using VContainer;
 // 각 노드는 ModuleLogic.IsUnlocked를 그대로 반영한다 - 해금 자체는 기존 ExpandEvent 흐름을 그대로 탄다.
 // RegionFacilitySlots는 모듈 프리팹에 붙어있지 않고(충돌 방지) moduleId로만 엮이므로, regions 리스트에서
 // 직접 찾는다(GetComponent 아님).
-// ESC 키는 여기서만 감지해서 UiPanelStack.CloseTop()으로 넘긴다 - 거점 UI 하위 패널들은 전부
-// OnEnable/OnDisable로 스택에 오르내리므로, 제일 나중에 연 패널부터 하나씩 닫힌다.
+// ESC/바깥클릭은 거점 UI 하위 패널들과 동일하게 "내가 스택 맨 위일 때만" 반응한다 - 다른 패널
+// Update()에 맡기지 않고 각자 판단하므로, 이 패널이 꺼져있어도(Update 자체가 안 돌아도) 위에 떠 있는
+// 다른 패널은 자기 몫의 ESC를 정상적으로 받는다.
 public class RegionOverviewPanel : MonoBehaviour, IClosablePanel
 {
     [SerializeField] private MapRegistry registry;
@@ -20,6 +20,8 @@ public class RegionOverviewPanel : MonoBehaviour, IClosablePanel
     [SerializeField] private List<RegionFacilitySlots> regions; // 인스펙터에서 지역 오브젝트들을 직접 연결
     [SerializeField] private Button openButton; // 거점 화면을 여는 버튼 - 밤에는 비활성화
     [SerializeField] private GameObject redDot; // 새로 해금된 지역이 있으면 openButton 위에 표시
+
+    private ClickOutsideCloser outsideCloser;
 
     // RegionDetailPanel이 자기 바깥-클릭 판정에서 지역 노드 버튼만 제외하는 데 쓴다
     // (오버뷰 전체가 아니라 노드들만 - 오버뷰는 화면 전체를 덮고 있어서 전체를 제외하면 바깥 클릭이 아예 안 잡힌다).
@@ -49,6 +51,11 @@ public class RegionOverviewPanel : MonoBehaviour, IClosablePanel
         // 한 프레임 미뤄서 구독한다 - Construct는 MapRegistry.Awake()보다 먼저 돌 수도 있어서,
         // 그 시점에 바로 registry.AllModules를 돌면 아직 비어있어 구독이 하나도 안 걸릴 수 있다.
         SubscribeModulesDeferred().Forget();
+    }
+
+    private void Awake()
+    {
+        outsideCloser = new ClickOutsideCloser((RectTransform)transform, openButton != null ? openButton.transform : null);
     }
 
     private async UniTaskVoid SubscribeModulesDeferred()
@@ -179,6 +186,7 @@ public class RegionOverviewPanel : MonoBehaviour, IClosablePanel
         if (isNight) return; // 밤에는 거점 화면을 열 수 없다.
 
         gameObject.SetActive(true);
+        outsideCloser.MarkOpened();
         if (redDot != null) redDot.SetActive(false); // 열었으니 확인한 걸로 치고 끈다
     }
 
@@ -189,9 +197,6 @@ public class RegionOverviewPanel : MonoBehaviour, IClosablePanel
 
     private void Update()
     {
-        if (!TutorialInputGate.BlockEscapeClose && Keyboard.current.escapeKey.wasPressedThisFrame)
-        {
-            panelStack.CloseTop();
-        }
+        if (panelStack.IsTop(this) && outsideCloser.ShouldClose()) Close();
     }
 }
