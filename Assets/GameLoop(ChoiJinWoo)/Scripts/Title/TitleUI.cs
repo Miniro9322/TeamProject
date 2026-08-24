@@ -71,13 +71,23 @@ public class TitleUI : MonoBehaviour
 
     public void OnNewGame()
     {
-        slotSelectPanel.OpenForNewGame();
+        if (slotSelectPanel == null) return;
+
+        if(slotSelectPanel.gameObject.activeSelf && slotSelectPanel.Mode == SlotSelectMode.NewGame)
+            slotSelectPanel.gameObject.SetActive(false);
+        else
+            slotSelectPanel.OpenForNewGame();
     }
 
     // "불러오기" 버튼: 슬롯 선택 패널을 불러오기 모드로 연다.
     public void OnLoad()
     {
-        slotSelectPanel.OpenForLoad();
+        if(slotSelectPanel == null) return;
+
+        if (slotSelectPanel.gameObject.activeSelf && slotSelectPanel.Mode == SlotSelectMode.Load)
+            slotSelectPanel.gameObject.SetActive(false);
+        else
+            slotSelectPanel.OpenForLoad();
     }
 
     // 튜토리얼 선택지의 "튜토리얼 하기" 버튼 - 명시적으로 다시 보겠다는 요청이니, 예전에 이미
@@ -85,6 +95,7 @@ public class TitleUI : MonoBehaviour
     public void OnStartWithTutorial()
     {
         new TutorialState().Reset();
+        if(tutorialChoicePanel == null) return;
         tutorialChoicePanel.SetActive(false);
         EnterMainScene();
     }
@@ -94,6 +105,7 @@ public class TitleUI : MonoBehaviour
     public void OnSkipTutorial()
     {
         new TutorialState().MarkSeen();
+        if(tutorialChoicePanel == null) return;
         tutorialChoicePanel.SetActive(false);
         EnterMainScene();
     }
@@ -147,12 +159,20 @@ public class TitleUI : MonoBehaviour
 
     public void OnUpgrade()
     {
-        upgradePanel.SetActive(true);
+        if (upgradePanel == null) return;
+
+        if(upgradePanel.activeSelf)
+            upgradePanel.SetActive(false);
+        else
+            upgradePanel.SetActive(true);
     }
 
     public void OnSetting()
     {
-        settingPanel.SetActive(true);
+        if(settingPanel.activeSelf)
+            settingPanel.SetActive(false);
+        else
+            settingPanel.SetActive(true);
     }
 
     public void OnQuitAlert()

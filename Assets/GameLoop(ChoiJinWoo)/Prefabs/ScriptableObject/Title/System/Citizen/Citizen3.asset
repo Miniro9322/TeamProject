@@ -14,10 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BaseUpgradeData
   id: Citizen3
   displayName: Upgrade_CitizenUpgrade3_Name
-  icon: {fileID: 21300000, guid: 7b03a2ae7ce8814479ca6e280a9f61a6, type: 3}
+  icon: {fileID: 21300000, guid: 7280e9a9fcb034f2e9b0c83dcb8c0eff, type: 3}
+  iconColor: {r: 1, g: 1, b: 1, a: 1}
   cost: 4
-  anchoredPosition: {x: 0, y: -88}
   description: Upgrade_CitizenUpgrade3_Desc
   prerequisites:
   - {fileID: 11400000, guid: 46139507f2663564189e0b654fbb7a2a, type: 2}
   effectAmount: 4
+  isLast: 0
