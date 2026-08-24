@@ -10,6 +10,7 @@ public class BuildModePanel : MonoBehaviour
     [SerializeField] private GameObject cheatPanel;
     [SerializeField] private HeroArchiveButton heroArchiveButton;
     [SerializeField] private GameObject heroInventory;
+    [SerializeField] private HeroCreateAmountController heroCreateAmountPanel;
     [SerializeField] private MapView view;
     [SerializeField] private MapGame game;
     [SerializeField] private Key closeKey = Key.Escape;
@@ -28,7 +29,8 @@ public class BuildModePanel : MonoBehaviour
 
         // alsoSelf로 이 패널 전체(빌드모드 버튼들)를 넘겨서, 다른 버튼(예: 로스터)을 눌렀을 때
         // 그 클릭이 "바깥 클릭"으로 잡혀 heroPanel이 먼저 닫혔다가 onClick이 다시 여는 깜빡임을 막는다.
-        heroPanelCloser = new ClickOutsideCloser((RectTransform)heroPanel.transform, transform);
+        heroPanelCloser = new ClickOutsideCloser((RectTransform)heroPanel.transform, transform,
+            heroCreateAmountPanel != null ? (RectTransform)heroCreateAmountPanel.transform : null);
         inventoryCloser = new ClickOutsideCloser((RectTransform)heroInventory.transform, transform, (RectTransform)heroPanel.transform);
         classUpgradeCloser = new ClickOutsideCloser((RectTransform)classUpgradePanel.transform, transform, (RectTransform)classUpgradePanel.transform);
     }
