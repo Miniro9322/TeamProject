@@ -25,7 +25,6 @@ public class LoadManager : IStartable
     // 모든 Start()가 끝난 다음 프레임에 한 번만 로드한다.
     public void Start()
     {
-        if (!SaveManager.ToolEnabled) return;
         if (SelectedSaveSlot.IsNewGame) return;   // 새 게임이면 로드를 건너뛴다
 
         WaitedLoad().Forget();

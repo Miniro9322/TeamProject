@@ -84,7 +84,7 @@ public class SaveManager
         get
         {
 #if UNITY_EDITOR
-            return PlayerPrefs.GetInt(ToolKey, 0) == 1;
+            return PlayerPrefs.GetInt(ToolKey, 1) == 1;
 #else
             return true;
 #endif
