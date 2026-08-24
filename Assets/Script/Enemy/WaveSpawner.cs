@@ -393,6 +393,7 @@ public class WaveSpawner : MonoBehaviour
         Enemycount =0;
         if (_activePaths.Count == 0) RollActivePortals(); // 포탈 추첨 없이 스폰되면(테스트 등) 여기서 보정
         int lookupId = GetStageLookupId(currentStage); // 10일차 초과는 1001~1005 라운드로 순환 조회
+
         foreach(var wave in waveTable.GetWave(1,lookupId))
         {
             int count = GetScaleCount(wave.Count, currentStage); // 라운드가 돌수록 마릿수 스케일업
@@ -400,11 +401,7 @@ public class WaveSpawner : MonoBehaviour
             Enemycount += count;
         }
     }
-    // unlockedRegionCount: 지금 해금된 지역 수. 이 수만큼 이 지역 "자신의" 증원 웨이브가 단계별로 얹힌다
-    // (9001, 9002 … — 자세한 건 ReinforceBaseId 주석 참고).
-    // currentStage: 이 지역의 로컬 진행도 — 어떤 웨이브 행(1~10, 1001~1005 순환)을 쓸지 고른다.
-    // scaleStage: 마릿수 배율 기준. 비워두면 currentStage를 그대로 쓴다(하위 호환). 배율은 지역과 무관하게
-    // 글로벌 DayCount로 유지하고 싶을 때 여기에 DayCount를 넘긴다.
+
     private float _roundStartTime;
     private int _roundDayCount;
 
@@ -429,19 +426,22 @@ public class WaveSpawner : MonoBehaviour
             }
         }
 
-        if (region == 1 && currentStage > 10 && currentStage % 10 == 0)
+        if (region == 1 && currentStage >= 10 && currentStage % 10 == 0)
         {
-            foreach (var w in waveTable.GetWave(1, 10))
+            // 씬 전환/오브젝트 파괴 시 연출이 알아서 취소되도록 UniTask의 파괴 토큰을 쓴다.
+            // 지역 CancellationTokenSource는 아무도 Cancel/Dispose하지 않아 사실상 None과 같았다.
+            spawnerManager.BossOpeningDirecting(this.GetCancellationTokenOnDestroy(), bossSpawnDelay - 0.5f).Forget();
+            foreach (var w in waveTable.GetWave(1, 5001))
             {
                 SpawnWaveRout(w, w.Count, bossSpawnDelay).Forget();
                 Enemycount += w.Count;
             }
         }
-
         _roundStartTime = Time.time;
         _roundDayCount = currentStage;
         AnalyticsRecorder.RoundStart(region, currentStage, Enemycount);
     }
+
 
     private async UniTask SpawnWaveRout(WaveTable.Data wave, int count, float startDelay = 0f)
     {
@@ -507,9 +507,9 @@ public class WaveSpawner : MonoBehaviour
             foreach (var w in waveTable.GetWave(region, ReinforceBaseId + tier))
                 AddStageLine(w.MonsterName, w.Count, "Ui_Add");
         }
-        if(currentstage>10&&currentstage%10==0&&region==1)
+        if(currentstage>=10&&currentstage%10==0&&region==1)
         {
-            foreach(var w in waveTable.GetWave(1,10))
+            foreach(var w in waveTable.GetWave(1,5001))
                 AddStageLine(w.MonsterName, w.Count, "Ui_Boss");
         }
     }

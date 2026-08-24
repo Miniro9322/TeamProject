@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -392,7 +394,7 @@ public class SpawnerManager : MonoBehaviour
 
         AllRegionsClear?.Invoke();
     }
-
+    
     // 길들에서 포탈을 하나씩 만들어 세운다. ShowPortal(낮에 켤 때)과 RestorePortal(로드할 때) 둘 다 이걸 쓴다.
     private void SpawnPortalsFor(int region, IReadOnlyList<IReadOnlyList<Vector3>> paths)
     {
@@ -472,5 +474,69 @@ public class SpawnerManager : MonoBehaviour
 
         // 켜진 길들 위에 포탈을 세운다
         SpawnPortalsFor(region, spawner.ActivePaths);
+    }
+     [SerializeField] private GameObject guardPanel;
+    [SerializeField] private Animator directingUi;
+    [SerializeField] private string directingStateName = "Directing";
+    [SerializeField] private float directingTimeout = 5f;
+    public bool isDirecting = false;
+    public async UniTask BossOpeningDirecting(CancellationToken token, float bossDelay = 0f)
+    {
+        if (bossDelay > 0f)
+            await UniTask.Delay(TimeSpan.FromSeconds(bossDelay), cancellationToken: token);
+
+        float savedTimeScale = Time.timeScale;
+        AnimatorUpdateMode savedUpdateMode = directingUi != null ? directingUi.updateMode : AnimatorUpdateMode.Normal;
+        try
+        {
+            guardPanel?.SetActive(true);
+            Time.timeScale = 0f;
+            isDirecting = true;
+
+            if (directingUi != null)
+            {
+                // 기본 Normal 모드는 timeScale을 따라가므로 얼린 동안 재생되게 언스케일드로 전환.
+                directingUi.updateMode = AnimatorUpdateMode.UnscaledTime;
+                directingUi.Rebind();   // 재사용되는 오브젝트라 지난 연출 끝난 지점이 아니라 처음부터 다시 재생
+                directingUi.Update(0f);
+                directingUi.SetTrigger(directingStateName);
+                await WaitForDirectingAnim(directingUi, directingStateName, directingTimeout, token);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // 씬 전환/취소 — 정상 취소이므로 무시하고 finally에서 원복만 한다.
+        }
+        finally
+        {
+            if (directingUi != null) directingUi.updateMode = savedUpdateMode;
+            Time.timeScale = savedTimeScale;
+            guardPanel?.SetActive(false);
+            isDirecting = false;
+        }
+    }
+
+    // EnemyBase.WaitForAttackAnim과 같은 패턴이지만, 이 연출은 Time.timeScale=0인 동안 돌아가므로
+    // 시간 소스를 전부 언스케일드로 맞춘다 — 스케일드로 두면(Time.deltaTime, UniTask.Delay 기본값)
+    // 얼려있는 동안 delta가 계속 0이라 영원히 안 끝난다.
+    private static async UniTask WaitForDirectingAnim(Animator anim, string stateName, float timeout, CancellationToken token)
+    {
+        const int layer = 0;
+        float elapsed = 0f;
+        while (anim != null && !anim.GetCurrentAnimatorStateInfo(layer).IsName(stateName))
+        {
+            elapsed += Time.unscaledDeltaTime;
+            if (elapsed >= timeout)
+            {
+                Debug.LogWarning($"BossOpeningDirecting: Animator에서 '{stateName}' 스테이트를 찾지 못함 — 이름/전이 확인.", anim);
+                return;
+            }
+            await UniTask.Yield(token);
+        }
+        if (anim == null) return;
+
+        var info = anim.GetCurrentAnimatorStateInfo(layer);
+        float wait = info.length / Mathf.Max(0.01f, anim.speed);
+        await UniTask.Delay(TimeSpan.FromSeconds(wait), ignoreTimeScale: true, cancellationToken: token);
     }
 }
