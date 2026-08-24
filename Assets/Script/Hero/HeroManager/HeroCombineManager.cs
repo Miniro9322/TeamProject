@@ -52,6 +52,20 @@ public class HeroCombineManager : MonoBehaviour
         return Combine(entries, null);
     }
 
+    // 호출부(예: 인벤토리 일괄합성)가 이미 필터링 등을 거쳐 고른 정확히 3개를 그대로 합성 — 후보 선정은
+    // 호출부 책임이고 여긴 검증(개수/MergeKey 일치) 후 실행만 한다.
+    public bool TryCombine(List<HeroRosterEntry> entries)
+    {
+        if (entries == null || entries.Count != 3) return false;
+        if (!entries[0].TryGetMergeKey(out MergeKey key)) return false;
+
+        foreach (HeroRosterEntry entry in entries)
+            if (!entry.TryGetMergeKey(out MergeKey entryKey) || !entryKey.Equals(key))
+                return false;
+
+        return Combine(entries, null);
+    }
+
     private bool Combine(List<HeroRosterEntry> entries, HeroRosterEntry pinnedEntry)
     {
         if (game.Rule != null && !game.Rule.CanBuild) return false; // 밤에는 합성 불가
