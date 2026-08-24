@@ -31,6 +31,9 @@ public class ClickOutsideCloser
 
     public bool ClickedOutside()
     {
+        // 튜토리얼이 강제 진행 중일 땐(ESC로 못 닫는 것과 같은 이유로) 바깥 클릭으로도 못 닫게 막는다 -
+        // 이 클래스를 쓰는 모든 패널(RegionOverviewPanel, BuildingPanel 등)에 공통으로 적용된다.
+        if (TutorialInputGate.BlockEscapeClose) return false;
         if (Time.frameCount == openedFrame) return false;
         if (!Mouse.current.leftButton.wasPressedThisFrame) return false;
         if (EventSystem.current == null) return true;

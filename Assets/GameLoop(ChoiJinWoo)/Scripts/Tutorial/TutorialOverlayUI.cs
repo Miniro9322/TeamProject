@@ -38,14 +38,10 @@ public class TutorialOverlayUI : MonoBehaviour
         acknowledgeButton.gameObject.SetActive(showAcknowledgeButton);
     }
 
-    // waypoint마다 다른 문구를 보여줄 수 있도록 Show()와 분리 - TutorialManager가 스포트라이트
-    // 대상이 바뀔 때마다(같은 단계 안에서도) 호출한다.
     public void SetMessage(string messageKey)
     {
         messageText.text = DataTableManager.StringTable.Get(messageKey);
 
-        // TooltipUi.Show()와 같은 이유 - 텍스트 길이가 바뀌면 Content Size Fitter가 다음 프레임에야
-        // 크기를 반영하는데, 이번 프레임에 곧장 messageBox.rect로 위치를 계산하니 즉시 반영해야 한다.
         LayoutRebuilder.ForceRebuildLayoutImmediate(messageBox);
     }
 
@@ -54,9 +50,6 @@ public class TutorialOverlayUI : MonoBehaviour
         gameObject.SetActive(false);
     }
 
-    // 영웅 배치처럼 마지막 액션이 UI가 아니라 3D 맵 클릭일 때 쓴다 - 특정 사각형을 못 짚어주니
-    // 아예 아무것도 막지 않고 화면 전체를 자유롭게 클릭할 수 있게 딤을 전부 끈다.
-    // messageBox 위치는 직전 상태 그대로 둔다(타겟이 없어 다시 계산할 기준이 없음).
     public void ShowUnblocked()
     {
         dimTop.gameObject.SetActive(false);
@@ -77,13 +70,7 @@ public class TutorialOverlayUI : MonoBehaviour
             dimLeft.gameObject.SetActive(false);
             dimRight.gameObject.SetActive(false);
 
-            // 타겟이 없으니 겹칠 대상도 없다 - 화면 가운데에 그냥 둔다.
-            Rect center = dimmerRoot.rect;
-            center.width = 0f;
-            center.height = 0f;
-            center.x = dimmerRoot.rect.center.x;
-            center.y = dimmerRoot.rect.center.y;
-            PositionMessageBox(center);
+            PositionMessageBoxCenter();
             return;
         }
 
@@ -136,10 +123,13 @@ public class TutorialOverlayUI : MonoBehaviour
         rt.anchoredPosition = new Vector2((xMin + xMax) * 0.5f, (yMin + yMax) * 0.5f);
     }
 
-    // 타겟의 위/아래/왼쪽/오른쪽 중 여유 공간이 가장 큰 쪽을 골라 그 바깥에 통째로 놓는다.
-    // 예전엔 타겟의 우상단 모서리 한 점 + 화면 절반 기준으로만 방향을 골랐는데, 자원 바처럼
-    // 가로로 넓고 얇은 타겟에서는 그 방향에 박스가 들어갈 공간이 없어 ClampToBounds가 다시
-    // 타겟 위로 끌어와 버리는 문제가 있었다 - 타겟 자체의 네 변까지 거리로 판단하면 이 문제가 없다.
+    // 스포트라이트 대상이 없을 때(완료 메시지 등) 화면 정중앙에 고정한다.
+    private void PositionMessageBoxCenter()
+    {
+        messageBox.pivot = new Vector2(0.5f, 0.5f);
+        messageBox.anchoredPosition = dimmerRoot.rect.center;
+    }
+
     private void PositionMessageBox(Rect targetLocal)
     {
         Rect bounds = dimmerRoot.rect;

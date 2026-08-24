@@ -17,6 +17,11 @@ public class GameSpeedUI : MonoBehaviour
 
     private Dictionary<Speed, Image> images;
 
+    // 이 오브젝트는 낮 동안 비활성 상태로 있다가 밤에 처음 켜지는데, 그러면 Awake()가 그 활성화
+    // 순간에야 처음 실행된다. 그 전에(비활성 상태에서) 외부(튜토리얼 등)가 OnButtonClick으로
+    // 이미 속도를 걸어뒀다면, Awake()의 기본값 초기화가 그걸 덮어쓰지 않게 이 플래그로 막는다.
+    private bool initialized;
+
     private Speed gameSpeed;
     private Speed GameSpeed
     {
@@ -27,6 +32,7 @@ public class GameSpeedUI : MonoBehaviour
 
         set
         {
+            initialized = true;
             switch (value)
             {
                 case Speed.Zero:
@@ -74,7 +80,10 @@ public class GameSpeedUI : MonoBehaviour
             { Speed.Double, twoImage },
             { Speed.Triple, threeImage },
         };
-        GameSpeed = Speed.Normal;
+
+        // 이미 외부에서 속도를 걸어둔 적이 있으면(예: 튜토리얼이 비활성 상태일 때 미리 Zero를 걸어둠)
+        // 그 값을 덮어쓰지 않는다.
+        if (!initialized) GameSpeed = Speed.Normal;
     }
 
     // 밤마다 UiManager.ToggleGameSpeedUi(true)로 이 UI가 다시 켜질 때 호출된다. Normal로 강제
@@ -128,6 +137,18 @@ public class GameSpeedUI : MonoBehaviour
 
     private void ChangeImage(Speed value)
     {
+        // 이 오브젝트가 씬 시작부터 비활성 상태면 Awake()가 아직 안 돌아 images가 비어있을 수 있다
+        // (예: 밤이 되기 전에 다른 컴포넌트가 OnButtonClick을 미리 호출하는 경우) - 그때를 대비해
+        // 여기서도 한 번 더 채워둔다.
+        images ??= new()
+        {
+            { Speed.Zero, zeroImage },
+            { Speed.Half, halfImage },
+            { Speed.Normal, oneImage },
+            { Speed.Double, twoImage },
+            { Speed.Triple, threeImage },
+        };
+
         foreach (var image in images)
         {
             image.Value.color = image.Key == value

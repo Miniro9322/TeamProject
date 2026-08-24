@@ -10190,7 +10190,6 @@ GameObject:
   - component: {fileID: 3057961748407814672}
   - component: {fileID: 2204787338258471245}
   - component: {fileID: 4392746361451241998}
-  - component: {fileID: 4312407814933574751}
   m_Layer: 0
   m_Name: GameSpeedUI
   m_TagString: Untagged
@@ -10281,19 +10280,6 @@ MonoBehaviour:
   oneImage: {fileID: 1685506046675949305}
   twoImage: {fileID: 1114324755988096545}
   threeImage: {fileID: 8768787203850625813}
---- !u!114 &4312407814933574751
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4703968571143045051}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2fafe2cfe61f6974895a912c3755e8f1, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.ToggleGroup
-  m_AllowSwitchOff: 0
 --- !u!1 &4913563000950577326
 GameObject:
   m_ObjectHideFlags: 0

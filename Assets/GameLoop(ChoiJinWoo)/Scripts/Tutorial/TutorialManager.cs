@@ -3,10 +3,6 @@ using Cysharp.Threading.Tasks;
 using UnityEngine;
 using VContainer;
 
-// 신규 플레이어를 실제 게임 화면에서 순서대로 강제로 안내하는 온보딩 튜토리얼.
-// 이벤트 버스가 없는 프로젝트 컨벤션을 따라, 각 매니저의 event Action을 직접 구독해 완료를 판정한다.
-// 씬의 RectTransform들을 인스펙터에 직접 연결해야 해서(스포트라이트 대상) plain class가 아니라
-// MonoBehaviour로 둔다 - 다른 오케스트레이션 패널들(RegionOverviewPanel 등)과 같은 패턴.
 public class TutorialManager : MonoBehaviour
 {
     [SerializeField] private TutorialOverlayUI overlay;
@@ -15,12 +11,6 @@ public class TutorialManager : MonoBehaviour
     [Tooltip("영웅 배치 단계에서 로스터 아이콘을 고른 뒤(맵 클릭 대기 중) 보여줄 문구. " +
         "이 순간엔 스포트라이트로 짚어줄 UI가 없어 화면 전체를 막지 않고 이 문구만 띄운다.")]
     [SerializeField] private string placeHeroMapClickMessageKey;
-
-    [Tooltip("0일차 밤이 시작되면(밤 전환이 다 끝난 시점) 짚어줄 플레이어 스킬 UI.")]
-    [SerializeField] private RectTransform playerSkillTarget;
-
-    [Tooltip("플레이어 스킬을 설명하는 문구. 이 순간엔 Time.timeScale을 0으로 멈춰둔다.")]
-    [SerializeField] private string playerSkillMessageKey;
 
     private CitizenManager citizenManager;
     private BaseConstructor baseConstructor;
@@ -31,6 +21,7 @@ public class TutorialManager : MonoBehaviour
     private ResourcesManager resourcesManager;
     private RegionOverviewPanel regionOverviewPanel;
     private MapGame mapGame;
+    private UiManager uiManager;
     private EnviromentManager enviromentManager;
     private TutorialState state;
 
@@ -40,19 +31,19 @@ public class TutorialManager : MonoBehaviour
     private string lastShownMessageKey;
     private readonly HashSet<HeroRosterEntry> placedSnapshot = new();
 
-    // 스텝 시퀀스 자체가 끝났는지, 0일차 리셋까지 끝났는지, 밤 스킬 설명까지 끝났는지 - 셋 다 true여야
-    // 컴포넌트를 완전히 끈다(그전에 끄면 ChangeToDay/OnNight를 못 받아서 0일차 정리를 놓친다).
     private bool sequenceFinished;
     private bool dayZeroResetDone;
-    private bool nightExplanationDone;
-    private bool nightExplanationActive;
+
+    [Tooltip("0일차 리셋이 끝난 뒤(진짜 1일차 시작) 한 번 보여줄 완료 메시지 키.")]
+    [SerializeField] private string completionMessageKey;
+    private bool showingCompletionMessage;
 
     [Inject]
     private void Construct(CitizenManager citizenManager,
         BaseConstructor baseConstructor, HeroRoster heroRoster, PlacePalette placePalette,
         BuildingPanel buildingPanel, GameManager gameManager, ResourcesManager resourcesManager,
-        RegionOverviewPanel regionOverviewPanel, MapGame mapGame, EnviromentManager enviromentManager,
-        TutorialState state)
+        RegionOverviewPanel regionOverviewPanel, MapGame mapGame, UiManager uiManager,
+        EnviromentManager enviromentManager, TutorialState state)
     {
         this.citizenManager = citizenManager;
         this.baseConstructor = baseConstructor;
@@ -63,12 +54,15 @@ public class TutorialManager : MonoBehaviour
         this.resourcesManager = resourcesManager;
         this.regionOverviewPanel = regionOverviewPanel;
         this.mapGame = mapGame;
+        this.uiManager = uiManager;
         this.enviromentManager = enviromentManager;
         this.state = state;
     }
 
     private void Start()
     {
+        WireRuntimeWaypoints();
+
         if (state.Seen || steps.Length == 0)
         {
             overlay.Hide();
@@ -76,14 +70,19 @@ public class TutorialManager : MonoBehaviour
             return;
         }
 
-        int startIndex = state.CurrentStepIndex;
-        if (startIndex >= steps.Length)
-        {
-            Finish();
-            return;
-        }
+        BeginStep(0);
+    }
 
-        BeginStep(startIndex);
+    private void WireRuntimeWaypoints()
+    {
+        foreach (var step in steps)
+        {
+            if (step.id != TutorialStepId.GameSpeedMention || step.waypoints == null) continue;
+            foreach (var waypoint in step.waypoints)
+            {
+                if (waypoint != null) waypoint.target = uiManager.GameSpeedUiRect;
+            }
+        }
     }
 
     private void OnEnable()
@@ -94,9 +93,8 @@ public class TutorialManager : MonoBehaviour
         heroRoster.Changed += OnHeroRosterChanged;
         buildingPanel.Upgraded += OnUpgraded;
         overlay.AcknowledgeClicked += OnAcknowledgeClicked;
-        gameManager.ChangeToDay += OnChangeToDay;
         gameManager.ChangeToNight += OnChangeToNight;
-        enviromentManager.OnNight += OnNightTransitionComplete;
+        enviromentManager.OnDay += OnDayTransitionComplete;
     }
 
     private void OnDisable()
@@ -107,9 +105,8 @@ public class TutorialManager : MonoBehaviour
         heroRoster.Changed -= OnHeroRosterChanged;
         buildingPanel.Upgraded -= OnUpgraded;
         overlay.AcknowledgeClicked -= OnAcknowledgeClicked;
-        gameManager.ChangeToDay -= OnChangeToDay;
         gameManager.ChangeToNight -= OnChangeToNight;
-        enviromentManager.OnNight -= OnNightTransitionComplete;
+        enviromentManager.OnDay -= OnDayTransitionComplete;
     }
 
     // 현재 단계의 waypoints 중 저작한 순서로 가장 깊이 들어간 활성 상태를 스포트라이트하고,
@@ -117,7 +114,7 @@ public class TutorialManager : MonoBehaviour
     // 단계가 바뀌지 않아도 매 프레임 다시 계산해야 한다.
     private void Update()
     {
-        if (sequenceFinished) return; // 스텝은 끝났고 나머지(0일차 리셋, 밤 스킬 설명)는 이벤트로 처리 - 더 그릴 것 없음
+        if (sequenceFinished) return; // 스텝은 끝났고 0일차 리셋은 EnviromentManager.OnDay가 알아서 처리 - 더 그릴 것 없음
 
         // 로스터에서 영웅을 고르면(배치 대기 중) 다음 클릭은 UI가 아니라 3D 맵 타일이라 짚어줄
         // 사각형이 없다 - 이 순간만큼은 딤을 전부 끄고 맵을 자유롭게 클릭할 수 있게 한다.
@@ -142,10 +139,6 @@ public class TutorialManager : MonoBehaviour
         overlay.SetMessage(messageKey);
     }
 
-    // waypoints는 진입 버튼 -> 최종 액션 버튼 순으로 저작하지만, 뒤에서부터 훑어 "가장 깊이 들어간
-    // 활성 상태"를 스포트라이트한다. 거점 화면을 여는 버튼처럼 앞쪽 waypoint는 패널이 열린 뒤에도
-    // 계속 activeInHierarchy=true로 남아있는 경우가 많아서, 앞에서부터 훑으면 플레이어가 이미
-    // 다음 화면으로 넘어갔어도 스포트라이트가 그 버튼에서 멈춰버린다.
     private TutorialWaypoint ResolveWaypoint()
     {
         if (currentIndex < 0 || currentIndex >= steps.Length) return null;
@@ -183,6 +176,8 @@ public class TutorialManager : MonoBehaviour
         currentIndex = index;
 
         var step = steps[index];
+        if (step.pauseTimeWhileActive) uiManager.GameSpeedUi.OnButtonClick((int)Speed.Zero);
+
         citizenSnapshot = citizenManager.CurrentCitizen;
         usedCitizenSnapshot = citizenManager.UsedCitizen;
         SnapshotPlacedHeroes();
@@ -203,32 +198,25 @@ public class TutorialManager : MonoBehaviour
 
     private void CompleteStep()
     {
-        int next = currentIndex + 1;
-        state.SaveProgress(next);
+        if (steps[currentIndex].pauseTimeWhileActive) uiManager.GameSpeedUi.OnButtonClick((int)Speed.Normal);
 
-        if (next >= steps.Length) Finish();
+        int next = currentIndex + 1;
+
+        if (next >= steps.Length) FinishSequence();
         else BeginStep(next);
     }
 
-    private void Finish()
+    private void FinishSequence()
     {
-        // 밤 버튼은 눌렸지만 전환 애니메이션이 끝나 스킬 설명이 뜨기 전까지는 짚어줄 UI가 없다.
-        // 그렇다고 여기서 강제를 풀면 그 몇 초 사이에 자유롭게 다른 조작을 할 수 있게 되므로,
-        // 스킬 설명이 뜨고 확인할 때까지(ResumeFromNightExplanation) 화면 전체를 막아둔 채로 대기한다.
-        overlay.SetSpotlight(null);
+        overlay.Hide();
+        TutorialInputGate.BlockEscapeClose = false;
         sequenceFinished = true;
         TryFullyDisable();
     }
 
-    // 스텝 시퀀스, 0일차 리셋, 밤 스킬 설명 - 셋 다 끝나야 완전히 끈다. 하나라도 안 끝났으면 그대로
-    // 살려둬서 나중에 올 ChangeToDay/OnNight를 계속 받을 수 있게 한다.
-    // state.MarkSeen()도 여기서 한다 - 밤 버튼을 누른 시점이 아니라 진짜 1일차가 시작되는 시점에야
-    // "튜토리얼을 다 봤다"고 기록해야, 0일차 밤 도중 앱이 꺼져도 다시 켰을 때 0일차를 다시 겪는다.
     private void TryFullyDisable()
     {
-        if (!(sequenceFinished && dayZeroResetDone && nightExplanationDone)) return;
-        state.MarkSeen();
-        enabled = false;
+        if (sequenceFinished && dayZeroResetDone && !showingCompletionMessage) enabled = false;
     }
 
     // 테스트용 - 인스펙터에서 이 컴포넌트 헤더 우클릭 -> 실행하면 Play 모드 중에도 처음부터 다시 볼 수 있다.
@@ -239,11 +227,12 @@ public class TutorialManager : MonoBehaviour
         if (steps.Length == 0) return;
 
         state.Reset();
+        gameManager.ResetDayCountForTutorialReplay(); // 실제 진행 중이던 날짜를 다시 "0일차"로 맞춘다
         currentIndex = -1;
         sequenceFinished = false;
         dayZeroResetDone = false;
-        nightExplanationDone = false;
-        nightExplanationActive = false;
+        showingCompletionMessage = false;
+        uiManager.GameSpeedUi.OnButtonClick((int)Speed.Normal); // 재시작 시점에 정지 상태였을 수도 있으니 방어적으로 되돌린다
         enabled = true;
         BeginStep(0);
     }
@@ -252,8 +241,17 @@ public class TutorialManager : MonoBehaviour
 
     private void OnAcknowledgeClicked()
     {
-        if (nightExplanationActive) { ResumeFromNightExplanation(); return; }
-        if (sequenceFinished) return; // 방어적 - 시퀀스 끝난 뒤엔 이 경로로 안 와야 정상
+        if (showingCompletionMessage)
+        {
+            showingCompletionMessage = false;
+            overlay.Hide();
+            TutorialInputGate.BlockEscapeClose = false;
+            uiManager.GameSpeedUi.OnButtonClick((int)Speed.Normal);
+            TryFullyDisable();
+            return;
+        }
+
+        if (sequenceFinished) return; // 방어적 - 시퀀스 끝난 뒤엔 오버레이가 숨겨져 있어 이 경로로 안 와야 정상
         if (currentIndex < 0 || currentIndex >= steps.Length) return;
         if (steps[currentIndex].completesOnAcknowledge) CompleteStep();
     }
@@ -301,39 +299,18 @@ public class TutorialManager : MonoBehaviour
     }
 
     // NightMention 단계가 활성일 때 낮/밤 버튼을 실제로 눌러야(ChangeToNight 발생) 완료된다 -
-    // 다른 강제 단계들(OnBuilt, OnCitizenChanged 등)과 같은 패턴.
+    // 다른 강제 단계들(OnBuilt, OnCitizenChanged 등)과 같은 패턴. 완료 즉시 다음 단계
+    // (PlayerSkillMention)로 넘어가지만, 그 스텝의 waypoint(PlayerSkillPanel)는 아직 안 켜져 있을 수
+    // 있다 - PlayerSkillPanel은 이제 ChangeToNight이 아니라 밤 전환이 실제로 다 끝나는
+    // EnviromentManager.OnNight에 맞춰 켜진다(PlayerSkillPanel.cs). GameSpeedMention과 마찬가지로
+    // Update()가 매 프레임 다시 스포트라이트를 계산하므로, 패널이 늦게 켜지면 그 순간 자동으로 잡힌다.
     private void OnChangeToNight()
     {
         if (!IsActive(TutorialStepId.NightMention)) return;
         CompleteStep();
     }
 
-    // 밤 전환 애니메이션이 다 끝나 적이 스폰될 수 있게 된 시점. 시간을 멈추고 플레이어 스킬을 한 번
-    // 설명한다 - 0일차에서 딱 한 번만.
-    private void OnNightTransitionComplete()
-    {
-        if (nightExplanationDone) return;
-        nightExplanationDone = true;
-
-        Time.timeScale = 0f;
-        nightExplanationActive = true;
-        overlay.Show(true);
-        overlay.SetSpotlight(playerSkillTarget);
-        overlay.SetMessage(playerSkillMessageKey);
-    }
-
-    private void ResumeFromNightExplanation()
-    {
-        nightExplanationActive = false;
-        overlay.Hide();
-        TutorialInputGate.BlockEscapeClose = false; // 이제 정말로 강제 진행이 끝났다 - ESC 막기도 풀어준다
-        Time.timeScale = 1f;
-        TryFullyDisable();
-    }
-
-    // 0일차 밤이 끝나고 진짜 1일차가 시작되는 첫 ChangeToDay - 0일차 동안 쌓은 자원/시민/건물/영웅을
-    // 전부 초기 상태로 되돌린다. 그 다음부터 오는 진짜 일차 전환들은 dayZeroResetDone 가드로 무시한다.
-    private void OnChangeToDay()
+    private void OnDayTransitionComplete()
     {
         if (dayZeroResetDone) return;
         dayZeroResetDone = true;
@@ -342,9 +319,6 @@ public class TutorialManager : MonoBehaviour
 
     private async UniTaskVoid DeferredReset()
     {
-        // ChangeToDay 호출 스택을 완전히 빠져나온 뒤 정리한다 - 같은 호출 스택 안에서 영웅을 즉시
-        // 풀로 돌려버리면, 씬의 각 배치된 영웅 인스턴스에 걸려있는 다른 ChangeToDay 구독자
-        // (Hero.cs의 Resurrection/HealFull/ResetSkillCooldown)가 뒤이어 접근하다 예외가 날 위험이 있다.
         await UniTask.Yield();
 
         ResetHeroes();
@@ -353,7 +327,20 @@ public class TutorialManager : MonoBehaviour
         citizenManager.Reset();
         gameManager.ResetHpToFull();
 
-        TryFullyDisable();
+        state.MarkSeen();
+        ShowCompletionMessage();
+    }
+
+    // 0일차 리셋과 낮 전환까지 전부 끝난 뒤, 확인을 눌러야 넘어가는 완료 메시지를 한 번 보여준다.
+    // 이걸 확인해야(OnAcknowledgeClicked) 비로소 컴포넌트를 완전히 끈다.
+    private void ShowCompletionMessage()
+    {
+        showingCompletionMessage = true;
+        TutorialInputGate.BlockEscapeClose = true;
+        uiManager.GameSpeedUi.OnButtonClick((int)Speed.Zero);
+        overlay.Show(true);
+        overlay.SetSpotlight(null);
+        overlay.SetMessage(completionMessageKey);
     }
 
     // HeroCombineManager.Combine()의 제거 절차(영역 해제 -> 풀 반환 -> FreeCitizenForHero)를 그대로

@@ -116,6 +116,14 @@ public class GameManager : MonoBehaviour
         dayCount++;
     }
 
+    // 테스트용 - TutorialManager.DebugRestart()가 0일차 흐름을 다시 재현할 때 쓴다. dayCount를
+    // 안 맞춰주면 이미 진행된 실제 날짜의 웨이브가 나가고, 밤이 끝난 뒤 0일차 리셋 타이밍도
+    // 어긋난다 - 지금 낮을 "0일차"로 다시 취급하도록 되돌린다.
+    public void ResetDayCountForTutorialReplay()
+    {
+        dayCount = 0;
+    }
+
     public void ChangeRequest(bool value)
     {
         requestSupport = value;

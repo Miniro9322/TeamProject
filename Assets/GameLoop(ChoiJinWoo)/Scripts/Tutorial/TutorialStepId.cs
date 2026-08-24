@@ -8,5 +8,7 @@ public enum TutorialStepId
     PlaceHero,
     HeroUpgradeMention,
     HeroCombineMention,
-    NightMention
+    NightMention,
+    PlayerSkillMention,
+    GameSpeedMention
 }

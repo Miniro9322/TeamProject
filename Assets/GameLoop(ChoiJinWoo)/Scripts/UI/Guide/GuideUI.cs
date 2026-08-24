@@ -54,6 +54,8 @@ public class GuideUI : MonoBehaviour
             guide.GuideButton.onClick.AddListener(() => ShowSpecificGuide(guide));
             activatedButtons.Add(guide);
         }
+
+        activatedButtons[0].GuideButton.onClick?.Invoke();
     }
 
     public void OnHeroGuide()
@@ -66,6 +68,8 @@ public class GuideUI : MonoBehaviour
             guide.GuideButton.onClick.AddListener(() => ShowSpecificGuide(guide));
             activatedButtons.Add(guide);
         }
+
+        activatedButtons[0].GuideButton.onClick?.Invoke();
     }
 
     public void OnBaseGuide()
@@ -78,6 +82,8 @@ public class GuideUI : MonoBehaviour
             guide.GuideButton.onClick.AddListener(() => ShowSpecificGuide(guide));
             activatedButtons.Add(guide);
         }
+
+        activatedButtons[0].GuideButton.onClick?.Invoke();
     }
 
     public void OnEnemyGuide()
@@ -90,6 +96,8 @@ public class GuideUI : MonoBehaviour
             guide.GuideButton.onClick.AddListener(() => ShowSpecificGuide(guide));
             activatedButtons.Add(guide);
         }
+
+        activatedButtons[0].GuideButton.onClick?.Invoke();
     }
 
     private void DisableButtons()
