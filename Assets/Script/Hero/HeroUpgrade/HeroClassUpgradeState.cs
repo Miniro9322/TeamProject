@@ -15,6 +15,9 @@ public class HeroClassUpgradeState
 
     public int MaxLevel => config.maxLevel;
 
+    // 강화된 클래스와 레벨을 그대로 열거한다 (세이브 전용 조회)
+    public IReadOnlyDictionary<int, int> ClassLevels => levels;
+
     private float CostDiscount => upgradeState.GetTotalEffect(config.UpgradeCostUpgrades);
 
     public HeroClassUpgradeState(HeroClassUpgradeConfig config, ResourcesManager resourcesManager, UpgradeState upgradeState)
@@ -51,5 +54,12 @@ public class HeroClassUpgradeState
         levels[heroType] = GetLevel(heroType) + 1;
         LevelChanged?.Invoke(heroType);
         return true;
+    }
+
+    // 세이브 데이터로 특정 클래스의 강화 레벨을 비용 차감 없이 그대로 지정한다 (로드 복원 전용)
+    public void RestoreLevel(int heroType, int level)
+    {
+        levels[heroType] = level;
+        LevelChanged?.Invoke(heroType);
     }
 }

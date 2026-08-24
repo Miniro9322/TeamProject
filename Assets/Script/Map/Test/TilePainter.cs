@@ -11,7 +11,7 @@ public class TilePainter : MonoBehaviour
     public Color okColor = new(0.21f, 0.77f, 0.41f);
     public Color denyColor = new(0.85f, 0.29f, 0.27f);
     [Tooltip("배치 프리뷰/호버 시 유닛 사거리 타일 색.")]
-    public Color rangeColor = new(0.30f, 0.60f, 1f);
+    public Color rangeColor = new(0f, 1f, 0.226f);
     [Tooltip("시전자로 선택된 영웅의 액티브 스킬 타격 범위 타일 색.")]
     public Color skillColor = new(1f, 0.55f, 0.15f);
     [Header("Range Scan")]

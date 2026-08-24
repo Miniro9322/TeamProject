@@ -14,6 +14,8 @@ public class MapAssemble : MonoBehaviour
     [SerializeField] private ExpandEvent expand;
     [SerializeField] private float dragPixels = 8f;
     [SerializeField] private float placeYOffset = 0f;
+    // 저장된 영웅 배치를 UnitPlacer.TryPlace()로 그대로 되돌릴 때 쓰는 배치 높이 조회 통로 (로드 복원 전용)
+    public float PlaceYOffset => placeYOffset;
     [Range(0f, 1f)]
     [Tooltip("배치 미리보기의 진하기. 낮출수록 투명해진다.")]
     [SerializeField] private float ghostAlpha = 0.45f;

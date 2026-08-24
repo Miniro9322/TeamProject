@@ -42,6 +42,8 @@ public class ProductionFacility : IUpgradableOccupant
     public int WorkerAmount => workerAmount;
     public int MaxWorker => maxWorker;
     public int ProductAmount => productAmount;
+    public int AmountUpgrade => amountUpgrade;
+    public int CitizenUpgrade => citizenUpgrade;
     private (ProductionType Type, int Amount)[] upgradeCostCopy = Array.Empty<(ProductionType, int)>();
     private (ProductionType Type, int Amount)[] totalUpgradeSpent = Array.Empty<(ProductionType, int)>();
     private (ProductionType Type, int Amount)[] constructCostPaid = Array.Empty<(ProductionType, int)>();
@@ -51,6 +53,10 @@ public class ProductionFacility : IUpgradableOccupant
     public string NextUpgradeInfo => nextUpgradeInfo;
 
     public int MaxUpgrade => maxUpgrade;
+
+    // 실제로 낸 건설·강화 비용을 그대로 읽는다 (세이브 전용 조회)
+    public (ProductionType Type, int Amount)[] ConstructCostPaid => constructCostPaid;
+    public (ProductionType Type, int Amount)[] TotalUpgradeSpent => totalUpgradeSpent;
 
     private string nextUpgradeInfo = "자원 생산량 증가";
 
@@ -204,5 +210,38 @@ public class ProductionFacility : IUpgradableOccupant
     public bool CheckCanUpgrade()
     {
         return upgradeCount < maxUpgrade && resourcesManager.CheckResources(upgradeCostCopy);
+    }
+
+    // 세이브 데이터로 건설·강화 상태를 자원 차감 없이 그대로 복원한다 (로드 복원 전용)
+    public void RestoreState(
+        int savedUpgradeCount,
+        int savedWorkerAmount,
+        int savedProductAmount,
+        int savedMaxWorker,
+        int savedAmountUpgrade,
+        int savedCitizenUpgrade,
+        string savedNextUpgradeInfo,
+        (ProductionType Type, int Amount)[] savedConstructPaid,
+        (ProductionType Type, int Amount)[] savedUpgradeSpent)
+    {
+        upgradeCount = savedUpgradeCount;
+        productAmount = savedProductAmount;
+        maxWorker = savedMaxWorker;
+        amountUpgrade = savedAmountUpgrade;
+        citizenUpgrade = savedCitizenUpgrade;
+        nextUpgradeInfo = savedNextUpgradeInfo;
+        workerAmount = savedWorkerAmount;
+        constructCostPaid = savedConstructPaid;
+        totalUpgradeSpent = savedUpgradeSpent;
+
+        var baseCost = basicValue.UpgradeCost.ApplyDiscount(UpgradeCostDiscount);
+        upgradeCostCopy = new (ProductionType, int)[baseCost.Length];
+        for (int i = 0; i < upgradeCostCopy.Length; i++)
+        {
+            upgradeCostCopy[i] = (baseCost[i].Type, baseCost[i].Amount * (upgradeCount + 1));
+        }
+
+        facilityManager.AddFacility(this);
+        UpdateInfo();
     }
 }

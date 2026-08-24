@@ -166,9 +166,32 @@ public class GameManager : MonoBehaviour
         unlockedHero = uiManager.UnlockedHero;
         unlockedEnemy = uiManager.UnlockedEnemy;
     }
+    public void RestoreDayCount(int amount)
+    {
+        dayCount = amount;
+    }
 
-    // 0일차 튜토리얼 밤 전투에서 입은 데미지를 되돌린다.
-    public void ResetHpToFull()
+    // 세이브 데이터로 기지 체력을 그대로 덮어쓴다 (로드 복원 전용)
+    public void RestoreHp(int amount)
+    {
+        hp = amount;
+        HpChanged?.Invoke();
+    }
+
+    // 세이브 데이터로 오늘 아침 기준 체력을 그대로 덮어쓴다 (로드 복원 전용)
+    public void RestoreTodayHp(int amount)
+    {
+        todayHp = amount;
+    }
+
+    // 세이브 데이터로 해금된 영웅 목록을 그대로 덮어쓴다 (로드 복원 전용)
+    public void RestoreUnlockedHero(byte value)
+    {
+        unlockedHero = value;
+        uiManager.UnlockedHero = value;
+    }
+
+        public void ResetHpToFull()
     {
         hp = initialHp;
         HpChanged?.Invoke();

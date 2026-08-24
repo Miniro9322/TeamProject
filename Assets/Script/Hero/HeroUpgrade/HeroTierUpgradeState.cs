@@ -16,6 +16,9 @@ public class HeroTierUpgradeState
 
     private float CostDiscount => upgradeState.GetTotalEffect(config.UpgradeCostUpgrades);
 
+    // 강화된 티어와 레벨을 그대로 열거한다 (세이브 전용 조회)
+    public IReadOnlyDictionary<int, int> Levels => levels;
+
     public HeroTierUpgradeState(HeroUpgradeConfig config, ResourcesManager resourcesManager, UpgradeState upgradeState)
     {
         this.config = config;
@@ -50,5 +53,12 @@ public class HeroTierUpgradeState
         levels[tier] = GetLevel(tier) + 1;
         LevelChanged?.Invoke(tier);
         return true;
+    }
+
+    // 세이브 데이터로 특정 티어의 강화 레벨을 비용 차감 없이 그대로 지정한다 (로드 복원 전용)
+    public void RestoreLevel(int tier, int level)
+    {
+        levels[tier] = level;
+        LevelChanged?.Invoke(tier);
     }
 }
