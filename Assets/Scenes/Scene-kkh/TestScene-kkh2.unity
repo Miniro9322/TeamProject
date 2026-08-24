@@ -3112,11 +3112,11 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 964995787}
-  m_Father: {fileID: 2089704959}
+  m_Father: {fileID: 1654659113}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 572.5, y: -491}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &158157034
@@ -4211,6 +4211,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 4538912842615452551, guid: 9a3137b1da49ca4428f2cc3257c1b3a5, type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: 21300000, guid: a91bab40fed0b484c8a69a95d83e5c42, type: 3}
     - target: {fileID: 6904784454642622277, guid: 9a3137b1da49ca4428f2cc3257c1b3a5, type: 3}
       propertyPath: registry
       value: 
@@ -4219,6 +4223,10 @@ PrefabInstance:
       propertyPath: bookAnimator
       value: 
       objectReference: {fileID: 196020501}
+    - target: {fileID: 6904784454642622277, guid: 9a3137b1da49ca4428f2cc3257c1b3a5, type: 3}
+      propertyPath: heroArchiveButton
+      value: 
+      objectReference: {fileID: 1221242825}
     - target: {fileID: 8640346737813943251, guid: 9a3137b1da49ca4428f2cc3257c1b3a5, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5
@@ -4281,11 +4289,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8640346737813943251, guid: 9a3137b1da49ca4428f2cc3257c1b3a5, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: 28
+      value: 11
       objectReference: {fileID: 0}
     - target: {fileID: 8640346737813943251, guid: 9a3137b1da49ca4428f2cc3257c1b3a5, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 11
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 8640346737813943251, guid: 9a3137b1da49ca4428f2cc3257c1b3a5, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -12163,7 +12171,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::HeroClassUpgradeMenu
   upgradeMenuUIPrefab: {fileID: 3953055370561145820, guid: d672fe63ffb0dda4893cfe878c8f6f1f, type: 3}
   menuContent: {fileID: 662978903}
-  openButton: {fileID: 1680791097}
 --- !u!114 &627099355
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -23238,11 +23245,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2637793882911063574, guid: 865cda3f22202bb4d9e7a1cf6c336086, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: -7.5
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2637793882911063574, guid: 865cda3f22202bb4d9e7a1cf6c336086, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: -22
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3060462579655650006, guid: 865cda3f22202bb4d9e7a1cf6c336086, type: 3}
       propertyPath: m_Pivot.x
@@ -23306,7 +23313,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3060462579655650006, guid: 865cda3f22202bb4d9e7a1cf6c336086, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: 0
+      value: 153
       objectReference: {fileID: 0}
     - target: {fileID: 3060462579655650006, guid: 865cda3f22202bb4d9e7a1cf6c336086, type: 3}
       propertyPath: m_AnchoredPosition.y
@@ -27415,11 +27422,11 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 2063884688}
-  m_Father: {fileID: 2089704959}
+  m_Father: {fileID: 1654659113}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 572.5, y: -393}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1221242825
@@ -36433,6 +36440,71 @@ MonoBehaviour:
   m_ChildScaleWidth: 0
   m_ChildScaleHeight: 0
   m_ReverseArrangement: 0
+--- !u!1 &1654659112
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1654659113}
+  - component: {fileID: 1654659114}
+  m_Layer: 5
+  m_Name: RightButtons
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1654659113
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1654659112}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 1711542351}
+  - {fileID: 158157033}
+  - {fileID: 1221242824}
+  m_Father: {fileID: 2089704959}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 1, y: 0.5}
+  m_AnchorMax: {x: 1, y: 0.5}
+  m_AnchoredPosition: {x: -50, y: 244}
+  m_SizeDelta: {x: 100, y: 100}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1654659114
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1654659112}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 59f8146938fff824cb5fd77236b75775, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.VerticalLayoutGroup
+  m_Padding:
+    m_Left: 0
+    m_Right: 0
+    m_Top: 0
+    m_Bottom: 0
+  m_ChildAlignment: 0
+  m_Spacing: 0
+  m_ChildForceExpandWidth: 1
+  m_ChildForceExpandHeight: 1
+  m_ChildControlWidth: 0
+  m_ChildControlHeight: 0
+  m_ChildScaleWidth: 0
+  m_ChildScaleHeight: 0
+  m_ReverseArrangement: 0
 --- !u!1 &1656848258
 GameObject:
   m_ObjectHideFlags: 0
@@ -37216,7 +37288,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1680791098}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 2084934173}
+        m_TargetAssemblyTypeName: BuildModePanel, Assembly-CSharp
+        m_MethodName: OnClassUpgradeButton
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &1680791098
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -38211,11 +38295,11 @@ RectTransform:
   m_Children:
   - {fileID: 237851023}
   - {fileID: 1068608154}
-  m_Father: {fileID: 2089704959}
+  m_Father: {fileID: 1654659113}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 1, y: 1}
-  m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: -256}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 1, y: 1}
 --- !u!1 &1714074719
@@ -46964,6 +47048,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BuildModePanel
   heroPanel: {fileID: 1309041908}
   rosterPanel: {fileID: 959416661}
+  classUpgradePanel: {fileID: 627099352}
+  cheatPanel: {fileID: 1575621191}
+  heroArchiveButton: {fileID: 1221242825}
   heroInventory: {fileID: 1376657462}
   view: {fileID: 314587628}
   game: {fileID: 314587623}
@@ -47331,15 +47418,13 @@ RectTransform:
   m_Children:
   - {fileID: 186776086}
   - {fileID: 1760085481}
-  - {fileID: 158157033}
-  - {fileID: 1221242824}
   - {fileID: 322001200}
   - {fileID: 1311540846}
   - {fileID: 250998269}
   - {fileID: 1964387339}
   - {fileID: 627099353}
   - {fileID: 1566887812}
-  - {fileID: 1711542351}
+  - {fileID: 1654659113}
   - {fileID: 658624905}
   - {fileID: 1091409378}
   - {fileID: 196020499}

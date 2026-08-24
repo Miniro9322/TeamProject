@@ -6,6 +6,10 @@ public class BuildModePanel : MonoBehaviour
 {
     [SerializeField] private GameObject heroPanel;
     [SerializeField] private GameObject rosterPanel;
+    //[SerializeField] private GameObject upgradePanel;
+    [SerializeField] private GameObject classUpgradePanel;
+    [SerializeField] private GameObject cheatPanel;
+    [SerializeField] private HeroArchiveButton heroArchiveButton;
     [SerializeField] private GameObject heroInventory;
     [SerializeField] private MapView view;
     [SerializeField] private MapGame game;
@@ -13,17 +17,22 @@ public class BuildModePanel : MonoBehaviour
     private Keyboard keyboard;
     private ClickOutsideCloser heroPanelCloser;
     private ClickOutsideCloser inventoryCloser;
+    private ClickOutsideCloser classUpgradeCloser;
 
     private void Awake()
     {
         heroPanel.SetActive(false);
         rosterPanel.SetActive(false);
+        heroInventory.SetActive(false);
+        classUpgradePanel.SetActive(false);
+
         keyboard = Keyboard.current;
 
         // alsoSelf로 이 패널 전체(빌드모드 버튼들)를 넘겨서, 다른 버튼(예: 로스터)을 눌렀을 때
         // 그 클릭이 "바깥 클릭"으로 잡혀 heroPanel이 먼저 닫혔다가 onClick이 다시 여는 깜빡임을 막는다.
         heroPanelCloser = new ClickOutsideCloser((RectTransform)heroPanel.transform, transform);
-        inventoryCloser = new ClickOutsideCloser((RectTransform)heroInventory.transform, transform);
+        inventoryCloser = new ClickOutsideCloser((RectTransform)heroInventory.transform, transform, (RectTransform)heroPanel.transform);
+        classUpgradeCloser = new ClickOutsideCloser((RectTransform)classUpgradePanel.transform, transform, (RectTransform)classUpgradePanel.transform);
     }
 
     private void Start()
@@ -43,6 +52,10 @@ public class BuildModePanel : MonoBehaviour
         if (heroPanel.activeSelf && heroPanelCloser.ClickedOutside())
         {
             heroPanel.SetActive(false);
+        }
+        if (classUpgradePanel.activeSelf && classUpgradeCloser.ClickedOutside())
+        {
+            classUpgradePanel.SetActive(false);
         }
         if (heroInventory.activeSelf && view.IsOff && inventoryCloser.ClickedOutside())
         {
@@ -66,10 +79,16 @@ public class BuildModePanel : MonoBehaviour
         {
             view.ClearMode();
         }
-        else if (heroPanel.activeSelf || rosterPanel.activeSelf)
+        else if (heroPanel.activeSelf || rosterPanel.activeSelf || heroInventory.activeSelf || classUpgradePanel.activeSelf
+            || (cheatPanel != null && cheatPanel.activeSelf)
+            || (heroArchiveButton != null && heroArchiveButton.IsOpen))
         {
             heroPanel.SetActive(false);
             rosterPanel.SetActive(false);
+            heroInventory.SetActive(false);
+            classUpgradePanel.SetActive(false);
+            if (cheatPanel != null) cheatPanel.SetActive(false);
+            heroArchiveButton?.Close();
         }
     }
 
@@ -78,6 +97,10 @@ public class BuildModePanel : MonoBehaviour
         if (heroPanel.activeSelf)
         {
             heroPanel.SetActive(false);
+        }
+        if (classUpgradePanel.activeSelf)
+        {
+            classUpgradePanel.SetActive(false);
         }
         if (heroInventory.activeSelf)
         {
@@ -144,6 +167,21 @@ public class BuildModePanel : MonoBehaviour
         {
             heroInventory.SetActive(true);
             inventoryCloser.MarkOpened();
+            if (classUpgradePanel.activeSelf) classUpgradePanel.SetActive(false);
+        }
+    }
+
+    public void OnClassUpgradeButton()
+    {
+        if (classUpgradePanel.activeSelf)
+        {
+            classUpgradePanel.SetActive(false);
+        }
+        else
+        {
+            classUpgradePanel.SetActive(true);
+            classUpgradeCloser.MarkOpened();
+            if (heroInventory.activeSelf) heroInventory.SetActive(false);
         }
     }
 
