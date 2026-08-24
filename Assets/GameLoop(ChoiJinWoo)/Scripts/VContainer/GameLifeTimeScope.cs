@@ -118,6 +118,7 @@ public class GameLifeTimeScope : LifetimeScope
         builder.RegisterComponentInHierarchy<HeroTierUpgradeMenu>();
         builder.RegisterComponentInHierarchy<HeroClassUpgradeMenu>();
         builder.RegisterComponentInHierarchy<HeroSetPanel>();
+        builder.RegisterComponentInHierarchy<BuildModePanel>();
         builder.RegisterComponentInHierarchy<TutorialOverlayUI>();
         builder.RegisterComponentInHierarchy<TutorialManager>();
         builder.RegisterComponentInHierarchy<PlacePalette>(); // 튜토리얼이 배치 대기 상태(Mode)를 읽어 맵 클릭 순간 딤을 풀어주는 데 씀

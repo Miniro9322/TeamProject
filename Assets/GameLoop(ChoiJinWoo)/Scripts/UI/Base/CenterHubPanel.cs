@@ -100,7 +100,7 @@ public class CenterHubPanel : MonoBehaviour, IClosablePanel
     private void Update()
     {
         if (addCitizenPanel != null && addCitizenPanel.gameObject.activeSelf) return;
-        if (outsideCloser.ClickedOutside()) Close();
+        if (panelStack.IsTop(this) && outsideCloser.ShouldClose()) Close();
     }
 
     private void RefreshButton()

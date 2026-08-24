@@ -8,6 +8,7 @@ public class HeroArchiveButton : MonoBehaviour
     [SerializeField] private GameObject archiveUI;
     private CancellationTokenSource cts;
     private bool isOpen;
+    private ClickOutsideCloser outsideCloser;
 
     public bool IsOpen => isOpen;
 
@@ -16,6 +17,14 @@ public class HeroArchiveButton : MonoBehaviour
         archiveUI.SetActive(false);
         archiveUI.transform.localScale = Vector3.zero; // 닫힘 = 스케일 0 기준 (이어서 열기 진행도 계산용)
         isOpen = false;
+        outsideCloser = new ClickOutsideCloser((RectTransform)archiveUI.transform, transform);
+    }
+
+    // ESC는 BuildModePanel의 취소 우선순위 체인이 IsOpen을 보고 Close()를 호출해주므로 여기서 또
+    // 감지하지 않는다(중복 처리 방지) - 바깥 클릭만 직접 담당한다.
+    private void Update()
+    {
+        if (isOpen && outsideCloser.ClickedOutside()) Close();
     }
 
     private void OnDestroy()
@@ -35,6 +44,7 @@ public class HeroArchiveButton : MonoBehaviour
     {
         if (isOpen) return;
         isOpen = true;
+        outsideCloser.MarkOpened();
         ResetCts();
         OpenArchiveCor(cts.Token).Forget();
     }

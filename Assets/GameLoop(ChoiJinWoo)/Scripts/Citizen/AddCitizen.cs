@@ -22,8 +22,7 @@ public class AddCitizen : MonoBehaviour
     private int amount = 0;
     private Keyboard keyboard;
     private Mouse mouse;
-    private RectTransform rectTransform;
-    private int openedFrame;
+    private ClickOutsideCloser outsideCloser;
 
     [Inject]
     private void Construct(CitizenManager citizenManager, ResourcesManager resourcesManager, ResourceIconSet resourceIconSet)
@@ -35,7 +34,7 @@ public class AddCitizen : MonoBehaviour
 
     private void Awake()
     {
-        rectTransform = (RectTransform)transform;
+        outsideCloser = new ClickOutsideCloser((RectTransform)transform, openButtonRect);
     }
 
     public void OpenPanel()
@@ -47,7 +46,7 @@ public class AddCitizen : MonoBehaviour
             gameObject.SetActive(true);
             keyboard = Keyboard.current;
             mouse = Mouse.current;
-            openedFrame = Time.frameCount;
+            outsideCloser.MarkOpened();
             amount = 0;
             UpdatePanel();
         }
@@ -62,16 +61,7 @@ public class AddCitizen : MonoBehaviour
             return;
         }
 
-        if (Time.frameCount == openedFrame) return; // 패널이 열린 바로 그 프레임의 클릭은 무시
-
-        if (!mouse.leftButton.wasPressedThisFrame) return;
-
-        var point = mouse.position.ReadValue();
-        bool insidePanel = RectTransformUtility.RectangleContainsScreenPoint(rectTransform, point, null);
-        bool onOpenButton = openButtonRect != null &&
-            RectTransformUtility.RectangleContainsScreenPoint(openButtonRect, point, null);
-
-        if (!insidePanel && !onOpenButton)
+        if (outsideCloser.ClickedOutside())
         {
             gameObject.SetActive(false);
         }

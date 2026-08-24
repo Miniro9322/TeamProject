@@ -29,6 +29,17 @@ public class ClickOutsideCloser
         openedFrame = Time.frameCount;
     }
 
+    // ESC 키 하나로 모든 패널이 똑같이 반응하도록 - 여기서도 ClickedOutside()와 동일하게
+    // 튜토리얼 강제 진행 중이면 막는다.
+    public bool EscapePressed()
+    {
+        if (TutorialInputGate.BlockEscapeClose) return false;
+        return Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame;
+    }
+
+    // "닫기 = ESC 또는 바깥 클릭"을 한 번에 묻는 창구. 모든 패널이 이거 하나만 쓰면 통일된다.
+    public bool ShouldClose() => EscapePressed() || ClickedOutside();
+
     public bool ClickedOutside()
     {
         // 튜토리얼이 강제 진행 중일 땐(ESC로 못 닫는 것과 같은 이유로) 바깥 클릭으로도 못 닫게 막는다 -

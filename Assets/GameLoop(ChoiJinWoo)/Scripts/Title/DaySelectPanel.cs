@@ -21,11 +21,25 @@ public class DaySelectPanel : MonoBehaviour
     private readonly List<DayRowView> spawnedRows = new List<DayRowView>();
 
     private int slotId;
+    private ClickOutsideCloser outsideCloser;
 
     // 닫기 버튼에 실행 메서드를 연결한다.
     private void Awake()
     {
         closeButton.onClick.AddListener(OnClose);
+        outsideCloser = new ClickOutsideCloser((RectTransform)transform);
+    }
+
+    // ESC와 바깥 클릭을 같은 창구(ShouldClose)로 묶어서, 확인 팝업이 떠 있으면 그것부터,
+    // 아니면 일차 선택 패널 자체를 닫는다 (SlotSelectPanel과 동일한 패턴).
+    private void Update()
+    {
+        if (!outsideCloser.ShouldClose()) return;
+
+        if (confirmPopup.gameObject.activeSelf)
+            confirmPopup.Cancel();
+        else
+            OnClose();
     }
 
     // 지정한 슬롯의 일차 목록을 연다.
@@ -36,6 +50,7 @@ public class DaySelectPanel : MonoBehaviour
         emptyText.text = DataTableManager.StringTable.Get("Ui_DaySelectEmpty");
         BuildRows();
         gameObject.SetActive(true);
+        outsideCloser.MarkOpened();
         ResetScroll();
     }
 
