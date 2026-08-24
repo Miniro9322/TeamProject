@@ -208,6 +208,41 @@ public class WaveSpawner : MonoBehaviour
     // 레인 정보 없이 켠 폴백 경로라 스폰 번호가 없다는 표시.
     private const int NoSpawn = -1;
 
+    // 저장된 스폰 칸 좌표들을 그대로 활성화한다 (NightReady 로드 전용)
+    public int ActivateSpawnsAt(IReadOnlyList<Vector2Int> savedCoords)
+    {
+        // 길 목록이 아직 안 만들어졌으면 만든다
+        EnsurePaths();
+        // 지금까지 켜져 있던 길·번호를 비우고, 저작 누락 경고도 다시 낼 수 있게 한다
+        _activePaths.Clear();
+        _activeSpawns.Clear();
+        _warnedKinds.Clear();
+
+        // 저장된 좌표 하나마다
+        for (int i = 0; i < savedCoords.Count; i++)
+        {
+            // 그 좌표가 몇 번 스폰 칸인지 찾는다
+            int spawn = FindSpawnIndex(savedCoords[i]);
+            // 지금 맵에 없는 좌표면 건너뛴다 (저장 당시와 맵이 다를 때만 생김)
+            if (spawn < 0) continue;
+            // 그 번호의 길과 번호를 활성 목록에 넣는다
+            _activePaths.Add(_allPaths[spawn]);
+            _activeSpawns.Add(spawn);
+        }
+
+        return _activePaths.Count;
+    }
+
+    // 좌표와 같은 스폰 칸의 인덱스를 찾는다 (ActivateSpawnsAt 전용)
+    private int FindSpawnIndex(Vector2Int coord)
+    {
+        for (int i = 0; i < _spawnTiles.Count; i++)
+        {
+            if (_spawnTiles[i].Coord == coord) return i;
+        }
+        return -1;
+    }
+
     /// <summary>이 적이 따라갈 경로. authored=true면 사람이 그린 경로라 적이 재탐색하지 않는다.
     ///
     /// 공중·수영 적은 그 종류의 저작 경로가 있는 포탈에서만 나온다 — 여러 곳에 그려 뒀으면 그중 랜덤.

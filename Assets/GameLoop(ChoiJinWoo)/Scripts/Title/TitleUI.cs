@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using UnityEngine.UI;
 using TMPro;
 
 #if UNITY_EDITOR
@@ -18,6 +19,12 @@ public class TitleUI : MonoBehaviour
     [SerializeField] private GameObject LoadingPanel;
     [SerializeField] private AudioMixer mixer;
 
+    [SerializeField] private Button loadButton;
+    [SerializeField] private SlotSelectPanel slotSelectPanel;
+    //[SerializeField] private DaySelectPanel daySelectPanel;
+
+    private readonly SlotPreviewReader previewReader = new SlotPreviewReader();
+
 
     private void Awake()
     {
@@ -26,6 +33,21 @@ public class TitleUI : MonoBehaviour
         settingPanel.SetActive(false);
         QuitAlert.SetActive(false);
         upgradePanel.SetActive(false);
+        slotSelectPanel.gameObject.SetActive(false);
+        //daySelectPanel.gameObject.SetActive(false);
+        slotSelectPanel.SlotConfirmed += OnSlotConfirmed;
+        slotSelectPanel.SaveChanged += RefreshLoad;
+        slotSelectPanel.SetPreviewReader(previewReader);
+        //daySelectPanel.SlotConfirmed += OnSlotConfirmed;
+        RefreshLoad();
+    }
+
+    // 슬롯 패널 이벤트 구독을 해제한다.
+    private void OnDestroy()
+    {
+        slotSelectPanel.SlotConfirmed -= OnSlotConfirmed;
+        slotSelectPanel.SaveChanged -= RefreshLoad;
+        //daySelectPanel.SlotConfirmed -= OnSlotConfirmed;
     }
 
     private async UniTaskVoid ApplyResolution()
@@ -50,10 +72,37 @@ public class TitleUI : MonoBehaviour
         mixer.SetFloat("System", PlayerPrefs.GetFloat("System", 0f));
     }
 
-    public void OnStart()
+
+    // "새 게임 시작" 버튼: 슬롯 선택 패널을 새 게임 모드로 연다.
+    public void OnNewGame()
     {
+        slotSelectPanel.OpenForNewGame();
+    }
+   // "불러오기" 버튼: 슬롯 선택 패널을 불러오기 모드로 연다.
+    public void OnLoad()
+    {
+        slotSelectPanel.OpenForLoad();
+    }
+
+    // SlotSelectPanel.SlotConfirmed 구독자: 슬롯이 확정되면 MainScene으로 넘어간다.
+    private void OnSlotConfirmed()
+    {
+        EnterMainScene();
+    }
+
+    // 로딩 화면을 띄우고 MainScene으로 넘어가는 본체(OnSlotConfirmed에서 재사용).
+    private void EnterMainScene()
+    {
+        slotSelectPanel.gameObject.SetActive(false);
+        //daySelectPanel.gameObject.SetActive(false);
         LoadingPanel.SetActive(true);
         LoadSceneAsync("MainScene").Forget();
+    }
+
+    // 저장 데이터 존재 여부에 맞춰 불러오기 버튼을 갱신한다.
+    private void RefreshLoad()
+    {
+        loadButton.interactable = previewReader.HasAnySave();
     }
 
     private async UniTaskVoid LoadSceneAsync(string sceneName)

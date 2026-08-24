@@ -19,6 +19,7 @@ public class HeroArchiveUI : MonoBehaviour
     [SerializeField] private Animator bookAnimator;
     [SerializeField] private CanvasGroup leftPanel;
     [SerializeField] private CanvasGroup rightPanel;
+    [SerializeField] private HeroArchiveButton heroArchiveButton;
     private float fadeDuration = 0.35f;
     private CancellationTokenSource revealCts;
     //private bool isBookOpening = false;
@@ -155,6 +156,7 @@ public class HeroArchiveUI : MonoBehaviour
     }
     public void OnExit()
     {
-        gameObject.SetActive(false);
+        if (heroArchiveButton != null) heroArchiveButton.Close();
+        else gameObject.SetActive(false);
     }
 }

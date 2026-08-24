@@ -17,6 +17,7 @@ public class MapBoard : MonoBehaviour
     private RectInt _playRect;
     private float _floorY; // 클릭 판정에서 타일 기둥이 내려가는 바닥(보드 기준 높이).
     private ModuleLogic _module; // 소속 모듈. Awake에서 한 번만 잡는다(매 호출 GetComponent 금지).
+    public ModuleLogic Module => _module;
 
     public IReadOnlyDictionary<Vector2Int, Tile> Cells => _cells;
     public IReadOnlyList<Tile> CellList => _cellList;

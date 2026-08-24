@@ -16,8 +16,8 @@ public class HeroRosterIcon : MonoBehaviour, IPointerClickHandler
     [SerializeField] private TextMeshProUGUI tierText;
     [SerializeField] private List<Sprite> classIcons;
     [SerializeField] private Image classIcon;
-    [SerializeField] private TooltipTrigger toolTip;
     [SerializeField] private Slider hpSlider;
+    [SerializeField] private HeroStatToolTipTrigger statToolTipTrigger;
 
     private const float DoubleClickWindow = 0.2f; // PlaceAction.DoubleClickWindow와 동일한 값
 
@@ -60,7 +60,7 @@ public class HeroRosterIcon : MonoBehaviour, IPointerClickHandler
         c.a = alpha;
         placedIcon.color = c;
         classIcon.sprite = classIcons[entry.Data.HeroType];
-        toolTip.SetMessaege(entry.Data.HeroNameKey);
+        statToolTipTrigger.SetData(entry);
     }
 
     // 배치된 영웅의 실시간 체력 반영. HeroRosterPanel은 HeroRoster.Changed(배치 상태 변화)로만

@@ -47,26 +47,30 @@ public class HeroUpgradeMenuUI : MonoBehaviour
         {
             resourceIconMap[resourceIcon.type] = resourceIcon.icon;
         }
-        upgradeButton.onClick.AddListener(() =>
-        {
-            if (upgradeState.TryLevelUp(tier))
-            {
-                UpdateResourceInfo(upgradeState.GetLevel(tier));
-                RefreshUpgradeButton();
-            }
-        });
+        upgradeButton.onClick.AddListener(() => upgradeState.TryLevelUp(tier));
     }
 
     private void Start()
     {
         resourcesManager.ProductUpdate += RefreshUpgradeButton;
+        upgradeState.LevelChanged += HandleLevelChanged;
+        UpdateResourceInfo(upgradeState.GetLevel(tier));
         RefreshUpgradeButton();
     }
 
     private void OnDestroy()
     {
         resourcesManager.ProductUpdate -= RefreshUpgradeButton;
+        upgradeState.LevelChanged -= HandleLevelChanged;
         upgradeButton.onClick.RemoveAllListeners();
+    }
+
+    // 이 UI가 담당하는 티어의 레벨이 바뀌면(레벨업·로드 복원 공통) 화면을 다시 그린다
+    private void HandleLevelChanged(int changedTier)
+    {
+        if (changedTier != tier) return;
+        UpdateResourceInfo(upgradeState.GetLevel(tier));
+        RefreshUpgradeButton();
     }
 
     public void Set(int tier)
@@ -75,8 +79,6 @@ public class HeroUpgradeMenuUI : MonoBehaviour
         banner.sprite = panelImageList[tier - 1];
         upgradeIcon.sprite = upgradeIconList[tier - 1];
         upgradeTierText.text = $"Upgrade Tier {tier}";
-        UpdateResourceInfo(upgradeState.GetLevel(tier));
-        RefreshUpgradeButton();
     }
 
     private void RefreshUpgradeButton()

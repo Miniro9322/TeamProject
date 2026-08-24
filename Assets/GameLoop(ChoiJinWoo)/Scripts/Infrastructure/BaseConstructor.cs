@@ -69,6 +69,43 @@ public class BaseConstructor
         return house;
     }
 
+    // 세이브 데이터로 기반시설을 자원 차감 없이 복원해 슬롯에 채운다 (로드 복원 전용)
+    public object RestoreBuild(BuildableFacility option, RegionFacilitySlots region, BuildSave save)
+    {
+        object built = option.kind == OccupantKind.Resource
+            ? RestoreFacility(option, save)
+            : RestoreHouse(option, save);
+
+        region.TryAssign(save.slotIndex, built, option.icon, option.DisplayName);
+        return built;
+    }
+
+    private ProductionFacility RestoreFacility(BuildableFacility option, BuildSave save)
+    {
+        var facility = new ProductionFacility(option.facilityValue, economyConfig, resourcesManager, citizenManager, facilityManager, upgradeState);
+        facility.RestoreState(save.upgradeCount, save.workerAmount, save.productAmount, save.maxWorker,
+            save.amountUpgrade, save.citizenUpgrade, save.nextUpgradeInfo, ToPairs(save.constructPaid), ToPairs(save.upgradePaid));
+        return facility;
+    }
+
+    private House RestoreHouse(BuildableFacility option, BuildSave save)
+    {
+        var house = new House(option.houseConfig, citizenManager, resourcesManager, upgradeState, economyConfig);
+        house.RestoreState(save.upgradeCount, ToPairs(save.constructPaid), ToPairs(save.upgradePaid));
+        return house;
+    }
+
+    // CostSave 배열을 ProductionFacility/House가 쓰는 튜플 배열로 바꾼다
+    private static (ProductionType Type, int Amount)[] ToPairs(CostSave[] costs)
+    {
+        (ProductionType Type, int Amount)[] pairs = new (ProductionType, int)[costs.Length];
+        for (int i = 0; i < costs.Length; i++)
+        {
+            pairs[i] = (costs[i].costType, costs[i].costAmount);
+        }
+        return pairs;
+    }
+
     public void Demolish(RegionFacilitySlots region, int slotIndex)
     {
         if (slotIndex < 0 || slotIndex >= region.Slots.Count) return;

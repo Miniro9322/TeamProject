@@ -11,6 +11,9 @@ public class House : IUpgradableOccupant
     private readonly UpgradeState upgradeState;
     private readonly ProductionEconomyConfig economyConfig;
 
+    // 세이브 조회용 — 원본 설정 SO를 그대로 노출한다 (facilityValue의 BasicValue 노출과 대칭)
+    public HouseConfig Config => config;
+
     private float ConstructCostDiscount => upgradeState.GetTotalEffect(economyConfig.ConstructCostUpgrades);
     private float UpgradeCostDiscount => upgradeState.GetTotalEffect(economyConfig.UpgradeCostUpgrades);
 
@@ -29,6 +32,10 @@ public class House : IUpgradableOccupant
     public string NextUpgradeInfo => nextUpgradeInfo;
 
     public int MaxUpgrade => maxUpgrade;
+
+    // 실제로 낸 건설·강화 비용을 그대로 읽는다 (세이브 전용 조회)
+    public (ProductionType Type, int Amount)[] ConstructCostPaid => constructCostPaid;
+    public (ProductionType Type, int Amount)[] TotalUpgradeSpent => totalUpgradeSpent;
 
     public event Action Changed;
 
@@ -109,5 +116,25 @@ public class House : IUpgradableOccupant
     public bool CheckCanUpgrade()
     {
         return upgradeCount < maxUpgrade && resourcesManager.CheckResources(upgradeCostCopy);
+    }
+
+    // 세이브 데이터로 건설·강화 상태를 자원 차감 없이 그대로 복원한다 (최대 시민은 정상 반영, 로드 복원 전용)
+    public void RestoreState(
+        int savedUpgradeCount,
+        (ProductionType Type, int Amount)[] savedConstructPaid,
+        (ProductionType Type, int Amount)[] savedUpgradeSpent)
+    {
+        upgradeCount = savedUpgradeCount;
+        citizenManager.IncreaseMaxCitizen(config.MaxCitizenAmount + config.CitizenPerUpgrade * savedUpgradeCount);
+
+        constructCostPaid = savedConstructPaid;
+        totalUpgradeSpent = savedUpgradeSpent;
+
+        var baseCost = config.UpgradeCost.ApplyDiscount(UpgradeCostDiscount);
+        upgradeCostCopy = new (ProductionType, int)[baseCost.Length];
+        for (int i = 0; i < upgradeCostCopy.Length; i++)
+        {
+            upgradeCostCopy[i] = (baseCost[i].Type, baseCost[i].Amount * (upgradeCount + 1));
+        }
     }
 }

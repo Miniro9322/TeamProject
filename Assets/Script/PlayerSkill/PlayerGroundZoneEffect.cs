@@ -26,9 +26,8 @@ public class PlayerGroundZoneEffect : MonoBehaviour
     public List<TargetDebuffRef> targetDebuffs = new();
     public GameObject hitEffect;
     public float hitEffectLifetime = 0.5f;
-    [Tooltip("mode==Heal: 힐 받는 대상 발밑에 표시할 1회성 이펙트. null이면 안 스폰.")]
+    [Tooltip("mode==Heal: 범위 안에 머무는 동안 아군 발밑에 붙어 유지되는 이펙트. null이면 안 스폰.")]
     public GameObject healReceiveEffect;
-    public float healReceiveEffectLifetime = 0.5f;
     [Tooltip("mode==Buff: 버프 받는 아군 발밑에 붙어 범위 안에 머무는 동안 유지되는 이펙트. null이면 안 스폰.")]
     public GameObject buffReceiveEffect;
     [Tooltip("이 프리팹의 파티클/데칼이 기본 크기(localScale=1)로 나타내는 반경(타일 수). radius/이값만큼 자기 자신을 스케일한다. 0이면 스케일하지 않음.")]
@@ -47,6 +46,8 @@ public class PlayerGroundZoneEffect : MonoBehaviour
     private GameObject selfEffectInstance;
     private readonly HashSet<Hero> buffedAllies = new();
     private readonly Dictionary<Hero, GameObject> buffEffectInstances = new();
+    private readonly HashSet<Hero> healPresentAllies = new();
+    private readonly Dictionary<Hero, GameObject> healEffectInstances = new();
     private GameManager gameManager;
 
     // 스폰 직후 호출한다. release가 null이면 만료 시 스스로 Destroy된다(풀링 없음).
@@ -98,6 +99,8 @@ public class PlayerGroundZoneEffect : MonoBehaviour
         {
             if (mode == GroundZoneMode.Buff)
                 ClearAllyBuffs();
+            else if (mode == GroundZoneMode.Heal)
+                ClearHealEffects();
             DespawnSelfEffect();
 
             if (this != null)
@@ -145,11 +148,46 @@ public class PlayerGroundZoneEffect : MonoBehaviour
         if (fx != null) Destroy(fx);
     }
 
-    private void SpawnHealReceiveEffect(Vector3 pos)
+    private void SpawnHealPresenceEffect(Hero ally)
     {
         if (healReceiveEffect == null) return;
-        GameObject go = Instantiate(healReceiveEffect, pos, healReceiveEffect.transform.localRotation);
-        if (healReceiveEffectLifetime > 0f) Destroy(go, healReceiveEffectLifetime);
+        GameObject fx = Instantiate(healReceiveEffect, ally.transform.position, healReceiveEffect.transform.rotation, ally.transform);
+        foreach (ParticleSystem ps in fx.GetComponentsInChildren<ParticleSystem>(true))
+            ps.Play(true);
+        healEffectInstances[ally] = fx;
+    }
+
+    private void DespawnHealPresenceEffect(Hero ally)
+    {
+        if (!healEffectInstances.Remove(ally, out GameObject fx)) return;
+        if (fx != null) Destroy(fx);
+    }
+
+    private void ClearHealEffects()
+    {
+        if (healPresentAllies.Count == 0) return;
+        foreach (Hero ally in healPresentAllies)
+            DespawnHealPresenceEffect(ally);
+        healPresentAllies.Clear();
+    }
+
+    private void UpdateHealPresence(List<GameObject> alliesInRange)
+    {
+        var inRange = new HashSet<Hero>();
+        foreach (GameObject go in alliesInRange)
+            if (go.GetComponentInParent<Hero>() is Hero ally)
+                inRange.Add(ally);
+
+        foreach (Hero ally in inRange)
+            if (healPresentAllies.Add(ally))
+                SpawnHealPresenceEffect(ally);
+
+        healPresentAllies.RemoveWhere(ally =>
+        {
+            if (ally != null && inRange.Contains(ally)) return false;
+            if (ally != null) DespawnHealPresenceEffect(ally);
+            return true;
+        });
     }
 
     private void Tick()
@@ -158,15 +196,17 @@ public class PlayerGroundZoneEffect : MonoBehaviour
 
         if (mode == GroundZoneMode.Heal)
         {
+            List<GameObject> alliesInRange = QueryAllies();
+            UpdateHealPresence(alliesInRange);
+
             if (healAmount <= 0f && hpHealPer <= 0f) return;
-            Hero target = AttackDamageUtil.FindLowestHpAlly(QueryAllies());
+            Hero target = AttackDamageUtil.FindLowestHpAlly(alliesInRange);
             if (target == null) return;
             float heal = healAmount + target.SC[StatType.HP] * hpHealPer;
             Debug.Log(heal);
             if (heal <= 0f) return;
             target.Heal(heal);
             SpawnHitEffect(transform.position);
-            SpawnHealReceiveEffect(target.transform.position);
             return;
         }
 
