@@ -50,9 +50,23 @@ public class SaveManager
         TrySave(SavePhase.NightReady, gameManager.DayCount, saveTimeData.DayList);
     }
 
+    // 낮/밤 전환 이벤트가 아닌 시점에 명시적으로 한 번 저장해야 할 때 쓴다 - 튜토리얼 0일차 리셋이
+    // 막 끝난 직후가 그 예다. ChangeToDay 시점엔 TutorialInputGate.BlockSave 때문에 저장이
+    // 건너뛰어졌으니(0일차의 지워질 상태였으므로), 리셋이 끝나 진짜 깨끗한 1일차가 된 지금 한 번 더 찍는다.
+    public void SaveNow()
+    {
+        TrySave(SavePhase.DayStart, gameManager.DayCount, saveTimeData.DayList);
+    }
+
     private bool TrySave(SavePhase phase, int dayCount, int[] savedDayList)
     {
         if (!ToolEnabled)
+        {
+            return false;
+        }
+
+        // 0일차 튜토리얼 연습 상태는 다음 날이 되는 순간 전부 초기화되는 임시 데이터라 저장하지 않는다.
+        if (TutorialInputGate.BlockSave)
         {
             return false;
         }
