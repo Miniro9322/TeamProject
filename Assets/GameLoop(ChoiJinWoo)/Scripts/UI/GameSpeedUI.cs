@@ -96,36 +96,39 @@ public class GameSpeedUI : MonoBehaviour
 
     private void Update()
     {
-        if (keyboard[timeIncreaseKey].wasPressedThisFrame)
+        if (!SpawnerManager.Instance.isDirecting)
         {
-            if(Time.timeScale < 0.5f)
+            if (keyboard[timeIncreaseKey].wasPressedThisFrame)
             {
-                GameSpeed = Speed.Half;
+                if(Time.timeScale < 0.5f)
+                {
+                    GameSpeed = Speed.Half;
+                }
+                else if (Time.timeScale < 1f)
+                {
+                    GameSpeed = Speed.Normal;
+                }
+                else if (Time.timeScale < 2f)
+                {
+                    GameSpeed = Speed.Double;
+                }
+                else if (Time.timeScale < 3f)
+                {
+                    GameSpeed = Speed.Triple;
+                }
             }
-            else if (Time.timeScale < 1f)
-            {
-                GameSpeed = Speed.Normal;
-            }
-            else if (Time.timeScale < 2f)
-            {
-                GameSpeed = Speed.Double;
-            }
-            else if (Time.timeScale < 3f)
-            {
-                GameSpeed = Speed.Triple;
-            }
-        }
 
-        if (keyboard[timeStopKey].wasPressedThisFrame)
-        {
-            if(Time.timeScale > 0f)
+            if (keyboard[timeStopKey].wasPressedThisFrame)
             {
-                beforeTimeSpeed = GameSpeed;
-                GameSpeed = Speed.Zero;
-            }
-            else
-            {
-                GameSpeed = beforeTimeSpeed;
+                if(Time.timeScale > 0f)
+                {
+                    beforeTimeSpeed = GameSpeed;
+                    GameSpeed = Speed.Zero;
+                }
+                else
+                {
+                    GameSpeed = beforeTimeSpeed;
+                }
             }
         }
     }
