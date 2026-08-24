@@ -21,8 +21,6 @@ public class SlotSelectPanel : MonoBehaviour
     [SerializeField] private Button closeButton;
     [SerializeField] private ConfirmPopup confirmPopup;
     [SerializeField] private ScrollRect scrollRect;
-    [SerializeField] private LoadOptionPopup loadOptionPopup;
-    [SerializeField] private DaySelectPanel daySelectPanel;
 
     public event Action SlotConfirmed;
     public event Action SaveChanged;
@@ -59,18 +57,6 @@ public class SlotSelectPanel : MonoBehaviour
             return;
         }
 
-        if (loadOptionPopup.gameObject.activeSelf)
-        {
-            loadOptionPopup.Cancel();
-            return;
-        }
-
-        if (daySelectPanel.gameObject.activeSelf)
-        {
-            daySelectPanel.gameObject.SetActive(false);
-            return;
-        }
-
         OnClose();
     }
 
@@ -98,8 +84,6 @@ public class SlotSelectPanel : MonoBehaviour
     private void OnClose()
     {
         confirmPopup.gameObject.SetActive(false);
-        loadOptionPopup.gameObject.SetActive(false);
-        daySelectPanel.gameObject.SetActive(false);
         gameObject.SetActive(false);
     }
 
