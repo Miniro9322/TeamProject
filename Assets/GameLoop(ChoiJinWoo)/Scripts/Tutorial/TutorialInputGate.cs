@@ -4,4 +4,9 @@
 public static class TutorialInputGate
 {
     public static bool BlockEscapeClose { get; set; }
+
+    // SaveManager가 0일차 연습 상태를 세이브 파일에 남기지 않으려고 확인한다 - 0일차는 다음 날이
+    // 되는 순간 전부 초기 상태로 되돌아가는 임시 데이터라, 그 사이에 저장되면 안 된다.
+    // TutorialManager가 켜져 있는 동안(0일차 리셋까지 끝날 때까지) true.
+    public static bool BlockSave { get; set; }
 }

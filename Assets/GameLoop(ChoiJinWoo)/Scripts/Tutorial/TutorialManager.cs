@@ -23,6 +23,7 @@ public class TutorialManager : MonoBehaviour
     private MapGame mapGame;
     private UiManager uiManager;
     private EnviromentManager enviromentManager;
+    private SaveManager saveManager;
     private TutorialState state;
 
     private int currentIndex = -1;
@@ -43,7 +44,7 @@ public class TutorialManager : MonoBehaviour
         BaseConstructor baseConstructor, HeroRoster heroRoster, PlacePalette placePalette,
         BuildingPanel buildingPanel, GameManager gameManager, ResourcesManager resourcesManager,
         RegionOverviewPanel regionOverviewPanel, MapGame mapGame, UiManager uiManager,
-        EnviromentManager enviromentManager, TutorialState state)
+        EnviromentManager enviromentManager, SaveManager saveManager, TutorialState state)
     {
         this.citizenManager = citizenManager;
         this.baseConstructor = baseConstructor;
@@ -56,6 +57,7 @@ public class TutorialManager : MonoBehaviour
         this.mapGame = mapGame;
         this.uiManager = uiManager;
         this.enviromentManager = enviromentManager;
+        this.saveManager = saveManager;
         this.state = state;
     }
 
@@ -88,6 +90,10 @@ public class TutorialManager : MonoBehaviour
     private void OnEnable()
     {
         TutorialInputGate.BlockEscapeClose = true;
+        // 0일차 연습 상태는 다음 날이 되는 순간 전부 초기화되는 임시 데이터라, 그 사이에
+        // SaveManager가 저장하지 못하게 막는다 - 컴포넌트가 완전히 꺼질 때(0일차 리셋까지 끝난
+        // 뒤)까지 유지한다.
+        TutorialInputGate.BlockSave = true;
         citizenManager.CitizenChanged += OnCitizenChanged;
         baseConstructor.Built += OnBuilt;
         heroRoster.Changed += OnHeroRosterChanged;
@@ -100,6 +106,7 @@ public class TutorialManager : MonoBehaviour
     private void OnDisable()
     {
         TutorialInputGate.BlockEscapeClose = false;
+        TutorialInputGate.BlockSave = false;
         citizenManager.CitizenChanged -= OnCitizenChanged;
         baseConstructor.Built -= OnBuilt;
         heroRoster.Changed -= OnHeroRosterChanged;
@@ -124,7 +131,21 @@ public class TutorialManager : MonoBehaviour
             return;
         }
 
+        var step = steps[currentIndex];
         var waypoint = ResolveWaypoint();
+
+        // waypoint가 지정돼는 있는데 아직 하나도 활성화 안 된 상태 - 예를 들어 밤 전환 애니메이션이
+        // 끝나기 전이라 PlayerSkillPanel/배속 패널이 아직 안 켜진 순간. 이럴 땐 엉뚱한 문구(키 없음
+        // 등)를 보여주는 대신 오버레이를 잠깐 숨기고, 실제로 켜지는 순간 다시 나타난다. waypoint를
+        // 아예 안 쓰는 스텝(순수 문구 안내)까지 숨기면 안 되니 그 경우는 그대로 둔다.
+        if (waypoint == null && step.waypoints != null && step.waypoints.Length > 0)
+        {
+            overlay.Hide();
+            lastShownMessageKey = null;
+            return;
+        }
+
+        overlay.Show(step.completesOnAcknowledge);
         overlay.SetSpotlight(waypoint?.target);
         RefreshMessage(waypoint);
     }
@@ -326,8 +347,20 @@ public class TutorialManager : MonoBehaviour
         resourcesManager.Reset();
         citizenManager.Reset();
         gameManager.ResetHpToFull();
+        // 0일차 밤의 완벽방어 여부는 이 리셋으로 이미 의미가 없어졌다 - 지워두지 않으면 바로 아래
+        // SaveNow()가 이 값을 perfectDefensePending으로 그대로 저장해버려서, 나중에 이 세이브를
+        // 불러올 때 LoadManager가 특수자원 보상을 또 한 번 적용해(GetSpecial) 방금 0으로 되돌린
+        // 특수자원이 다시 늘어나 보인다.
+        gameManager.perfactDefence = false;
 
         state.MarkSeen();
+
+        // ChangeToDay 시점엔 TutorialInputGate.BlockSave 때문에 SaveManager의 자동 저장이 건너뛰어졌다
+        // (그때는 아직 0일차의 지워질 상태였으므로). 리셋이 끝나 진짜 깨끗한 1일차가 된 지금, 이 상태를
+        // 놓치지 않도록 명시적으로 한 번 저장한다.
+        TutorialInputGate.BlockSave = false;
+        saveManager.SaveNow();
+
         ShowCompletionMessage();
     }
 

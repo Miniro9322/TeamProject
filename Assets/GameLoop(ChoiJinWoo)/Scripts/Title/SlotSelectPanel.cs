@@ -22,7 +22,9 @@ public class SlotSelectPanel : MonoBehaviour
     [SerializeField] private ConfirmPopup confirmPopup;
     [SerializeField] private ScrollRect scrollRect;
 
-    public event Action SlotConfirmed;
+    // 어떤 모드로 확인됐는지(새 게임/불러오기)를 같이 넘긴다 - TitleUI가 새 게임일 때만
+    // 씬 전환 전에 튜토리얼 선택 화면을 끼워 넣어야 해서 구분이 필요하다.
+    public event Action<SlotSelectMode> SlotConfirmed;
     public event Action SaveChanged;
 
     private SlotPreviewReader previewReader;
@@ -209,6 +211,6 @@ public class SlotSelectPanel : MonoBehaviour
         }
 
         gameObject.SetActive(false);
-        SlotConfirmed?.Invoke();
+        SlotConfirmed?.Invoke(mode);
     }
 }
