@@ -212,8 +212,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -8, y: -12}
-  m_SizeDelta: {x: 60, y: 60}
+  m_AnchoredPosition: {x: -14.200012, y: -3.100006}
+  m_SizeDelta: {x: 50, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &2741490933582809572
 CanvasRenderer:
@@ -243,7 +243,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: -164354678, guid: 9647ce8cf65f5ff498b406128db94c11, type: 3}
+  m_Sprite: {fileID: -232279858, guid: 9647ce8cf65f5ff498b406128db94c11, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -371,6 +371,7 @@ MonoBehaviour:
   bookAnimator: {fileID: 4581880331807832743}
   leftPanel: {fileID: 7478178933047714836}
   rightPanel: {fileID: 6683636643396846709}
+  heroArchiveButton: {fileID: 0}
 --- !u!1 &2465358862487830221
 GameObject:
   m_ObjectHideFlags: 0
