@@ -14,10 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BaseUpgradeData
   id: Starting5
   displayName: Upgrade_StartResource5_Name
-  icon: {fileID: 21300000, guid: 8f98e7ad9a26d0c4199c7137ffb0eec0, type: 3}
+  icon: {fileID: 21300000, guid: 6d8c0f52d07ee4987a75248a44b3efc0, type: 3}
+  iconColor: {r: 1, g: 1, b: 1, a: 1}
   cost: 16
-  anchoredPosition: {x: -106, y: -88}
   description: Upgrade_StartResource5_Desc
   prerequisites:
   - {fileID: 11400000, guid: daa014c566bad284284bbe0c266d09f7, type: 2}
   effectAmount: 100
+  isLast: 1

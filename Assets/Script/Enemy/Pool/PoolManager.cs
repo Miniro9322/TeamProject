@@ -86,6 +86,13 @@ public class PoolManager : MonoBehaviour
         instance = this;
     }
 
+    // 풀이 비어있어 새로 생성해야 할 때 쓸 위치/회전 - Spawn()이 Get() 호출 직전에 채워 넣는다.
+    // createFunc에서 위치를 안 주고 Instantiate하면 NavMeshAgent가 root의 위치(NavMesh 밖일 수 있음)에서
+    // 먼저 OnEnable 돼버려 "Failed to create agent because it is not close enough to the NavMesh" 경고가 뜬다.
+    // Instantiate(prefab, position, rotation, parent) 오버로드는 Awake/OnEnable 전에 위치를 확정하므로 이걸 막는다.
+    private Vector3 pendingSpawnPos;
+    private Quaternion pendingSpawnRot;
+
     private ObjectPool<GameObject> GetPool(GameObject prefab)
     {
         if (pools.TryGetValue(prefab, out var pool)) return pool;
@@ -103,8 +110,8 @@ public class PoolManager : MonoBehaviour
                 // [Inject]가 채워진다. 주입 대상이 없으면(순수 시각 프리팹) 전체 계층 재귀 스캔을
                 // 건너뛰고 일반 Instantiate로 생성해 스폰 비용을 줄인다.
                 var go = needsInjection && _resolver != null
-                    ? _resolver.Instantiate(prefab, root)
-                    : Instantiate(prefab, root);
+                    ? _resolver.Instantiate(prefab, pendingSpawnPos, pendingSpawnRot, root)
+                    : Instantiate(prefab, pendingSpawnPos, pendingSpawnRot, root);
                 var po = go.GetComponent<PooledObject>();
                 if (po == null) po = go.AddComponent<PooledObject>();
                 po.Init(prefab, this); // 자기 풀을 넘겨 회수 시 쓰게(AddComponent는 주입 안 되므로 직접 전달)
@@ -132,6 +139,8 @@ public class PoolManager : MonoBehaviour
         if (prefab == null) return null;
 
         var pool = GetPool(prefab);
+        pendingSpawnPos = pos;
+        pendingSpawnRot = rot;
         var go = pool.Get();
         var t = go.transform;
         if (parent != null) t.SetParent(parent);

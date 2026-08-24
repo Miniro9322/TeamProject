@@ -14,6 +14,7 @@ public class UpgradeInfoUI : MonoBehaviour
 
     public event Action<BaseUpgradeData> ConfirmClicked;
     private BaseUpgradeData current;
+    public BaseUpgradeData Current => current;
 
     private void Awake()
     {
@@ -34,7 +35,13 @@ public class UpgradeInfoUI : MonoBehaviour
         descText.text = DataTableManager.StringTable.Get(data.description);
         costText.text = data.cost.ToString();
         icon.sprite = data.icon;
+        icon.color = data.iconColor;
         confirmButton.gameObject.SetActive(canUnlockNow); // 여기서만 잠금 여부가 반영됨
         gameObject.SetActive(true);
+    }
+
+    public void OnReset(bool canUnlock)
+    {
+        confirmButton.gameObject.SetActive(canUnlock);
     }
 }

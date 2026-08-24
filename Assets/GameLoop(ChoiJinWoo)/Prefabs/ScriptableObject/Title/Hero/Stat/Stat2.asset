@@ -14,10 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BaseUpgradeData
   id: Stat2
   displayName: Upgrade_HeroStat2_Name
-  icon: {fileID: 21300000, guid: 5427a82e6c71cea429089cf09f90a676, type: 3}
+  icon: {fileID: 21300000, guid: 678a0ad4be47340d49403da6b930716c, type: 3}
+  iconColor: {r: 1, g: 1, b: 1, a: 1}
   cost: 2
-  anchoredPosition: {x: -106, y: -88}
   description: Upgrade_HeroStat2_Desc
   prerequisites:
   - {fileID: 11400000, guid: 024d160f71f942b4189efd44499389c5, type: 2}
   effectAmount: 0.1
+  isLast: 0

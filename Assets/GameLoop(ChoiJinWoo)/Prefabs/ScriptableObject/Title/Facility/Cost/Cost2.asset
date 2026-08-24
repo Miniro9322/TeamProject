@@ -14,10 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BaseUpgradeData
   id: Cost2
   displayName: Upgrade_BuildCost2_Name
-  icon: {fileID: 21300000, guid: 197c7900c171abe43a7c60dc09f3e86d, type: 3}
+  icon: {fileID: 21300000, guid: 5abe4e3db94f84da6b218e30d19566b3, type: 3}
+  iconColor: {r: 1, g: 1, b: 1, a: 1}
   cost: 2
-  anchoredPosition: {x: 0, y: -88}
   description: Upgrade_BuildCost2_Desc
   prerequisites:
   - {fileID: 11400000, guid: d1de5450ccfd4fd4f9e27b762dd737ee, type: 2}
-  effectAmount: 0.05
+  effectAmount: 0.1
+  isLast: 0

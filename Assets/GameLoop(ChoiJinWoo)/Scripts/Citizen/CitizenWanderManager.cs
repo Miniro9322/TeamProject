@@ -102,9 +102,7 @@ public class CitizenWanderManager : MonoBehaviour
         await SyncVisibleCountAsync(token);
     }
 
-    // hubPoint가 NavMesh 위/근처에 있지 않으면 NavMeshAgent를 그 자리에 활성화하는 순간
-    // "Failed to create agent because it is not close enough to the NavMesh" 에러가 난다.
-    // 그래서 실제 스폰/목적지 좌표는 hubPoint를 NavMesh로 스냅한 지점을 쓴다.
+
     private Vector3 ResolveHubGroundPosition()
     {
         if (NavMesh.SamplePosition(hubPoint.position, out var hit, wanderRadius, NavMesh.AllAreas))
@@ -269,13 +267,7 @@ public class CitizenWanderManager : MonoBehaviour
         }
     }
 
-    // 첫 대량 스폰에서 Instantiate 스파이크가 나지 않도록 미리 만들었다가 즉시 풀에 반납.
-    // 모델별로 visibleCap을 다 채우면 프리팹이 늘수록 낭비가 커지므로, 랜덤 선택이 대략 고르게
-    // 퍼진다고 보고 프리팹 개수로 나눈 만큼만 워밍업한다(한쪽으로 심하게 쏠리면 그 초과분만 그때
-    // 즉석 Instantiate되지만, 전체 재스폰 대비 극소수라 체감되는 스파이크는 아니다).
-    //
-    // WarmPoolBatchSize개마다 한 프레임 양보한다 — 안 그러면 이 워밍업 자체가 씬 로딩 직후
-    // 한 프레임에 최대 visibleCap개의 Instantiate/Despawn을 몰아서 하는 스파이크가 된다.
+
     private const int WarmPoolBatchSize = 5;
 
     private async UniTask WarmPoolAsync(CancellationToken token)
