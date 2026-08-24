@@ -28,9 +28,8 @@ public class GroundZoneEffect : MonoBehaviour
     public List<TargetDebuffRef> targetDebuffs = new();
     public GameObject hitEffect;
     public float hitEffectLifetime = 0.5f;
-    [Tooltip("mode==Heal: 힐 받는 대상 발밑에 표시할 1회성 이펙트. null이면 안 스폰.")]
+    [Tooltip("mode==Heal: 범위 안에 머무는 동안 아군 발밑에 붙어 유지되는 이펙트. null이면 안 스폰.")]
     public GameObject healReceiveEffect;
-    public float healReceiveEffectLifetime = 0.5f;
     [Tooltip("mode==Buff: 버프 받는 아군 발밑에 붙어 범위 안에 머무는 동안 유지되는 이펙트. null이면 안 스폰.")]
     public GameObject buffReceiveEffect;
     [Tooltip("이 프리팹의 파티클/데칼이 기본 크기(localScale=1)로 나타내는 반경(타일 수). radius/이값만큼 자기 자신을 스케일한다. 0이면 스케일하지 않음.")]
@@ -50,6 +49,8 @@ public class GroundZoneEffect : MonoBehaviour
     private GameObject selfEffectInstance;
     private readonly HashSet<Hero> buffedAllies = new();
     private readonly Dictionary<Hero, GameObject> buffEffectInstances = new();
+    private readonly HashSet<Hero> healPresentAllies = new();
+    private readonly Dictionary<Hero, GameObject> healEffectInstances = new();
 
     // Hero.SpawnGroundZone이 풀에서 꺼낸 직후 호출한다. followOwner는 오라(소유자를 따라다녀야 하는
     // 장판)인지, 스킬/공격이 심어놓고 떠나는 장판인지를 호출부가 명시한다(duration 값으로는 구분 불가 —
@@ -98,6 +99,8 @@ public class GroundZoneEffect : MonoBehaviour
         {
             if (mode == GroundZoneMode.Buff)
                 ClearAllyBuffs();
+            else if (mode == GroundZoneMode.Heal)
+                ClearHealEffects();
 
             // this가 이미 파괴된 상태(예: followOwner 오라가 소유자 파괴와 함께 자식으로 같이 파괴된 경우)면
             // gameObject 등 네이티브 접근은 전부 건너뛴다 — 반납할 풀도 소유자와 함께 사라지는 것이므로 안전하다.
@@ -140,21 +143,64 @@ public class GroundZoneEffect : MonoBehaviour
         if (fx != null) owner.DespawnEffect(buffReceiveEffect, fx);
     }
 
+    private void SpawnHealPresenceEffect(Hero ally)
+    {
+        if (healReceiveEffect == null) return;
+        GameObject fx = owner.SpawnPersistentEffect(healReceiveEffect, ally.transform.position);
+        if (fx == null) return;
+        fx.transform.SetParent(ally.transform, worldPositionStays: true);
+        healEffectInstances[ally] = fx;
+    }
+
+    private void DespawnHealPresenceEffect(Hero ally)
+    {
+        if (!healEffectInstances.Remove(ally, out GameObject fx)) return;
+        if (fx != null) owner.DespawnEffect(healReceiveEffect, fx);
+    }
+
+    private void ClearHealEffects()
+    {
+        if (healPresentAllies.Count == 0) return;
+        foreach (Hero ally in healPresentAllies)
+            DespawnHealPresenceEffect(ally);
+        healPresentAllies.Clear();
+    }
+
+    private void UpdateHealPresence(List<GameObject> alliesInRange)
+    {
+        var inRange = new HashSet<Hero>();
+        foreach (GameObject go in alliesInRange)
+            if (go.GetComponentInParent<Hero>() is Hero ally)
+                inRange.Add(ally);
+
+        foreach (Hero ally in inRange)
+            if (healPresentAllies.Add(ally))
+                SpawnHealPresenceEffect(ally);
+
+        healPresentAllies.RemoveWhere(ally =>
+        {
+            if (ally != null && inRange.Contains(ally)) return false;
+            if (ally != null) DespawnHealPresenceEffect(ally);
+            return true;
+        });
+    }
+
     private void Tick()
     {
         if (board == null || owner == null) return;
 
         if (mode == GroundZoneMode.Heal)
         {
+            List<GameObject> alliesInRange = owner.GetObjectsInRange(transform.position, radius, shape, RangeQueryAffinity.Ally);
+            UpdateHealPresence(alliesInRange);
+
             float heal = owner.SC[StatType.ATK] * healPer;
             if (heal <= 0f) return;
-            Hero target = AttackDamageUtil.FindLowestHpAlly(owner.GetObjectsInRange(transform.position, radius, shape, RangeQueryAffinity.Ally));
+            Hero target = AttackDamageUtil.FindLowestHpAlly(alliesInRange);
             if (target == null) return;
             heal = heal + target.SC[StatType.HP] * hpHealPer;
             target.Heal(heal);
             SpawnHitEffect(transform.position);
-            if (healReceiveEffect != null)
-                owner.SpawnEffect(healReceiveEffect, target.transform.position, healReceiveEffectLifetime);
             return;
         }
 
