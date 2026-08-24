@@ -27,21 +27,21 @@ public class SaveManager
         gameManager.ChangeToNight += OnNightTransitioned;
     }
 
-    // 새 일차로 전환된 직후(생산 전) 상태를 저장하고 일차 전용 파일까지 남긴다
+    // 새 일차로 전환된 직후(생산 전) 상태를 저장한다
     private void OnDayTransitioned()
     {
         int currentDayCount = gameManager.DayCount;
-        int[] appendedDayList = DayListCalc.AppendDay(saveTimeData.DayList, currentDayCount);
+        TrySave(SavePhase.DayStart, currentDayCount, saveTimeData.DayList);
 
-        if (!TrySave(SavePhase.DayStart, currentDayCount, appendedDayList))
-        {
-            return;
-        }
-
-        saveTimeData.SetDayList(appendedDayList);
-
-        bool archived = saveSlot.TryWriteDayArchive(SelectedSaveSlot.SlotId, currentDayCount);
-        LogFailure(archived, currentDayCount);
+        // 일차별 저장(Save_Day_XX 아카이브 + savedDayList 갱신) 일단 중단
+        // int[] appendedDayList = DayListCalc.AppendDay(saveTimeData.DayList, currentDayCount);
+        // if (!TrySave(SavePhase.DayStart, currentDayCount, appendedDayList))
+        // {
+        //     return;
+        // }
+        // saveTimeData.SetDayList(appendedDayList);
+        // bool archived = saveSlot.TryWriteDayArchive(SelectedSaveSlot.SlotId, currentDayCount);
+        // LogFailure(archived, currentDayCount);
     }
 
     // 밤으로 전환된 직후(낮 준비가 끝난 최종) 상태를 저장한다
@@ -66,13 +66,13 @@ public class SaveManager
         return saveSlot.TryWrite(SelectedSaveSlot.SlotId, file);
     }
 
-    // 일차 파일 복사 실패를 로그로 알린다
-    private void LogFailure(bool archived, int dayCount)
-    {
-        if (archived) return;
-
-        Debug.LogError($"[SaveLoad] {dayCount}일차 파일 복사에 실패했습니다.");
-    }
+    // 일차 파일 복사 실패를 로그로 알린다 (일차별 저장 중단으로 미사용)
+    // private void LogFailure(bool archived, int dayCount)
+    // {
+    //     if (archived) return;
+    //
+    //     Debug.LogError($"[SaveLoad] {dayCount}일차 파일 복사에 실패했습니다.");
+    // }
 
     #region Save Tools
 

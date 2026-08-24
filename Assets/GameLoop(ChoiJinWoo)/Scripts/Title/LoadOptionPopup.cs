@@ -22,6 +22,7 @@ public class LoadOptionPopup : MonoBehaviour
         continueButton.onClick.AddListener(OnContinueClicked);
         pastDayButton.onClick.AddListener(OnPastDayClicked);
         cancelButton.onClick.AddListener(OnCancelClicked);
+        pastDayButton.gameObject.SetActive(false);
     }
 
     // 언어 변경 시 버튼 문구를 다시 표시한다.

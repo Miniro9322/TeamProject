@@ -146,7 +146,7 @@ public class SlotSelectPanel : MonoBehaviour
     {
         if (mode == SlotSelectMode.Load)
         {
-            loadOptionPopup.ShowPopup(() => ConfirmContinueLoad(slotId), () => OpenDaySelect(slotId));
+            ConfirmContinueLoad(slotId);
             return;
         }
 
@@ -156,10 +156,10 @@ public class SlotSelectPanel : MonoBehaviour
     }
 
     // 선택한 슬롯의 일차 목록 패널을 연다.
-    private void OpenDaySelect(int slotId)
-    {
-        daySelectPanel.Open(slotId);
-    }
+    // private void OpenDaySelect(int slotId)
+    // {
+    //     daySelectPanel.Open(slotId);
+    // }
 
     // 이어하기 선택 시 최종 확인 팝업을 연다.
     private void ConfirmContinueLoad(int slotId)
