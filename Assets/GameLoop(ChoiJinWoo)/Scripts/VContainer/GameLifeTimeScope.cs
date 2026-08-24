@@ -53,6 +53,24 @@ public class GameLifeTimeScope : LifetimeScope
         builder.Register<UiPanelStack>(Lifetime.Singleton).AsSelf();
         builder.Register<TutorialState>(Lifetime.Singleton).AsSelf();
 
+        // 세이브·로드 담당들. File/은 서로 의존하고, Logic/은 씬의 각 매니저를 읽고 쓴다.
+        builder.Register<SaveCheck>(Lifetime.Singleton).AsSelf();
+        builder.Register<SaveIO>(Lifetime.Singleton).AsSelf();
+        builder.Register<SaveSlot>(Lifetime.Singleton).AsSelf();
+        builder.Register<SaveCapture>(Lifetime.Singleton).AsSelf();
+        builder.Register<SaveRestore>(Lifetime.Singleton).AsSelf();
+        builder.Register<SaveTimeData>(Lifetime.Singleton).As<ITickable>().AsSelf();
+        builder.Register<SaveManager>(Lifetime.Singleton).AsSelf();
+        builder.Register<LoadManager>(Lifetime.Singleton).As<IStartable>().AsSelf();
+
+        // SaveManager는 주입받는 곳이 없어 안 만들어지므로, 여기서 강제로 Resolve해 이벤트 구독을 걸리게 한다.
+        builder.RegisterBuildCallback(resolver =>
+        {
+            resolver.Resolve<SaveManager>();
+        });
+        builder.Register<SaveKey>(Lifetime.Singleton).AsSelf();
+        builder.Register<SaveCipher>(Lifetime.Singleton).AsSelf();
+
         if (sunLight != null)
         {
             builder.RegisterBuildCallback(resolver =>
@@ -76,6 +94,9 @@ public class GameLifeTimeScope : LifetimeScope
         builder.RegisterComponentInHierarchy<DayNightButton>();
         builder.RegisterComponentInHierarchy<PlayerSkillPanel>();
         builder.RegisterComponentInHierarchy<MapGame>();
+        builder.RegisterComponentInHierarchy<MapRegistry>();
+        builder.RegisterComponentInHierarchy<MapAssemble>();
+        builder.RegisterComponentInHierarchy<HeroRegistry>();
         builder.RegisterComponentInHierarchy<AddCitizen>();
         builder.RegisterComponentInHierarchy<SpawnerManager>().AsSelf();
         builder.RegisterComponentInHierarchy<FacilityBuildChoicePanel>();

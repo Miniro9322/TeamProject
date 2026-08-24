@@ -15,6 +15,7 @@ public class CitizenManager : MonoBehaviour
     public int CurrentCitizen => currentCitizen;
     public int UsedCitizen => usedCitizen + heroUsedCitizen;
     public int HeroUsedCitizen => heroUsedCitizen;
+    public int FacilityUsedCitizen => usedCitizen;
     public int CanUseCitizen => currentCitizen - UsedCitizen;
 
     public event Action CitizenChanged;
@@ -75,6 +76,21 @@ public class CitizenManager : MonoBehaviour
     public void IncreaseCitizen(int amount)
     {
         currentCitizen += amount;
+        UpdateCitizen();
+    }
+
+    // 세이브 데이터로 현재 시민 수를 그대로 덮어쓴다 (로드 복원 전용)
+    public void RestoreCitizen(int amount)
+    {
+        currentCitizen = amount;
+        UpdateCitizen();
+    }
+
+    // 시민 사용량을 저장된 값 그대로 지정한다 (로드 복원 전용)
+    public void RestoreUsedCitizen(int facilityUsed, int heroUsed)
+    {
+        usedCitizen = facilityUsed;
+        heroUsedCitizen = heroUsed;
         UpdateCitizen();
     }
 

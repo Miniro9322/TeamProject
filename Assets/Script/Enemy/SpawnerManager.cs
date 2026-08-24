@@ -192,14 +192,8 @@ public class SpawnerManager : MonoBehaviour
         var paths = spawner.ActivePaths;
         if (paths == null || paths.Count == 0) return;
 
-        var portals = new List<GameObject>(paths.Count);
-        Vector3 lift = Vector3.up * yOffset;
-        foreach (var path in paths)
-        {
-            if (path == null || path.Count == 0) continue;
-            portals.Add(PoolManager.Instance.Spawn(spawnPoint, path[0] + lift, Quaternion.identity));
-        }
-        spawnPoints[region] = portals;
+        // 켜진 길들 위에 포탈을 세운다 (RestorePortal과 같이 쓰는 헬퍼)
+        SpawnPortalsFor(region, paths);
     }
 
     // 포탈 테이블(Region,Id,Count)에서 이번 지역·라운드에 열 포탈 수를 읽는다.
@@ -397,5 +391,86 @@ public class SpawnerManager : MonoBehaviour
                 return; // 아직 남은 지역이 있음
 
         AllRegionsClear?.Invoke();
+    }
+
+    // 길들에서 포탈을 하나씩 만들어 세운다. ShowPortal(낮에 켤 때)과 RestorePortal(로드할 때) 둘 다 이걸 쓴다.
+    private void SpawnPortalsFor(int region, IReadOnlyList<IReadOnlyList<Vector3>> paths)
+    {
+        // 포탈을 담을 목록을 길 개수만큼 미리 만든다
+        var portals = new List<GameObject>(paths.Count);
+        // 포탈을 땅 위로 살짝 띄우는 높이값
+        Vector3 lift = Vector3.up * yOffset;
+        // 길 하나마다 그 길의 시작점 위에 포탈을 하나 꺼내 세운다 (풀에서 재사용)
+        foreach (var path in paths)
+        {
+            portals.Add(PoolManager.Instance.Spawn(spawnPoint, path[0] + lift, Quaternion.identity));
+        }
+        // 이 지역의 포탈 목록으로 기록해둔다 (나중에 지우거나 찾을 때 씀)
+        spawnPoints[region] = portals;
+    }
+
+    // 이 지역이 전체 날짜보다 며칠 늦게 시작했는지(오프셋)를 읽는다. 세이브할 때 부른다.
+    public int GetOffset(int region)
+    {
+        // 이미 정해진 오프셋이 있으면 그 값을 그대로 돌려준다
+        if (_unlockOffset.TryGetValue(region, out int off)) return off;
+        // 아직 안 열린 지역이면 오프셋이 필요 없으니 0을 돌려준다
+        if (!IsUnlocked(region)) return 0;
+
+        // 열려있는데 값이 없으면, 지금 날짜 기준으로 새로 정해서 저장해둔다
+        off = CurrentDay - 1;
+        _unlockOffset[region] = off;
+        return off;
+    }
+
+    // 저장해뒀던 오프셋 숫자를 그대로 다시 집어넣는다. 로드할 때 부른다.
+    public void RestoreOffset(int region, int offset)
+    {
+        // 계산 없이 저장된 값 그대로 넣는다
+        _unlockOffset[region] = offset;
+    }
+
+    // 지금 켜져 있는 포탈들의 칸 좌표를 읽어온다. 세이브할 때 부른다.
+    public bool TryGetActiveSpawnCoords(int region, out Vector2Int[] coords)
+    {
+        // 일단 빈 값으로 시작해둔다
+        coords = Array.Empty<Vector2Int>();
+        // 이 지역 담당 스포너가 없으면 읽을 게 없다
+        if (!_byRegion.TryGetValue(region, out var spawner) || spawner == null) return false;
+
+        // 지금 켜진 포탈들의 번호 목록
+        IReadOnlyList<int> activeSpawns = spawner.ActiveSpawns;
+        // 번호마다 실제 칸 좌표를 찾아서 담는다
+        coords = new Vector2Int[activeSpawns.Count];
+        for (int i = 0; i < activeSpawns.Count; i++)
+        {
+            coords[i] = spawner.SpawnCoord(activeSpawns[i]);
+        }
+        return true;
+    }
+
+    // 저장된 좌표대로 포탈을 다시 세운다. 로드할 때 부른다.
+    public void RestorePortal(int region, Vector2Int[] savedCoords)
+    {
+        // 포탈을 세울 기준 오브젝트가 없으면 아무것도 못 하니 끝낸다
+        if (spawnPoint == null) return;
+        // 이 지역 담당 스포너를 못 찾으면 끝낸다
+        if (!_byRegion.TryGetValue(region, out var spawner) || spawner == null) return;
+
+        // 혹시 이미 떠 있는 포탈이 있으면(중복 방지) 먼저 다 지운다
+        if (spawnPoints.TryGetValue(region, out var existing) && existing != null)
+        {
+            // 떠 있던 포탈들을 하나씩 반납한다
+            foreach (var portal in existing)
+                if (portal != null) PoolManager.Instance.Despawn(portal);
+            // 이 지역의 포탈 기록도 지운다
+            spawnPoints.Remove(region);
+        }
+
+        // 저장된 좌표대로 길을 켠다
+        spawner.ActivateSpawnsAt(savedCoords);
+
+        // 켜진 길들 위에 포탈을 세운다
+        SpawnPortalsFor(region, spawner.ActivePaths);
     }
 }

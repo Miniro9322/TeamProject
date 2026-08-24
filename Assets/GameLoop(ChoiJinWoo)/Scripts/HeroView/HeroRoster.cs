@@ -22,6 +22,15 @@ public class HeroRoster
         return entry;
     }
 
+    // 저장된 Guid로 로스터 엔트리를 만들어 목록에 추가한다 (로드 복원 전용)
+    public HeroRosterEntry AddRestored(Guid savedId, Placeable slot, HeroData data, int citizenCost)
+    {
+        HeroRosterEntry entry = new HeroRosterEntry(savedId, slot, data, citizenCost);
+        _entries.Add(entry);
+        Changed?.Invoke();
+        return entry;
+    }
+
     // 합성 등으로 개체 자체가 소멸할 때 씀 — Available로 되돌리는 MarkAvailable과 달리 엔트리를 목록에서 아예 뺀다.
     public bool Remove(HeroRosterEntry entry)
     {

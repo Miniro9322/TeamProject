@@ -114,4 +114,17 @@ public class ResourcesManager : MonoBehaviour
 
         ProductUpdate?.Invoke();
     }
+
+    // 세이브 데이터로 자원 6종을 그대로 덮어쓴다 (로드 복원 전용)
+    public void RestoreResources(int wood, int food, int gold, int iron, int stone, int special)
+    {
+        this.wood = wood;
+        this.food = food;
+        this.gold = gold;
+        this.iron = iron;
+        this.stone = stone;
+        this.special = special;
+
+        ProductUpdate?.Invoke();
+    }
 }

@@ -28,6 +28,15 @@ public class HeroRosterEntry
         CitizenCost = citizenCost;
     }
 
+    // 저장된 Guid로 로스터 엔트리를 복원한다 (로드 복원 전용)
+    public HeroRosterEntry(Guid savedId, Placeable slot, HeroData data, int citizenCost)
+    {
+        Id = savedId;
+        Slot = slot;
+        Data = data;
+        CitizenCost = citizenCost;
+    }
+
     public void MarkPlaced(GameObject unit)
     {
         State = HeroRosterState.Placed;

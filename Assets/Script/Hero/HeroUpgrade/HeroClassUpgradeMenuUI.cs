@@ -37,26 +37,30 @@ public class HeroClassUpgradeMenuUI : MonoBehaviour
         {
             resourceIconMap[resourceIcon.type] = resourceIcon.icon;
         }
-        upgradeButton.onClick.AddListener(() =>
-        {
-            if (upgradeState.TryLevelUp(heroType))
-            {
-                UpdateResourceInfo(upgradeState.GetLevel(heroType));
-                RefreshUpgradeButton();
-            }
-        });
+        upgradeButton.onClick.AddListener(() => upgradeState.TryLevelUp(heroType));
     }
 
     private void Start()
     {
         resourcesManager.ProductUpdate += RefreshUpgradeButton;
+        upgradeState.LevelChanged += HandleLevelChanged;
+        UpdateResourceInfo(upgradeState.GetLevel(heroType));
         RefreshUpgradeButton();
     }
 
     private void OnDestroy()
     {
         resourcesManager.ProductUpdate -= RefreshUpgradeButton;
+        upgradeState.LevelChanged -= HandleLevelChanged;
         upgradeButton.onClick.RemoveAllListeners();
+    }
+
+    // 이 UI가 담당하는 클래스의 레벨이 바뀌면(레벨업·로드 복원 공통) 화면을 다시 그린다
+    private void HandleLevelChanged(int changedHeroType)
+    {
+        if (changedHeroType != heroType) return;
+        UpdateResourceInfo(upgradeState.GetLevel(heroType));
+        RefreshUpgradeButton();
     }
 
     public void Set(int heroType)
@@ -65,8 +69,6 @@ public class HeroClassUpgradeMenuUI : MonoBehaviour
         banner.sprite = panelImageList[heroType];
         upgradeIcon.sprite = upgradeIconList[heroType];
         upgradeTierText.text = heroType == 0 ? "근거리 업그레이드" : "원거리 업그레이드";
-        UpdateResourceInfo(upgradeState.GetLevel(heroType));
-        RefreshUpgradeButton();
     }
 
     private void RefreshUpgradeButton()
