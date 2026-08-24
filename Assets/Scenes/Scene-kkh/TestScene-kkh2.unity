@@ -31378,6 +31378,11 @@ MonoBehaviour:
   infoTextOffset: {x: 2, y: 4, z: 0}
   stageInfoSortingOrder: -10
   cam: {fileID: 755029713}
+  guardPanel: {fileID: 0}
+  directingUi: {fileID: 0}
+  directingStateName: Directing
+  directingTimeout: 5
+  isDirecting: 0
 --- !u!4 &1403437580
 Transform:
   m_ObjectHideFlags: 0
@@ -35371,6 +35376,7 @@ MonoBehaviour:
       blockedWhile: {fileID: 0}
       messageKey: Tutorial_Resource
     completesOnAcknowledge: 1
+    pauseTimeWhileActive: 0
   - id: 3
     messageKey: 
     waypoints:
@@ -35403,6 +35409,7 @@ MonoBehaviour:
       blockedWhile: {fileID: 0}
       messageKey: Tutorial_AssignWorker_Step7
     completesOnAcknowledge: 0
+    pauseTimeWhileActive: 0
   - id: 4
     messageKey: 
     waypoints:
@@ -35411,6 +35418,7 @@ MonoBehaviour:
       blockedWhile: {fileID: 0}
       messageKey: Tutorial_BuildingUpgrade
     completesOnAcknowledge: 1
+    pauseTimeWhileActive: 0
   - id: 1
     messageKey: 
     waypoints:
@@ -35427,6 +35435,7 @@ MonoBehaviour:
       blockedWhile: {fileID: 0}
       messageKey: Tutorial_BuildHouse_Step3
     completesOnAcknowledge: 0
+    pauseTimeWhileActive: 0
   - id: 2
     messageKey: 
     waypoints:
@@ -35447,6 +35456,7 @@ MonoBehaviour:
       blockedWhile: {fileID: 0}
       messageKey: Tutorial_AddCitizen_Step1
     completesOnAcknowledge: 0
+    pauseTimeWhileActive: 0
   - id: 5
     messageKey: Tutorial_PlaceHero_Step4
     waypoints:
@@ -35467,6 +35477,7 @@ MonoBehaviour:
       blockedWhile: {fileID: 0}
       messageKey: Tutorial_PlaceHero_Step4
     completesOnAcknowledge: 0
+    pauseTimeWhileActive: 0
   - id: 6
     messageKey: 
     waypoints:
@@ -35475,6 +35486,7 @@ MonoBehaviour:
       blockedWhile: {fileID: 0}
       messageKey: Tutorial_HeroUpgrade
     completesOnAcknowledge: 1
+    pauseTimeWhileActive: 0
   - id: 7
     messageKey: 
     waypoints:
@@ -35483,6 +35495,7 @@ MonoBehaviour:
       blockedWhile: {fileID: 0}
       messageKey: Tutorial_HeroMerge
     completesOnAcknowledge: 1
+    pauseTimeWhileActive: 0
   - id: 8
     messageKey: 
     waypoints:
@@ -35491,7 +35504,9 @@ MonoBehaviour:
       blockedWhile: {fileID: 0}
       messageKey: Tutorial_NightButton
     completesOnAcknowledge: 1
+    pauseTimeWhileActive: 0
   placeHeroMapClickMessageKey: Tutorial_PlaceHero_Step4
+  completionMessageKey: 
 --- !u!4 &1605368764
 Transform:
   m_ObjectHideFlags: 0
@@ -36450,6 +36465,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1654659113}
   - component: {fileID: 1654659114}
+  - component: {fileID: 1654659115}
   m_Layer: 5
   m_Name: RightButtons
   m_TagString: Untagged
@@ -36505,6 +36521,19 @@ MonoBehaviour:
   m_ChildScaleWidth: 0
   m_ChildScaleHeight: 0
   m_ReverseArrangement: 0
+--- !u!114 &1654659115
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1654659112}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b0a2771e7ff333f41a6ab7e3ecb1aa5d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RightButtonsPanel
+  game: {fileID: 314587623}
 --- !u!1 &1656848258
 GameObject:
   m_ObjectHideFlags: 0
