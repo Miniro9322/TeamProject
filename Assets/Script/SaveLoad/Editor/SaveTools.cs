@@ -1,5 +1,6 @@
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 // 개발 중 세이브 기능을 켜고 끄거나 현재 슬롯을 초기화하는 에디터 전용 메뉴다.
 public static class SaveTools
@@ -7,6 +8,7 @@ public static class SaveTools
     private const string EnablePath = "Tools/SaveLoad/세이브 ON";
     private const string DisablePath = "Tools/SaveLoad/세이브 OFF";
     private const string ClearPath = "Tools/SaveLoad/슬롯 01 초기화";
+    private const string TitleSceneName = "TempTitle";
 
     // 개발자 세이브 기능을 활성화한다.
     [MenuItem(EnablePath)]
@@ -43,5 +45,14 @@ public static class SaveTools
 
         SaveSlot.ClearSlot(1);
         Debug.Log("[SaveLoad Tools] Slot_01을 초기화했습니다.");
+    }
+
+    // 타이틀 없이 다른 씬을 바로 플레이해도 이어하기로 취급해 로드가 되게 한다 (에디터 전용).
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+    private static void AutoContinueOutsideTitle()
+    {
+        if (SceneManager.GetActiveScene().name == TitleSceneName) return;
+
+        SelectedSaveSlot.SetLoad(1);
     }
 }
