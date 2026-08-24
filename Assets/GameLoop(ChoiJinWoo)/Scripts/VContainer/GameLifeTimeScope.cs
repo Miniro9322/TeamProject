@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using VContainer;
 using VContainer.Unity;
@@ -16,6 +17,7 @@ public class GameLifeTimeScope : LifetimeScope
     [SerializeField] private ResourceIconSet resourceIconSet;
     [SerializeField] private HeroUpgradeConfig heroUpgradeConfig;
     [SerializeField] private HeroClassUpgradeConfig heroClassUpgradeConfig;
+    [SerializeField] private List<BaseUpgradeData> heroStatUpgrades;
     [SerializeField] private Light sunLight;
     [SerializeField] private Transform citizenHubPoint;
     [SerializeField] private Transform[] citizenHomePoints; // 밤에 귀가할 목적지 후보들(여러 개면 시민마다 랜덤 선택)
@@ -42,6 +44,7 @@ public class GameLifeTimeScope : LifetimeScope
         builder.RegisterInstance(resourceIconSet);
         builder.RegisterInstance(heroUpgradeConfig);
         builder.RegisterInstance(heroClassUpgradeConfig);
+        builder.RegisterInstance(heroStatUpgrades);
         builder.RegisterComponentOnNewGameObject<PoolManager>(Lifetime.Singleton).AsSelf();
         builder.Register<FacilityManager>(Lifetime.Singleton).AsSelf();
         builder.Register<BaseConstructor>(Lifetime.Singleton).AsSelf();
@@ -50,6 +53,14 @@ public class GameLifeTimeScope : LifetimeScope
         builder.Register<UpgradeState>(Lifetime.Singleton);
         builder.Register<HeroTierUpgradeState>(Lifetime.Singleton);
         builder.Register<HeroClassUpgradeState>(Lifetime.Singleton);
+        builder.Register<HeroStatManager>(Lifetime.Singleton).AsSelf();
+        // 아무도 생성자 의존성으로 요구하지 않아 lazy 등록만으로는 안 만들어진다 - 강제로 Resolve해서
+        // 생성자가 돌게(=LevelChanged 구독이 걸리게) 한다. 안 하면 Hero.Awake가 정적 캐시를 처음
+        // 읽는 순간 HeroStatManager 인스턴스가 없어 NullReferenceException이 난다.
+        builder.RegisterBuildCallback(resolver =>
+        {
+            resolver.Resolve<HeroStatManager>();
+        });
         builder.Register<UiPanelStack>(Lifetime.Singleton).AsSelf();
         builder.Register<TutorialState>(Lifetime.Singleton).AsSelf();
 
