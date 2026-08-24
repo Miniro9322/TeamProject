@@ -1,0 +1,80 @@
+using TMPro;
+using UnityEngine;
+using UnityEngine.UI;
+
+public class GuideTabSelector : MonoBehaviour
+{
+    [SerializeField] private Image gamePlayImage;
+    [SerializeField] private Image heroImage;
+    [SerializeField] private Image baseImage;
+    [SerializeField] private Image enemyImage;
+
+    [SerializeField] private TextMeshProUGUI gamePlayText;
+    [SerializeField] private TextMeshProUGUI heroText;
+    [SerializeField] private TextMeshProUGUI baseText;
+    [SerializeField] private TextMeshProUGUI enemyText;
+
+    [SerializeField] private Color selectedTint = new Color(0.502f, 0.361f, 0.204f);
+    [SerializeField] private Color normalTint = Color.white;
+    [SerializeField] private Color selectedTextColor = Color.white;
+    [SerializeField] private Color normalTextColor = new Color(0.196f, 0.196f, 0.196f);
+
+    [SerializeField] private GuideClickBurst clickBurst;
+
+    // 시작할 때 게임 플레이 탭이 선택된 모습으로 맞춰둔다 (스파크 없이)
+    private void Awake()
+    {
+        SetTabState(gamePlayImage, gamePlayText, gamePlayImage);
+        SetTabState(heroImage, heroText, gamePlayImage);
+        SetTabState(baseImage, baseText, gamePlayImage);
+        SetTabState(enemyImage, enemyText, gamePlayImage);
+    }
+
+    // 게임 플레이 탭을 선택 상태로 표시한다
+    public void SelectGamePlayTab()
+    {
+        ApplySelection(gamePlayImage);
+    }
+
+    // 영웅 탭을 선택 상태로 표시한다
+    public void SelectHeroTab()
+    {
+        ApplySelection(heroImage);
+    }
+
+    // 거점 탭을 선택 상태로 표시한다
+    public void SelectBaseTab()
+    {
+        ApplySelection(baseImage);
+    }
+
+    // 적 탭을 선택 상태로 표시한다
+    public void SelectEnemyTab()
+    {
+        ApplySelection(enemyImage);
+    }
+
+    // 선택된 탭만 강조하고 그 위치에 클릭 스파크를 띄운다
+    private void ApplySelection(Image selectedImage)
+    {
+        SetTabState(gamePlayImage, gamePlayText, selectedImage);
+        SetTabState(heroImage, heroText, selectedImage);
+        SetTabState(baseImage, baseText, selectedImage);
+        SetTabState(enemyImage, enemyText, selectedImage);
+
+        if (clickBurst != null) clickBurst.SpawnAt(selectedImage.rectTransform);
+    }
+
+    // 탭 하나의 배경색과 글씨색을 선택 여부에 맞게 반영한다
+    private void SetTabState(Image image, TextMeshProUGUI text, Image selectedImage)
+    {
+        if (image == selectedImage)
+        {
+            image.color = selectedTint;
+            text.color = selectedTextColor;
+            return;
+        }
+        image.color = normalTint;
+        text.color = normalTextColor;
+    }
+}
