@@ -187,7 +187,7 @@ public class SpawnerManager : MonoBehaviour
         if (region == 1 && CurrentDay > 0 && CurrentDay % 10 == 0)
             spawner.ActivateCornerPortal();
         else
-            spawner.RollActivePortals(PortalCount(region));
+            spawner.RollActivePortals(PortalCount(region), PortalRng(region));
         var paths = spawner.ActivePaths;
         if (paths == null || paths.Count == 0) return;
 
@@ -203,6 +203,51 @@ public class SpawnerManager : MonoBehaviour
         if (table == null) return 1;
         int id = WaveSpawner.GetStageLookupId(LocalStage(region));
         return table.GetCount(region, id, 1);
+    }
+
+    // 이 지역·이 일차의 포탈을 뽑을 난수기.
+    // 같은 (게임 시드, 지역, 일차)면 항상 같은 포탈이 열린다 — 세이브를 다시 로드해도 그날 포탈이 그대로 재현된다.
+    //
+    // 영웅 뽑기(ConsumeHeroDraw)처럼 저장되는 순번이 필요 없는 이유:
+    // 뽑기는 플레이어가 임의 횟수로 부르지만 포탈은 지역·일차마다 정확히 한 번만 굴리므로,
+    // (지역, 일차) 쌍 자체가 순번 노릇을 한다. 그래서 SaveData에 추가할 필드가 없다.
+    //
+    // 일차는 LocalStage가 아니라 CurrentDay를 쓴다 — LocalStage는 지역마다 값이 겹치고
+    // 10일차 넘어가면 순환하지만, CurrentDay는 밤마다 전역에서 유일하다.
+    private bool _warnedNoSeed;
+
+    private System.Random PortalRng(int region)
+    {
+        int day = CurrentDay;   // 이 게터가 필요하면 _gameManager를 여기서 resolve한다
+        string seed = _gameManager != null ? _gameManager.GameSeed : null;
+        // 시드를 못 얻으면(테스트 씬 등) null을 돌려 예전처럼 전역 Random으로 굴리게 둔다.
+        // 다만 조용히 넘기면 "왜 아직도 포탈이 매번 다르지"의 원인을 못 찾는다 — 한 번만 알린다.
+        if (string.IsNullOrEmpty(seed))
+        {
+            if (!_warnedNoSeed)
+            {
+                _warnedNoSeed = true;
+                Debug.LogWarning("SpawnerManager: GameManager의 시드를 얻지 못해 포탈을 전역 Random으로 뽑습니다 " +
+                                 "— 로드할 때마다 포탈이 달라집니다.", this);
+            }
+            return null;
+        }
+        return new System.Random(GameSeeding.Derive($"{seed}:portal:{region}", day));
+    }
+
+    // 세이브 로드가 끝난 뒤 포탈을 다시 뽑는다.
+    //
+    // 왜 필요한가: LoadManager는 모든 Start()가 끝난 '다음 프레임'에 복원한다(UniTask.Yield).
+    // 그런데 이 매니저의 Start()는 그 전 프레임에 이미 ShowAllPortals()로 포탈을 굴려버린다 —
+    // 그 시점의 DayCount는 아직 복원 전 값이라, 시드 유도식이 엉뚱한 일차로 계산된다.
+    // 예전엔 어차피 랜덤이라 티가 안 났지만 시드를 쓰면 '항상 같지만 틀린' 포탈이 나온다.
+    // 복원이 끝난 뒤 이걸 한 번 불러주면 올바른 일차로 다시 뽑는다.
+    //
+    // NightReady 저장본은 RestorePortal이 좌표를 그대로 되살리므로 부르면 안 된다(그 밤의 포탈이 바뀐다).
+    public void RefreshPortals()
+    {
+        HideAllPortals();
+        ShowAllPortals();
     }
 
     private void HideAllPortals()

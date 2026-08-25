@@ -33,7 +33,7 @@ Region,ID,MonsterName,Prefab,Count,SpawnTime,Delay
 1,1004,Chicken,Resources/EnemyUnitPrefabs/Chicken,30,0,0.5
 1,1005,SpiderToxin,Resources/EnemyUnitPrefabs/SpiderToxin,12,7,0.4
 1,1005,SpiderNormal,Resources/EnemyUnitPrefabs/SpiderNormal,14,0,0.3
-1,1005,SpiderKing,Resources/EnemyUnitPrefabs/SpiderKing,1,10,0.4
+1,1005,SpiderKing,Resources/EnemyUnitPrefabs/SpiderKing,1,10,2.5
 1,9001,Bat,Resources/EnemyUnitPrefabs/Bat,3,0,0.5
 1,9002,Chicken,Resources/EnemyUnitPrefabs/Chicken,6,0,0.5
 1,9003,Bat,Resources/EnemyUnitPrefabs/Bat,4,0,0.5
@@ -79,7 +79,7 @@ Region,ID,MonsterName,Prefab,Count,SpawnTime,Delay
 2,1004,Bat,Resources/EnemyUnitPrefabs/Bat,8,0,0.5
 2,1005,SpiderNormal,Resources/EnemyUnitPrefabs/SpiderNormal,10,0,0.5
 2,1005,Golem,Resources/EnemyUnitPrefabs/Golem,6,7.3,0.7
-2,1005,SpiderKing,Resources/EnemyUnitPrefabs/SpiderKing,1,8,0.3
+2,1005,SpiderKing,Resources/EnemyUnitPrefabs/SpiderKing,1,8,2.5
 2,1005,Scorpion,Resources/EnemyUnitPrefabs/Scorpion,5,5,0.4
 2,9001,Bat,Resources/EnemyUnitPrefabs/Bat,3,1,0.5
 2,9002,Golem,Resources/EnemyUnitPrefabs/Golem,2,0,0.8
@@ -114,7 +114,7 @@ Region,ID,MonsterName,Prefab,Count,SpawnTime,Delay
 3,1004,SpiderKing,Resources/EnemyUnitPrefabs/SpiderKing,1,3,0.4
 3,1005,FireGolem,Resources/EnemyUnitPrefabs/FireGolem,8,0,0.3
 3,1005,FireBird,Resources/EnemyUnitPrefabs/FireBird,8,3,0.4
-3,1005,SpiderKing,Resources/EnemyUnitPrefabs/SpiderKing,1,6,0.4
+3,1005,SpiderKing,Resources/EnemyUnitPrefabs/SpiderKing,1,6,2
 3,9001,FireBird,Resources/EnemyUnitPrefabs/FireBird,1,1,0.5
 3,9002,FireGolem,Resources/EnemyUnitPrefabs/FireGolem,2,0,0.3
 3,9003,SpiderNormal,Resources/EnemyUnitPrefabs/SpiderNormal,2,0,0.7
@@ -156,7 +156,7 @@ Region,ID,MonsterName,Prefab,Count,SpawnTime,Delay
 4,1004,Scorpion,Resources/EnemyUnitPrefabs/Scorpion,11,0,0.6
 4,1004,Bat,Resources/EnemyUnitPrefabs/Bat,8,0,0.4
 4,1005,IceGolem,Resources/EnemyUnitPrefabs/IceGolem,12,5,0.3
-4,1005,ScorpionKing,Resources/EnemyUnitPrefabs/ScorpionKing,1,9,0.3
+4,1005,ScorpionKing,Resources/EnemyUnitPrefabs/ScorpionKing,1,9,1.5
 4,1005,Bat,Resources/EnemyUnitPrefabs/Bat,10,0,0.4
 4,9001,Spook,Resources/EnemyUnitPrefabs/Spook,1,2.5,0.5
 4,9002,IceGolem,Resources/EnemyUnitPrefabs/IceGolem,1,2,0.8
@@ -197,7 +197,7 @@ Region,ID,MonsterName,Prefab,Count,SpawnTime,Delay
 5,1005,Worm,Resources/EnemyUnitPrefabs/Worm,16,4.8,0.3
 5,1005,Scorpion,Resources/EnemyUnitPrefabs/Scorpion,16,5,0.3
 5,1005,GrimReaper,Resources/EnemyUnitPrefabs/GrimReaper,7,0,0.5
-5,1005,WormQueen,Resources/EnemyUnitPrefabs/WormQueen,1,10,0.5
+5,1005,WormQueen,Resources/EnemyUnitPrefabs/WormQueen,1,10,1
 5,9001,Scorpion,Resources/EnemyUnitPrefabs/Scorpion,2,2.5,0.7
 5,9002,Worm,Resources/EnemyUnitPrefabs/Worm,3,2,0.9
 5,9003,Bat,Resources/EnemyUnitPrefabs/Bat,2,3.5,0.5
@@ -223,8 +223,8 @@ Region,ID,MonsterName,Prefab,Count,SpawnTime,Delay
 6,9,SpiderToxin,Resources/EnemyUnitPrefabs/SpiderToxin,6,3,0.4
 6,10,Spore,Resources/EnemyUnitPrefabs/Spore,14,0,0.4
 6,10,Bat,Resources/EnemyUnitPrefabs/Bat,8,5,0.5
-6,10,ScorpionKing,Resources/EnemyUnitPrefabs/ScorpionKing,1,10,0.3
-6,10,Wraith,Resources/EnemyUnitPrefabs/Wraith,1,6,0.4
+6,10,ScorpionKing,Resources/EnemyUnitPrefabs/ScorpionKing,1,10,2.5
+6,10,Wraith,Resources/EnemyUnitPrefabs/Wraith,1,6,2
 6,1001,Spore,Resources/EnemyUnitPrefabs/Spore,20,5,0.3
 6,1001,Bat,Resources/EnemyUnitPrefabs/Bat,10,0,0.4
 6,1002,Spore,Resources/EnemyUnitPrefabs/Spore,22,0,0.3
@@ -236,8 +236,8 @@ Region,ID,MonsterName,Prefab,Count,SpawnTime,Delay
 6,1004,Bat,Resources/EnemyUnitPrefabs/Bat,12,0,0.4
 6,1005,Spore,Resources/EnemyUnitPrefabs/Spore,24,0,0.3
 6,1005,Bat,Resources/EnemyUnitPrefabs/Bat,5,0,0.4
-6,1005,Wraith,Resources/EnemyUnitPrefabs/Wraith,1,10,0.3
-6,1005,ScorpionKing,Resources/EnemyUnitPrefabs/ScorpionKing,1,5,0.3
+6,1005,Wraith,Resources/EnemyUnitPrefabs/Wraith,1,10,2.5
+6,1005,ScorpionKing,Resources/EnemyUnitPrefabs/ScorpionKing,1,5,2
 6,9001,Spore,Resources/EnemyUnitPrefabs/Spore,3,1,0.5
 6,9002,Bat,Resources/EnemyUnitPrefabs/Bat,2,2.5,0.6
 6,9003,SpiderNormal,Resources/EnemyUnitPrefabs/SpiderNormal,3,2.2,0.7
