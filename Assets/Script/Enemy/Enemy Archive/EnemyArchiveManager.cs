@@ -5,7 +5,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
-public class EnemyArchiveManager : MonoBehaviour
+public class EnemyArchiveManager : MonoBehaviour, IExclusiveUiPanel
 {
     // 스테이지 정보 팝업은 풀링 프리팹이라 씬 오브젝트를 인스펙터로 참조할 수 없다 → 런타임 창구.
     public static EnemyArchiveManager Instance { get; private set; }
@@ -21,6 +21,8 @@ public class EnemyArchiveManager : MonoBehaviour
     [SerializeField] private GameObject[] closeWhenOpened;
     private CancellationTokenSource cts;
     private bool isOpenCheck;
+    private Keyboard keyboard;
+    private Key openKey = Key.O;
 
     // UiManager가 ESC로 메뉴를 열지 말지 판단할 때 쓴다 - 도감이 열려 있으면(닫히는 애니메이션
     // 도중 포함) 메뉴를 열지 않고 도감부터 닫아야 하므로.
@@ -55,6 +57,7 @@ public class EnemyArchiveManager : MonoBehaviour
 
     void Start()
     {
+        keyboard = Keyboard.current;
         archive.SetActive(false);
         archive.transform.localScale = Vector3.zero; // 닫힘 = 스케일 0 기준 (resume 로직이 진행도를 스케일로 읽음)
         isOpenCheck = false;
@@ -68,7 +71,6 @@ public class EnemyArchiveManager : MonoBehaviour
 
     }
 
-
     // 진행 중이던 애니메이션 취소 + 새 토큰 발급
     private void ResetCts()
     {
@@ -76,15 +78,22 @@ public class EnemyArchiveManager : MonoBehaviour
         cts?.Dispose();
         cts = new CancellationTokenSource();
     }
-    void Update()
+    private void Update()
     {
         OnEscInput();
         CloseIfOtherUiOpened();
+
+        if (keyboard == null) return;
+
+        if (keyboard[openKey].wasPressedThisFrame)
+        {
+            if (archiveList.gameObject.activeSelf)
+                infoCloseButton.onClick?.Invoke();
+            else
+                infoOpenButton.onClick?.Invoke();
+        }
     }
 
-    // 등록해 둔 다른 UI가 켜지면 도감을 닫는다.
-    // hidePanal(바깥 클릭)로는 못 잡는 경우를 메운다 — 그 위에 그려지는 버튼으로 연 UI는
-    // hidePanal의 클릭을 거치지 않으므로 도감이 뒤에 그대로 남는다.
     private void CloseIfOtherUiOpened()
     {
         if (!isOpenCheck) return;               // 완전히 열려 있을 때만 본다
@@ -99,10 +108,6 @@ public class EnemyArchiveManager : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// 바깥에서 도감을 닫는 창구. 다른 UI 버튼의 OnClick에 직접 걸어도 된다.
-    /// 열려 있을 때만 동작하고, 닫히는 중에 또 불려도 애니메이션을 다시 시작하지 않는다.
-    /// </summary>
     public void CloseArchive()
     {
         if (!isOpenCheck) return;
@@ -115,7 +120,10 @@ public class EnemyArchiveManager : MonoBehaviour
         cts?.Cancel();
         cts?.Dispose();
         cts = null;
+        ExclusiveUiCoordinator.NotifyClosed(this);
     }
+
+    public void RequestClose() => CloseArchive();
     private void OnEscInput()
     {
         if (Keyboard.current == null) return;
@@ -129,14 +137,14 @@ public class EnemyArchiveManager : MonoBehaviour
 
     private void OpenArchive(bool restoreLastPage)
     {
+        ExclusiveUiCoordinator.NotifyOpened(this);
         ResetCts();
-        OpenArchiveCor(cts.Token).Forget();   // 첫 await 전까지 동기 — 여기서 archive가 이미 활성화된다
+        OpenArchiveCor(cts.Token).Forget();
 
         if (!restoreLastPage) return;
         if (TryGetArchiveList(out EnemyArchive list)) list.ShowLastOrDefault();
     }
-    // 바깥 클릭(hidePanal) 전용 - ESC와 동일하게 튜토리얼 강제 진행 중엔 막는다.
-    // 명시적 닫기 버튼(infoCloseButton)은 이 가드를 안 거치고 OnClickCloseArchive를 직접 부른다.
+
     private void OnClickOutsideClose()
     {
         if (TutorialInputGate.BlockEscapeClose) return;
@@ -145,6 +153,7 @@ public class EnemyArchiveManager : MonoBehaviour
     // 버튼/판넬/ESC 공용 닫기 창구 — 진행 중이던 열기 코루틴을 취소하고 닫는다(동시 실행 방지)
     private void OnClickCloseArchive()
     {
+        ExclusiveUiCoordinator.NotifyClosed(this);
         ResetCts();
         CloseArchiveCor(cts.Token).Forget();
     }

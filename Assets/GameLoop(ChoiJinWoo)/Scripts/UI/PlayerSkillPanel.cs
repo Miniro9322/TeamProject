@@ -23,6 +23,9 @@ public class PlayerSkillPanel : MonoBehaviour
     private PlayerManaManager mana;
     private PlayerSkillCastController cast;
     private Keyboard keyboard;
+    [SerializeField] private Key skill1Key = Key.Digit1;
+    [SerializeField] private Key skill2Key = Key.Digit2;
+    [SerializeField] private Key skill3Key = Key.Digit3;
 
     [Inject]
     private void Construct(GameManager gameManager, EnviromentManager enviromentManager, PlayerManaManager mana)
@@ -82,21 +85,21 @@ public class PlayerSkillPanel : MonoBehaviour
 
         if (keyboard == null) return;
 
-        if (keyboard.digit1Key.wasPressedThisFrame)
+        if (keyboard[skill1Key].wasPressedThisFrame)
         {
             if (mana.CurrentMana < entries[0].skill.manaCost) return;
 
             entries[0].button.onClick?.Invoke();
         }
 
-        if (keyboard.digit2Key.wasPressedThisFrame)
+        if (keyboard[skill2Key].wasPressedThisFrame)
         {
             if (mana.CurrentMana < entries[1].skill.manaCost) return;
 
             entries[1].button.onClick?.Invoke();
         }
 
-        if (keyboard.digit3Key.wasPressedThisFrame)
+        if (keyboard[skill3Key].wasPressedThisFrame)
         {
             if (mana.CurrentMana < entries[2].skill.manaCost) return;
 

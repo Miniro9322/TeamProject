@@ -24081,6 +24081,7 @@ MonoBehaviour:
     regionName: "6 \uC9C0\uC5ED"
   openButton: {fileID: 1711542347}
   redDot: {fileID: 1068608151}
+  openBaseKey: 16
 --- !u!114 &1128999297
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -27012,6 +27013,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HeroArchiveButton
   archiveUI: {fileID: 196020502}
+  openKey: 30
 --- !u!114 &1221242826
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -38837,6 +38839,7 @@ MonoBehaviour:
   button: {fileID: 1760085484}
   icon: {fileID: 186776086}
   dayText: {fileID: 1245896929}
+  nightKey: 28
 --- !u!114 &1760085484
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -39748,6 +39751,9 @@ MonoBehaviour:
       zonePrefab: {fileID: 4269708727165565049, guid: bf1f9763cd6d56d468560faf6d1a0d61, type: 3}
       manaCost: 60
   manaBar: {fileID: 1651629285}
+  skill1Key: 41
+  skill2Key: 42
+  skill3Key: 43
 --- !u!1001 &1805302641
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -46276,7 +46282,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2075775770}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 2ab552151c380004f860560771e4ac43, type: 3}
   m_Name: 
@@ -46366,6 +46372,10 @@ MonoBehaviour:
   view: {fileID: 314587628}
   game: {fileID: 314587623}
   closeKey: 60
+  upgradeKey: 35
+  replaceKey: 32
+  removeKey: 19
+  inventoryKey: 23
 --- !u!114 &2084934174
 MonoBehaviour:
   m_ObjectHideFlags: 0

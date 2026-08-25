@@ -5914,7 +5914,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a884c86289546db44934b5714235468e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TooltipTrigger
-  message: UI_PlayerSkill_Debuff
+  message: Player_ActiveSkill_EnemySlow
   isJust: 0
 --- !u!1001 &262898420
 PrefabInstance:
@@ -10227,31 +10227,31 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1412472829563689340, guid: 1d9e1c1b6881e06499b0174cb6684aa2, type: 3}
       propertyPath: m_AnchorMax.y
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1617722479047092453, guid: 1d9e1c1b6881e06499b0174cb6684aa2, type: 3}
       propertyPath: m_AnchorMax.y
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1617722479047092453, guid: 1d9e1c1b6881e06499b0174cb6684aa2, type: 3}
       propertyPath: m_AnchorMin.y
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1617722479047092453, guid: 1d9e1c1b6881e06499b0174cb6684aa2, type: 3}
       propertyPath: m_SizeDelta.x
-      value: 0
+      value: 464.8665
       objectReference: {fileID: 0}
     - target: {fileID: 1617722479047092453, guid: 1d9e1c1b6881e06499b0174cb6684aa2, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: 0
+      value: 232.43324
       objectReference: {fileID: 0}
     - target: {fileID: 1617722479047092453, guid: 1d9e1c1b6881e06499b0174cb6684aa2, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 0
+      value: -95.90775
       objectReference: {fileID: 0}
     - target: {fileID: 2287480760389495002, guid: 1d9e1c1b6881e06499b0174cb6684aa2, type: 3}
       propertyPath: m_AnchorMax.y
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 3627482285149250960, guid: 1d9e1c1b6881e06499b0174cb6684aa2, type: 3}
       propertyPath: m_Name
@@ -10259,27 +10259,27 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3627482285149250960, guid: 1d9e1c1b6881e06499b0174cb6684aa2, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5523184048581130127, guid: 1d9e1c1b6881e06499b0174cb6684aa2, type: 3}
       propertyPath: m_AnchorMax.y
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5523184048581130127, guid: 1d9e1c1b6881e06499b0174cb6684aa2, type: 3}
       propertyPath: m_AnchorMin.y
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5523184048581130127, guid: 1d9e1c1b6881e06499b0174cb6684aa2, type: 3}
       propertyPath: m_SizeDelta.x
-      value: 0
+      value: 464.8665
       objectReference: {fileID: 0}
     - target: {fileID: 5523184048581130127, guid: 1d9e1c1b6881e06499b0174cb6684aa2, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: 0
+      value: 232.43324
       objectReference: {fileID: 0}
     - target: {fileID: 5523184048581130127, guid: 1d9e1c1b6881e06499b0174cb6684aa2, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 0
+      value: -263.56726
       objectReference: {fileID: 0}
     - target: {fileID: 8813513747139997407, guid: 1d9e1c1b6881e06499b0174cb6684aa2, type: 3}
       propertyPath: m_Pivot.x
@@ -31708,7 +31708,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a884c86289546db44934b5714235468e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TooltipTrigger
-  message: UI_PlayerSkill_Buff
+  message: Player_ActiveSkill_AttackBuff
   isJust: 0
 --- !u!1001 &1434414286
 PrefabInstance:
@@ -48101,7 +48101,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a884c86289546db44934b5714235468e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TooltipTrigger
-  message: UI_PlayerSkill_Heal
+  message: Player_ActiveSkill_Heal
   isJust: 0
 --- !u!1001 &2133194459
 PrefabInstance:

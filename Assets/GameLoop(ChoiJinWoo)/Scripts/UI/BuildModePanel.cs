@@ -29,6 +29,13 @@ public class BuildModePanel : MonoBehaviour
         heroInventory.SetActive(false);
         classUpgradePanel.SetActive(false);
 
+        // classUpgradePanel/heroInventory는 전용 스크립트가 없는 순수 GameObject라, OnEnable/OnDisable로
+        // ExclusiveUiCoordinator에 알려줄 컴포넌트를 여기서 붙여준다(씬/프리팹을 직접 안 건드리기 위해).
+        if (classUpgradePanel.GetComponent<ExclusivePanelPresence>() == null)
+            classUpgradePanel.AddComponent<ExclusivePanelPresence>();
+        if (heroInventory.GetComponent<ExclusivePanelPresence>() == null)
+            heroInventory.AddComponent<ExclusivePanelPresence>();
+
         keyboard = Keyboard.current;
 
         // alsoSelf로 이 패널 전체(빌드모드 버튼들)를 넘겨서, 다른 버튼(예: 로스터)을 눌렀을 때

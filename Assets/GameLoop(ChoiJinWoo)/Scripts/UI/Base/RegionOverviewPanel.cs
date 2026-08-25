@@ -5,7 +5,7 @@ using UnityEngine.InputSystem;
 using UnityEngine.UI;
 using VContainer;
 
-public class RegionOverviewPanel : MonoBehaviour, IClosablePanel
+public class RegionOverviewPanel : MonoBehaviour, IClosablePanel, IExclusiveUiPanel
 {
     [SerializeField] private MapRegistry registry;
     [SerializeField] private RegionDetailPanel detailPanel;
@@ -98,6 +98,7 @@ public class RegionOverviewPanel : MonoBehaviour, IClosablePanel
 
     private void OnEnable()
     {
+        ExclusiveUiCoordinator.NotifyOpened(this);
         panelStack.Push(this);
         BindModules();
         Refresh();
@@ -105,6 +106,7 @@ public class RegionOverviewPanel : MonoBehaviour, IClosablePanel
 
     private void OnDisable()
     {
+        ExclusiveUiCoordinator.NotifyClosed(this);
         panelStack.Remove(this);
         UnbindModules();
 
@@ -190,6 +192,8 @@ public class RegionOverviewPanel : MonoBehaviour, IClosablePanel
     {
         gameObject.SetActive(false);
     }
+
+    public void RequestClose() => Close();
 
     private void Update()
     {

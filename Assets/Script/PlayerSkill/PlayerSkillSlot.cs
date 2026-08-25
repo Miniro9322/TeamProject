@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 // 스킬 버튼 하나에 대응하는 데이터. 히어로처럼 SO 카탈로그를 쓰지 않고 Hero.auraZonePrefabs와 같이
 // 직렬화된 리스트로 인스펙터에서 구성한다.

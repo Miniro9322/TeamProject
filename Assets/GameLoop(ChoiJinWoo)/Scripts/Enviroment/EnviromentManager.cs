@@ -1,6 +1,7 @@
 using UnityEngine;
 using Cysharp.Threading.Tasks;
 using System;
+using System.Threading;
 using VContainer;
 
 public class EnviromentManager : MonoBehaviour
@@ -78,6 +79,8 @@ public class EnviromentManager : MonoBehaviour
 
     private async UniTaskVoid TransitionRoutine(bool toNight)
     {
+        if (sunLight == null) return;
+
         Color startColor = sunLight.color;
         Color targetColor = toNight ? nightColor : dayColor;
 
@@ -87,9 +90,13 @@ public class EnviromentManager : MonoBehaviour
         Color startAmbient = RenderSettings.ambientLight;
         Color targetAmbient = toNight ? nightAmbient : dayAmbient;
 
+        CancellationToken cancellationToken = this.GetCancellationTokenOnDestroy();
+
         float elapsed = 0f;
         while (elapsed < transitionDuration)
         {
+            if (sunLight == null) return;
+
             elapsed += Time.unscaledDeltaTime;
             float t = elapsed / transitionDuration;
 
@@ -97,8 +104,10 @@ public class EnviromentManager : MonoBehaviour
             sunLight.intensity = Mathf.Lerp(startIntensity, targetIntensity, t);
             RenderSettings.ambientLight = Color.Lerp(startAmbient, targetAmbient, t);
 
-            await UniTask.Yield();
+            await UniTask.Yield(cancellationToken);
         }
+
+        if (sunLight == null) return;
 
         // 최종값 정확히 세팅
         sunLight.color = targetColor;
