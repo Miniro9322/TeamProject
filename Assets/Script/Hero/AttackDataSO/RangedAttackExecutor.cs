@@ -68,6 +68,7 @@ public class RangedAttackExecutor : IAttackExecutor
 
         for (int i = 0; i < targets.Count; i++)
         {
+            if (targets[i] == null) continue; // 볼리 도중 타겟이 먼저 죽었으면(다른 피해 등) 건너뛴다
             FireArrow(pool, ctx, targets[i].transform, damage, data);
             if (i < targets.Count - 1)
                 await UniTask.Delay(System.TimeSpan.FromSeconds(data.shotInterval), cancellationToken: ct);

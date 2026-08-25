@@ -9,7 +9,6 @@ public class HeroCheatSpawnUI : MonoBehaviour
     [SerializeField] private MapGame game;
     [SerializeField] private Transform listContent;
     [SerializeField] private HeroCheatListItem itemPrefab;
-    [SerializeField] private GameObject rosterPanel;
 
     private void OnEnable()
     {
@@ -77,6 +76,5 @@ public class HeroCheatSpawnUI : MonoBehaviour
         };
         game.CitizenManager.UseCitizenForHero(picked.PopulationCost);
         game.HeroRoster.Add(slot, picked, picked.PopulationCost);
-        if (!rosterPanel.activeSelf) rosterPanel.SetActive(true);
     }
 }

@@ -60,13 +60,11 @@ public class RegionDetailPanel : MonoBehaviour, IClosablePanel
         outsideCloser.MarkOpened();
     }
 
-    // buildChoicePanel/buildingPanel은 하이러키상 자식이 아니라 필드로만 참조되는 별도 패널이라,
-    // 그 안의 버튼을 눌러도 이 패널 입장에선 "바깥 클릭"으로 보인다. 둘 중 하나라도 열려있으면
-    // 바깥 클릭 판정은 그쪽(자기 자신 하위 트리는 자기가 챙김)에 맡기고 여기선 쉰다.
+    // buildChoicePanel/buildingPanel도 같은 UiPanelStack에 Push되는 패널이라, 둘 중 하나가 열리면
+    // 그게 스택 맨 위가 되어 IsTop(this)가 자연히 false가 된다 - 그쪽 Update()가 먼저 처리하고 여긴 쉰다.
     private void Update()
     {
-        if (buildChoicePanel.gameObject.activeSelf || buildingPanel.gameObject.activeSelf) return;
-        if (outsideCloser.ClickedOutside()) Close();
+        if (panelStack.IsTop(this) && outsideCloser.ShouldClose()) Close();
     }
 
     public void Open(RegionFacilitySlots target)

@@ -8,11 +8,11 @@ using UnityEngine.UI;
 public class UpgradeUI : MonoBehaviour
 {
     [SerializeField] private List<BaseUpgradeData> SystemUpgradeData;
-    [SerializeField] private List<GameObject> SystemUpgradeParent;
+    [SerializeField] private GameObject SystemUpgradeParent;
     [SerializeField] private List<BaseUpgradeData> FacilityUpgradeData;
-    [SerializeField] private List<GameObject> FacilityUpgradeParent;
+    [SerializeField] private GameObject FacilityUpgradeParent;
     [SerializeField] private List<BaseUpgradeData> HeroUpgradeData;
-    [SerializeField] private List<GameObject> HeroUpgradeParent;
+    [SerializeField] private GameObject HeroUpgradeParent;
     [SerializeField] private UpgradeInfoUI upgradeInfoPanel;
     [SerializeField] private BaseUpgradeButton buttonPrefab;
     [SerializeField] private TextMeshProUGUI pointsText;
@@ -23,19 +23,18 @@ public class UpgradeUI : MonoBehaviour
     [SerializeField] private int cheatAddPointsAmount = 100;
 
     private UpgradeState upgradeState;
-    private RectTransform rectTransform;
-    private int openedFrame;
+    private ClickOutsideCloser outsideCloser;
     private readonly Dictionary<BaseUpgradeData, BaseUpgradeButton> nodes = new();
 
     private void Awake()
     {
         upgradeState = new UpgradeState();
-        rectTransform = (RectTransform)transform;
+        outsideCloser = new ClickOutsideCloser((RectTransform)transform, openButtonRect);
     }
 
     private void OnEnable()
     {
-        openedFrame = Time.frameCount;
+        outsideCloser.MarkOpened();
     }
 
     private void Update()
@@ -46,21 +45,7 @@ public class UpgradeUI : MonoBehaviour
             RefreshAll();
         }
 
-        if (Keyboard.current.escapeKey.wasPressedThisFrame)
-        {
-            gameObject.SetActive(false);
-            return;
-        }
-
-        if (Time.frameCount == openedFrame) return; // 패널이 열린 바로 그 프레임의 클릭은 무시
-        if (!Mouse.current.leftButton.wasPressedThisFrame) return;
-
-        var point = Mouse.current.position.ReadValue();
-        bool insidePanel = RectTransformUtility.RectangleContainsScreenPoint(rectTransform, point, null);
-        bool onOpenButton = openButtonRect != null &&
-            RectTransformUtility.RectangleContainsScreenPoint(openButtonRect, point, null);
-
-        if (!insidePanel && !onOpenButton)
+        if (outsideCloser.ShouldClose())
         {
             gameObject.SetActive(false);
         }
@@ -76,20 +61,13 @@ public class UpgradeUI : MonoBehaviour
         OnNodeClicked(nodes.First().Key);
     }
 
-    private void CreateButton(List<BaseUpgradeData> datas, List<GameObject> parents)
+    private void CreateButton(List<BaseUpgradeData> datas, GameObject parents)
     {
-        int i = 0;
-
         foreach (var data in datas)
         {
-            var node = Instantiate(buttonPrefab, parents[i].transform);
-            ((RectTransform)node.transform).anchoredPosition = data.anchoredPosition;
+            var node = Instantiate(buttonPrefab, parents.transform);
             node.Clicked += OnNodeClicked;
             nodes[data] = node;
-            if (i < parents.Count - 1)
-                i++;
-            else
-                i = 0;
         }
     }
 
@@ -128,13 +106,7 @@ public class UpgradeUI : MonoBehaviour
     {
         upgradeState.ResetAll(nodes.Keys);
         RefreshAll();
-    }
-
-    // 디버그용 리셋 버튼의 OnClick에 연결 — 자원 환불 없이 해금 상태만 초기화
-    public void OnDebugResetButton()
-    {
-        upgradeState.DebugResetWithoutRefund();
-        RefreshAll();
+        upgradeInfoPanel.OnReset(CanUnlock(upgradeInfoPanel.Current));
     }
 
     public void OnClose()

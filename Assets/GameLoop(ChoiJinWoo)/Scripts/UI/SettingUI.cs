@@ -4,7 +4,6 @@ using System.Linq;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Audio;
-using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 public class SettingUI : MonoBehaviour
@@ -40,8 +39,18 @@ public class SettingUI : MonoBehaviour
         (systemVolume, "System"),
     };
 
+    [SerializeField] private RectTransform openButton; // 설정 패널을 여는 버튼 - alsoSelf로 넘겨야 열려있을 때 눌러도 꺼졌다 켜지는 깜빡임이 안 생긴다
+    private ClickOutsideCloser outsideCloser;
+
+    private void Awake()
+    {
+        outsideCloser = new ClickOutsideCloser((RectTransform)transform, openButton);
+    }
+
     private void OnEnable()
     {
+        outsideCloser.MarkOpened();
+
         //창 모드
         screenMode.ClearOptions();
 
@@ -130,7 +139,17 @@ public class SettingUI : MonoBehaviour
 
     private void Update()
     {
-        if(Keyboard.current.escapeKey.wasPressedThisFrame)
+        if (outsideCloser.ShouldClose())
+        {
+            gameObject.SetActive(false);
+        }
+
+        if (outsideCloser.ClickedOutside())
+        {
+            gameObject.SetActive(false);
+        }
+
+        if (outsideCloser.ClickedOutside())
         {
             gameObject.SetActive(false);
         }

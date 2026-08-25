@@ -33,4 +33,14 @@ public static class ResourceCostExtensions
         }
         return result;
     }
+
+    public static (ProductionType Type, int Amount)[] Multiply(this (ProductionType Type, int Amount)[] cost, int n)
+    {
+        var result = new (ProductionType, int)[cost.Length];
+        for (int i = 0; i < cost.Length; i++)
+        {
+            result[i] = (cost[i].Type, cost[i].Amount * n);
+        }
+        return result;
+    }
 }

@@ -77,15 +77,18 @@ public class FacilityBuildChoicePanel : MonoBehaviour, IClosablePanel
     }
 
     // 정보 패널 바깥(그러나 이 패널 안)을 클릭하면 정보 패널만 닫고, 이 패널 바깥을 클릭하면 이 패널 전체를 닫는다.
+    // 스택 맨 위일 때만 반응한다 - 내 위에 다른 패널이 떠 있으면 이 프레임엔 그쪽이 먼저 처리한다.
     private void Update()
     {
-        if (infoPanel.activeSelf && infoOutsideCloser.ClickedOutside())
+        if (!panelStack.IsTop(this)) return;
+
+        if (infoPanel.activeSelf && infoOutsideCloser.ShouldClose())
         {
             infoPanel.SetActive(false);
             return;
         }
 
-        if (outsideCloser.ClickedOutside()) Close();
+        if (outsideCloser.ShouldClose()) Close();
     }
 
     public void Open(RegionFacilitySlots target, int index)
