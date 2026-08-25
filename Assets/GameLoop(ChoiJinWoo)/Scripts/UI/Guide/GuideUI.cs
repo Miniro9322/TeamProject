@@ -1,16 +1,23 @@
 using System.Collections.Generic;
+using Cysharp.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class GuideUI : MonoBehaviour
 {
+    private const int ContentLeaveDelayMs = 80;
+
     [SerializeField] private List<SpecificGuide> gamePlayGuides;
     [SerializeField] private List<SpecificGuide> heroGuides;
     [SerializeField] private List<SpecificGuide> baseGuides;
     [SerializeField] private List<SpecificGuide> enemyGuides;
     [SerializeField] private Image guideImage;
     [SerializeField] private TextMeshProUGUI guideText;
+    [SerializeField] private Animator guideCopyAnimator;
+    [SerializeField] private Animator guidePictureAnimator;
+    [SerializeField] private GameObject shadeObject;
+    [SerializeField] private Animator shadeAnimator;
 
     private List<SpecificGuide> activatedButtons = new();
 
@@ -25,12 +32,13 @@ public class GuideUI : MonoBehaviour
 
     private void OnEnable()
     {
-        OnGamePlayGuide();
-        activatedButtons[0].GuideButton.onClick?.Invoke();
+        ShowShade();
+        OnGamePlayGuide(true);
     }
 
     private void OnDisable()
     {
+        HideShade();
         DisableButtons();
     }
 
@@ -44,7 +52,22 @@ public class GuideUI : MonoBehaviour
         gameObject.SetActive(false);
     }
 
-    public void OnGamePlayGuide()
+    // 배경 셰이드를 켜고 페이드인 연출을 재생한다
+    private void ShowShade()
+    {
+        if (shadeObject == null) return;
+        shadeObject.SetActive(true);
+        if (shadeAnimator != null) shadeAnimator.Play("FadeIn", -1, 0f);
+    }
+
+    // 배경 셰이드를 즉시 끈다
+    private void HideShade()
+    {
+        if (shadeObject == null) return;
+        shadeObject.SetActive(false);
+    }
+
+    public void OnGamePlayGuide(bool isInitialOpen = false)
     {
         DisableButtons();
 
@@ -55,7 +78,7 @@ public class GuideUI : MonoBehaviour
             activatedButtons.Add(guide);
         }
 
-        activatedButtons[0].GuideButton.onClick?.Invoke();
+        ShowSpecificGuide(activatedButtons[0], !isInitialOpen);
     }
 
     public void OnHeroGuide()
@@ -69,7 +92,7 @@ public class GuideUI : MonoBehaviour
             activatedButtons.Add(guide);
         }
 
-        activatedButtons[0].GuideButton.onClick?.Invoke();
+        ShowSpecificGuide(activatedButtons[0]);
     }
 
     public void OnBaseGuide()
@@ -83,7 +106,7 @@ public class GuideUI : MonoBehaviour
             activatedButtons.Add(guide);
         }
 
-        activatedButtons[0].GuideButton.onClick?.Invoke();
+        ShowSpecificGuide(activatedButtons[0]);
     }
 
     public void OnEnemyGuide()
@@ -97,7 +120,7 @@ public class GuideUI : MonoBehaviour
             activatedButtons.Add(guide);
         }
 
-        activatedButtons[0].GuideButton.onClick?.Invoke();
+        ShowSpecificGuide(activatedButtons[0]);
     }
 
     private void DisableButtons()
@@ -110,8 +133,42 @@ public class GuideUI : MonoBehaviour
 
         activatedButtons.Clear();
     }
-    
-    private void ShowSpecificGuide(SpecificGuide guide)
+
+    private void ShowSpecificGuide(SpecificGuide guide, bool playLeave = true)
+    {
+        UpdateItemSelection(guide);
+        PlayContentChangeAsync(guide, playLeave).Forget();
+    }
+
+    // 현재 카테고리 안에서 클릭한 항목만 선택 상태로 표시한다 (클릭 이펙트는 전역 ClickEffect가 담당)
+    private void UpdateItemSelection(SpecificGuide guide)
+    {
+        for (int i = 0; i < activatedButtons.Count; i++)
+        {
+            var target = activatedButtons[i];
+            target.GetComponent<GuideItemHighlight>().SetSelected(target == guide);
+        }
+    }
+
+    // 기존 내용을 퇴장시키고, 내용을 바꾼 뒤 새 내용을 등장시킨다 (처음 열 때는 퇴장 단계를 건너뛴다)
+    private async UniTaskVoid PlayContentChangeAsync(SpecificGuide guide, bool playLeave)
+    {
+        if (playLeave)
+        {
+            if (guideCopyAnimator != null) guideCopyAnimator.Play("Leave", -1, 0f);
+            if (guidePictureAnimator != null) guidePictureAnimator.Play("Leave", -1, 0f);
+
+            await UniTask.Delay(ContentLeaveDelayMs);
+        }
+
+        ApplyGuideContent(guide);
+
+        if (guideCopyAnimator != null) guideCopyAnimator.Play("Arrive", -1, 0f);
+        if (guidePictureAnimator != null) guidePictureAnimator.Play("Arrive", -1, 0f);
+    }
+
+    // 가이드 이미지와 본문 텍스트를 실제로 교체한다
+    private void ApplyGuideContent(SpecificGuide guide)
     {
         if (guide.GuideImage == null)
             guideImage.gameObject.SetActive(false);
