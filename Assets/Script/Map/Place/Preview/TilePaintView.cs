@@ -11,6 +11,7 @@ public class TilePaintView : MonoBehaviour
     [SerializeField] private float edgeWidth = 0.06f;
     [SerializeField] private float edgeLift = 0.025f;
     [SerializeField] private Material campfireEdgeMat;
+    [SerializeField] private Material hoverEdgeMat;
 
     // MapAssemble이 조립 시점에 넣어준다.
     public TilePaintSync sync;
@@ -20,6 +21,7 @@ public class TilePaintView : MonoBehaviour
     private readonly List<Tile> cellPainted = new();
     private PlaceEdgeView edgeView;
     private CampfireEdgeView campfireEdgeView;
+    private HoverEdgeView hoverEdgeView;
 
     // 외곽선 출력기와 대상 맵 보드를 준비합니다.
     public void SetupEdges(List<MapBoard> boards)
@@ -27,6 +29,7 @@ public class TilePaintView : MonoBehaviour
         edgeView = new PlaceEdgeView(transform, edgeMat, edgeWidth, edgeLift);
         edgeView.Setup(boards);
         campfireEdgeView = new CampfireEdgeView(transform, campfireEdgeMat, edgeWidth, edgeLift);
+        hoverEdgeView = new HoverEdgeView(transform, hoverEdgeMat, edgeWidth, edgeLift);
     }
 
     private void Update()
@@ -39,6 +42,7 @@ public class TilePaintView : MonoBehaviour
         bool changed = sync.TryBuildPlan(out List<PaintEntry> plan);
         ShowEdges();
         ShowCampfireEdges();
+        ShowHoverEdge();
 
         if (changed)
         {
@@ -65,11 +69,21 @@ public class TilePaintView : MonoBehaviour
         }
     }
 
+    // 커서 아래 타일의 테두리를 표시합니다.
+    private void ShowHoverEdge()
+    {
+        if (hoverEdgeView != null)
+        {
+            hoverEdgeView.Show(sync.HoverTile);
+        }
+    }
+
     // 생성한 외곽선 출력기를 정리합니다.
     private void OnDestroy()
     {
         edgeView?.Dispose();
         campfireEdgeView?.Dispose();
+        hoverEdgeView?.Dispose();
     }
 
     private void RestoreCells()
