@@ -480,7 +480,6 @@ public class SpawnerManager : MonoBehaviour
             guardPanel?.SetActive(true);
             Time.timeScale = 0f;
             isDirecting = true;
-
             if (directingUi != null)
             {
                 // 기본 Normal 모드는 timeScale을 따라가므로 얼린 동안 재생되게 언스케일드로 전환.
@@ -488,6 +487,7 @@ public class SpawnerManager : MonoBehaviour
                 directingUi.Rebind();   // 재사용되는 오브젝트라 지난 연출 끝난 지점이 아니라 처음부터 다시 재생
                 directingUi.Update(0f);
                 directingUi.SetTrigger(directingStateName);
+                EnemySoundManager.Play("Warning!");
                 await WaitForDirectingAnim(directingUi, directingStateName, directingTimeout, token);
             }
         }
@@ -501,6 +501,7 @@ public class SpawnerManager : MonoBehaviour
             Time.timeScale = savedTimeScale;
             guardPanel?.SetActive(false);
             isDirecting = false;
+            // EnemySoundManager.PlayBgm("BossBGM");
         }
     }
 

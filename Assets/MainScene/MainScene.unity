@@ -5508,7 +5508,14 @@ MonoBehaviour:
   infoOpenButton: {fileID: 158157035}
   infoCloseButton: {fileID: 1091409379}
   archiveList: {fileID: 1091409381}
-  closeWhenOpened: []
+  closeWhenOpened:
+  - {fileID: 196020502}
+  - {fileID: 2001846024}
+  - {fileID: 1575621191}
+  - {fileID: 1309041908}
+  - {fileID: 1128999294}
+  - {fileID: 1964387338}
+  - {fileID: 627099352}
 --- !u!4 &250356135
 Transform:
   m_ObjectHideFlags: 0
@@ -23016,6 +23023,10 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 2995027033719828909, guid: 865cda3f22202bb4d9e7a1cf6c336086, type: 3}
+      propertyPath: m_SortingOrder
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 3060462579655650006, guid: 865cda3f22202bb4d9e7a1cf6c336086, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5
@@ -28989,7 +29000,7 @@ Canvas:
   m_AdditionalShaderChannelsFlag: 0
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
-  m_SortingOrder: 1
+  m_SortingOrder: 0
   m_TargetDisplay: 0
 --- !u!114 &1311540849
 MonoBehaviour:
