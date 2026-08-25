@@ -1241,6 +1241,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TooltipTrigger
   message: ToolTip_Remove
+  isJust: 0
 --- !u!114 &64402129
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2099,6 +2100,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TooltipTrigger
   message: ToolTip_Stone
+  isJust: 0
 --- !u!114 &100636384
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3011,6 +3013,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TooltipTrigger
   message: ToolTip_Cancel
+  isJust: 0
 --- !u!114 &154819805
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3158,6 +3161,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TooltipTrigger
   message: ToolTip_MonsterBook
+  isJust: 0
 --- !u!114 &158157035
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4157,6 +4161,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TooltipTrigger
   message: ToolTip_Hp
+  isJust: 0
 --- !u!114 &193534643
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5839,6 +5844,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TooltipTrigger
   message: ToolTip_Gold
+  isJust: 0
 --- !u!114 &257395554
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -9572,6 +9578,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TooltipTrigger
   message: ToolTip_Wood
+  isJust: 0
 --- !u!114 &463585027
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -10986,6 +10993,7 @@ GameObject:
   - component: {fileID: 544139260}
   - component: {fileID: 544139259}
   - component: {fileID: 544139258}
+  - component: {fileID: 544139261}
   m_Layer: 5
   m_Name: Button
   m_TagString: Untagged
@@ -11094,6 +11102,20 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 544139256}
   m_CullTransparentMesh: 1
+--- !u!114 &544139261
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 544139256}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a884c86289546db44934b5714235468e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TooltipTrigger
+  message: 
+  isJust: 1
 --- !u!1001 &544477811
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -14826,6 +14848,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TooltipTrigger
   message: Tooltip_Hero_Inventory
+  isJust: 0
 --- !u!114 &726167672
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -14973,6 +14996,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TooltipTrigger
   message: ToolTip_Replace
+  isJust: 0
 --- !u!114 &730561565
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -18912,6 +18936,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TooltipTrigger
   message: ToolTip_Food
+  isJust: 0
 --- !u!114 &911041578
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -19216,6 +19241,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TooltipTrigger
   message: ToolTip_heroCitizen
+  isJust: 0
 --- !u!114 &917270388
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -19943,6 +19969,7 @@ GameObject:
   - component: {fileID: 943907946}
   - component: {fileID: 943907945}
   - component: {fileID: 943907944}
+  - component: {fileID: 943907947}
   m_Layer: 5
   m_Name: Button (2)
   m_TagString: Untagged
@@ -20051,6 +20078,20 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 943907942}
   m_CullTransparentMesh: 1
+--- !u!114 &943907947
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 943907942}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a884c86289546db44934b5714235468e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TooltipTrigger
+  message: 
+  isJust: 1
 --- !u!1 &948196456
 GameObject:
   m_ObjectHideFlags: 0
@@ -22341,6 +22382,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TooltipTrigger
   message: ToolTip_curmaxCitizen
+  isJust: 0
 --- !u!114 &1066152998
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -29377,6 +29419,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TooltipTrigger
   message: ToolTip_Upgrade
+  isJust: 0
 --- !u!114 &1343095048
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -32276,6 +32319,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TooltipTrigger
   message: ToolTip_Special
+  isJust: 0
 --- !u!114 &1457922593
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -34050,6 +34094,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TooltipTrigger
   message: ToolTip_HeroIcon
+  isJust: 0
 --- !u!114 &1550034622
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -36426,6 +36471,7 @@ GameObject:
   - component: {fileID: 1675238886}
   - component: {fileID: 1675238885}
   - component: {fileID: 1675238884}
+  - component: {fileID: 1675238887}
   m_Layer: 5
   m_Name: Button (1)
   m_TagString: Untagged
@@ -36534,6 +36580,20 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1675238882}
   m_CullTransparentMesh: 1
+--- !u!114 &1675238887
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1675238882}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a884c86289546db44934b5714235468e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TooltipTrigger
+  message: 
+  isJust: 1
 --- !u!1001 &1678518344
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -36662,6 +36722,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TooltipTrigger
   message: ToolTip_Upgrade
+  isJust: 0
 --- !u!114 &1680791097
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -37827,6 +37888,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TooltipTrigger
   message: ToolTip_BaseOpen
+  isJust: 0
 --- !u!222 &1711542350
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -38748,6 +38810,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TooltipTrigger
   message: ToolTip_NightButton
+  isJust: 0
 --- !u!114 &1760085483
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -39660,17 +39723,17 @@ MonoBehaviour:
   entries:
   - button: {fileID: 544139258}
     skill:
-      skillName: 
+      skillDescKey: Player_ActiveSkill_AttackBuff
       zonePrefab: {fileID: 4269708727165565049, guid: 379d90c5dc506c14aa70f8eab49b6808, type: 3}
       manaCost: 80
   - button: {fileID: 1675238884}
     skill:
-      skillName: 
+      skillDescKey: Player_ActiveSkill_EnemySlow
       zonePrefab: {fileID: 4269708727165565049, guid: b222b0d2981a5984bb6b067c87058298, type: 3}
       manaCost: 50
   - button: {fileID: 943907944}
     skill:
-      skillName: 
+      skillDescKey: Player_ActiveSkill_Heal
       zonePrefab: {fileID: 4269708727165565049, guid: bf1f9763cd6d56d468560faf6d1a0d61, type: 3}
       manaCost: 60
   manaBar: {fileID: 1651629285}
@@ -41594,6 +41657,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TooltipTrigger
   message: ToolTip_Iron
+  isJust: 0
 --- !u!114 &1884736022
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -48002,6 +48066,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TooltipTrigger
   message: ToolTip_canUseCitizen
+  isJust: 0
 --- !u!114 &2125165711
 MonoBehaviour:
   m_ObjectHideFlags: 0
