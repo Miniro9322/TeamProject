@@ -40,10 +40,7 @@ public class RegionDetailPanel : MonoBehaviour, IClosablePanel
         if (closeButton != null) closeButton.onClick.AddListener(Close);
         buildChoicePanel.gameObject.SetActive(false);
         buildingPanel.gameObject.SetActive(false);
-        // 지역 노드 버튼(RegionOverviewPanel 소속)을 눌러 다른 지역으로 옮겨갈 때, 그 클릭이 "바깥
-        // 클릭"으로 잡혀 Close()가 먼저 불리고 곧이어 Open()이 다시 켜는 깜빡임을 막는다.
-        // 오버뷰 전체가 아니라 노드 버튼들만 예외로 둔다 - 오버뷰는 화면 전체를 덮고 있어서 전체를
-        // 예외로 두면 진짜 바깥 클릭(닫기)까지 다 막혀버린다.
+
         Transform[] nodeTransforms = null;
         if (overviewPanel != null)
         {
@@ -58,6 +55,7 @@ public class RegionDetailPanel : MonoBehaviour, IClosablePanel
     {
         panelStack.Push(this);
         outsideCloser.MarkOpened();
+        LocalizeTextManager.OnLanguageChanged += Refresh;
     }
 
     // buildChoicePanel/buildingPanel도 같은 UiPanelStack에 Push되는 패널이라, 둘 중 하나가 열리면
@@ -103,6 +101,7 @@ public class RegionDetailPanel : MonoBehaviour, IClosablePanel
     private void OnDisable()
     {
         panelStack.Remove(this);
+        LocalizeTextManager.OnLanguageChanged -= Refresh;
 
         UnsubscribeOpenOccupant();
 
@@ -138,18 +137,21 @@ public class RegionDetailPanel : MonoBehaviour, IClosablePanel
                 continue;
             }
 
+            string label = "";
             string level = "";
             string workers = "";
             if (slot.Occupant is ProductionFacility facility)
             {
-                level = $"Lv.{facility.UpgradeCount}";
+                label = facility.BasicValue.FacilityDisplayName;
+                level = string.Format(DataTableManager.StringTable.Get("Ui_LevelFormat"), facility.UpgradeCount);
                 workers = $"{facility.WorkerAmount}/{facility.MaxWorker}";
             }
             else if (slot.Occupant is House house)
             {
-                level = $"Lv.{house.UpgradeCount}";
+                label = house.Config.HouseDisplayName;
+                level = string.Format(DataTableManager.StringTable.Get("Ui_LevelFormat"), house.UpgradeCount);
             }
-            slotViews[i].ShowBuilt(slot.Icon, slot.Label, level, workers);
+            slotViews[i].ShowBuilt(slot.Icon, label, level, workers);
         }
     }
 

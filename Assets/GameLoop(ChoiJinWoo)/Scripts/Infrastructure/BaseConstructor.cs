@@ -50,7 +50,7 @@ public class BaseConstructor
         built = option.kind == OccupantKind.Resource ? BuildFacility(option) : BuildHouse(option);
         if (built == null) return false;
 
-        region.TryAssign(slotIndex, built, option.icon, option.DisplayName);
+        region.TryAssign(slotIndex, built, option.icon);
         Built?.Invoke(built);
         return true;
     }
@@ -76,7 +76,7 @@ public class BaseConstructor
             ? RestoreFacility(option, save)
             : RestoreHouse(option, save);
 
-        region.TryAssign(save.slotIndex, built, option.icon, option.DisplayName);
+        region.TryAssign(save.slotIndex, built, option.icon);
         return built;
     }
 

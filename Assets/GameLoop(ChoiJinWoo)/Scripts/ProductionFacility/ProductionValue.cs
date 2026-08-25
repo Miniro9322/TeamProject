@@ -6,10 +6,14 @@ public class ProductionValue : ScriptableObject
 {
     [Header("생산하는 자원 종류")]
     [SerializeField] private ProductionType type;
-    [Header("건물 이름")]
+    [Header("건물 이름 (저장 데이터 식별자 - 변경 금지)")]
     [SerializeField] private string facilityName;
-    [Header("건물 설명")]
+    [Header("건물 설명 (미사용 - 표시는 StringTable 키를 통해서 한다)")]
     [SerializeField] private string facilityInfo;
+    [Header("건물 이름 StringTable 키")]
+    [SerializeField] private string facilityNameKey;
+    [Header("건물 설명 StringTable 키")]
+    [SerializeField] private string facilityInfoKey;
     [Header("초기 자원 생산량")]
     [SerializeField] private int defaultAmount;
     [Header("생산 건물 초기 내구도")]
@@ -33,8 +37,10 @@ public class ProductionValue : ScriptableObject
     public int DefaultAmount => defaultAmount;
     public int DefaultHp => defaulthp;
     public int DefaultMaxWorker => defaultMaxWorker;
-    public string FacilityName => facilityName;
+    public string FacilityName => facilityName; // 저장 데이터의 buildKey로도 쓰인다 - 표시용이 아니다
     public string FacilityInfo => facilityInfo;
+    public string FacilityDisplayName => DataTableManager.StringTable.Get(facilityNameKey);
+    public string FacilityDisplayInfo => DataTableManager.StringTable.Get(facilityInfoKey);
     public (ProductionType Type, int Amount)[] ConstructProduct => constructCost.ToNegatedCostArray();
 
     public (ProductionType Type, int Amount)[] UpgradeCost => upgradeCost.ToNegatedCostArray();

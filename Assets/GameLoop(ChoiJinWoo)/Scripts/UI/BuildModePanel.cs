@@ -88,16 +88,16 @@ public class BuildModePanel : MonoBehaviour
 
         if (keyboard == null) return;
 
-        if (keyboard[upgradeKey].wasPressedThisFrame)
+        if (keyboard[upgradeKey].wasPressedThisFrame && !TutorialInputGate.BlockHotkeys)
             OnClassUpgradeButton();
 
-        if (keyboard[replaceKey].wasPressedThisFrame)
+        if (keyboard[replaceKey].wasPressedThisFrame && !TutorialInputGate.BlockHotkeys)
             OnReplaceButton();
 
-        if (keyboard[removeKey].wasPressedThisFrame)
+        if (keyboard[removeKey].wasPressedThisFrame && !TutorialInputGate.BlockHotkeys)
             OnRemoveButton();
 
-        if (keyboard[inventoryKey].wasPressedThisFrame)
+        if (keyboard[inventoryKey].wasPressedThisFrame && !TutorialInputGate.BlockHotkeys)
             OnInventoryButton();
 
         if (!keyboard[closeKey].wasPressedThisFrame) return;
