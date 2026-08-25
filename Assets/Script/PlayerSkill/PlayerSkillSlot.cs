@@ -5,7 +5,7 @@ using UnityEngine;
 [System.Serializable]
 public class PlayerSkillSlot
 {
-    public string skillName;
+    public string skillDescKey;
     [Tooltip("PlayerGroundZoneEffect 컴포넌트가 붙은 프리팹 (PlayerBuffZone/PlayerDebuffZone/PlayerHealZone 등)")]
     public GameObject zonePrefab;
     public float manaCost = 10f;

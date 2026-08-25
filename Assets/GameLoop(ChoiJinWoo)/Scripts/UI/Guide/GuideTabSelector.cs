@@ -19,8 +19,6 @@ public class GuideTabSelector : MonoBehaviour
     [SerializeField] private Color selectedTextColor = Color.white;
     [SerializeField] private Color normalTextColor = new Color(0.196f, 0.196f, 0.196f);
 
-    [SerializeField] private GuideClickBurst clickBurst;
-
     // 시작할 때 게임 플레이 탭이 선택된 모습으로 맞춰둔다 (스파크 없이)
     private void Awake()
     {
@@ -54,15 +52,13 @@ public class GuideTabSelector : MonoBehaviour
         ApplySelection(enemyImage);
     }
 
-    // 선택된 탭만 강조하고 그 위치에 클릭 스파크를 띄운다
+    // 선택된 탭만 강조한다 (클릭 이펙트는 전역 ClickEffect가 담당)
     private void ApplySelection(Image selectedImage)
     {
         SetTabState(gamePlayImage, gamePlayText, selectedImage);
         SetTabState(heroImage, heroText, selectedImage);
         SetTabState(baseImage, baseText, selectedImage);
         SetTabState(enemyImage, enemyText, selectedImage);
-
-        if (clickBurst != null) clickBurst.SpawnAt(selectedImage.rectTransform);
     }
 
     // 탭 하나의 배경색과 글씨색을 선택 여부에 맞게 반영한다
