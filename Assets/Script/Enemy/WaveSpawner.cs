@@ -497,16 +497,28 @@ public class WaveSpawner : MonoBehaviour
         if (infoView != null) infoView.Begin();
         else text.text = string.Empty;
 
+        // 일반 웨이브와 증원을 한 덩어리로 합쳐서 센다.
+        // 증원을 "(증원)" 배지가 붙은 별도 줄로 띄우지 않는 이유: 플레이어에게 필요한 정보는
+        // "오늘 밤 이 몹이 몇 마리 오는가"뿐이라, 같은 몹이면 마릿수를 더하고
+        // 증원에만 나오는 몹은 일반 몹과 똑같은 [아이콘] x마릿수 모양으로 붙인다.
+        _stageCounts.Clear();
+        _stageOrder.Clear();
+
         foreach(var w in waveTable.GetWave(region,lookupId))
-            AddStageLine(w.MonsterName, GetScaleCount(w.Count, scale), null);
+            AccumulateStageCount(w.MonsterName, GetScaleCount(w.Count, scale));
 
         // 마릿수는 SpawnWave와 같이 배율 없는 원본 그대로 — 여기서 GetScaleCount를 붙이면
         // 팝업이 실제 스폰보다 많은 수를 알려준다.
         for (int tier = 0; tier < ReinforceTiers(unlockedRegionCount); tier++)
         {
             foreach (var w in waveTable.GetWave(region, ReinforceBaseId + tier))
-                AddStageLine(w.MonsterName, w.Count, "Ui_Add");
+                AccumulateStageCount(w.MonsterName, w.Count);
         }
+
+        for (int i = 0; i < _stageOrder.Count; i++)
+            AddStageLine(_stageOrder[i], _stageCounts[_stageOrder[i]], null);
+
+        // 보스는 합치지 않는다 — 그 밤이 보스전이라는 것 자체가 정보라 배지를 남긴다.
         if(currentstage>=10&&currentstage%10==0&&region==1)
         {
             foreach(var w in waveTable.GetWave(1,5001))
@@ -514,7 +526,25 @@ public class WaveSpawner : MonoBehaviour
         }
     }
 
-    // 적 한 종류를 한 줄로 추가. badgeKey: "Ui_Add"(증원) / "Ui_Boss"(보스) / null(일반).
+    // 같은 몹은 한 줄로 합치되 처음 나온 순서를 지킨다(표에 적은 순서 = 보여주고 싶은 순서).
+    // 매 클릭마다 Clear해서 재사용한다 — 팝업은 자주 열리는데 여기서 컬렉션을 새로 만들 이유가 없다.
+    private readonly List<string> _stageOrder = new();
+    private readonly Dictionary<string, int> _stageCounts = new();
+
+    private void AccumulateStageCount(string monsterName, int count)
+    {
+        if (string.IsNullOrEmpty(monsterName)) return;
+        if (_stageCounts.TryGetValue(monsterName, out int prev))
+        {
+            _stageCounts[monsterName] = prev + count;
+            return;
+        }
+        _stageCounts[monsterName] = count;
+        _stageOrder.Add(monsterName);
+    }
+
+    // 적 한 종류를 한 줄로 추가. badgeKey: "Ui_Boss"(보스) / null(일반).
+    // 증원은 배지를 달지 않고 일반 줄에 마릿수만 합쳐 넣는다(AccumulateStageCount).
     // WaveTable.MonsterName과 EnemyTable.Name은 같은 키라 그대로 조회한다(아이콘·설명도 이 키 기준).
     private void AddStageLine(string monsterName, int count, string badgeKey)
     {

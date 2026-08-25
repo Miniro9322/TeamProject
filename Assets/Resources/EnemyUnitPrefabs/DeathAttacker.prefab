@@ -411,8 +411,11 @@ MonoBehaviour:
   skills: []
   cloakSettings: {fileID: 0}
   attackClipLength: 0
-  burrowMarkerPrefab: {fileID: 0}
   burrowTimeout: 3
+  swimTimeout: 3
+  swimSpeedMultiplier: 1.5
+  swimTransitionPenaltyTiles: 0.7
+  logSwimPath: 0
   burrowEmergeStun: 2
   healthSlider: {fileID: 6861903171365447828}
   bossName: {fileID: 1373790909789830560}
@@ -427,7 +430,6 @@ MonoBehaviour:
   arriveSqr: 0.0004
   stunEffectAnchor: {fileID: 6414501957349388549}
   bodyEffectAnchor: {fileID: 4343748113633271435}
-  debuffEffectSet: {fileID: 11400000, guid: 12a3a83e3450b1e49aa05cd8066ecbdb, type: 2}
   immuneDebuffs: 0
   hp: 0
   speed: 0
@@ -10691,6 +10693,10 @@ PrefabInstance:
     - target: {fileID: 4590780138371232226, guid: 90aa17c579f243b439280f0ac8a3c00c, type: 3}
       propertyPath: m_Color.a
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4792199882972416968, guid: 90aa17c579f243b439280f0ac8a3c00c, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: -150
       objectReference: {fileID: 0}
     - target: {fileID: 5390474894884847597, guid: 90aa17c579f243b439280f0ac8a3c00c, type: 3}
       propertyPath: m_Pivot.x
