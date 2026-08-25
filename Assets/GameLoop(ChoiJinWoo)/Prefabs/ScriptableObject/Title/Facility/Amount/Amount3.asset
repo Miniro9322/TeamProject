@@ -14,10 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BaseUpgradeData
   id: Amount3
   displayName: Upgrade_FacilityAmount3_Name
-  icon: {fileID: 21300000, guid: 6437a06244763ae4b99da09e1760e9d5, type: 3}
+  icon: {fileID: 21300000, guid: 41cf9020d8ba74a6d836d27cbad90ec9, type: 3}
+  iconColor: {r: 1, g: 1, b: 1, a: 1}
   cost: 4
-  anchoredPosition: {x: -106, y: -88}
   description: Upgrade_FacilityAmount3_Desc
   prerequisites:
   - {fileID: 11400000, guid: 742cb699907d29b4aac75be9071c373f, type: 2}
   effectAmount: 10
+  isLast: 0

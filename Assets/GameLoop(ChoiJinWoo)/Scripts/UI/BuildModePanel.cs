@@ -5,12 +5,12 @@ using UnityEngine.UI;
 public class BuildModePanel : MonoBehaviour
 {
     [SerializeField] private GameObject heroPanel;
-    [SerializeField] private GameObject rosterPanel;
     //[SerializeField] private GameObject upgradePanel;
     [SerializeField] private GameObject classUpgradePanel;
     [SerializeField] private GameObject cheatPanel;
     [SerializeField] private HeroArchiveButton heroArchiveButton;
     [SerializeField] private GameObject heroInventory;
+    [SerializeField] private HeroCreateAmountController heroCreateAmountPanel;
     [SerializeField] private MapView view;
     [SerializeField] private MapGame game;
     [SerializeField] private Key closeKey = Key.Escape;
@@ -22,7 +22,6 @@ public class BuildModePanel : MonoBehaviour
     private void Awake()
     {
         heroPanel.SetActive(false);
-        rosterPanel.SetActive(false);
         heroInventory.SetActive(false);
         classUpgradePanel.SetActive(false);
 
@@ -30,7 +29,8 @@ public class BuildModePanel : MonoBehaviour
 
         // alsoSelf로 이 패널 전체(빌드모드 버튼들)를 넘겨서, 다른 버튼(예: 로스터)을 눌렀을 때
         // 그 클릭이 "바깥 클릭"으로 잡혀 heroPanel이 먼저 닫혔다가 onClick이 다시 여는 깜빡임을 막는다.
-        heroPanelCloser = new ClickOutsideCloser((RectTransform)heroPanel.transform, transform);
+        heroPanelCloser = new ClickOutsideCloser((RectTransform)heroPanel.transform, transform,
+            heroCreateAmountPanel != null ? (RectTransform)heroCreateAmountPanel.transform : null);
         inventoryCloser = new ClickOutsideCloser((RectTransform)heroInventory.transform, transform, (RectTransform)heroPanel.transform);
         classUpgradeCloser = new ClickOutsideCloser((RectTransform)classUpgradePanel.transform, transform, (RectTransform)classUpgradePanel.transform);
     }
@@ -64,6 +64,7 @@ public class BuildModePanel : MonoBehaviour
 
         if (keyboard == null) return;
         if (!keyboard[closeKey].wasPressedThisFrame) return;
+        if (TutorialInputGate.BlockEscapeClose) return;
 
         // 영웅 스킬 시전자 선택/플레이어 스킬 무장이 있으면 그것부터 취소한다(우클릭과 동일한 우선순위).
         if (view.HasArmedOrSelectedSkill)
@@ -79,12 +80,11 @@ public class BuildModePanel : MonoBehaviour
         {
             view.ClearMode();
         }
-        else if (heroPanel.activeSelf || rosterPanel.activeSelf || heroInventory.activeSelf || classUpgradePanel.activeSelf
+        else if (heroPanel.activeSelf || heroInventory.activeSelf || classUpgradePanel.activeSelf
             || (cheatPanel != null && cheatPanel.activeSelf)
             || (heroArchiveButton != null && heroArchiveButton.IsOpen))
         {
             heroPanel.SetActive(false);
-            rosterPanel.SetActive(false);
             heroInventory.SetActive(false);
             classUpgradePanel.SetActive(false);
             if (cheatPanel != null) cheatPanel.SetActive(false);
@@ -133,14 +133,6 @@ public class BuildModePanel : MonoBehaviour
         }
     }
 
-    public void OnRosterButton()
-    {
-        if(rosterPanel.activeSelf)
-            rosterPanel.SetActive(false);
-        else
-            rosterPanel.SetActive(true);
-    }
-
     public void OnRemoveButton()
     {
         if (view.IsRemoving)
@@ -165,10 +157,20 @@ public class BuildModePanel : MonoBehaviour
         }
         else
         {
-            heroInventory.SetActive(true);
-            inventoryCloser.MarkOpened();
-            if (classUpgradePanel.activeSelf) classUpgradePanel.SetActive(false);
+            OpenInventory();
         }
+    }
+
+    // HeroSetPanel이 영웅 생성 직후 바로 장비를 끼울 수 있게 열 때 쓴다 - 토글이 아니라 항상 "열림"
+    // 상태로만 만든다. inventoryCloser.MarkOpened()를 반드시 거쳐야 그 프레임의 클릭(생성 버튼 클릭
+    // 등)이 "바깥 클릭"으로 오판돼 열리자마자 닫히는 깜빡임이 안 생긴다.
+    public void OpenInventory()
+    {
+        if (heroInventory.activeSelf) return;
+
+        heroInventory.SetActive(true);
+        inventoryCloser.MarkOpened();
+        if (classUpgradePanel.activeSelf) classUpgradePanel.SetActive(false);
     }
 
     public void OnClassUpgradeButton()

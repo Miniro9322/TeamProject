@@ -19,7 +19,9 @@ public class HeroSkillState : HeroState
     public override void Enter()
     {
         finished = false;
-        cts = new CancellationTokenSource();
+        // HeroAttackState와 동일한 이유 - Exit()이 안 불려도(씬 전환/영웅 파괴) 스킬 실행이
+        // 알아서 취소되도록 UniTask의 파괴 토큰과 묶는다.
+        cts = CancellationTokenSource.CreateLinkedTokenSource(hero.GetCancellationTokenOnDestroy());
         Run().Forget();
     }
 

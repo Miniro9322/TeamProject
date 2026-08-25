@@ -21,6 +21,10 @@ public class SlotSelectPanel : MonoBehaviour
     [SerializeField] private Button closeButton;
     [SerializeField] private ConfirmPopup confirmPopup;
     [SerializeField] private ScrollRect scrollRect;
+    [SerializeField] private RectTransform newGameButton; // 이 패널을 여는 "새 게임" 버튼
+    [SerializeField] private RectTransform loadButton; // 이 패널을 여는 "불러오기" 버튼
+    // 위 두 버튼은 alsoSelf로 넘겨야 열려있는 상태에서 다시 눌렀을 때 "바깥 클릭"으로 잡혀
+    // Close()가 먼저 불리고 곧이어 OnNewGame/OnLoad의 토글 로직이 다시 여는 깜빡임이 안 생긴다.
 
     // 어떤 모드로 확인됐는지(새 게임/불러오기)를 같이 넘긴다 - TitleUI가 새 게임일 때만
     // 씬 전환 전에 튜토리얼 선택 화면을 끼워 넣어야 해서 구분이 필요하다.
@@ -32,13 +36,21 @@ public class SlotSelectPanel : MonoBehaviour
     private readonly List<SlotRowView> spawnedRows = new List<SlotRowView>();
 
     private SlotSelectMode mode;
+    public SlotSelectMode Mode => mode;
     private Keyboard keyboard;
+    private ClickOutsideCloser outsideCloser;
 
     // 닫기 버튼에 실행 메서드를 연결한다.
     private void Awake()
     {
         closeButton.onClick.AddListener(OnClose);
         keyboard = Keyboard.current;
+        outsideCloser = new ClickOutsideCloser((RectTransform)transform, newGameButton, loadButton);
+    }
+
+    private void OnEnable()
+    {
+        outsideCloser.MarkOpened();
     }
 
     // TitleUI가 만든 리더를 그대로 받아 쓴다 (자기 것을 새로 안 만듦).
@@ -47,19 +59,26 @@ public class SlotSelectPanel : MonoBehaviour
         previewReader = reader;
     }
 
-    // ESC: 가장 위에 떠 있는 창 한 겹만 닫는다 (확인 팝업 > 불러오기 방식 팝업 > 일차 선택 패널 > 슬롯 선택 패널 순).
+    // ESC와 바깥 클릭을 같은 창구(ShouldClose)로 묶어서, 가장 위에 떠 있는 창 한 겹만 닫는다
+    // (확인 팝업이 떠 있으면 그것부터, 아니면 슬롯 선택 패널 자체를).
     private void Update()
     {
+        if (outsideCloser.ClickedOutside())
+        {
+            // 확인 팝업이 떠 있으면 바깥 클릭도 ESC와 동일하게 팝업만 먼저 닫는다.
+            if (confirmPopup.gameObject.activeSelf)
+                confirmPopup.Cancel();
+            else
+                OnClose();
+        }
+
         if (keyboard == null) return;
         if (!keyboard.escapeKey.wasPressedThisFrame) return;
 
         if (confirmPopup.gameObject.activeSelf)
-        {
             confirmPopup.Cancel();
-            return;
-        }
-
-        OnClose();
+        else
+            OnClose();
     }
 
     // 새 게임 모드로 전체 슬롯 목록을 연다.

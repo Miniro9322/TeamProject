@@ -58,8 +58,8 @@ public class EnemyArchiveManager : MonoBehaviour
         hidePanal.gameObject.SetActive(false);
         ResetCts();
         infoOpenButton.onClick.AddListener(OnClickOpenArchive);
-        infoCloseButton.onClick.AddListener(OnClickCloseArchive); // 닫기 창구 통일
-        hidePanal.onClick.AddListener(OnClickCloseArchive);        // 여기서 한 번만 등록(열 때마다 누적 방지)
+        infoCloseButton.onClick.AddListener(OnClickCloseArchive); // 닫기 버튼: 튜토리얼 중에도 항상 동작
+        hidePanal.onClick.AddListener(OnClickOutsideClose);        // 바깥 클릭: ESC와 동일하게 튜토리얼 가드 적용, 여기서 한 번만 등록(열 때마다 누적 방지)
         // 버튼 라벨을 코드가 채우므로 LocalizeText가 없다 → 언어 전환 이벤트를 직접 받아 갱신한다.
 
     }
@@ -116,6 +116,7 @@ public class EnemyArchiveManager : MonoBehaviour
     {
         if (Keyboard.current == null) return;
         if(Time.timeScale==0)return;
+        if (TutorialInputGate.BlockEscapeClose) return;
         if (Keyboard.current.escapeKey.wasPressedThisFrame&&isOpenCheck)
             OnClickCloseArchive();   // 동일 닫기 창구 재사용
     }
@@ -129,6 +130,13 @@ public class EnemyArchiveManager : MonoBehaviour
 
         if (!restoreLastPage) return;
         if (TryGetArchiveList(out EnemyArchive list)) list.ShowLastOrDefault();
+    }
+    // 바깥 클릭(hidePanal) 전용 - ESC와 동일하게 튜토리얼 강제 진행 중엔 막는다.
+    // 명시적 닫기 버튼(infoCloseButton)은 이 가드를 안 거치고 OnClickCloseArchive를 직접 부른다.
+    private void OnClickOutsideClose()
+    {
+        if (TutorialInputGate.BlockEscapeClose) return;
+        OnClickCloseArchive();
     }
     // 버튼/판넬/ESC 공용 닫기 창구 — 진행 중이던 열기 코루틴을 취소하고 닫는다(동시 실행 방지)
     private void OnClickCloseArchive()

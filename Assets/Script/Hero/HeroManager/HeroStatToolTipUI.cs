@@ -34,17 +34,28 @@ public class HeroStatToolTipUI : MonoBehaviour
 
     public void Show(HeroRosterEntry heroEntry, Vector2 screenPosition)
     {
-        if (heroEntry.PlacedUnit == null || heroEntry.PlacedUnit.GetComponent<Hero>() is not Hero hero) return;
+        if (heroEntry.PlacedUnit != null && heroEntry.PlacedUnit.GetComponent<Hero>() is Hero hero)
+        {
+            StatContainer stat = hero.SC;
+            hpStatus.text = $"{(int)stat[StatType.HP]}";
+            atkStatus.text = $"{stat[StatType.ATK]:F3}";
+            defStatus.text = $"{stat[StatType.DEF]:F3}";
+            asStatus.text = $"{stat[StatType.AS]:F3}";
+            blkStatus.text = $"{(int)stat[StatType.BLK]}";
+        }
+        else
+        {
+            var stats = HeroStatManager.GetAll(heroEntry.Data);
+            hpStatus.text = $"{(int)stats[StatType.HP]}";
+            atkStatus.text = $"{stats[StatType.ATK]:F3}";
+            defStatus.text = $"{stats[StatType.DEF]:F3}";
+            asStatus.text = $"{stats[StatType.AS]:F3}";
+            blkStatus.text = $"{(int)stats[StatType.BLK]}";
+        }
 
         SetPosition(screenPosition);
         nameText.text = DataTableManager.StringTable.Get(heroEntry.Data.HeroNameKey);
-        StatContainer stat = hero.SC;
-        hpStatus.text = stat[StatType.HP].ToString();
-        atkStatus.text = stat[StatType.ATK].ToString();
-        defStatus.text = stat[StatType.DEF].ToString();
-        asStatus.text = stat[StatType.AS].ToString();
-        blkStatus.text = stat[StatType.BLK].ToString();
-
+        
         panel.gameObject.SetActive(true);
         canvasGroup.alpha = 1f;
     }

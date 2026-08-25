@@ -11,20 +11,12 @@ public enum RangeQueryAffinity { Enemy, TargetableEnemy, Ally }
 
 public class Hero : MonoBehaviour, IDamageAble, IUnit, IStunAble, IDebuffCarrier
 {
-    [SerializeField] private List<BaseUpgradeData> statUpgrades;
     [SerializeField] private HeroData heroData;
     public int Tier => heroData.Tier;
     public int UnitId => heroData.UnitId;
     public string HeroName => heroData.HeroName;
     public MergeKey MergeKey => heroData.MergeKey;
     public int HeroType => heroData.HeroType;
-
-    // 티어 단위로 공유되는 업그레이드 레벨(개체별로 갖지 않음) — HeroTierUpgradeState 참고.
-    public int Level => tierUpgradeState.GetLevel(Tier) + 1;
-    // 클래스(근거리/원거리) 단위로 공유되는 업그레이드 레벨 — HeroClassUpgradeState 참고.
-    public int ClassLevel => classUpgradeState.GetLevel(HeroType) + 1;
-
-    private UpgradeState UpgradeStateOrFallback => upgradeState ?? new UpgradeState();
 
     [Header("유닛 정보")]
     [SerializeField] private List<AttackDataSO> basePattern;
@@ -74,8 +66,8 @@ public class Hero : MonoBehaviour, IDamageAble, IUnit, IStunAble, IDebuffCarrier
 
     [SerializeField] private StatDataSO statData;
     public StatDataSO StatData => statData;
-    public float PreviewAttackPower => statData.attackPower + UpgradeStateOrFallback.GetTotalEffect(statUpgrades);
-    public float PreviewDefence => statData.defence + UpgradeStateOrFallback.GetTotalEffect(statUpgrades);
+    public float PreviewAttackPower => HeroStatManager.GetStat(heroData, StatType.ATK);
+    public float PreviewDefence => HeroStatManager.GetStat(heroData, StatType.DEF);
 
     [SerializeField] private MapBoard board;
     public MapBoard Board => board;
@@ -272,19 +264,12 @@ public class Hero : MonoBehaviour, IDamageAble, IUnit, IStunAble, IDebuffCarrier
     private ResourcesManager resourcesManager;
     protected BuffManager buffManager;
     public BuffManager Buffs => buffManager;
-    private UpgradeState upgradeState;
-    private HeroTierUpgradeState tierUpgradeState;
-    private HeroClassUpgradeState classUpgradeState;
-
     [Inject]
-    private void Construct(GameManager gameManager, BuffManager buffManager, ResourcesManager resourcesManager, UpgradeState upgradeState, HeroTierUpgradeState tierUpgradeState, HeroClassUpgradeState classUpgradeState)
+    private void Construct(GameManager gameManager, BuffManager buffManager, ResourcesManager resourcesManager)
     {
         this.gameManager = gameManager;
         this.buffManager = buffManager;
         this.resourcesManager = resourcesManager;
-        this.upgradeState = upgradeState;
-        this.tierUpgradeState = tierUpgradeState;
-        this.classUpgradeState = classUpgradeState;
     }
 
     public void Die()
@@ -324,11 +309,12 @@ public class Hero : MonoBehaviour, IDamageAble, IUnit, IStunAble, IDebuffCarrier
         stunState = new HeroStunState(this, stateMachine);
         stateMachine.Initialize(idleState);
 
-        sc.AddStat(StatType.HP, statData.maxHp);
-        sc.AddStat(StatType.ATK, statData.attackPower);
-        sc.AddStat(StatType.DEF, statData.defence);
-        sc.AddStat(StatType.BLK, statData.blockCount);
-        sc.AddStat(StatType.AS, statData.attackSpeed);
+        Dictionary<StatType, float> resolvedStats = HeroStatManager.GetAll(heroData);
+        sc.AddStat(StatType.HP, resolvedStats[StatType.HP]);
+        sc.AddStat(StatType.ATK, resolvedStats[StatType.ATK]);
+        sc.AddStat(StatType.DEF, resolvedStats[StatType.DEF]);
+        sc.AddStat(StatType.BLK, resolvedStats[StatType.BLK]);
+        sc.AddStat(StatType.AS, resolvedStats[StatType.AS]);
         currentHp = sc[StatType.HP];
         _bar.Setup(healthSlider, 10f);
         _bar.ResetTo(currentHp, sc[StatType.HP]);
@@ -364,12 +350,7 @@ public class Hero : MonoBehaviour, IDamageAble, IUnit, IStunAble, IDebuffCarrier
     protected virtual void Start()
     {
         SetCurrentTile();
-        ApplyStatUpgradeBonus();
-        ApplyTierLevelBonus();
-        ApplyClassLevelBonus();
-        currentHp = sc[StatType.HP]; // 티어/클래스 업그레이드로 늘어난 최대체력을 스폰 시점부터 반영
-        tierUpgradeState.LevelChanged += OnTierLevelChanged;
-        classUpgradeState.LevelChanged += OnClassLevelChanged;
+        HeroStatManager.StatsChanged += RefreshBaseStats;
         if (gameManager != null)
         {
             gameManager.ChangeToDay += Resurrection;
@@ -388,58 +369,18 @@ public class Hero : MonoBehaviour, IDamageAble, IUnit, IStunAble, IDebuffCarrier
             SpawnGroundZone(prefab, transform.position, followOwner: true);
     }
 
-    private static readonly object StatUpgradeBonusSource = new object();
-
-    // ApplyTierLevelBonus와 같은 이유로 멱등해야 한다 — 풀링된 유닛을 재사용할 때(PrepareForSpawn)
-    // 다시 호출되므로, source를 인스턴스(this)가 아니라 고정 오브젝트로 둬 재호출 시 이전 modifier를
-    // 정확히 지우고 다시 얹을 수 있게 한다.
-    private void ApplyStatUpgradeBonus()
+    // 업그레이드(talent+티어+클래스)가 반영된 기본 스탯은 HeroStatManager가 HeroData 단위로 미리
+    // 계산해 캐싱해둔다 — 여기서는 그 값을 SetBaseValue로 얹기만 한다. AddStat이 아니라 SetBaseValue를
+    // 쓰는 이유: AddStat은 Stat을 새로 만들어 진행 중인 버프 Modifier까지 날려버리지만, SetBaseValue는
+    // baseValue만 바꾸고 버프 Modifier는 그대로 둔다.
+    private void RefreshBaseStats()
     {
-        sc.RemoveModifier(StatUpgradeBonusSource);
-        if (upgradeState == null) return;
-
-        float bonus = upgradeState.GetTotalEffect(statUpgrades);
-        if (bonus == 0f) return;
-
-        sc.AddModifier(StatType.ATK, new Modifier(ModifierType.Additive, bonus, 0f, StatLayer.Equip, StatUpgradeBonusSource));
-        sc.AddModifier(StatType.DEF, new Modifier(ModifierType.Additive, bonus, 0f, StatLayer.Equip, StatUpgradeBonusSource));
-    }
-
-    private static readonly object TierLevelBonusSource = new object();
-
-    private void ApplyTierLevelBonus()
-    {
-        sc.RemoveModifier(TierLevelBonusSource);
-        int extraLevels = tierUpgradeState.GetLevel(Tier);
-        if (extraLevels <= 0) return;
-
-        foreach (var gain in tierUpgradeState.GetStatGains(Tier))
-            sc.AddModifier(gain.statType, new Modifier(gain.modifierType, gain.amountPerLevel * extraLevels, 0f, StatLayer.Equip, TierLevelBonusSource));
-    }
-
-    private void OnTierLevelChanged(int changedTier)
-    {
-        if (changedTier != Tier) return;
-        ApplyTierLevelBonus();
-        if (!isDead) currentHp = sc[StatType.HP]; // 업그레이드로 최대체력이 늘어난 만큼 낮이니 그냥 전부 채운다
-    }
-
-    private static readonly object ClassLevelBonusSource = new object();
-
-    private void ApplyClassLevelBonus()
-    {
-        sc.RemoveModifier(ClassLevelBonusSource);
-        int extraLevels = classUpgradeState.GetLevel(HeroType);
-        if (extraLevels <= 0) return;
-
-        foreach (var gain in classUpgradeState.GetStatGains(HeroType))
-            sc.AddModifier(gain.statType, new Modifier(gain.modifierType, gain.amountPerLevel * extraLevels, 0f, StatLayer.Equip, ClassLevelBonusSource));
-    }
-
-    private void OnClassLevelChanged(int changedHeroType)
-    {
-        if (changedHeroType != HeroType) return;
-        ApplyClassLevelBonus();
+        Dictionary<StatType, float> resolved = HeroStatManager.GetAll(heroData);
+        sc.SetBaseValue(StatType.HP, resolved[StatType.HP]);
+        sc.SetBaseValue(StatType.ATK, resolved[StatType.ATK]);
+        sc.SetBaseValue(StatType.DEF, resolved[StatType.DEF]);
+        sc.SetBaseValue(StatType.BLK, resolved[StatType.BLK]);
+        sc.SetBaseValue(StatType.AS, resolved[StatType.AS]);
         if (!isDead) currentHp = sc[StatType.HP]; // 업그레이드로 최대체력이 늘어난 만큼 낮이니 그냥 전부 채운다
     }
 
@@ -452,8 +393,7 @@ public class Hero : MonoBehaviour, IDamageAble, IUnit, IStunAble, IDebuffCarrier
             gameManager.ChangeToDay -= ResetSkillCooldown;
             gameManager.ChangeToDay -= NotifyDayStart;
         }
-        tierUpgradeState.LevelChanged -= OnTierLevelChanged;
-        classUpgradeState.LevelChanged -= OnClassLevelChanged;
+        HeroStatManager.StatsChanged -= RefreshBaseStats;
         debuffEffects.Reset();
         skillCts?.Cancel();
         skillCts?.Dispose();
@@ -735,10 +675,7 @@ public class Hero : MonoBehaviour, IDamageAble, IUnit, IStunAble, IDebuffCarrier
         isDead = false;
         stateMachine.ChangeState(idleState);
         anim.SetBool(HeroAnimHash.idle, true);
-        ApplyStatUpgradeBonus();
-        ApplyTierLevelBonus();
-        ApplyClassLevelBonus();
-        currentHp = sc[StatType.HP];
+        RefreshBaseStats();
         _bar.ResetTo(currentHp, sc[StatType.HP]);
         target = null;
         context.target = null;

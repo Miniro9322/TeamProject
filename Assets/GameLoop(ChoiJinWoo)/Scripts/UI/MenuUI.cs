@@ -27,7 +27,7 @@ public class MenuUI : MonoBehaviour
 
     private void Update()
     {
-        if (outsideCloser.ClickedOutside()) OnCloseButton();
+        if (outsideCloser.ShouldClose()) OnCloseButton();
     }
 
     public void OnCloseButton()

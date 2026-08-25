@@ -12,6 +12,7 @@ public class HeroRosterIcon : MonoBehaviour, IPointerClickHandler
 {
     [SerializeField] private Image icon;
     [SerializeField] private Button button;
+    [SerializeField] private Button retrieveButton;
     [SerializeField] private Image placedIcon;
     [SerializeField] private TextMeshProUGUI tierText;
     [SerializeField] private List<Sprite> classIcons;
@@ -24,6 +25,7 @@ public class HeroRosterIcon : MonoBehaviour, IPointerClickHandler
     private HeroRosterEntry entry;
     private Action<HeroRosterEntry, HeroRosterIcon> onClick;
     private Action<HeroRosterEntry> onDoubleClick;
+    private Action<HeroRosterEntry> onRetrieveClick;
     private CancellationTokenSource pendingSingleClickCts;
 
     // 풀로 반납되기 직전 호출. entry/콜백을 비워둬야 재활성화 직후(Set() 호출 전) 낡은 값을
@@ -34,6 +36,8 @@ public class HeroRosterIcon : MonoBehaviour, IPointerClickHandler
         entry = null;
         onClick = null;
         onDoubleClick = null;
+        onRetrieveClick = null;
+        if (retrieveButton != null) retrieveButton.onClick.RemoveAllListeners();
     }
 
     // Coroutine과 달리 UniTask.Delay는 GameObject 비활성화로 자동 취소되지 않으므로, 풀 반납이 아닌
@@ -47,11 +51,13 @@ public class HeroRosterIcon : MonoBehaviour, IPointerClickHandler
         pendingSingleClickCts = null;
     }
 
-    public void Set(HeroRosterEntry entry, Action<HeroRosterEntry, HeroRosterIcon> onClick, Action<HeroRosterEntry> onDoubleClick = null)
+    public void Set(HeroRosterEntry entry, Action<HeroRosterEntry, HeroRosterIcon> onClick,
+        Action<HeroRosterEntry> onDoubleClick = null, Action<HeroRosterEntry> onRetrieveClick = null)
     {
         this.entry = entry;
         this.onClick = onClick;
         this.onDoubleClick = onDoubleClick;
+        this.onRetrieveClick = onRetrieveClick;
 
         icon.sprite = entry.Icon;
         tierText.text = entry.Tier.ToString();
@@ -61,6 +67,15 @@ public class HeroRosterIcon : MonoBehaviour, IPointerClickHandler
         placedIcon.color = c;
         classIcon.sprite = classIcons[entry.Data.HeroType];
         statToolTipTrigger.SetData(entry);
+
+        // 회수 버튼: 콜백이 없으면(밤이거나 아직 안 넘겨주는 호출부) 아예 숨긴다. 배치된 영웅만 회수 대상.
+        if (retrieveButton != null)
+        {
+            bool canRetrieve = onRetrieveClick != null && entry.State == HeroRosterState.Placed;
+            retrieveButton.gameObject.SetActive(canRetrieve);
+            retrieveButton.onClick.RemoveAllListeners();
+            if (canRetrieve) retrieveButton.onClick.AddListener(() => onRetrieveClick(entry));
+        }
     }
 
     // 배치된 영웅의 실시간 체력 반영. HeroRosterPanel은 HeroRoster.Changed(배치 상태 변화)로만

@@ -47,7 +47,7 @@ public class HeroTierUpgradeMenu : MonoBehaviour, IClosablePanel
 
     private void Update()
     {
-        if (outsideCloser.ClickedOutside()) Close();
+        if (panelStack.IsTop(this) && outsideCloser.ShouldClose()) Close();
     }
 
     public void Toggle()

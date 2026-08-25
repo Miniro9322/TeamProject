@@ -1,4 +1,5 @@
 using System.Threading;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 public class HeroAttackState : HeroState
@@ -15,7 +16,10 @@ public class HeroAttackState : HeroState
     public override void Enter()
     {
         timer = 0f;
-        attackCts = new CancellationTokenSource();
+        // 씬 전환/영웅 파괴 시(게임오버 -> 타이틀 등) Exit()이 안 불려도 진행 중이던 공격 코루틴이
+        // 알아서 취소되도록 UniTask의 파괴 토큰과 묶는다 - 안 그러면 딜레이 도중 씬이 넘어가서
+        // 이미 파괴된 타겟의 transform에 접근해 MissingReferenceException이 난다.
+        attackCts = CancellationTokenSource.CreateLinkedTokenSource(hero.GetCancellationTokenOnDestroy());
     }
 
     public override void Exit()
