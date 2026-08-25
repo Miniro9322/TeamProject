@@ -81,7 +81,7 @@ public class UiManager : MonoBehaviour
                 menuPanel.SetActive(true);
         }
 
-        if (keyboard[guideOpenKey].wasPressedThisFrame)
+        if (keyboard[guideOpenKey].wasPressedThisFrame && !TutorialInputGate.BlockHotkeys)
             OpenGuide();
     }
 

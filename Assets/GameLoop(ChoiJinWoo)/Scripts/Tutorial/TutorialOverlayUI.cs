@@ -26,6 +26,12 @@ public class TutorialOverlayUI : MonoBehaviour
 
     public event Action AcknowledgeClicked;
 
+    // "다음" 버튼으로 넘어가는 단계는 진행에 타겟 클릭이 필요 없으니, 안내창이 도저히 안 들어가는
+    // 상황(예: HeroMergeMention처럼 문구+버튼까지 있는데 타겟이 화면 대부분을 차지)에서는 화면 밖으로
+    // 나가는 것보다 타겟 쪽으로 살짝 겹치는 걸 감수한다. 반대로 실제 target 클릭으로 완료되는
+    // 단계는 겹치면 클릭을 막아버리니 화면 경계보다 타겟 회피가 항상 우선이어야 한다.
+    private bool targetClickRequired;
+
     private void Awake()
     {
         acknowledgeButton.onClick.AddListener(() => AcknowledgeClicked?.Invoke());
@@ -36,6 +42,7 @@ public class TutorialOverlayUI : MonoBehaviour
     {
         gameObject.SetActive(true);
         acknowledgeButton.gameObject.SetActive(showAcknowledgeButton);
+        targetClickRequired = !showAcknowledgeButton;
     }
 
     public void SetMessage(string messageKey)
@@ -133,28 +140,38 @@ public class TutorialOverlayUI : MonoBehaviour
     private void PositionMessageBox(Rect targetLocal)
     {
         Rect bounds = dimmerRoot.rect;
+        Vector2 size = messageBox.rect.size;
 
         float spaceTop = bounds.yMax - targetLocal.yMax;
         float spaceBottom = targetLocal.yMin - bounds.yMin;
         float spaceLeft = targetLocal.xMin - bounds.xMin;
         float spaceRight = bounds.xMax - targetLocal.xMax;
-        float best = Mathf.Max(Mathf.Max(spaceTop, spaceBottom), Mathf.Max(spaceLeft, spaceRight));
+
+        // 남는 공간이 가장 넓은 방향이 아니라, 안내창이 실제로 그 공간에 다 들어가고도 얼마나
+        // 남는지(공간 - 박스 크기 - 여백)로 방향을 고른다. HeroInventory처럼 폭이 넓은 타겟은
+        // 좌우 여유가 넓어 보여도(예: 360px) 안내창 고정 폭(예: 820px)보다 작아서 못 들어가면,
+        // 상/하처럼 실제로 들어가는 방향을 우선해야 화면 밖으로 밀려나거나 타겟과 겹치지 않는다.
+        float fitTop = spaceTop - size.y - messageOffset.y;
+        float fitBottom = spaceBottom - size.y - messageOffset.y;
+        float fitLeft = spaceLeft - size.x - messageOffset.x;
+        float fitRight = spaceRight - size.x - messageOffset.x;
+        float best = Mathf.Max(Mathf.Max(fitTop, fitBottom), Mathf.Max(fitLeft, fitRight));
 
         Vector2 anchor;
         Vector2 offset;
-        if (best == spaceTop)
+        if (best == fitTop)
         {
             anchor = new Vector2(targetLocal.center.x, targetLocal.yMax);
             messageBox.pivot = new Vector2(0.5f, 0f);
             offset = new Vector2(0f, messageOffset.y);
         }
-        else if (best == spaceBottom)
+        else if (best == fitBottom)
         {
             anchor = new Vector2(targetLocal.center.x, targetLocal.yMin);
             messageBox.pivot = new Vector2(0.5f, 1f);
             offset = new Vector2(0f, -messageOffset.y);
         }
-        else if (best == spaceLeft)
+        else if (best == fitLeft)
         {
             anchor = new Vector2(targetLocal.xMin, targetLocal.center.y);
             messageBox.pivot = new Vector2(1f, 0.5f);
@@ -167,11 +184,18 @@ public class TutorialOverlayUI : MonoBehaviour
             offset = new Vector2(messageOffset.x, 0f);
         }
 
-        messageBox.anchoredPosition = ClampToBounds(anchor + offset);
+        messageBox.anchoredPosition = ClampToBounds(anchor + offset, targetLocal);
     }
 
-    // TooltipUi.ClampToCanvas와 같은 방식 - 메시지 박스가 화면 밖으로 잘려나가지 않게 anchoredPosition을 눌러 담는다.
-    private Vector2 ClampToBounds(Vector2 desired)
+    // TooltipUi.ClampToCanvas와 같은 방식으로 화면 밖으로 잘려나가지 않게 누르되, 안내창이 향하는
+    // 쪽(pivot이 타겟을 바라보는 축)에서는 화면 경계보다 타겟 사각형을 우선 존중해서 절대 겹치지
+    // 않게 한다 - target을 실제로 클릭해야 다음 단계로 넘어가는 경우 겹치면 클릭이 막혀버리기 때문.
+    // 반대로 completesOnAcknowledge 단계("다음" 버튼으로 넘어가서 target 클릭이 필요 없는 경우, 이
+    // targetClickRequired == false)는 문구+버튼까지 들어가 박스가 커지면 타겟 회피 여유 공간
+    // (HeroInventory처럼 타겟이 화면 대부분을 차지하면 상하좌우 여백이 다 좁다) 안에 다 못 들어갈
+    // 수 있는데, 이때는 화면 밖으로 나가 문구가 잘리는 것보다 타겟과 살짝 겹치는 쪽을 택한다 -
+    // 어차피 그 자리를 클릭할 필요가 없으니 잠깐 겹쳐도 진행에 지장이 없다.
+    private Vector2 ClampToBounds(Vector2 desired, Rect targetLocal)
     {
         Rect bounds = dimmerRoot.rect;
         Vector2 anchorPoint = bounds.min + Vector2.Scale(bounds.size, messageBox.anchorMin);
@@ -182,8 +206,38 @@ public class TutorialOverlayUI : MonoBehaviour
         float minY = bounds.yMin - anchorPoint.y + pivotOffset.y;
         float maxY = bounds.yMax - anchorPoint.y - (messageBox.rect.height - pivotOffset.y);
 
-        float x = minX <= maxX ? Mathf.Clamp(desired.x, minX, maxX) : minX;
-        float y = minY <= maxY ? Mathf.Clamp(desired.y, minY, maxY) : minY;
+        float x;
+        if (messageBox.pivot.x == 1f) // 타겟 좌측에 배치 - 오른쪽 경계(=박스 우측)가 타겟 좌측을 넘지 못한다.
+        {
+            if (targetClickRequired) maxX = Mathf.Min(maxX, targetLocal.xMin);
+            x = minX <= maxX ? Mathf.Clamp(desired.x, minX, maxX) : (targetClickRequired ? maxX : minX);
+        }
+        else if (messageBox.pivot.x == 0f) // 타겟 우측에 배치 - 왼쪽 경계(=박스 좌측)가 타겟 우측을 넘지 못한다.
+        {
+            if (targetClickRequired) minX = Mathf.Max(minX, targetLocal.xMax);
+            x = minX <= maxX ? Mathf.Clamp(desired.x, minX, maxX) : minX;
+        }
+        else
+        {
+            x = minX <= maxX ? Mathf.Clamp(desired.x, minX, maxX) : minX;
+        }
+
+        float y;
+        if (messageBox.pivot.y == 0f) // 타겟 상단에 배치 - 아래쪽 경계(=박스 하단)가 타겟 상단을 넘지 못한다.
+        {
+            if (targetClickRequired) minY = Mathf.Max(minY, targetLocal.yMax);
+            y = minY <= maxY ? Mathf.Clamp(desired.y, minY, maxY) : minY;
+        }
+        else if (messageBox.pivot.y == 1f) // 타겟 하단에 배치 - 위쪽 경계(=박스 상단)가 타겟 하단을 넘지 못한다.
+        {
+            if (targetClickRequired) maxY = Mathf.Min(maxY, targetLocal.yMin);
+            y = minY <= maxY ? Mathf.Clamp(desired.y, minY, maxY) : (targetClickRequired ? maxY : minY);
+        }
+        else
+        {
+            y = minY <= maxY ? Mathf.Clamp(desired.y, minY, maxY) : minY;
+        }
+
         return new Vector2(x, y);
     }
 }

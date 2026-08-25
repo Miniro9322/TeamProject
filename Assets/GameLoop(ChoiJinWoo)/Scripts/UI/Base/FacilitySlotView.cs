@@ -22,7 +22,7 @@ public class FacilitySlotView : MonoBehaviour
     public void ShowEmpty()
     {
         if (icon != null) icon.gameObject.SetActive(false);
-        if (nameText != null) nameText.text = "+";
+        if (nameText != null) nameText.text = DataTableManager.StringTable.Get("Ui_EmptySlot");
     }
 
     public void ShowBuilt(Sprite facilityIcon, string label, string level, string workers)

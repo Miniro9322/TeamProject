@@ -82,11 +82,13 @@ public class CenterHubPanel : MonoBehaviour, IClosablePanel
         if (tradeStoneText != null) tradeStoneText.text = $"{resourcesManager.TradeAmount}";
 
         RefreshButton();
+        LocalizeTextManager.OnLanguageChanged += Refresh;
     }
 
     private void OnDisable()
     {
         panelStack.Remove(this);
+        LocalizeTextManager.OnLanguageChanged -= Refresh;
 
         if (tradeFoodButton != null) tradeFoodButton.onClick.RemoveAllListeners();
         if (tradeIronButton != null) tradeIronButton.onClick.RemoveAllListeners();
@@ -148,7 +150,7 @@ public class CenterHubPanel : MonoBehaviour, IClosablePanel
                     break;
                 }
             }
-            if (row.amountText != null) row.amountText.text = $"{amount}/day";
+            if (row.amountText != null) row.amountText.text = $"{amount}{DataTableManager.StringTable.Get("Ui_PerDay")}";
         }
     }
 

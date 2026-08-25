@@ -46,6 +46,7 @@ public class BuildingPanel : MonoBehaviour, IClosablePanel
     {
         panelStack.Push(this);
         outsideCloser.MarkOpened();
+        LocalizeTextManager.OnLanguageChanged += UpdatePanel;
     }
 
     public void Close()
@@ -79,6 +80,8 @@ public class BuildingPanel : MonoBehaviour, IClosablePanel
         var occupant = Occupant;
         if (occupant == null || FacilityLevelText == null) return;
 
+        var table = DataTableManager.StringTable;
+
         // 인력/생산량은 ProductionFacility에만 있는 개념이라, House를 보는 중이면 숨긴다.
         bool isFacility = facility != null;
         if (workerText != null) workerText.gameObject.SetActive(isFacility);
@@ -91,7 +94,7 @@ public class BuildingPanel : MonoBehaviour, IClosablePanel
         {
             if (workerText != null) workerText.text = $"{facility.WorkerAmount}/{facility.MaxWorker}";
             if (productIcon != null) productIcon.sprite = resourceIconSet.GetIcon(facility.ProductionType);
-            if (perProductText != null) perProductText.text = $"{facility.ProductAmount * facility.WorkerAmount}/day";
+            if (perProductText != null) perProductText.text = $"{facility.ProductAmount * facility.WorkerAmount}{table.Get("Ui_PerDay")}";
         }
 
         upgradeButton.interactable = occupant.CheckCanUpgrade();
@@ -109,9 +112,14 @@ public class BuildingPanel : MonoBehaviour, IClosablePanel
             }
         }
 
-        FacilityLevelText.text = $"Lv. {occupant.UpgradeCount}";
-        if (NextLevelInfoText != null) NextLevelInfoText.text = $"Lv. {(occupant.UpgradeCount != occupant.MaxUpgrade ? occupant.UpgradeCount : "Max")}" +
-                $"{(occupant.UpgradeCount != occupant.MaxUpgrade ? $"→ Lv. {occupant.UpgradeCount + 1}" : string.Empty)}\n{occupant.NextUpgradeInfo}";
+        FacilityLevelText.text = string.Format(table.Get("Ui_LevelFormat"), occupant.UpgradeCount);
+        if (NextLevelInfoText != null)
+        {
+            bool isMaxLevel = occupant.UpgradeCount == occupant.MaxUpgrade;
+            string currentLevel = string.Format(table.Get("Ui_LevelFormat"), isMaxLevel ? table.Get("Ui_MaxLevel") : occupant.UpgradeCount.ToString());
+            string nextLevel = isMaxLevel ? string.Empty : $"→ {string.Format(table.Get("Ui_LevelFormat"), occupant.UpgradeCount + 1)}";
+            NextLevelInfoText.text = $"{currentLevel}{nextLevel}\n{occupant.NextUpgradeInfo}";
+        }
     }
 
     // ProductionFacility/House 어느 쪽이든 이 하나로 받는다 - 둘 다 IUpgradableOccupant라
@@ -140,6 +148,7 @@ public class BuildingPanel : MonoBehaviour, IClosablePanel
     private void OnDisable()
     {
         panelStack.Remove(this);
+        LocalizeTextManager.OnLanguageChanged -= UpdatePanel;
 
         UnsubscribeOccupant();
         facility = null;

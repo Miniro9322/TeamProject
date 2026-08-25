@@ -56,7 +56,7 @@ public class DayNightButton : MonoBehaviour
     {
         if (keyboard == null) return;
 
-        if (keyboard[nightKey].wasPressedThisFrame)
+        if (keyboard[nightKey].wasPressedThisFrame && !TutorialInputGate.BlockHotkeys)
             OnButton();
     }
 

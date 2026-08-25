@@ -90,6 +90,7 @@ public class TutorialManager : MonoBehaviour
     private void OnEnable()
     {
         TutorialInputGate.BlockEscapeClose = true;
+        TutorialInputGate.BlockHotkeys = true;
         // 0일차 연습 상태는 다음 날이 되는 순간 전부 초기화되는 임시 데이터라, 그 사이에
         // SaveManager가 저장하지 못하게 막는다 - 컴포넌트가 완전히 꺼질 때(0일차 리셋까지 끝난
         // 뒤)까지 유지한다.
@@ -106,6 +107,7 @@ public class TutorialManager : MonoBehaviour
     private void OnDisable()
     {
         TutorialInputGate.BlockEscapeClose = false;
+        TutorialInputGate.BlockHotkeys = false;
         TutorialInputGate.BlockSave = false;
         citizenManager.CitizenChanged -= OnCitizenChanged;
         baseConstructor.Built -= OnBuilt;
@@ -146,8 +148,10 @@ public class TutorialManager : MonoBehaviour
         }
 
         overlay.Show(step.completesOnAcknowledge);
-        overlay.SetSpotlight(waypoint?.target);
+        // 메시지를 먼저 갱신해야 SetSpotlight가 그 문구로 리빌드된 messageBox 크기를 보고 위치를
+        // 잡는다 - 순서가 바뀌면 문구가 바뀌는 첫 프레임에 직전 문구 크기로 잘못 배치된다.
         RefreshMessage(waypoint);
+        overlay.SetSpotlight(waypoint?.target);
     }
 
     // 스포트라이트로 짚어줄 UI가 없는 대기 구간(맵 클릭 대기 등)에 쓴다 - 딤을 전부 풀고 문구만 띄운다.
@@ -231,6 +235,7 @@ public class TutorialManager : MonoBehaviour
     {
         overlay.Hide();
         TutorialInputGate.BlockEscapeClose = false;
+        TutorialInputGate.BlockHotkeys = false;
         sequenceFinished = true;
         TryFullyDisable();
     }
@@ -267,6 +272,7 @@ public class TutorialManager : MonoBehaviour
             showingCompletionMessage = false;
             overlay.Hide();
             TutorialInputGate.BlockEscapeClose = false;
+            TutorialInputGate.BlockHotkeys = false;
             uiManager.GameSpeedUi.OnButtonClick((int)Speed.Normal);
             TryFullyDisable();
             return;
@@ -370,6 +376,7 @@ public class TutorialManager : MonoBehaviour
     {
         showingCompletionMessage = true;
         TutorialInputGate.BlockEscapeClose = true;
+        TutorialInputGate.BlockHotkeys = true;
         uiManager.GameSpeedUi.OnButtonClick((int)Speed.Zero);
         overlay.Show(true);
         overlay.SetSpotlight(null);

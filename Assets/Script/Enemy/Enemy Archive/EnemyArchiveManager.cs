@@ -85,7 +85,7 @@ public class EnemyArchiveManager : MonoBehaviour, IExclusiveUiPanel
 
         if (keyboard == null) return;
 
-        if (keyboard[openKey].wasPressedThisFrame)
+        if (keyboard[openKey].wasPressedThisFrame && !TutorialInputGate.BlockHotkeys)
         {
             if (archiveList.gameObject.activeSelf)
                 infoCloseButton.onClick?.Invoke();

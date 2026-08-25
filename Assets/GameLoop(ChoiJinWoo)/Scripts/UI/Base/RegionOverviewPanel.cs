@@ -72,7 +72,6 @@ public class RegionOverviewPanel : MonoBehaviour, IClosablePanel, IExclusiveUiPa
         }
     }
 
-    // 지역이 새로 해금되면(잠김 -> 준비됨) 거점 버튼 위에 레드닷을 띄운다 - 패널을 열면(OpenPanel) 확인한 걸로 치고 끈다.
     private void OnAnyModuleUnlocked(ModuleState state)
     {
         if (state == ModuleState.Preparing && redDot != null)
@@ -81,8 +80,6 @@ public class RegionOverviewPanel : MonoBehaviour, IClosablePanel, IExclusiveUiPa
         }
     }
 
-    // 밤이 되면 열려있던 거점 화면을 즉시 닫고, 여는 버튼 자체를 꺼버린다
-    // (BuildModePanel이 낮/밤 전환에 반응하는 것과 같은 패턴).
     private void OnNight()
     {
         isNight = true;
@@ -110,8 +107,6 @@ public class RegionOverviewPanel : MonoBehaviour, IClosablePanel, IExclusiveUiPa
         panelStack.Remove(this);
         UnbindModules();
 
-        // 오버뷰가 꺼지면 그 아래에서 열려있던 패널들도 다 같이 닫는다.
-        // detailPanel.Close()가 buildChoicePanel/buildingPanel까지 정리해주므로 SetActive만 하지 않는다.
         detailPanel.Close();
         if (hubPanel != null) hubPanel.Close();
     }
@@ -203,7 +198,7 @@ public class RegionOverviewPanel : MonoBehaviour, IClosablePanel, IExclusiveUiPa
     private void CheckOpenHotkey()
     {
         var keyboard = Keyboard.current;
-        if (keyboard != null && keyboard[openBaseKey].wasPressedThisFrame)
+        if (keyboard != null && keyboard[openBaseKey].wasPressedThisFrame && !TutorialInputGate.BlockHotkeys)
             OpenPanel();
     }
 }
