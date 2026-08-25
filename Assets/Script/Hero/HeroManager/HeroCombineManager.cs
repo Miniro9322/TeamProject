@@ -75,7 +75,7 @@ public class HeroCombineManager : MonoBehaviour
         if (!heroRegistry.TryGetNextTierHeroDatas(tier, kind, out List<HeroData> nextTierDatas))
             return false; // 최고 티어거나, 같은 종류의 다음 티어 데이터 없음
 
-        (string seed, int count) = game.Rule.ConsumeHeroCombine();
+        (string seed, int count) = game.Rule.ConsumeHeroCombine(kind, tier);
         System.Random rng = new System.Random(GameSeeding.Derive(seed, count));
         HeroData nextTierData = nextTierDatas[rng.Next(nextTierDatas.Count)];
         GameObject nextTierPrefab = nextTierData.HeroPrefab;
