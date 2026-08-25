@@ -243,7 +243,7 @@ public class GameManager : MonoBehaviour
         return (heroDrawSeed, heroCombineCount);
     }
 
-        public void ResetHpToFull()
+    public void ResetHpToFull()
     {
         hp = initialHp;
         HpChanged?.Invoke();
