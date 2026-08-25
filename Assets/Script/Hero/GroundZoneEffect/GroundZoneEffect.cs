@@ -241,7 +241,7 @@ public class GroundZoneEffect : MonoBehaviour
             {
                 d.TakeDamage(dmg);
                 owner.NotifyHit(go, dmg, false);
-                SpawnHitEffect(go.transform.position);
+                SpawnDamageHitEffect(go);
             }
 
             AttackDamageUtil.ApplyTargetDebuffs(go.transform, targetDebuffs, owner.Buffs, this);
@@ -249,6 +249,12 @@ public class GroundZoneEffect : MonoBehaviour
     }
 
     private void SpawnHitEffect(Vector3 pos) => owner.SpawnEffect(hitEffect, pos, hitEffectLifetime);
+
+    // 데미지 틱 전용 — 장판 안 적이 여러 마리면 틱마다 각자에게 이펙트가 뜨는데, 같은 적이 여러 틱에
+    // 걸쳐 겹치면 파티클이 쌓이므로 대상별 중복 방지 헬퍼를 거친다. 힐 틱(SpawnHitEffect(Vector3))은
+    // 아군 대상이라 억제 대상이 아니므로 그대로 둔다.
+    private void SpawnDamageHitEffect(GameObject target)
+        => AttackDamageUtil.SpawnHitEffect(owner, hitEffect, target, hitEffectLifetime);
 
     private void SpawnSelfEffect()
     {

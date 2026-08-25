@@ -60,7 +60,6 @@ public class ContinuousBeamStrategy : IAttackDeliveryStrategy
 
         try
         {
-            float interval = Mathf.Max(0.05f, data.continuousTickInterval);
             float elapsed = 0f;
             while (data.continuousDuration <= 0f || elapsed < data.continuousDuration)
             {
@@ -88,6 +87,16 @@ public class ContinuousBeamStrategy : IAttackDeliveryStrategy
                     if (hero.Target == null) break; // 채널링 도중 타겟이 죽거나 벗어남 — 여기서 끊는다
                     await FireProjectileVolley(hero, data, ctx, ct);
                 }
+
+                // 공격속도(AS) 디버프/버프가 채널링 도중 걸리거나 풀릴 수 있으므로 매 tick마다
+                // 다시 계산한다 — 기준(버프/디버프 적용 전) AS 대비 현재 AS 비율만큼 tick 간격을
+                // 늘리거나 줄인다. 디버프/버프가 전혀 없으면 asScale=1이라 기획자가 세팅한
+                // continuousTickInterval 값이 그대로 유지된다.
+                float baseAS = ctx.sc.GetBaseValue(StatType.AS);
+                float currentAS = ctx.sc[StatType.AS];
+                float asScale = (baseAS > 0f && currentAS > 0f) ? baseAS / currentAS : 1f;
+                float interval = Mathf.Max(0.05f, data.continuousTickInterval * asScale);
+
                 await UniTask.Delay(TimeSpan.FromSeconds(interval), cancellationToken: ct);
                 elapsed += interval;
             }
