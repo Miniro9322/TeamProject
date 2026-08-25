@@ -44,7 +44,7 @@ public class TooltipTrigger : MonoBehaviour, IPointerEnterHandler, IPointerExitH
     {
         try
         {
-            await UniTask.Delay(TimeSpan.FromSeconds(hoverDelay), cancellationToken: token);
+            await UniTask.Delay(TimeSpan.FromSeconds(hoverDelay), ignoreTimeScale: true, cancellationToken: token);
         }
         catch (OperationCanceledException)
         {

@@ -1,17 +1,11 @@
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
 using VContainer;
 
-// 기반시설 UI 최상단 화면 - 지역 다이아몬드 오버뷰(§허브 + 6지역).
-// 각 노드는 ModuleLogic.IsUnlocked를 그대로 반영한다 - 해금 자체는 기존 ExpandEvent 흐름을 그대로 탄다.
-// RegionFacilitySlots는 모듈 프리팹에 붙어있지 않고(충돌 방지) moduleId로만 엮이므로, regions 리스트에서
-// 직접 찾는다(GetComponent 아님).
-// ESC/바깥클릭은 거점 UI 하위 패널들과 동일하게 "내가 스택 맨 위일 때만" 반응한다 - 다른 패널
-// Update()에 맡기지 않고 각자 판단하므로, 이 패널이 꺼져있어도(Update 자체가 안 돌아도) 위에 떠 있는
-// 다른 패널은 자기 몫의 ESC를 정상적으로 받는다.
-public class RegionOverviewPanel : MonoBehaviour, IClosablePanel
+public class RegionOverviewPanel : MonoBehaviour, IClosablePanel, IExclusiveUiPanel
 {
     [SerializeField] private MapRegistry registry;
     [SerializeField] private RegionDetailPanel detailPanel;
@@ -20,6 +14,7 @@ public class RegionOverviewPanel : MonoBehaviour, IClosablePanel
     [SerializeField] private List<RegionFacilitySlots> regions; // 인스펙터에서 지역 오브젝트들을 직접 연결
     [SerializeField] private Button openButton; // 거점 화면을 여는 버튼 - 밤에는 비활성화
     [SerializeField] private GameObject redDot; // 새로 해금된 지역이 있으면 openButton 위에 표시
+    [SerializeField] private Key openBaseKey = Key.B; // 거점 화면을 여는 단축키
 
     private ClickOutsideCloser outsideCloser;
 
@@ -33,9 +28,6 @@ public class RegionOverviewPanel : MonoBehaviour, IClosablePanel
     private EnviromentManager enviromentManager;
     private bool isNight;
 
-    // 낮/밤 구독은 Start가 아니라 여기서 한다 - 이 오브젝트는 씬에서 처음부터 비활성 상태라
-    // (버튼을 눌러야 처음 활성화됨) Start/Awake는 한 번도 안 켜지면 영영 안 불린다. [Inject]는
-    // 활성 여부와 무관하게 VContainer가 실행해주므로, 버튼을 한 번도 안 눌러도 구독이 걸린다.
     [Inject]
     private void Construct(UiPanelStack panelStack, GameManager gameManager, EnviromentManager enviromentManager)
     {
@@ -46,10 +38,11 @@ public class RegionOverviewPanel : MonoBehaviour, IClosablePanel
         gameManager.ChangeToNight += OnNight;
         enviromentManager.OnDay += OnDayStart;
 
-        // 레드닷 감지는 패널이 닫혀있어도 계속 돌아야 해서(닫힌 버튼 위에 띄우는 용도) OnEnable이 아니라
-        // 여기서 항상 구독해둔다. Refresh용 BindModules()/UnbindModules()와는 별개다.
-        // 한 프레임 미뤄서 구독한다 - Construct는 MapRegistry.Awake()보다 먼저 돌 수도 있어서,
-        // 그 시점에 바로 registry.AllModules를 돌면 아직 비어있어 구독이 하나도 안 걸릴 수 있다.
+        // 열기 단축키는 패널이 닫혀있는 동안(=이 오브젝트가 비활성인 동안) 감지되어야 하는데,
+        // 이 오브젝트는 씬에서 처음부터 비활성 상태라 Update()가 전혀 돌지 않는다(레드닷 구독과 동일한 이유).
+        // InputSystem.onAfterUpdate는 GameObject 활성 여부와 무관하게 매 업데이트마다 호출되므로 여기서 구독한다.
+        InputSystem.onAfterUpdate += CheckOpenHotkey;
+
         SubscribeModulesDeferred().Forget();
     }
 
@@ -71,6 +64,7 @@ public class RegionOverviewPanel : MonoBehaviour, IClosablePanel
     {
         gameManager.ChangeToNight -= OnNight;
         enviromentManager.OnDay -= OnDayStart;
+        InputSystem.onAfterUpdate -= CheckOpenHotkey;
 
         foreach (var module in registry.AllModules.Values)
         {
@@ -104,6 +98,7 @@ public class RegionOverviewPanel : MonoBehaviour, IClosablePanel
 
     private void OnEnable()
     {
+        ExclusiveUiCoordinator.NotifyOpened(this);
         panelStack.Push(this);
         BindModules();
         Refresh();
@@ -111,6 +106,7 @@ public class RegionOverviewPanel : MonoBehaviour, IClosablePanel
 
     private void OnDisable()
     {
+        ExclusiveUiCoordinator.NotifyClosed(this);
         panelStack.Remove(this);
         UnbindModules();
 
@@ -184,8 +180,10 @@ public class RegionOverviewPanel : MonoBehaviour, IClosablePanel
     public void OpenPanel()
     {
         if (isNight) return; // 밤에는 거점 화면을 열 수 없다.
-
-        gameObject.SetActive(true);
+        if (gameObject.activeSelf)
+            gameObject.SetActive(false);
+        else
+            gameObject.SetActive(true);
         outsideCloser.MarkOpened();
         if (redDot != null) redDot.SetActive(false); // 열었으니 확인한 걸로 치고 끈다
     }
@@ -195,8 +193,17 @@ public class RegionOverviewPanel : MonoBehaviour, IClosablePanel
         gameObject.SetActive(false);
     }
 
+    public void RequestClose() => Close();
+
     private void Update()
     {
         if (panelStack.IsTop(this) && outsideCloser.ShouldClose()) Close();
+    }
+
+    private void CheckOpenHotkey()
+    {
+        var keyboard = Keyboard.current;
+        if (keyboard != null && keyboard[openBaseKey].wasPressedThisFrame)
+            OpenPanel();
     }
 }

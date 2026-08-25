@@ -1,14 +1,17 @@
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
-public class HeroArchiveButton : MonoBehaviour
-{ 
+public class HeroArchiveButton : MonoBehaviour, IExclusiveUiPanel
+{
     [SerializeField] private GameObject archiveUI;
+    [SerializeField] private Key openKey = Key.P;
     private CancellationTokenSource cts;
     private bool isOpen;
     private ClickOutsideCloser outsideCloser;
+    private Keyboard keyboard;
 
     public bool IsOpen => isOpen;
 
@@ -18,6 +21,7 @@ public class HeroArchiveButton : MonoBehaviour
         archiveUI.transform.localScale = Vector3.zero; // 닫힘 = 스케일 0 기준 (이어서 열기 진행도 계산용)
         isOpen = false;
         outsideCloser = new ClickOutsideCloser((RectTransform)archiveUI.transform, transform);
+        keyboard = Keyboard.current;
     }
 
     // ESC는 BuildModePanel의 취소 우선순위 체인이 IsOpen을 보고 Close()를 호출해주므로 여기서 또
@@ -25,6 +29,16 @@ public class HeroArchiveButton : MonoBehaviour
     private void Update()
     {
         if (isOpen && outsideCloser.ClickedOutside()) Close();
+
+        if (keyboard == null) return;
+
+        if (keyboard[openKey].wasPressedThisFrame)
+        {
+            if (archiveUI.activeSelf)
+                Close();
+            else
+                Open();
+        }
     }
 
     private void OnDestroy()
@@ -32,7 +46,10 @@ public class HeroArchiveButton : MonoBehaviour
         cts?.Cancel();
         cts?.Dispose();
         cts = null;
+        ExclusiveUiCoordinator.NotifyClosed(this);
     }
+
+    public void RequestClose() => Close();
 
     public void OnClick()
     {
@@ -45,6 +62,7 @@ public class HeroArchiveButton : MonoBehaviour
         if (isOpen) return;
         isOpen = true;
         outsideCloser.MarkOpened();
+        ExclusiveUiCoordinator.NotifyOpened(this);
         ResetCts();
         OpenArchiveCor(cts.Token).Forget();
     }
@@ -53,6 +71,7 @@ public class HeroArchiveButton : MonoBehaviour
     {
         if (!isOpen) return;
         isOpen = false;
+        ExclusiveUiCoordinator.NotifyClosed(this);
         ResetCts();
         CloseArchiveCor(cts.Token).Forget();
     }

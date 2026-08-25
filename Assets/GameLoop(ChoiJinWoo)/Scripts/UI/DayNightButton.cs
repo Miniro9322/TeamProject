@@ -2,6 +2,7 @@ using System;
 using Cysharp.Threading.Tasks;
 using TMPro;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
 using VContainer;
 
@@ -10,8 +11,10 @@ public class DayNightButton : MonoBehaviour
     [SerializeField] private Button button;
     [SerializeField] private RectTransform icon;
     [SerializeField] private TextMeshProUGUI dayText;
+    [SerializeField] private Key nightKey = Key.N;
     private GameManager gameManager;
     private EnviromentManager enviromentManager;
+    private Keyboard keyboard;
 
     // Quaternion.Slerp은 180도 회전에서 어느 쪽으로 돌지가 애매해서(부동소수점에 따라 달라짐),
     // 방향을 확실히 통제하려고 각도를 직접 실수로 누적한다(래핑 없이 계속 더함).
@@ -26,6 +29,7 @@ public class DayNightButton : MonoBehaviour
 
     private void Start()
     {
+        keyboard = Keyboard.current;
         button.onClick.AddListener(OnButton);
         icon.transform.rotation = Quaternion.identity;
         gameManager.ChangeToDay += OnDayStart;
@@ -46,6 +50,14 @@ public class DayNightButton : MonoBehaviour
             button.gameObject.SetActive(true);
             button.interactable = true;
         }).Forget();
+    }
+
+    private void Update()
+    {
+        if (keyboard == null) return;
+
+        if (keyboard[nightKey].wasPressedThisFrame)
+            OnButton();
     }
 
     private async UniTaskVoid RotateIconBy(float deltaZ, Action onComplete)

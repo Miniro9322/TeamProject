@@ -4,7 +4,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class GuideUI : MonoBehaviour
+public class GuideUI : MonoBehaviour, IExclusiveUiPanel
 {
     private const int ContentLeaveDelayMs = 80;
 
@@ -32,12 +32,14 @@ public class GuideUI : MonoBehaviour
 
     private void OnEnable()
     {
+        ExclusiveUiCoordinator.NotifyOpened(this);
         ShowShade();
         OnGamePlayGuide(true);
     }
 
     private void OnDisable()
     {
+        ExclusiveUiCoordinator.NotifyClosed(this);
         HideShade();
         DisableButtons();
     }
@@ -51,6 +53,8 @@ public class GuideUI : MonoBehaviour
     {
         gameObject.SetActive(false);
     }
+
+    public void RequestClose() => OnCloseButton();
 
     // 배경 셰이드를 켜고 페이드인 연출을 재생한다
     private void ShowShade()
