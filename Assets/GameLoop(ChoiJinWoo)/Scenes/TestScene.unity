@@ -1115,6 +1115,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TooltipTrigger
   message: ToolTip_Remove
+  isJust: 0
 --- !u!114 &64402129
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1973,6 +1974,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TooltipTrigger
   message: ToolTip_Stone
+  isJust: 0
 --- !u!114 &100636384
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2885,6 +2887,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TooltipTrigger
   message: ToolTip_Cancel
+  isJust: 0
 --- !u!114 &154819805
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3032,6 +3035,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TooltipTrigger
   message: ToolTip_MonsterBook
+  isJust: 0
 --- !u!114 &158157035
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4031,6 +4035,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TooltipTrigger
   message: ToolTip_Hp
+  isJust: 0
 --- !u!114 &193534643
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5713,6 +5718,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TooltipTrigger
   message: ToolTip_Gold
+  isJust: 0
 --- !u!114 &257395554
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5909,6 +5915,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TooltipTrigger
   message: UI_PlayerSkill_Debuff
+  isJust: 0
 --- !u!1001 &262898420
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -9460,6 +9467,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TooltipTrigger
   message: ToolTip_Wood
+  isJust: 0
 --- !u!114 &463585027
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -10219,31 +10227,31 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1412472829563689340, guid: 1d9e1c1b6881e06499b0174cb6684aa2, type: 3}
       propertyPath: m_AnchorMax.y
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1617722479047092453, guid: 1d9e1c1b6881e06499b0174cb6684aa2, type: 3}
       propertyPath: m_AnchorMax.y
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1617722479047092453, guid: 1d9e1c1b6881e06499b0174cb6684aa2, type: 3}
       propertyPath: m_AnchorMin.y
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1617722479047092453, guid: 1d9e1c1b6881e06499b0174cb6684aa2, type: 3}
       propertyPath: m_SizeDelta.x
-      value: 464.8665
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1617722479047092453, guid: 1d9e1c1b6881e06499b0174cb6684aa2, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: 232.43324
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1617722479047092453, guid: 1d9e1c1b6881e06499b0174cb6684aa2, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: -95.90775
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2287480760389495002, guid: 1d9e1c1b6881e06499b0174cb6684aa2, type: 3}
       propertyPath: m_AnchorMax.y
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3627482285149250960, guid: 1d9e1c1b6881e06499b0174cb6684aa2, type: 3}
       propertyPath: m_Name
@@ -10251,27 +10259,27 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3627482285149250960, guid: 1d9e1c1b6881e06499b0174cb6684aa2, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5523184048581130127, guid: 1d9e1c1b6881e06499b0174cb6684aa2, type: 3}
       propertyPath: m_AnchorMax.y
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5523184048581130127, guid: 1d9e1c1b6881e06499b0174cb6684aa2, type: 3}
       propertyPath: m_AnchorMin.y
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5523184048581130127, guid: 1d9e1c1b6881e06499b0174cb6684aa2, type: 3}
       propertyPath: m_SizeDelta.x
-      value: 464.8665
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5523184048581130127, guid: 1d9e1c1b6881e06499b0174cb6684aa2, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: 232.43324
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5523184048581130127, guid: 1d9e1c1b6881e06499b0174cb6684aa2, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: -263.56726
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8813513747139997407, guid: 1d9e1c1b6881e06499b0174cb6684aa2, type: 3}
       propertyPath: m_Pivot.x
@@ -14714,6 +14722,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TooltipTrigger
   message: Tooltip_Hero_Inventory
+  isJust: 0
 --- !u!114 &726167672
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -14861,6 +14870,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TooltipTrigger
   message: ToolTip_Replace
+  isJust: 0
 --- !u!114 &730561565
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -18776,6 +18786,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TooltipTrigger
   message: ToolTip_Food
+  isJust: 0
 --- !u!114 &911041578
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -19080,6 +19091,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TooltipTrigger
   message: ToolTip_heroCitizen
+  isJust: 0
 --- !u!114 &917270388
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -22205,6 +22217,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TooltipTrigger
   message: ToolTip_curmaxCitizen
+  isJust: 0
 --- !u!114 &1066152998
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -26932,6 +26945,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TooltipTrigger
   message: ToolTip_HeroBook
+  isJust: 0
 --- !u!1001 &1222289865
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -29256,6 +29270,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TooltipTrigger
   message: ToolTip_Upgrade
+  isJust: 0
 --- !u!114 &1343095048
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -31694,6 +31709,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TooltipTrigger
   message: UI_PlayerSkill_Buff
+  isJust: 0
 --- !u!1001 &1434414286
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -32169,6 +32185,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TooltipTrigger
   message: ToolTip_Special
+  isJust: 0
 --- !u!114 &1457922593
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -33932,6 +33949,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TooltipTrigger
   message: ToolTip_HeroIcon
+  isJust: 0
 --- !u!114 &1550034622
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -36544,6 +36562,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TooltipTrigger
   message: ToolTip_Upgrade
+  isJust: 0
 --- !u!114 &1680791097
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -37709,6 +37728,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TooltipTrigger
   message: ToolTip_BaseOpen
+  isJust: 0
 --- !u!222 &1711542350
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -38630,6 +38650,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TooltipTrigger
   message: ToolTip_NightButton
+  isJust: 0
 --- !u!114 &1760085483
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -39543,17 +39564,17 @@ MonoBehaviour:
   entries:
   - button: {fileID: 544139258}
     skill:
-      skillName: 
+      skillDescKey: 
       zonePrefab: {fileID: 4269708727165565049, guid: 379d90c5dc506c14aa70f8eab49b6808, type: 3}
       manaCost: 80
   - button: {fileID: 1675238884}
     skill:
-      skillName: 
+      skillDescKey: 
       zonePrefab: {fileID: 4269708727165565049, guid: b222b0d2981a5984bb6b067c87058298, type: 3}
       manaCost: 50
   - button: {fileID: 943907944}
     skill:
-      skillName: 
+      skillDescKey: 
       zonePrefab: {fileID: 4269708727165565049, guid: bf1f9763cd6d56d468560faf6d1a0d61, type: 3}
       manaCost: 60
   manaBar: {fileID: 1651629285}
@@ -41477,6 +41498,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TooltipTrigger
   message: ToolTip_Iron
+  isJust: 0
 --- !u!114 &1884736022
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -47888,6 +47910,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TooltipTrigger
   message: ToolTip_canUseCitizen
+  isJust: 0
 --- !u!114 &2125165711
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -48079,6 +48102,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TooltipTrigger
   message: UI_PlayerSkill_Heal
+  isJust: 0
 --- !u!1001 &2133194459
 PrefabInstance:
   m_ObjectHideFlags: 0

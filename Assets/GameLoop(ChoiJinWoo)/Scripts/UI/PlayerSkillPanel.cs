@@ -43,6 +43,10 @@ public class PlayerSkillPanel : MonoBehaviour
         {
             PlayerSkillSlot slot = entry.skill;
             entry.button.onClick.AddListener(() => cast?.ArmSkill(slot));
+            if (entry.button.GetComponent<TooltipTrigger>() is TooltipTrigger tooltip)
+            {
+                tooltip.SetMessaege(string.Format(DataTableManager.StringTable.Get(slot.skillDescKey), slot.manaCost));
+            }
         }
 
         // ChangeToNight이 아니라 EnviromentManager.OnNight을 쓴다 - ChangeToNight은 밤 전환이

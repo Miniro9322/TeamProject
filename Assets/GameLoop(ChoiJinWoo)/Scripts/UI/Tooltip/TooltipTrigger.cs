@@ -10,6 +10,7 @@ using UnityEngine.InputSystem;
 public class TooltipTrigger : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
 {
     [SerializeField, TextArea] private string message;
+    [SerializeField] private bool isJust = false;
     private float hoverDelay = 0.2f;
 
     private CancellationTokenSource cts;
@@ -52,6 +53,7 @@ public class TooltipTrigger : MonoBehaviour, IPointerEnterHandler, IPointerExitH
 
         // 딜레이가 끝난 시점의 실제 마우스 위치를 다시 읽는다 - eventData.position은 진입 순간 좌표라
         // 그새 마우스가 움직였으면 어긋난다.
-        TooltipUi.Instance.Show(message, Mouse.current.position.ReadValue());
+        if (isJust) TooltipUi.Instance.JustShow(message, Mouse.current.position.ReadValue());
+        else TooltipUi.Instance.Show(message, Mouse.current.position.ReadValue());
     }
 }
