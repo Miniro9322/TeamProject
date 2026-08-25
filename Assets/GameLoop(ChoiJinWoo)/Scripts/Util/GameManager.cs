@@ -48,6 +48,13 @@ public class GameManager : MonoBehaviour
     public int todayHp;
     public bool perfactDefence = false;
 
+    private string heroDrawSeed = Guid.NewGuid().ToString("N");
+    private int heroDrawCount;
+    private int heroCombineCount;
+    public string HeroDrawSeed => heroDrawSeed;
+    public int HeroDrawCount => heroDrawCount;
+    public int HeroCombineCount => heroCombineCount;
+
     [Inject]
     private void Construct(UiManager uiManager, SpawnerManager waveSpawner, UpgradeState upgradeState, TutorialState tutorialState)
     {
@@ -206,6 +213,34 @@ public class GameManager : MonoBehaviour
     {
         unlockedHero = value;
         uiManager.UnlockedHero = value;
+    }
+
+    // 세이브 데이터로 영웅 뽑기 시드/순번을 그대로 덮어쓴다 (로드 복원 전용) -
+    // 뽑기 직전 상태로 되돌아가도 같은 순번을 다시 소비하게 되어 결과가 항상 같아진다.
+    public void RestoreHeroDrawState(string seed, int count)
+    {
+        heroDrawSeed = seed;
+        heroDrawCount = count;
+    }
+
+    // 영웅을 뽑을 때마다 호출한다 - 순번을 하나 늘리고 (시드, 순번)을 반환한다.
+    public (string seed, int count) ConsumeHeroDraw()
+    {
+        heroDrawCount++;
+        return (heroDrawSeed, heroDrawCount);
+    }
+
+    // 세이브 데이터로 영웅 합성 순번을 그대로 덮어쓴다 (로드 복원 전용)
+    public void RestoreHeroCombineCount(int count)
+    {
+        heroCombineCount = count;
+    }
+
+    // 영웅을 합성할 때마다 호출한다 - 순번을 하나 늘리고 (시드, 순번)을 반환한다.
+    public (string seed, int count) ConsumeHeroCombine()
+    {
+        heroCombineCount++;
+        return (heroDrawSeed, heroCombineCount);
     }
 
         public void ResetHpToFull()
