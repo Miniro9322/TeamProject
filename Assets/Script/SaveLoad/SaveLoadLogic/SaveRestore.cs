@@ -81,6 +81,9 @@ public class SaveRestore
         gameManager.RestoreHp(data.baseHp);
         gameManager.RestoreTodayHp(data.baseHp);
         gameManager.RestoreUnlockedHero(data.heroUnlock);
+        gameManager.RestoreGameSeed(data.gameSeed);
+        gameManager.RestoreHeroDrawCounts(data.heroDrawMeleeCount, data.heroDrawRangedCount);
+        gameManager.RestoreHeroCombineCounts(data.heroCombineMeleeCounts, data.heroCombineRangedCounts);
     }
 
     // 지역 상태·오프셋 넣기          → ModuleLogic / SpawnerManager

@@ -13,6 +13,12 @@ public class SaveData
     public byte heroUnlock;              // 해금된 영웅들을 비트로 모아둔 값 (영웅 하나가 아님)
     public bool perfectDefensePending;   // 완벽 방어 특수자원 보상을 아직 안 줬는지
 
+    public string gameSeed;             // 시드 고정 랜덤(영웅 뽑기/합성 등)에 쓰는 슬롯 공용 시드 (슬롯 생성 시 한 번 정해진 뒤 불변)
+    public int heroDrawMeleeCount;      // 지금까지 근접 영웅을 뽑은 횟수 (뽑기 결과의 재현 순번)
+    public int heroDrawRangedCount;     // 지금까지 원거리 영웅을 뽑은 횟수
+    public int[] heroCombineMeleeCounts = new int[3];   // 근접 합성 순번 (인덱스 0=1→2티어, 1=2→3티어, 2=3→4티어)
+    public int[] heroCombineRangedCounts = new int[3];  // 원거리 합성 순번
+
     public int woodAmount;      // 목재
     public int foodAmount;      // 식량
     public int goldAmount;      // 골드
