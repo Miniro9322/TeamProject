@@ -294,43 +294,10 @@ public class EnemyInfo : MonoBehaviour
     //
     // 이 칸은 표시 전용이다. 적이 실제로 그 스킬을 쓰는지는 EnemyTable의 Skills 칸이 정하고,
     // EnemyBase.ParseAttribute는 여기 적힌 스킬 ID를 (enum이 아니므로) 조용히 무시한다.
+    // 파싱·링크 규칙 자체는 EnemyAttributeText로 옮겼다 — 스테이지 정보 툴팁도 같은 문자열을 써야
+    // AttributeTooltip의 link ID 규약이 한 곳에만 남는다. 색과 구분자는 여기 인스펙터 값 그대로다.
     private string LocalizeAttributes(string raw)
-    {
-        var st = DataTableManager.StringTable;
-        var parts = new List<string>();
-        var seen = new HashSet<string>();   // 같은 토큰을 두 번 적어도 한 번만 표기
-
-        if (!string.IsNullOrEmpty(raw))
-        {
-            foreach (string token in raw.Split(new[] { '|', ';' }, StringSplitOptions.RemoveEmptyEntries))
-            {
-                string id = token.Trim();
-                if (id.Length == 0 || !seen.Add(id)) continue;
-
-                if (Enum.TryParse(id, true, out EnemyAttribute flag))
-                {
-                    if (flag == EnemyAttribute.None) continue;   // "None"을 적은 경우 — 아래 폴백이 처리한다
-                    // 색 입히고 <link>로 감싼다 → AttributeTooltip이 hover 감지. link ID = 특성 enum 이름
-                    parts.Add($"<link=\"{flag}\">{Wrap(st.Get(flag.ToString()), AttrColor(flag))}</link>");
-                    continue;
-                }
-
-                SkillTable.Data skill = DataTableManager.SkillTable?.Get(id);
-                if (skill == null)
-                {
-                    // 예전엔 조용히 사라져서 오타를 못 잡았다. 특성도 스킬도 아니면 알려준다.
-                    Debug.LogWarning($"EnemyInfo: 특성 칸의 '{id}'는 EnemyAttribute도 스킬 ID도 아니라 건너뛴다.", this);
-                    continue;
-                }
-                // link ID = 스킬 ID. 툴팁이 SkillTable에서 그 행의 Desc 키를 찾아 준다.
-                // NameKey가 빈 칸이면 null이고 StringTable.Get(null)은 예외를 던지므로 스킬 ID를 그대로 보여준다.
-                string label = string.IsNullOrEmpty(skill.NameKey) ? id : st.Get(skill.NameKey);
-                parts.Add($"<link=\"{id}\">{Wrap(label, signatureSkillColor)}</link>");
-            }
-        }
-
-        return parts.Count > 0 ? string.Join(attributeSeparator, parts) : st.Get("None");
-    }
+        => EnemyAttributeText.Build(raw, AttrColor, signatureSkillColor, attributeSeparator, this);
 
     // 특성별 글자색
     private Color AttrColor(EnemyAttribute f)
@@ -349,10 +316,6 @@ public class EnemyInfo : MonoBehaviour
             default:                          return Color.white;
         }
     }
-
-    // TMP 리치 텍스트 color 태그로 감싸기
-    private static string Wrap(string text, Color c)
-        => $"<color=#{ColorUtility.ToHtmlStringRGB(c)}>{text}</color>";
 
     // ---- 책 펼침 + 텍스트 페이드 ----
 

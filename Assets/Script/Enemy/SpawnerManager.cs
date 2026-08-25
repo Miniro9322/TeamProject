@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
-using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
@@ -32,14 +31,11 @@ public class SpawnerManager : MonoBehaviour
     // 지역번호 → 그 지역에 이번 라운드 활성화된 포탈들(레인마다 1개).
     public Dictionary<int,List<GameObject>> spawnPoints = new();
 
-    [Tooltip("구역 클릭 시 포탈 옆에 뜨는 월드 스페이스 텍스트 프리팹(TMP_Text 포함).")]
-    public GameObject infoTextPrefab;
-    [Tooltip("포탈 기준 텍스트 오프셋(월드 좌표).")]
-    public Vector3 infoTextOffset = new Vector3(1.5f, 1f, 0f);
-    [Tooltip("스테이지 정보 팝업 캔버스의 정렬 기준값(+지역번호). 메인 HUD(0)보다 낮게 둬야 HUD를 덮지 않는다.")]
-    public int stageInfoSortingOrder = -10;
-    // 지역번호 → 클릭 시 띄운 정보 텍스트 인스턴스
-    private readonly Dictionary<int,GameObject> _infoTexts = new();
+    [Tooltip("스테이지 정보 패널(고정 UI). 포탈을 클릭하면 켜지고 그 지역 웨이브로 내용이 채워진다. " +
+             "포탈마다 월드 팝업을 스폰하던 방식을 대체한다 — 패널은 하나뿐이고 SetActive로만 껐다 켠다.")]
+    [SerializeField] private StageInfoView stageInfoPanel;
+    // 지금 패널에 내용을 채워 넣은 지역. 닫을 때 그 스포너의 참조만 끊으면 되므로 들고 있는다.
+    private int _shownRegion = -1;
     // 해금된 모든 지역의 적이 전멸했을 때 1회 발생.
     public Camera cam;
     public event Action AllRegionsClear;
@@ -70,6 +66,7 @@ public class SpawnerManager : MonoBehaviour
                 UnlockRegion(m.ModuleId,m.CurrentState);
         }
         changeCheck = true;
+        HideStageInfos();
     }
 
     private void OnDestroy()
@@ -114,7 +111,7 @@ public class SpawnerManager : MonoBehaviour
                 continue;
             }
             if(!IsUnlocked(kv.Key))continue;
-            ShowStageInfo(kv.Key, tile); // 클릭한 그 포탈 옆에 정보 텍스트 띄우고 그 지역의 웨이브 정보 채우기
+            ShowStageInfo(kv.Key, tile); // 스테이지 정보 패널을 켜고 그 지역의 웨이브 정보로 채운다
             return;                                            // 맞는 지역 하나 찾으면 끝
         }
     }
@@ -165,7 +162,7 @@ public class SpawnerManager : MonoBehaviour
     private void ChangeNight()
     {
         changeCheck = false;
-        HideStageInfos(); // 밤엔 정보 텍스트 제거
+        HideStageInfos(); // 밤엔 정보 패널을 닫는다
     }
 
     // 해금된 모든 지역에 포탈 표시(낮). 이미 떠 있으면 중복 생성하지 않는다.
@@ -220,41 +217,28 @@ public class SpawnerManager : MonoBehaviour
         spawnPoints.Clear();
     }
 
-    // 구역 클릭 시: 클릭한 그 포탈 옆에 정보 텍스트 프리팹을 띄우고, 그 TMP에 웨이브 정보를 채운다.
-    // 월드 오브젝트라 화면을 이동해도 포탈 옆에 그대로 유지된다.
+    // 구역 클릭 시: 고정 스테이지 정보 패널을 켜고 그 지역의 웨이브 정보로 채운다.
+    // 패널은 씬에 하나뿐이라 지역을 바꿔 클릭하면 같은 패널의 내용만 갈아끼운다.
     private void ShowStageInfo(int region, Tile clickedTile)
     {
-        if (infoTextPrefab == null) return;
+        if (stageInfoPanel == null) return;
         if (!spawnPoints.TryGetValue(region, out var portals) || portals == null || portals.Count == 0) return; // 포탈 없으면 표시 안 함
         if (!_byRegion.TryGetValue(region, out var spawner) || spawner == null) return;
 
-        // 클릭한 스폰 칸 위에 실제로 서 있는 포탈을 기준점으로 삼는다(포탈은 레인 시작 칸에 세워지므로 좌표가 일치).
-        // 이번 라운드에 안 뽑혀 포탈이 없는 칸이면 적이 나오지 않는 자리 — 정보를 띄우지 않고 떠 있던 것도 치운다.
-        GameObject portal = FindPortalAt(spawner.Board, portals, clickedTile);
-        if (portal == null) { HideStageInfos(); return; }
+        // 클릭한 스폰 칸 위에 실제로 포탈이 서 있는지만 확인한다(포탈은 레인 시작 칸에 세워지므로 좌표가 일치).
+        // 이번 라운드에 안 뽑혀 포탈이 없는 칸이면 적이 나오지 않는 자리 — 패널을 띄우지 않고 떠 있던 것도 닫는다.
+        if (FindPortalAt(spawner.Board, portals, clickedTile) == null) { HideStageInfos(); return; }
 
-        Vector3 pos = portal.transform.position + infoTextOffset;
-        if (!_infoTexts.TryGetValue(region, out var go) || go == null)
-        {
-            go = PoolManager.Instance.Spawn(infoTextPrefab, pos, Quaternion.identity);
-            _infoTexts[region] = go;
-        }
-        else
-        {
-            go.transform.position = pos;
-        }
+        // 다른 지역을 눌렀으면 이전 지역의 참조부터 끊는다(스포너 하나가 패널을 계속 물고 있지 않게).
+        if (_shownRegion >= 0 && _shownRegion != region) UnbindSpawner(_shownRegion);
 
-
-        var follow = go.GetComponent<StageInfoFollow>();
-        if (follow != null) follow.Follow(portal.transform, infoTextOffset, cam);
-        Canvas canvas = go.GetComponentInChildren<Canvas>(true);
-        if (canvas != null) canvas.sortingOrder = stageInfoSortingOrder + region;
-
-        // 새 팝업(아이콘 행 + 툴팁)이면 StageInfoView로, 아직 구버전 프리팹이면 TMP_Text로 폴백.
-        // GetComponentInChildren<TMP_Text>는 행마다 TMP가 생기면 아무거나 집어오므로 View가 있을 때는 쓰지 않는다.
-        StageInfoView view = go.GetComponent<StageInfoView>() ?? go.GetComponentInChildren<StageInfoView>(true);
-        spawner.infoView = view;
-        spawner.text = view != null ? null : go.GetComponentInChildren<TMP_Text>(true);
+        stageInfoPanel.Show();
+        // 툴팁 스탯이 EnemyBase와 같은 배율을 쓰려면 글로벌 일차가 필요하다.
+        // 패널은 컨테이너에 등록돼 있지 않아 GameManager를 직접 주입받지 못하므로 여기서 넘긴다.
+        stageInfoPanel.SetDay(CurrentDay);
+        spawner.infoView = stageInfoPanel;
+        spawner.text = null;   // 패널을 쓰는 동안은 TMP 한 덩어리 폴백을 죽여둔다
+        _shownRegion = region;
         spawner.OnClickStage(region, LocalStage(region), UnlockedCount(), CurrentDay); // 웨이브/증원/보스 정보 기록
     }
 
@@ -272,19 +256,23 @@ public class SpawnerManager : MonoBehaviour
         return null;
     }
 
+    // 패널을 닫는다. 스폰 칸이 아닌 곳을 클릭했을 때와 밤 전환 때 불린다.
+    // 패널은 하나뿐이므로 스폰/회수 없이 SetActive만 내린다.
     private void HideStageInfos()
     {
-        foreach (var kv in _infoTexts)
-        {
-            if (_byRegion.TryGetValue(kv.Key, out var spawner) && spawner != null)
-            {
-                spawner.ResetText();  // 떠 있던 툴팁/행을 먼저 정리 (풀 오브젝트는 자식이 남는다)
-                spawner.text = null;  // 반납된 풀 오브젝트를 계속 참조하지 않도록 해제
-                spawner.infoView = null;
-            }
-            if (kv.Value != null) PoolManager.Instance.Despawn(kv.Value);
-        }
-        _infoTexts.Clear();
+        if (_shownRegion >= 0) UnbindSpawner(_shownRegion);
+        _shownRegion = -1;
+        if (stageInfoPanel != null) stageInfoPanel.Hide();
+    }
+
+    // 패널을 물고 있던 스포너의 참조를 끊는다. 끊기 전에 ResetText로 떠 있던 툴팁/행을 먼저 정리해야
+    // 다음에 다른 지역이 같은 패널을 쓸 때 지난 내용이 남지 않는다.
+    private void UnbindSpawner(int region)
+    {
+        if (!_byRegion.TryGetValue(region, out var spawner) || spawner == null) return;
+        spawner.ResetText();
+        spawner.infoView = null;
+        spawner.text = null;
     }
     private void BuildRegistry()
     {

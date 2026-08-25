@@ -17,6 +17,8 @@ public class EnemyArchiveManager : MonoBehaviour
     public Button infoCloseButton;
     [Tooltip("적 목록 컴포넌트. 비워두면 archive 하위에서 찾는다.")]
     [SerializeField] private EnemyArchive archiveList;
+    [Tooltip("여기 등록한 오브젝트가 하나라도 켜지면 도감을 닫는다. 다른 UI의 루트 패널을 넣으면 된다.")]
+    [SerializeField] private GameObject[] closeWhenOpened;
     private CancellationTokenSource cts;
     private bool isOpenCheck;
 
@@ -29,15 +31,22 @@ public class EnemyArchiveManager : MonoBehaviour
 
         // OpenArchiveCor는 첫 await 전까지 동기로 도므로 archive.SetActive(true)가 여기서 이미 끝난다.
         // → 그 뒤에 ShowEnemy를 불러야 EnemyArchive.OnEnable(Build) 다음 순서가 된다.
-        if (!isOpenCheck) OnClickOpenArchive();
+        // 보여줄 적이 이미 정해져 있으니 마지막 페이지 복원은 건너뛴다(두 번 펼치지 않게).
+        if (!isOpenCheck) OpenArchive(restoreLastPage: false);
 
+        if (!TryGetArchiveList(out EnemyArchive list)) return;
+        list.ShowEnemy(data);
+    }
+
+    // archive 하위의 EnemyArchive를 늦게 찾아 캐시한다. 인스펙터에 안 꽂아도 동작하게.
+    private bool TryGetArchiveList(out EnemyArchive list)
+    {
         if (archiveList == null) archiveList = archive.GetComponentInChildren<EnemyArchive>(true);
-        if (archiveList == null)
-        {
-            Debug.LogWarning("EnemyArchiveManager: archive 하위에 EnemyArchive가 없어 페이지를 띄울 수 없습니다.", this);
-            return;
-        }
-        archiveList.ShowEnemy(data);
+        list = archiveList;
+        if (list != null) return true;
+
+        Debug.LogWarning("EnemyArchiveManager: archive 하위에 EnemyArchive가 없어 페이지를 띄울 수 없습니다.", this);
+        return false;
     }
 
     void Start()
@@ -66,6 +75,35 @@ public class EnemyArchiveManager : MonoBehaviour
     void Update()
     {
         OnEscInput();
+        CloseIfOtherUiOpened();
+    }
+
+    // 등록해 둔 다른 UI가 켜지면 도감을 닫는다.
+    // hidePanal(바깥 클릭)로는 못 잡는 경우를 메운다 — 그 위에 그려지는 버튼으로 연 UI는
+    // hidePanal의 클릭을 거치지 않으므로 도감이 뒤에 그대로 남는다.
+    private void CloseIfOtherUiOpened()
+    {
+        if (!isOpenCheck) return;               // 완전히 열려 있을 때만 본다
+        if (closeWhenOpened == null) return;
+
+        for (int i = 0; i < closeWhenOpened.Length; i++)
+        {
+            GameObject go = closeWhenOpened[i];
+            if (go == null || !go.activeInHierarchy) continue;
+            CloseArchive();
+            return;
+        }
+    }
+
+    /// <summary>
+    /// 바깥에서 도감을 닫는 창구. 다른 UI 버튼의 OnClick에 직접 걸어도 된다.
+    /// 열려 있을 때만 동작하고, 닫히는 중에 또 불려도 애니메이션을 다시 시작하지 않는다.
+    /// </summary>
+    public void CloseArchive()
+    {
+        if (!isOpenCheck) return;
+        isOpenCheck = false;   // CloseArchiveCor가 끝나기 전에 매 프레임 다시 불리는 것을 막는다
+        OnClickCloseArchive();
     }
     void OnDestroy()
     {
@@ -82,10 +120,16 @@ public class EnemyArchiveManager : MonoBehaviour
         if (Keyboard.current.escapeKey.wasPressedThisFrame&&isOpenCheck)
             OnClickCloseArchive();   // 동일 닫기 창구 재사용
     }
-    private void OnClickOpenArchive()
+    // 도감 버튼으로 여는 경로 — 마지막으로 보던 페이지(없으면 기본 적)로 되돌린다.
+    private void OnClickOpenArchive() => OpenArchive(restoreLastPage: true);
+
+    private void OpenArchive(bool restoreLastPage)
     {
         ResetCts();
-        OpenArchiveCor(cts.Token).Forget();
+        OpenArchiveCor(cts.Token).Forget();   // 첫 await 전까지 동기 — 여기서 archive가 이미 활성화된다
+
+        if (!restoreLastPage) return;
+        if (TryGetArchiveList(out EnemyArchive list)) list.ShowLastOrDefault();
     }
     // 바깥 클릭(hidePanal) 전용 - ESC와 동일하게 튜토리얼 강제 진행 중엔 막는다.
     // 명시적 닫기 버튼(infoCloseButton)은 이 가드를 안 거치고 OnClickCloseArchive를 직접 부른다.

@@ -36,6 +36,10 @@ public class StageEnemyRow : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
 
     public EnemyTable.Data Data => data;
 
+    // 이 행이 실제로 그리고 있는 아이콘. 아이콘 PNG가 없어 이름으로 폴백한 행은 null.
+    // 툴팁이 같은 그림을 다시 Resources에서 찾지 않고 이걸 그대로 쓴다.
+    public Sprite IconSprite => icon != null && icon.enabled ? icon.sprite : null;
+
     public void Set(EnemyTable.Data data, int count, string badgeKey,
                     Action<StageEnemyRow> onHover, Action<StageEnemyRow> onExit, Action<StageEnemyRow> onClick)
     {
