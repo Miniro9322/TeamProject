@@ -14,6 +14,10 @@ public class BuildModePanel : MonoBehaviour
     [SerializeField] private MapView view;
     [SerializeField] private MapGame game;
     [SerializeField] private Key closeKey = Key.Escape;
+    [SerializeField] private Key upgradeKey = Key.U;
+    [SerializeField] private Key replaceKey = Key.R;
+    [SerializeField] private Key removeKey = Key.E;
+    [SerializeField] private Key inventoryKey = Key.I;
     private Keyboard keyboard;
     private ClickOutsideCloser heroPanelCloser;
     private ClickOutsideCloser inventoryCloser;
@@ -24,6 +28,13 @@ public class BuildModePanel : MonoBehaviour
         heroPanel.SetActive(false);
         heroInventory.SetActive(false);
         classUpgradePanel.SetActive(false);
+
+        // classUpgradePanel/heroInventory는 전용 스크립트가 없는 순수 GameObject라, OnEnable/OnDisable로
+        // ExclusiveUiCoordinator에 알려줄 컴포넌트를 여기서 붙여준다(씬/프리팹을 직접 안 건드리기 위해).
+        if (classUpgradePanel.GetComponent<ExclusivePanelPresence>() == null)
+            classUpgradePanel.AddComponent<ExclusivePanelPresence>();
+        if (heroInventory.GetComponent<ExclusivePanelPresence>() == null)
+            heroInventory.AddComponent<ExclusivePanelPresence>();
 
         keyboard = Keyboard.current;
 
@@ -47,6 +58,19 @@ public class BuildModePanel : MonoBehaviour
         game.EnviromentManager.OnDay -= EnablePanel;
     }
 
+    // ESC로 메뉴를 열지 말지 판단할 때 쓴다(UiManager) - 여기서 취소/닫을 게 있으면 ESC는
+    // 메뉴를 여는 대신 그것부터 처리해야 하므로, Update()의 ESC 분기와 조건을 그대로 맞춘다.
+    public bool HasEscapeCancelable =>
+        view.HasArmedOrSelectedSkill
+        || view.IsHolding
+        || !view.IsOff
+        || heroPanel.activeSelf
+        || heroInventory.activeSelf
+        || classUpgradePanel.activeSelf
+        || (cheatPanel != null && cheatPanel.activeSelf)
+        || (heroArchiveButton != null && heroArchiveButton.IsOpen)
+        || (heroCreateAmountPanel != null && heroCreateAmountPanel.gameObject.activeInHierarchy);
+
     private void Update()
     {
         if (heroPanel.activeSelf && heroPanelCloser.ClickedOutside())
@@ -63,6 +87,19 @@ public class BuildModePanel : MonoBehaviour
         }
 
         if (keyboard == null) return;
+
+        if (keyboard[upgradeKey].wasPressedThisFrame)
+            OnClassUpgradeButton();
+
+        if (keyboard[replaceKey].wasPressedThisFrame)
+            OnReplaceButton();
+
+        if (keyboard[removeKey].wasPressedThisFrame)
+            OnRemoveButton();
+
+        if (keyboard[inventoryKey].wasPressedThisFrame)
+            OnInventoryButton();
+
         if (!keyboard[closeKey].wasPressedThisFrame) return;
         if (TutorialInputGate.BlockEscapeClose) return;
 
@@ -114,12 +151,6 @@ public class BuildModePanel : MonoBehaviour
         gameObject.SetActive(true);
     }
 
-    public void OnFacilityButton()
-    {
-        if (heroPanel.activeSelf)
-            heroPanel.SetActive(false);
-    }
-
     public void OnHeroButton()
     {
         if (heroPanel.activeSelf)
@@ -130,6 +161,8 @@ public class BuildModePanel : MonoBehaviour
         {
             heroPanel.SetActive(true);
             heroPanelCloser.MarkOpened();
+            if (heroInventory.activeSelf) heroInventory.SetActive(false);
+            if (classUpgradePanel.activeSelf) classUpgradePanel.SetActive(false);
         }
     }
 
@@ -161,9 +194,6 @@ public class BuildModePanel : MonoBehaviour
         }
     }
 
-    // HeroSetPanel이 영웅 생성 직후 바로 장비를 끼울 수 있게 열 때 쓴다 - 토글이 아니라 항상 "열림"
-    // 상태로만 만든다. inventoryCloser.MarkOpened()를 반드시 거쳐야 그 프레임의 클릭(생성 버튼 클릭
-    // 등)이 "바깥 클릭"으로 오판돼 열리자마자 닫히는 깜빡임이 안 생긴다.
     public void OpenInventory()
     {
         if (heroInventory.activeSelf) return;
@@ -171,6 +201,7 @@ public class BuildModePanel : MonoBehaviour
         heroInventory.SetActive(true);
         inventoryCloser.MarkOpened();
         if (classUpgradePanel.activeSelf) classUpgradePanel.SetActive(false);
+        if (heroPanel.activeSelf) heroPanel.SetActive(false);
     }
 
     public void OnClassUpgradeButton()
@@ -184,6 +215,7 @@ public class BuildModePanel : MonoBehaviour
             classUpgradePanel.SetActive(true);
             classUpgradeCloser.MarkOpened();
             if (heroInventory.activeSelf) heroInventory.SetActive(false);
+            if (heroPanel.activeSelf) heroPanel.SetActive(false);
         }
     }
 

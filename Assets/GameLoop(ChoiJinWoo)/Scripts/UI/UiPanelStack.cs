@@ -9,6 +9,10 @@ public class UiPanelStack
 {
     private readonly List<IClosablePanel> stack = new();
 
+    // ESC로 메뉴를 열지 말지 판단할 때 쓴다(UiManager) - 이 스택에 뭐라도 떠 있으면 ESC는
+    // 메뉴를 여는 대신 그 패널부터 닫아야 하므로.
+    public bool HasAny => stack.Count > 0;
+
     public void Push(IClosablePanel panel)
     {
         stack.Remove(panel); // 이미 있으면 맨 위로 옮긴다(중복 방지)

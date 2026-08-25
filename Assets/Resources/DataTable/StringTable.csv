@@ -110,8 +110,8 @@ HitsShield_Desc,받는 피해가 1로 고정되며 일정 타수만큼만 피해
 Burrow_Desc,땅속에 숨어 이동을 하며 공격대상에서 제외된다. 저지 했을 시 영웅에게 피해를 주며 기절을 걸고 밖으로 나온다.,Moves hidden underground and is excluded from targeting. When blocked it damages and stuns the hero then surfaces.,地中に隠れて移動し攻撃対象から外れる。阻止された時は英雄にダメージと気絶を与えて地上に出る。
 Flame_Desc,모든 불 데미지에 면역이며 불에 닿으면 고유 특성으로 화염의 오라 를 사용 한다.,Immune to all fire damage. On contact with fire it uses its innate Flame Aura.,全ての火炎ダメージに免疫を持ち、炎に触れると固有特性の炎のオーラを使用する。
 Swim_Desc,물 타일에서 수영으로 지나 갈 수 있으며 물 에서는 이동속도가 증가한다.,Can swim across water tiles and moves faster while in water.,水タイルを泳いで渡ることができ、水中では移動速度が上がる。
-ToolTip_HeroIcon,영웅 소환,HeroSpawn,英雄召喚
-ToolTip_Upgrade,업그레이드,Upgrade,アップグレード
+ToolTip_HeroIcon,영웅 소환  ,HeroSpawn,英雄召喚
+ToolTip_Upgrade,업그레이드 (단축키: U),Upgrade,アップグレード
 Melee_Hero_Create,근거리 영웅 생성,Create Melee Hero,
 Ranged_Hero_Create,원거리 영웅 생성,Create Ranged Hero,
 Hero_BraveCitizen_Name,용감한 시민,Brave Citizen,Todo
@@ -209,8 +209,8 @@ Guide_CitizenInfo,"자원 생산 및 영웅 생성에 필수불가결인 요소�
 Guide_DayNIghtInfo,시간대가 낮과 밤으로 나뉘어져 낮에는 영웅 생성과 배치 및 건물 건설 및 시민 배치를 할 수 있고 밤에는 전투가 시작된다.\n밤에는 스킬 사용을 제외한 모든 행동이 불가능하다.\n우 하단의 아이콘을 클릭하여 밤으로 넘어갈 수 있다.,,
 Guide_MonsterBookButton,도감,,
 Guide_MonsterBookInfo,도감에서는 마주한 적 있는 적에 대한 정보가 적혀있다.,,
-ToolTip_Replace,재배치,,
-ToolTip_Remove,제거,,
+ToolTip_Replace,재배치 (단축키: R),,
+ToolTip_Remove,제거 (단축키: E),,
 ToolTip_Hp,거점 체력(0이 되면 게임 오버),,
 ToolTip_Cancel,취소,,
 ToolTip_DayCount,진행 날짜,,
@@ -223,12 +223,12 @@ ToolTip_Iron,철,,
 ToolTip_Gold,금,,
 ToolTip_Food,식량,,
 ToolTip_Special,특수 자원(이름 미정),,
-ToolTip_BaseOpen,거점 화면,,
-ToolTip_NightButton,밤으로 변경,,
-ToolTip_MonsterBook,몬스터 도감,,
+ToolTip_BaseOpen,거점 화면 (단축키: B),,
+ToolTip_NightButton,밤으로 변경 (단축키: N),,
+ToolTip_MonsterBook,몬스터 도감 (단축키: O),,
 ToolTip_HeroList,영웅 리스트,,
-ToolTip_Menu,메뉴,,
-ToolTip_Help,가이드,,
+ToolTip_Menu,메뉴 (단축키: ESC),,
+ToolTip_Help,가이드 (단축키: G),,
 Ui_NewGame,새 게임 시작,New Game,新しいゲーム
 Ui_Load,불러오기,Load,ロード
 Ui_SlotLabel,슬롯 {0},Slot {0},スロット{0}
@@ -326,7 +326,7 @@ Tutorial_HeroUpgrade,해당 버튼을 누르면 영웅을 업그레이드 할 �
 Tutorial_HeroMerge,같은 종류의 영웅이 3명 있으면 아이콘을 더블 클릭해서 상위 티어로 조합할 수 있습니다.\n근접 영웅은 상위 티어의 근접 영웅이 원거리 영웅은 상위 티어의 원거리 영웅이 나옵니다.,,
 Tutorial_NightButton,준비가 다 됐으니 적의 공격을 막아봅시다. 아이콘을 눌러 시간대를 밤으로 변경해 봅시다.,,
 Tutorial_NextButton,다음으로,,
-Tooltip_Hero_Inventory,영웅 목록,,
+Tooltip_Hero_Inventory,영웅 목록 (단축키: I),,
 Title_StartButton,시작,,
 Title_UpgradeButton,업그레이드,,
 Title_SettingButton,설정,,
@@ -444,6 +444,9 @@ Tutorial_SkipTutorial,아니요,,
 Tutorial_GameSpeed,"이 버튼으로 게임의 진행 속도를 조절할 수 있습니다.\n정지, 배속을 상황에 맞게 활용해 보세요.",,
 Tutorial_Complete,"축하합니다! 튜토리얼을 모두 마쳤습니다.\n지금까지 배운 내용을 활용해 마을을 지키고 키워나가 보세요.",,
 Hero_Buy,구매,BUY,
-Player_ActiveSkill_AttackBuff,영역 내 모든 영웅들의 공격력과 공격속도가 증가합니다. (사용 마나: {0}),,
-Player_ActiveSkill_EnemySlow,영역 내 모든 적들의 이동속도가 감소합니다. (사용 마나: {0}),,
-Player_ActiveSkill_Heal,영역 내 모든 영웅들의 체력을 점차 회복시킵니다. (사용 마나: {0}),,
+Player_ActiveSkill_AttackBuff,영역 내 모든 영웅들의 공격력과 공격속도가 증가합니다. (사용 마나: {0}) (단축키: 1),,
+Player_ActiveSkill_EnemySlow,영역 내 모든 적들의 이동속도가 감소합니다. (사용 마나: {0}) (단축키: 2),,
+Player_ActiveSkill_Heal,영역 내 모든 영웅들의 체력을 점차 회복시킵니다. (사용 마나: {0}) (단축키: 3),,
+ToolTip_HeroBook,영웅 도감 (단축키: P),,
+UI_BaseUpgrade_ResetButton,초기화,,
+UI_BaseUPgrade_UpgradeButton,업그레이드,,
