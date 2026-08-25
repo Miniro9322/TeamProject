@@ -1,6 +1,9 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.Pool;
+using UnityEngine.UI;
 
 public class HeroInventory : MonoBehaviour
 {
@@ -12,6 +15,7 @@ public class HeroInventory : MonoBehaviour
     [SerializeField] private HeroCombineManager combineManager;
     [SerializeField] private Transform tabBarContainer;
     [SerializeField] private CanvasGroup canvasGroup;
+    [SerializeField] private Button combineAllButton;
     private readonly Dictionary<HeroRosterEntry, HeroRosterIcon> icons = new();
     private ObjectPool<HeroRosterIcon> iconPool;
 
@@ -31,6 +35,7 @@ public class HeroInventory : MonoBehaviour
             defaultCapacity: 16);
 
         BuildTabs();
+        combineAllButton?.onClick.AddListener(OnCombineAllClicked);
         game.HeroRoster.Changed += Refresh;
         Refresh();
         view.OnOffMode += ShowContent;
@@ -94,6 +99,8 @@ public class HeroInventory : MonoBehaviour
             if (Matches(entry))
                 yield return entry;
     }
+    private bool CanBuildNow() => game.Rule == null || game.Rule.CanBuild;
+
     private void Refresh()
     {
         var current = new HashSet<HeroRosterEntry>(FilteredEntries());
@@ -110,6 +117,9 @@ public class HeroInventory : MonoBehaviour
                 icons.Remove(entry);
             }
 
+        // 밤에는 회수 불가 — 콜백 자체를 넘기지 않아 아이콘 쪽에서 회수 버튼을 숨기게 한다.
+        Action<HeroRosterEntry> retrieveCallback = CanBuildNow() ? OnRetrieveClicked : null;
+
         foreach (HeroRosterEntry entry in FilteredEntries())
         {
             if (!icons.TryGetValue(entry, out HeroRosterIcon icon))
@@ -117,8 +127,78 @@ public class HeroInventory : MonoBehaviour
                 icon = iconPool.Get();
                 icons[entry] = icon;
             }
-            icon.Set(entry, OnIconClicked, OnIconDoubleClicked);
+            icon.Set(entry, OnIconClicked, OnIconDoubleClicked, retrieveCallback);
             icon.transform.SetAsLastSibling();
+        }
+
+        if (combineAllButton != null)
+            combineAllButton.interactable = CanBuildNow() && GroupFilteredByMergeKey().Values.Any(g => g.Count >= 3);
+    }
+
+    // 현재 필터(FilteredEntries)에 걸린 엔트리만 MergeKey로 묶는다 — 일괄합성이 필터 밖의 동일 영웅까지
+    // 건드리지 않도록 후보를 여기서부터 필터링된 목록으로만 만든다.
+    private Dictionary<MergeKey, List<HeroRosterEntry>> GroupFilteredByMergeKey()
+    {
+        var groups = new Dictionary<MergeKey, List<HeroRosterEntry>>();
+        foreach (HeroRosterEntry entry in FilteredEntries())
+        {
+            if (!entry.TryGetMergeKey(out MergeKey key)) continue;
+            if (!groups.TryGetValue(key, out List<HeroRosterEntry> list))
+                groups[key] = list = new List<HeroRosterEntry>();
+            list.Add(entry);
+        }
+        return groups;
+    }
+
+    private void OnCombineAllClicked()
+    {
+        bool combinedAny = true;
+        while (combinedAny)
+        {
+            combinedAny = false;
+            foreach (List<HeroRosterEntry> group in GroupFilteredByMergeKey().Values)
+            {
+                if (group.Count < 3) continue;
+                group.Sort((a, b) => (a.PlacedUnit != null ? 1 : 0).CompareTo(b.PlacedUnit != null ? 1 : 0)); // 미배치 우선
+                if (combineManager.TryCombine(group.GetRange(0, 3)))
+                {
+                    combinedAny = true;
+                    break; // 로스터가 바뀌었으니 그룹을 다시 계산
+                }
+            }
+        }
+    }
+
+    // 배치된 영웅을 필드에서 치우고 로스터로 되돌린다(UnitRemover.DestroyOrReturnToPool과 같은 절차,
+    // 다만 엔트리를 로스터에서 빼지 않고 MarkAvailable로만 되돌린다는 점이 다르다).
+    private void OnRetrieveClicked(HeroRosterEntry entry)
+    {
+        if (!CanBuildNow()) return; // 밤에는 회수 불가
+        if (entry == null || entry.State != HeroRosterState.Placed) return;
+
+        GameObject unit = entry.PlacedUnit;
+        if (unit == null) return;
+
+        unit.TryGetComponent(out Hero hero);
+
+        if (game.Units.TryGetArea(unit, out PlacementArea area))
+        {
+            AreaPlace.Remove(area);
+            game.Units.Remove(unit);
+        }
+
+        entry.MarkAvailable();
+        game.HeroRoster.NotifyStateChanged();
+
+        if (hero != null)
+        {
+            HeroSelectionService.ClearIfSelected(hero);
+            hero.PrepareForDespawn();
+            PoolManager.Instance.Despawn(unit);
+        }
+        else
+        {
+            Destroy(unit);
         }
     }
 
