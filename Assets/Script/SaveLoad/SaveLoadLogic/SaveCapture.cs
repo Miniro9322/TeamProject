@@ -52,6 +52,11 @@ public class SaveCapture
         data.baseHp = gameManager.Hp;
         data.heroUnlock = gameManager.UnlockHero;
         data.perfectDefensePending = gameManager.perfactDefence;
+        data.gameSeed = gameManager.GameSeed;
+        data.heroDrawMeleeCount = gameManager.HeroDrawMeleeCount;
+        data.heroDrawRangedCount = gameManager.HeroDrawRangedCount;
+        data.heroCombineMeleeCounts = gameManager.HeroCombineMeleeCounts;
+        data.heroCombineRangedCounts = gameManager.HeroCombineRangedCounts;
         data.woodAmount = resourcesManager.Wood;
         data.foodAmount = resourcesManager.Food;
         data.goldAmount = resourcesManager.Gold;

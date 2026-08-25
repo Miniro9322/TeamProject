@@ -48,6 +48,18 @@ public class GameManager : MonoBehaviour
     public int todayHp;
     public bool perfactDefence = false;
 
+    private string gameSeed = Guid.NewGuid().ToString("N");
+    private int heroDrawMeleeCount;
+    private int heroDrawRangedCount;
+    private int[] heroCombineMeleeCounts = new int[3];   // 인덱스 0=1→2티어, 1=2→3티어, 2=3→4티어
+    private int[] heroCombineRangedCounts = new int[3];
+
+    public string GameSeed => gameSeed;
+    public int HeroDrawMeleeCount => heroDrawMeleeCount;
+    public int HeroDrawRangedCount => heroDrawRangedCount;
+    public int[] HeroCombineMeleeCounts => heroCombineMeleeCounts;
+    public int[] HeroCombineRangedCounts => heroCombineRangedCounts;
+
     [Inject]
     private void Construct(UiManager uiManager, SpawnerManager waveSpawner, UpgradeState upgradeState, TutorialState tutorialState)
     {
@@ -208,7 +220,50 @@ public class GameManager : MonoBehaviour
         uiManager.UnlockedHero = value;
     }
 
-        public void ResetHpToFull()
+    // 세이브 데이터로 시드를 그대로 덮어쓴다 (로드 복원 전용) - 비어있으면(패치 이전 세이브) 새로 만든다.
+    public void RestoreGameSeed(string seed)
+    {
+        gameSeed = string.IsNullOrEmpty(seed) ? Guid.NewGuid().ToString("N") : seed;
+    }
+
+    // 세이브 데이터로 영웅 뽑기 순번(근접/원거리)을 그대로 덮어쓴다 (로드 복원 전용) -
+    // 뽑기 직전 상태로 되돌아가도 같은 순번을 다시 소비하게 되어 결과가 항상 같아진다.
+    public void RestoreHeroDrawCounts(int meleeCount, int rangedCount)
+    {
+        heroDrawMeleeCount = meleeCount;
+        heroDrawRangedCount = rangedCount;
+    }
+
+    // 영웅을 뽑을 때마다 호출한다 - 종류에 맞는 순번을 하나 늘리고 (시드, 순번)을 반환한다.
+    public (string seed, int count) ConsumeHeroDraw(OccupantKind kind)
+    {
+        if (kind == OccupantKind.RangedHero)
+        {
+            heroDrawRangedCount++;
+            return (gameSeed, heroDrawRangedCount);
+        }
+
+        heroDrawMeleeCount++;
+        return (gameSeed, heroDrawMeleeCount);
+    }
+
+    // 세이브 데이터로 영웅 합성 순번(근접/원거리 × 티어)을 그대로 덮어쓴다 (로드 복원 전용)
+    public void RestoreHeroCombineCounts(int[] meleeCounts, int[] rangedCounts)
+    {
+        heroCombineMeleeCounts = meleeCounts ?? new int[3];
+        heroCombineRangedCounts = rangedCounts ?? new int[3];
+    }
+
+    // 영웅을 합성할 때마다 호출한다 - 종류+티어에 맞는 순번을 하나 늘리고 (시드, 순번)을 반환한다.
+    public (string seed, int count) ConsumeHeroCombine(OccupantKind kind, int tier)
+    {
+        int[] counts = kind == OccupantKind.RangedHero ? heroCombineRangedCounts : heroCombineMeleeCounts;
+        int index = Mathf.Clamp(tier - 1, 0, counts.Length - 1);
+        counts[index]++;
+        return (gameSeed, counts[index]);
+    }
+
+    public void ResetHpToFull()
     {
         hp = initialHp;
         HpChanged?.Invoke();

@@ -100,7 +100,7 @@ public class MapAssemble : MonoBehaviour
             SkillTargetFinder skillFinder = new SkillTargetFinder(skillCast, view);
             PlayerSkillTargetFinder playerSkillFinder = new PlayerSkillTargetFinder(playerSkillCast, view);
             tilePaintView.SetupEdges(boards);
-            tilePaintView.sync = new TilePaintSync(hoverFinder, skillFinder, playerSkillFinder, rangeCalc, rangeStore, tilePaintView.Painter);
+            tilePaintView.sync = new TilePaintSync(hoverFinder, skillFinder, playerSkillFinder, rangeCalc, rangeStore, tilePaintView.Painter, pointerPick);
         }
 
         rangeInput.pointerPick = pointerPick;

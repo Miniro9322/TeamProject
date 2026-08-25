@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using UnityEngine;
-using Random = UnityEngine.Random;
 
 // 같은 영웅 3개를 합성해 다음 티어 영웅 1개를 만드는 담당. 결과는 항상 원본과 같은 종류(근접/원거리)다.
 // 더블클릭한 대상(pinnedEntry)이 필드에 배치돼 있었다면 결과 영웅을 그 자리에 그대로 배치하고,
@@ -76,7 +75,9 @@ public class HeroCombineManager : MonoBehaviour
         if (!heroRegistry.TryGetNextTierHeroDatas(tier, kind, out List<HeroData> nextTierDatas))
             return false; // 최고 티어거나, 같은 종류의 다음 티어 데이터 없음
 
-        HeroData nextTierData = nextTierDatas[Random.Range(0, nextTierDatas.Count)];
+        (string seed, int count) = game.Rule.ConsumeHeroCombine(kind, tier);
+        System.Random rng = new System.Random(GameSeeding.Derive(seed, count));
+        HeroData nextTierData = nextTierDatas[rng.Next(nextTierDatas.Count)];
         GameObject nextTierPrefab = nextTierData.HeroPrefab;
 
         // 합성 결과는 결과 티어만큼 인구수를 차지 — 원본 3개가 쓰던 인구수는 여기서 정산해 반환한다.
