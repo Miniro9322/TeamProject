@@ -5377,6 +5377,7 @@ MonoBehaviour:
   infoOpenButton: {fileID: 158157035}
   infoCloseButton: {fileID: 1091409379}
   archiveList: {fileID: 1091409381}
+  closeWhenOpened: []
 --- !u!4 &250356135
 Transform:
   m_ObjectHideFlags: 0
@@ -30873,9 +30874,7 @@ MonoBehaviour:
   - {fileID: 886515112}
   - {fileID: 215363321}
   spawnPoint: {fileID: 7456569907757309849, guid: bea80f4b41e53ed419d66ed07388c193, type: 3}
-  infoTextPrefab: {fileID: 7556058626658315482, guid: 4e2497c728adeb14d84e5b1905c18242, type: 3}
-  infoTextOffset: {x: 2, y: 4, z: 0}
-  stageInfoSortingOrder: -10
+  stageInfoPanel: {fileID: 0}
   cam: {fileID: 755029713}
   guardPanel: {fileID: 250998268}
   directingUi: {fileID: 1756177633}
@@ -46177,7 +46176,7 @@ MonoBehaviour:
   closeKey: 60
   upgradeKey: 35
   replaceKey: 32
-  removeKey: 21
+  removeKey: 19
   inventoryKey: 23
 --- !u!114 &2084934174
 MonoBehaviour:

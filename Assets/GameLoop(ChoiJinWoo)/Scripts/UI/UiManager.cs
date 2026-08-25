@@ -9,6 +9,7 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
+using VContainer;
 
 public class UiManager : MonoBehaviour
 {
@@ -28,13 +29,31 @@ public class UiManager : MonoBehaviour
     [SerializeField] private GameObject guidePanel;
     [SerializeField] private TextMeshProUGUI dayText;
     [SerializeField] private TextMeshProUGUI upgradeResourceText;
-    [SerializeField] private Key MenuKey = Key.T;
+    [SerializeField] private Key MenuKey = Key.Escape;
+    [SerializeField] private Key guideOpenKey = Key.G;
 
     public byte UnlockedHero;
     public byte UnlockedEnemy;
 
     public event Action UnlockChanged;
     private Keyboard keyboard;
+
+    private UiPanelStack panelStack;
+    private BuildModePanel buildModePanel;
+    private AddCitizen addCitizen;
+    // ESC가 눌린 "이전 프레임 끝" 시점에 닫을 게 있었는지를 담아둔다 - 같은 프레임 안에서 다른
+    // 패널들의 Update()가 이 스크립트보다 먼저/나중에 도는지는 보장이 안 되므로, 그 프레임 자체의
+    // 상태를 실시간으로 물어보면 이미 닫힌 뒤라 "닫을 게 없었다"고 오판할 수 있다. 그래서 한 프레임 전
+    // (LateUpdate에서 찍어둔) 스냅샷으로 판단해 Update 실행 순서와 무관하게 만든다.
+    private bool hadEscapeCloseTargetLastFrame;
+
+    [Inject]
+    private void Construct(UiPanelStack panelStack, BuildModePanel buildModePanel, AddCitizen addCitizen)
+    {
+        this.panelStack = panelStack;
+        this.buildModePanel = buildModePanel;
+        this.addCitizen = addCitizen;
+    }
 
     private void Awake()
     {
@@ -54,15 +73,32 @@ public class UiManager : MonoBehaviour
     {
         if (keyboard == null) return;
 
-        // ESC로 menuPanel/guidePanel을 닫는 건 각자 붙어있는 MenuUI/GuideUI가 자기 ClickOutsideCloser로
-        // 직접 담당한다(바깥 클릭과 같은 창구로 통일) - 여기서는 단축키 토글만 다룬다.
-        if (keyboard[MenuKey].wasPressedThisFrame)
+        if (keyboard[MenuKey].wasPressedThisFrame && !TutorialInputGate.BlockEscapeClose)
         {
-            if(menuPanel.activeSelf)
+            if (menuPanel.activeSelf)
                 menuPanel.SetActive(false);
-            else
+            else if (!hadEscapeCloseTargetLastFrame) // ESC로 닫거나 취소할 다른 게 있으면 그것부터 - 메뉴는 안 연다
                 menuPanel.SetActive(true);
         }
+
+        if (keyboard[guideOpenKey].wasPressedThisFrame)
+            OpenGuide();
+    }
+
+    private void LateUpdate()
+    {
+        hadEscapeCloseTargetLastFrame = HasEscapeCloseTarget();
+    }
+
+    // 이 패널들이 각자 자기 Update()에서 ESC를 보고 스스로 닫는 것과 별개로, 메뉴를 열지 말지
+    // 판단하는 데만 쓰는 상태 조회다 - 실제로 닫는 동작은 여전히 각 패널이 담당한다.
+    private bool HasEscapeCloseTarget()
+    {
+        return (panelStack != null && panelStack.HasAny)
+            || guidePanel.activeInHierarchy
+            || (addCitizen != null && addCitizen.gameObject.activeInHierarchy)
+            || (buildModePanel != null && buildModePanel.HasEscapeCancelable)
+            || (EnemyArchiveManager.Instance != null && EnemyArchiveManager.Instance.IsOpen);
     }
 
     public void ToggleGameSpeedUi(bool value)

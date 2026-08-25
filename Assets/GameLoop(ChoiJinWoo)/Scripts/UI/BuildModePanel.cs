@@ -16,7 +16,7 @@ public class BuildModePanel : MonoBehaviour
     [SerializeField] private Key closeKey = Key.Escape;
     [SerializeField] private Key upgradeKey = Key.U;
     [SerializeField] private Key replaceKey = Key.R;
-    [SerializeField] private Key removeKey = Key.G;
+    [SerializeField] private Key removeKey = Key.E;
     [SerializeField] private Key inventoryKey = Key.I;
     private Keyboard keyboard;
     private ClickOutsideCloser heroPanelCloser;
@@ -50,6 +50,19 @@ public class BuildModePanel : MonoBehaviour
         game.Rule.ChangeToNight -= DisablePanels;
         game.EnviromentManager.OnDay -= EnablePanel;
     }
+
+    // ESC로 메뉴를 열지 말지 판단할 때 쓴다(UiManager) - 여기서 취소/닫을 게 있으면 ESC는
+    // 메뉴를 여는 대신 그것부터 처리해야 하므로, Update()의 ESC 분기와 조건을 그대로 맞춘다.
+    public bool HasEscapeCancelable =>
+        view.HasArmedOrSelectedSkill
+        || view.IsHolding
+        || !view.IsOff
+        || heroPanel.activeSelf
+        || heroInventory.activeSelf
+        || classUpgradePanel.activeSelf
+        || (cheatPanel != null && cheatPanel.activeSelf)
+        || (heroArchiveButton != null && heroArchiveButton.IsOpen)
+        || (heroCreateAmountPanel != null && heroCreateAmountPanel.gameObject.activeInHierarchy);
 
     private void Update()
     {

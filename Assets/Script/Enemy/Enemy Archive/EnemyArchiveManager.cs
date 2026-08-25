@@ -22,6 +22,10 @@ public class EnemyArchiveManager : MonoBehaviour
     private CancellationTokenSource cts;
     private bool isOpenCheck;
 
+    // UiManager가 ESC로 메뉴를 열지 말지 판단할 때 쓴다 - 도감이 열려 있으면(닫히는 애니메이션
+    // 도중 포함) 메뉴를 열지 않고 도감부터 닫아야 하므로.
+    public bool IsOpen => isOpenCheck;
+
     void Awake() => Instance = this;
 
     // 도감을 열고 그 적 페이지를 띄운다. 이미 열려 있으면 페이지만 갈아끼운다.

@@ -4347,6 +4347,7 @@ GameObject:
   - component: {fileID: 566403344}
   - component: {fileID: 566403346}
   - component: {fileID: 566403345}
+  - component: {fileID: 566403347}
   m_Layer: 5
   m_Name: Text (TMP)
   m_TagString: Untagged
@@ -4473,6 +4474,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 566403343}
   m_CullTransparentMesh: 1
+--- !u!114 &566403347
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 566403343}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 49beb084dd5019e45a90f32e065ce6f6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LocalizeText
+  key: UI_BaseUpgrade_ResetButton
 --- !u!1 &589240146
 GameObject:
   m_ObjectHideFlags: 0
@@ -10679,6 +10693,7 @@ GameObject:
   - component: {fileID: 1661798183}
   - component: {fileID: 1661798185}
   - component: {fileID: 1661798184}
+  - component: {fileID: 1661798186}
   m_Layer: 5
   m_Name: Text (TMP)
   m_TagString: Untagged
@@ -10805,6 +10820,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1661798182}
   m_CullTransparentMesh: 1
+--- !u!114 &1661798186
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1661798182}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 49beb084dd5019e45a90f32e065ce6f6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LocalizeText
+  key: UI_BaseUPgrade_UpgradeButton
 --- !u!1 &1676444571
 GameObject:
   m_ObjectHideFlags: 0

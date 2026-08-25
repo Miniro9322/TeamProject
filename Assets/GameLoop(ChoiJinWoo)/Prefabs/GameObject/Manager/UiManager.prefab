@@ -3259,6 +3259,7 @@ GameObject:
   - component: {fileID: 2977252936146226345}
   - component: {fileID: 6959716378564783851}
   - component: {fileID: 3656597919315170261}
+  - component: {fileID: 6205246408045150205}
   m_Layer: 0
   m_Name: Guide_Text_Enemy
   m_TagString: Untagged
@@ -3385,6 +3386,19 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &6205246408045150205
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1864792822899123696}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 49beb084dd5019e45a90f32e065ce6f6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LocalizeText
+  key: Guide_EnemyButton
 --- !u!1 &1885715462691930970
 GameObject:
   m_ObjectHideFlags: 0
@@ -7217,6 +7231,7 @@ GameObject:
   - component: {fileID: 3143966506590992914}
   - component: {fileID: 1782294274132667806}
   - component: {fileID: 2414561859399751039}
+  - component: {fileID: 233327248428714489}
   m_Layer: 0
   m_Name: Guide_Text_Hero
   m_TagString: Untagged
@@ -7343,6 +7358,19 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &233327248428714489
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2962610052690414457}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 49beb084dd5019e45a90f32e065ce6f6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LocalizeText
+  key: Guide_HeroButton
 --- !u!1 &3021709791077918937
 GameObject:
   m_ObjectHideFlags: 0
@@ -11656,7 +11684,8 @@ MonoBehaviour:
   guidePanel: {fileID: 2919385711586162892}
   dayText: {fileID: 2283597533785434327}
   upgradeResourceText: {fileID: 8507462245929307665}
-  MenuKey: 34
+  MenuKey: 60
+  guideOpenKey: 21
   UnlockedHero: 0
   UnlockedEnemy: 0
 --- !u!1 &4699501721016528985
@@ -19570,9 +19599,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: TitleUI, Assembly-CSharp
-        m_MethodName: OnCancel
+      - m_Target: {fileID: 6952341956764663950}
+        m_TargetAssemblyTypeName: MenuUI, Assembly-CSharp
+        m_MethodName: OnCancelQuit
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -19703,9 +19732,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: TitleUI, Assembly-CSharp
-        m_MethodName: OnQuit
+      - m_Target: {fileID: 6952341956764663950}
+        m_TargetAssemblyTypeName: MenuUI, Assembly-CSharp
+        m_MethodName: OnQuitButton
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -19726,6 +19755,7 @@ GameObject:
   - component: {fileID: 6924678355126307117}
   - component: {fileID: 2052693932372511439}
   - component: {fileID: 6064580865098803491}
+  - component: {fileID: 6182993064810893687}
   m_Layer: 0
   m_Name: Guide_Text_Base
   m_TagString: Untagged
@@ -19852,6 +19882,19 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &6182993064810893687
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8173212493726367196}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 49beb084dd5019e45a90f32e065ce6f6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LocalizeText
+  key: Guide_BaseButton
 --- !u!1 &8223563245595426150
 GameObject:
   m_ObjectHideFlags: 0
