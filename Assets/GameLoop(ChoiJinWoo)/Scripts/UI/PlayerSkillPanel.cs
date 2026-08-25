@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
 using VContainer;
 
@@ -21,6 +22,7 @@ public class PlayerSkillPanel : MonoBehaviour
     private EnviromentManager enviromentManager;
     private PlayerManaManager mana;
     private PlayerSkillCastController cast;
+    private Keyboard keyboard;
 
     [Inject]
     private void Construct(GameManager gameManager, EnviromentManager enviromentManager, PlayerManaManager mana)
@@ -35,6 +37,8 @@ public class PlayerSkillPanel : MonoBehaviour
 
     private void Start()
     {
+        keyboard = Keyboard.current;
+
         foreach (Entry entry in entries)
         {
             PlayerSkillSlot slot = entry.skill;
@@ -70,6 +74,29 @@ public class PlayerSkillPanel : MonoBehaviour
         {
             entry.button.interactable = mana.CurrentMana >= entry.skill.manaCost;
             entry.button.transition = entry.button.interactable ? Selectable.Transition.ColorTint : Selectable.Transition.None;
+        }
+
+        if (keyboard == null) return;
+
+        if (keyboard.digit1Key.wasPressedThisFrame)
+        {
+            if (mana.CurrentMana < entries[0].skill.manaCost) return;
+
+            entries[0].button.onClick?.Invoke();
+        }
+
+        if (keyboard.digit2Key.wasPressedThisFrame)
+        {
+            if (mana.CurrentMana < entries[1].skill.manaCost) return;
+
+            entries[1].button.onClick?.Invoke();
+        }
+
+        if (keyboard.digit3Key.wasPressedThisFrame)
+        {
+            if (mana.CurrentMana < entries[2].skill.manaCost) return;
+
+            entries[2].button.onClick?.Invoke();
         }
     }
 }

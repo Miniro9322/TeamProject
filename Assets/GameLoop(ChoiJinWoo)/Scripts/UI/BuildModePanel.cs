@@ -14,6 +14,10 @@ public class BuildModePanel : MonoBehaviour
     [SerializeField] private MapView view;
     [SerializeField] private MapGame game;
     [SerializeField] private Key closeKey = Key.Escape;
+    [SerializeField] private Key upgradeKey = Key.U;
+    [SerializeField] private Key replaceKey = Key.R;
+    [SerializeField] private Key removeKey = Key.G;
+    [SerializeField] private Key inventoryKey = Key.I;
     private Keyboard keyboard;
     private ClickOutsideCloser heroPanelCloser;
     private ClickOutsideCloser inventoryCloser;
@@ -63,6 +67,19 @@ public class BuildModePanel : MonoBehaviour
         }
 
         if (keyboard == null) return;
+
+        if (keyboard[upgradeKey].wasPressedThisFrame)
+            OnClassUpgradeButton();
+
+        if (keyboard[replaceKey].wasPressedThisFrame)
+            OnReplaceButton();
+
+        if (keyboard[removeKey].wasPressedThisFrame)
+            OnRemoveButton();
+
+        if (keyboard[inventoryKey].wasPressedThisFrame)
+            OnInventoryButton();
+
         if (!keyboard[closeKey].wasPressedThisFrame) return;
         if (TutorialInputGate.BlockEscapeClose) return;
 
@@ -114,12 +131,6 @@ public class BuildModePanel : MonoBehaviour
         gameObject.SetActive(true);
     }
 
-    public void OnFacilityButton()
-    {
-        if (heroPanel.activeSelf)
-            heroPanel.SetActive(false);
-    }
-
     public void OnHeroButton()
     {
         if (heroPanel.activeSelf)
@@ -130,6 +141,8 @@ public class BuildModePanel : MonoBehaviour
         {
             heroPanel.SetActive(true);
             heroPanelCloser.MarkOpened();
+            if (heroInventory.activeSelf) heroInventory.SetActive(false);
+            if (classUpgradePanel.activeSelf) classUpgradePanel.SetActive(false);
         }
     }
 
@@ -161,9 +174,6 @@ public class BuildModePanel : MonoBehaviour
         }
     }
 
-    // HeroSetPanel이 영웅 생성 직후 바로 장비를 끼울 수 있게 열 때 쓴다 - 토글이 아니라 항상 "열림"
-    // 상태로만 만든다. inventoryCloser.MarkOpened()를 반드시 거쳐야 그 프레임의 클릭(생성 버튼 클릭
-    // 등)이 "바깥 클릭"으로 오판돼 열리자마자 닫히는 깜빡임이 안 생긴다.
     public void OpenInventory()
     {
         if (heroInventory.activeSelf) return;
@@ -171,6 +181,7 @@ public class BuildModePanel : MonoBehaviour
         heroInventory.SetActive(true);
         inventoryCloser.MarkOpened();
         if (classUpgradePanel.activeSelf) classUpgradePanel.SetActive(false);
+        if (heroPanel.activeSelf) heroPanel.SetActive(false);
     }
 
     public void OnClassUpgradeButton()
@@ -184,6 +195,7 @@ public class BuildModePanel : MonoBehaviour
             classUpgradePanel.SetActive(true);
             classUpgradeCloser.MarkOpened();
             if (heroInventory.activeSelf) heroInventory.SetActive(false);
+            if (heroPanel.activeSelf) heroPanel.SetActive(false);
         }
     }
 
