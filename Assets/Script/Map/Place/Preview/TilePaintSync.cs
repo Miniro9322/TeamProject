@@ -10,6 +10,7 @@ public class TilePaintSync
     private readonly RangeCalc rangeCalc;
     private readonly RangeTileData rangeStore;
     private readonly TilePainter painter;
+    private readonly PointerPick pointerPick;
 
     private static readonly List<Tile> NoCampfireEdge = new();
 
@@ -18,6 +19,9 @@ public class TilePaintSync
     private bool hasDisplay;
 
     public PlaceEdgeData EdgeData { get; private set; }
+
+    // 아무 동작도 없을 때 커서가 가리키는 타일. 배치·재배치·사거리 표시 중이면 비어있다.
+    public Tile HoverTile { get; private set; }
 
     // 지금 눌러서 켜진 모닥불의 범위. 모닥불이 아니면 빈 목록.
     public IReadOnlyList<Tile> CampfireEdgeTiles { get; private set; } = NoCampfireEdge;
@@ -31,7 +35,8 @@ public class TilePaintSync
         PlayerSkillTargetFinder playerSkillFinder,
         RangeCalc rangeCalc,
         RangeTileData rangeStore,
-        TilePainter painter)
+        TilePainter painter,
+        PointerPick pointerPick)
     {
         this.hoverFinder = hoverFinder;
         this.skillFinder = skillFinder;
@@ -39,6 +44,7 @@ public class TilePaintSync
         this.rangeCalc = rangeCalc;
         this.rangeStore = rangeStore;
         this.painter = painter;
+        this.pointerPick = pointerPick;
     }
 
     public bool TryBuildPlan(out List<PaintEntry> result)
@@ -47,6 +53,7 @@ public class TilePaintSync
 
         HoverMode mode = hoverFinder.FindHover(out PlaceData placeData, out GameObject unit, out OccupantKind kind);
         EdgeData = new PlaceEdgeData(mode, kind);
+        HoverTile = ResolveHoverTile(mode);
         skillFinder.TryFindTarget(out Hero caster, out HeroActiveSkill skill, out Tile skillOrigin);
         playerSkillFinder.TryFindTarget(out PlayerSkillSlot armedSkill, out Tile playerSkillOrigin);
         int rangeVersion = ResolveRangeVersion(mode);
@@ -171,6 +178,17 @@ public class TilePaintSync
     private static bool IsRangeHoverMode(HoverMode mode)
     {
         return mode == HoverMode.Range;
+    }
+
+    // 배치·재배치 중이 아니고 사거리도 안 뜬 평소 상태에서만 커서 아래 타일을 내어줍니다.
+    private Tile ResolveHoverTile(HoverMode mode)
+    {
+        if (IsRangeHoverMode(mode) && !rangeStore.HasRange)
+        {
+            return pointerPick.UnderPointer();
+        }
+
+        return null;
     }
 
     private void AddAreaPreviewEntries(PlaceData data, GameObject unit)
