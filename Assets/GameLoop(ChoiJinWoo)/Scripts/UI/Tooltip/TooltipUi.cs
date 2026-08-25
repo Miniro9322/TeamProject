@@ -51,6 +51,19 @@ public class TooltipUi : MonoBehaviour
 
         FadeTo(1f).Forget();
     }
+    public void JustShow(string message, Vector2 screenPosition)
+    {
+        if (string.IsNullOrEmpty(message)) return;
+
+        text.text = message;
+
+        panel.gameObject.SetActive(true);
+
+        LayoutRebuilder.ForceRebuildLayoutImmediate(panel);
+        SetPosition(screenPosition);
+
+        FadeTo(1f).Forget();
+    }
 
     public void Hide()
     {
