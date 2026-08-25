@@ -67,6 +67,6 @@ public class MenuUI : MonoBehaviour, IExclusiveUiPanel
 
     public void OnTitle()
     {
-        SceneManager.LoadScene("TempTitle");
+        SceneManager.LoadScene("Title");
     }
 }
