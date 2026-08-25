@@ -13,6 +13,33 @@ public static class AttackDamageUtil
 
     public static Vector3 EffectPosition(Component c) => EffectPosition(c.gameObject);
 
+    // 한 적에게 여러 히트가 짧은 시간 안에 겹치면(다단히트/AoE/장판 틱/다수 영웅 동시 타격) 그 수만큼
+    // 히트 파티클이 동시에 재생되어 렉을 유발한다. (적, 프리팹) 쌍을 키로 써서 같은 대상에 같은 이펙트가
+    // 겹칠 때만 억제하고, 서로 다른 이펙트는 항상 각자 재생되게 한다 — 적은 자식 콜라이더 GameObject로
+    // 넘어올 수 있어 GameObject 자체가 아니라 GetComponentInParent<EnemyBase>()로 얻는 컴포넌트를 키로
+    // 쓴다. 적은 풀링(비활성화/재활성화)되는 오브젝트라 컴포넌트 참조가 계속 살아있고 (적, 프리팹) 조합
+    // 수도 풀 용량 × 이펙트 종류 수만큼으로 유한해 정리 없이 누적돼도 된다.
+    private static readonly Dictionary<(EnemyBase enemy, GameObject prefab), float> hitEffectBusyUntil = new();
+    // lifetime(풀 반납 타이머)과는 무관한 고정 억제 구간 — 이펙트 재생 시간이 스킬마다 달라져도
+    // "같은 이펙트가 얼마나 자주 겹치면 생략할지"는 항상 이 값 하나로 판단한다.
+    private const float HitEffectDedupInterval = 0.2f;
+
+    public static void SpawnHitEffect(Hero hero, GameObject prefab, GameObject target, float lifetime)
+    {
+        if (prefab == null || target == null) return;
+        if (target.GetComponentInParent<EnemyBase>() is EnemyBase enemy)
+        {
+            var key = (enemy, prefab);
+            float now = Time.time;
+            if (hitEffectBusyUntil.TryGetValue(key, out float busyUntil) && now < busyUntil) return;
+            hitEffectBusyUntil[key] = now + HitEffectDedupInterval;
+        }
+        hero.SpawnEffect(prefab, EffectPosition(target), lifetime);
+    }
+
+    public static void SpawnHitEffect(Hero hero, GameObject prefab, Component target, float lifetime)
+        => SpawnHitEffect(hero, prefab, target != null ? target.gameObject : null, lifetime);
+
     // 대상이 살아있는 동안은 EffectPosition을 다시 읽고, 파괴되거나 풀에 반납되면 마지막 위치에
     // 고정한다 — 빔/체인 이펙트(BeamLinkEffect.Track)가 매 프레임 스스로 위치를 갱신할 때 쓴다.
     public static Func<Vector3> TrackingPosition(GameObject target)
@@ -46,7 +73,7 @@ public static class AttackDamageUtil
                     ctx.hero.NotifyHit((e as Component)?.gameObject, (int)baseDamage, false);
                     ApplyTargetDebuffs(e as Component, data.targetDebuffs, ctx.buffManager, data, ctx.sc[StatType.ATK]);
                     ApplyHealOptions(data, ctx.self.position, ctx.hero.Heal, AllyQuery, baseDamage, ctx.sc[StatType.ATK]);
-                    ctx.hero.SpawnEffect(data.hitEffect, EffectPosition(e as Component), data.hitEffectLifetime);
+                    SpawnHitEffect(ctx.hero, data.hitEffect, e as Component, data.hitEffectLifetime);
                 }
                 if (i < data.attackCount - 1)
                     await UniTask.Delay(TimeSpan.FromSeconds(data.shotInterval), cancellationToken: ct);
@@ -62,7 +89,7 @@ public static class AttackDamageUtil
             {
                 ApplyTargetDebuffs(go.transform, data.targetDebuffs, ctx.buffManager, data, ctx.sc[StatType.ATK]);
                 ApplyHealOptions(data, ctx.self.position, ctx.hero.Heal, AllyQuery, baseDamage, ctx.sc[StatType.ATK]);
-                ctx.hero.SpawnEffect(data.hitEffect, EffectPosition(go), data.hitEffectLifetime);
+                SpawnHitEffect(ctx.hero, data.hitEffect, go, data.hitEffectLifetime);
             }
             // hits[0]은 체인 시작 타겟(캐스터→시작 타겟 구간은 빔 비주얼 등 별도 이펙트가 표현) —
             // 튕긴 대상들 사이(hits[i]→hits[i+1])만 아크로 잇는다.
@@ -81,7 +108,7 @@ public static class AttackDamageUtil
                     ctx.hero.NotifyHit(ctx.target.gameObject, (int)baseDamage, false);
                     ApplyTargetDebuffs(ctx.target, data.targetDebuffs, ctx.buffManager, data, ctx.sc[StatType.ATK]);
                     ApplyHealOptions(data, ctx.self.position, ctx.hero.Heal, AllyQuery, baseDamage, ctx.sc[StatType.ATK]);
-                    ctx.hero.SpawnEffect(data.hitEffect, EffectPosition(ctx.target), data.hitEffectLifetime);
+                    SpawnHitEffect(ctx.hero, data.hitEffect, ctx.target, data.hitEffectLifetime);
                 }
                 if (i < data.attackCount - 1)
                     await UniTask.Delay(TimeSpan.FromSeconds(data.shotInterval), cancellationToken: ct);
@@ -100,7 +127,7 @@ public static class AttackDamageUtil
                 ctx.hero.NotifyHit(t, (int)baseDamage, false);
                 ApplyTargetDebuffs(t.transform, data.targetDebuffs, ctx.buffManager, data, ctx.sc[StatType.ATK]);
                 ApplyHealOptions(data, ctx.self.position, ctx.hero.Heal, AllyQuery, baseDamage, ctx.sc[StatType.ATK]);
-                ctx.hero.SpawnEffect(data.hitEffect, EffectPosition(t), data.hitEffectLifetime);
+                SpawnHitEffect(ctx.hero, data.hitEffect, t, data.hitEffectLifetime);
             }, data.shotInterval, ct);
             return;
         }
@@ -119,7 +146,7 @@ public static class AttackDamageUtil
                     ctx.hero.NotifyHit(go, (int)baseDamage, false);
                     ApplyTargetDebuffs(go.transform, data.targetDebuffs, ctx.buffManager, data, ctx.sc[StatType.ATK]);
                     ApplyHealOptions(data, ctx.self.position, ctx.hero.Heal, AllyQuery, baseDamage, ctx.sc[StatType.ATK]);
-                    ctx.hero.SpawnEffect(data.hitEffect, EffectPosition(go), data.hitEffectLifetime);
+                    SpawnHitEffect(ctx.hero, data.hitEffect, go, data.hitEffectLifetime);
                 }
                 if (i < data.attackCount - 1)
                     await UniTask.Delay(TimeSpan.FromSeconds(data.shotInterval), cancellationToken: ct);
@@ -138,7 +165,7 @@ public static class AttackDamageUtil
                 ctx.hero.NotifyHit(hit, (int)baseDamage, false);
                 ApplyTargetDebuffs(hit.transform, data.targetDebuffs, ctx.buffManager, data, ctx.sc[StatType.ATK]);
                 ApplyHealOptions(data, ctx.self.position, ctx.hero.Heal, AllyQuery, baseDamage, ctx.sc[StatType.ATK]);
-                ctx.hero.SpawnEffect(data.hitEffect, EffectPosition(hit), data.hitEffectLifetime);
+                SpawnHitEffect(ctx.hero, data.hitEffect, hit, data.hitEffectLifetime);
             }
         }, data.shotInterval, ct);
     }

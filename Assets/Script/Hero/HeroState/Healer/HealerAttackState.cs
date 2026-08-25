@@ -21,7 +21,9 @@ public class HealerAttackState : HeroAttackState
 
         float interval = healer.SC[StatType.AS] > 0f ? 1f / healer.SC[StatType.AS] : 1f;
         float elapsed = Time.time - lastAttackTime;
-        if (elapsed >= interval)
+        bool skipAsGate = hero.LastUsedAttackData != null
+            && hero.LastUsedAttackData.timingMode == AttackTimingMode.Continuous;
+        if (elapsed >= interval || skipAsGate)
         {
             RotateToTarget();
             TryExecuteCurrentStep();

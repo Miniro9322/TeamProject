@@ -38,18 +38,18 @@ public class HeroStatToolTipUI : MonoBehaviour
         {
             StatContainer stat = hero.SC;
             hpStatus.text = $"{(int)stat[StatType.HP]}";
-            atkStatus.text = $"{stat[StatType.ATK]:F3}";
-            defStatus.text = $"{stat[StatType.DEF]:F3}";
-            asStatus.text = $"{stat[StatType.AS]:F3}";
+            atkStatus.text = $"{stat[StatType.ATK]:N1}";
+            defStatus.text = $"{stat[StatType.DEF]:N1}";
+            asStatus.text = $"{stat[StatType.AS]:N1}";
             blkStatus.text = $"{(int)stat[StatType.BLK]}";
         }
         else
         {
             var stats = HeroStatManager.GetAll(heroEntry.Data);
             hpStatus.text = $"{(int)stats[StatType.HP]}";
-            atkStatus.text = $"{stats[StatType.ATK]:F3}";
-            defStatus.text = $"{stats[StatType.DEF]:F3}";
-            asStatus.text = $"{stats[StatType.AS]:F3}";
+            atkStatus.text = $"{stats[StatType.ATK]:N1}";
+            defStatus.text = $"{stats[StatType.DEF]:N1}";
+            asStatus.text = $"{stats[StatType.AS]:N1}";
             blkStatus.text = $"{(int)stats[StatType.BLK]}";
         }
 

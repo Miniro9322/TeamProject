@@ -174,7 +174,7 @@ public class Projectile : MonoBehaviour
             {
                 AttackDamageUtil.ApplyTargetDebuffs(go.transform, cfg.targetDebuffs, cfg.buffManager, cfg.source);
                 ApplyHealOptions(damage);
-                SpawnHitEffect(AttackDamageUtil.EffectPosition(go));
+                SpawnHitEffect(go);
             }
         }
         else if (cfg.attackType == AttackType.Area)
@@ -186,7 +186,7 @@ public class Projectile : MonoBehaviour
                 cfg.hero.NotifyHit(go, (int)damage, false);
                 AttackDamageUtil.ApplyTargetDebuffs(go.transform, cfg.targetDebuffs, cfg.buffManager, cfg.source);
                 ApplyHealOptions(damage);
-                SpawnHitEffect(AttackDamageUtil.EffectPosition(go));
+                SpawnHitEffect(go);
             }
         }
         else if (target != null && target.GetComponentInParent<IDamageAble>() is IDamageAble damageable)
@@ -195,7 +195,7 @@ public class Projectile : MonoBehaviour
             cfg.hero.NotifyHit(target.gameObject, (int)damage, false);
             AttackDamageUtil.ApplyTargetDebuffs(target, cfg.targetDebuffs, cfg.buffManager, cfg.source);
             ApplyHealOptions(damage);
-            SpawnHitEffect(AttackDamageUtil.EffectPosition(target));
+            SpawnHitEffect(target.gameObject);
         }
 
         if (cfg.groundZonePrefab != null)
@@ -204,11 +204,16 @@ public class Projectile : MonoBehaviour
         Return();
     }
 
+    // 라인 관통형 시각 전용 화살(visualOnly)의 착탄 연출 전용 — 실제 적 타겟이 없는 고정 좌표라
+    // 대상별 중복 방지 대상이 아니다(그 적들의 히트 이펙트는 발사 전에 이미 따로 적용됨).
     private void SpawnHitEffect(Vector3 pos)
     {
         if (hitEffectPrefab != null)
             hero.SpawnEffect(hitEffectPrefab, pos, hitEffectLifetime);
     }
+
+    private void SpawnHitEffect(GameObject target)
+        => AttackDamageUtil.SpawnHitEffect(hero, hitEffectPrefab, target, hitEffectLifetime);
 
     private void ApplyHealOptions(float damageDealt)
     {
