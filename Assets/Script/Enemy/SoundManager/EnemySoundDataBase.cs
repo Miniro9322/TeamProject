@@ -17,6 +17,8 @@ public class EnemySoundDataBase : ScriptableObject
         [Range(0f, 1f)] public float volume = 1f;
         public SoundType type = SoundType.Sfx;
         public bool loop = false;
+        [Tooltip("0이면 클립을 끝까지 재생한다. 값을 넣으면 그 초가 지날 때 잘라낸다 " +
+                 "(긴 클립을 연출 길이에 맞춰 쓸 때). Sfx에만 적용 — PlayBgm은 이 값을 보지 않는다.")]
         public float soundTime = 0;
     }
 

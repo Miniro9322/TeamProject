@@ -28,6 +28,17 @@ public class EnemySoundManager : MonoBehaviour
     private const float PlayThrottle = 0.05f;
     private readonly Dictionary<string, float> lastPlayTime = new Dictionary<string, float>();
 
+    // soundTime이 들어있는 클립 전용 재생 슬롯.
+    // 공용 sfxSource의 PlayOneShot으로는 중간에 못 끊는다 — 끊으려면 sfxSource.Stop()인데
+    // 그러면 그 순간 재생 중인 다른 효과음까지 전부 죽는다. 그래서 이 클립들만
+    // 각자 AudioSource를 하나씩 물고 재생하고, 시간이 되면 그 소스만 멈춘다.
+    private class TimedVoice
+    {
+        public AudioSource source;
+        public float endTime;   // Time.unscaledTime 기준
+    }
+    private readonly List<TimedVoice> timedVoices = new List<TimedVoice>();
+
     void Awake()
     {
         if (Instance != null && Instance != this) { Destroy(gameObject); return; }
@@ -78,20 +89,86 @@ public class EnemySoundManager : MonoBehaviour
     }
 
     // 효과음 재생 (중복 재생 허용)
+    // soundTime이 0 이하면 클립을 끝까지 재생한다(기존 동작 그대로).
+    // soundTime이 들어있으면 그 초가 지날 때 잘라낸다 — 긴 클립을 연출 길이에 맞춰 쓸 때.
     public static void Play(string key)
     {
         if (Instance == null || Instance.db == null) return;
         var e = Instance.db.Get(key);
         if (e == null) { Debug.LogWarning($"SoundDatabase에 '{key}' 키 없음"); return; }
-        if (Instance.sfxSource == null) { Debug.LogWarning("sfxSource 미할당"); return; }
 
         // 같은 키 중복 재생 스로틀: 런타임 딕셔너리 + 언스케일드 타임(일시정지 timeScale=0 영향 없음)
         float now = Time.unscaledTime;
         if (Instance.lastPlayTime.TryGetValue(key, out float last) && now - last < PlayThrottle) return;
         Instance.lastPlayTime[key] = now;
 
+        if (e.soundTime > 0f) { Instance.PlayTimed(e, now); return; }
+
+        if (Instance.sfxSource == null) { Debug.LogWarning("sfxSource 미할당"); return; }
         // 카테고리(SFX) 볼륨은 믹서가 담당. 여기선 클립별 상대 볼륨만 적용
         Instance.sfxSource.PlayOneShot(e.clip, e.volume);
+    }
+
+    // soundTime이 있는 클립을 전용 소스로 재생하고 마감 시각을 예약한다.
+    // 마감 시각을 unscaledTime으로 잡는 게 핵심 — 이 기능을 처음 쓰는 곳이 보스 연출인데
+    // 거기는 Time.timeScale=0으로 얼려놓고 돌아간다(SpawnerManager.BossOpeningDirecting).
+    // 스케일드 시간으로 재면 얼어있는 동안 시계가 안 흘러 영영 안 끊긴다.
+    private void PlayTimed(EnemySoundDataBase.Entry e, float now)
+    {
+        TimedVoice voice = GetFreeVoice();
+        AudioSource src = voice.source;
+        src.clip = e.clip;
+        src.volume = e.volume;
+        src.loop = e.loop;      // 루프 + soundTime = "이 초 동안만 반복"
+        src.Play();
+        voice.endTime = now + e.soundTime;
+    }
+
+    // 놀고 있는 슬롯을 재사용하고, 없으면 하나 더 만든다.
+    // 새로 만든 소스도 반드시 SFX 믹서 그룹에 물려야 설정창 볼륨이 먹는다(RouteToMixer와 같은 이유).
+    private TimedVoice GetFreeVoice()
+    {
+        for (int i = 0; i < timedVoices.Count; i++)
+        {
+            TimedVoice v = timedVoices[i];
+            if (v.source != null && !v.source.isPlaying) return v;
+        }
+
+        AudioSource src = gameObject.AddComponent<AudioSource>();
+        src.playOnAwake = false;
+        src.outputAudioMixerGroup = ResolveGroup(sfxGroup, "SFX");
+        // 인스펙터에서 잡아둔 sfxSource와 같은 톤으로 들리게 맞춘다.
+        // 특히 spatialBlend — 새 AudioSource는 기본이 2D라, sfxSource가 3D면 이것만 소리가 다르게 난다.
+        if (sfxSource != null)
+        {
+            src.spatialBlend = sfxSource.spatialBlend;
+            src.rolloffMode = sfxSource.rolloffMode;
+            src.minDistance = sfxSource.minDistance;
+            src.maxDistance = sfxSource.maxDistance;
+            src.priority = sfxSource.priority;
+            src.bypassEffects = sfxSource.bypassEffects;
+            src.bypassListenerEffects = sfxSource.bypassListenerEffects;
+        }
+
+        var created = new TimedVoice { source = src };
+        timedVoices.Add(created);
+        return created;
+    }
+
+    // 예약된 마감 시각이 지난 슬롯만 멈춘다. 멈추면 isPlaying이 꺼져 자동으로 재사용 대상이 된다.
+    // 코루틴 대신 Update로 도는 이유: 오브젝트가 꺼지거나 씬이 바뀔 때 코루틴만 죽고 소리가 남는 걸 피한다.
+    private void Update()
+    {
+        if (timedVoices.Count == 0) return;
+
+        float now = Time.unscaledTime;
+        for (int i = 0; i < timedVoices.Count; i++)
+        {
+            TimedVoice v = timedVoices[i];
+            if (v.source == null || !v.source.isPlaying) continue;
+            if (now < v.endTime) continue;
+            v.source.Stop();
+        }
     }
 
     // BGM 재생 (같은 곡이면 무시, 다르면 교체)

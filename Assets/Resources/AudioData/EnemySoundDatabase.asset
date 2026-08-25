@@ -15,7 +15,7 @@ MonoBehaviour:
   entries:
   - key: RushAttack
     clip: {fileID: 8300000, guid: ec2cf6869352f4e80a32598bac708074, type: 3}
-    volume: 0.49
+    volume: 0.44
     type: 0
     loop: 0
     soundTime: 0
@@ -33,13 +33,13 @@ MonoBehaviour:
     soundTime: 0
   - key: DeathNormalAttack
     clip: {fileID: 8300000, guid: 8297900351eb24ac6908e03c22952b72, type: 3}
-    volume: 0.49
+    volume: 0.41
     type: 0
     loop: 0
     soundTime: 0
   - key: DeathNormalAttack2
     clip: {fileID: 8300000, guid: 9e0cd798c3ecc437dbc1fa1a6dc6a84e, type: 3}
-    volume: 0.49
+    volume: 0.38
     type: 0
     loop: 0
     soundTime: 0
@@ -51,7 +51,7 @@ MonoBehaviour:
     soundTime: 0
   - key: SpiderAttack
     clip: {fileID: 8300000, guid: e90c9029397f7403f923a3a38e8f3be6, type: 3}
-    volume: 0.49
+    volume: 0.26
     type: 0
     loop: 0
     soundTime: 0
@@ -109,3 +109,9 @@ MonoBehaviour:
     type: 0
     loop: 0
     soundTime: 0
+  - key: Warning!
+    clip: {fileID: 8300000, guid: 90afd6ec92d1549519e8ad0a06529995, type: 3}
+    volume: 0.5
+    type: 0
+    loop: 0
+    soundTime: 3
