@@ -342,7 +342,8 @@ public class StageInfoView : MonoBehaviour
         }
     }
 
-    // 적 한 줄 추가. badgeKey는 "Ui_Add"(증원) / "Ui_Boss"(보스), 일반 웨이브는 null.
+    // 적 한 줄 추가. badgeKey는 "Ui_Boss"(보스), 일반 웨이브는 null.
+    // 증원은 배지를 쓰지 않는다 — WaveSpawner가 같은 몹의 마릿수에 합쳐 일반 줄로 넘긴다.
     public void AddRow(EnemyTable.Data data, int count, string badgeKey = null)
     {
         if (data == null) return;
