@@ -19,6 +19,11 @@ public class StatContainer
         stats[type].ResetBase(value);
     }
 
+    public float GetBaseValue(StatType type)
+    {
+        return stats[type].BaseValue;
+    }
+
     public void AddModifier(StatType type, Modifier modifier)
     {
         stats[type].AddModifier(modifier);
