@@ -13,7 +13,7 @@ public class SaveData
     public byte heroUnlock;              // 해금된 영웅들을 비트로 모아둔 값 (영웅 하나가 아님)
     public bool perfectDefensePending;   // 완벽 방어 특수자원 보상을 아직 안 줬는지
 
-    public string heroDrawSeed;    // 영웅 뽑기 시드 (슬롯 생성 시 한 번 정해진 뒤 불변)
+    public string gameSeed;        // 시드 고정 랜덤(영웅 뽑기/합성 등)에 쓰는 슬롯 공용 시드 (슬롯 생성 시 한 번 정해진 뒤 불변)
     public int heroDrawCount;      // 지금까지 영웅을 뽑은 횟수 (뽑기 결과의 재현 순번)
     public int heroCombineCount;   // 지금까지 영웅을 합성한 횟수 (합성 결과의 재현 순번)
 

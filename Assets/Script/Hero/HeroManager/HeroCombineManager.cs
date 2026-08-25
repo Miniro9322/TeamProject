@@ -76,7 +76,7 @@ public class HeroCombineManager : MonoBehaviour
             return false; // 최고 티어거나, 같은 종류의 다음 티어 데이터 없음
 
         (string seed, int count) = game.Rule.ConsumeHeroCombine();
-        System.Random rng = new System.Random(HeroDrawSeeding.Derive(seed, count));
+        System.Random rng = new System.Random(GameSeeding.Derive(seed, count));
         HeroData nextTierData = nextTierDatas[rng.Next(nextTierDatas.Count)];
         GameObject nextTierPrefab = nextTierData.HeroPrefab;
 

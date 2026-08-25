@@ -64,7 +64,7 @@ public class HeroCreateManager : MonoBehaviour
         if (weights.Count == 0) return false;
 
         (string seed, int count) = game.Rule.ConsumeHeroDraw();
-        System.Random rng = new System.Random(HeroDrawSeeding.Derive(seed, count));
+        System.Random rng = new System.Random(GameSeeding.Derive(seed, count));
 
         int tier = WeightedPickTier(weights, rng);
         while (tier >= 1)

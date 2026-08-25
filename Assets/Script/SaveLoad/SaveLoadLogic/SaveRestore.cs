@@ -81,7 +81,7 @@ public class SaveRestore
         gameManager.RestoreHp(data.baseHp);
         gameManager.RestoreTodayHp(data.baseHp);
         gameManager.RestoreUnlockedHero(data.heroUnlock);
-        gameManager.RestoreHeroDrawState(data.heroDrawSeed, data.heroDrawCount);
+        gameManager.RestoreHeroDrawState(data.gameSeed, data.heroDrawCount);
         gameManager.RestoreHeroCombineCount(data.heroCombineCount);
     }
 
