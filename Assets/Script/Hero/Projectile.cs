@@ -102,7 +102,7 @@ public class Projectile : MonoBehaviour
     private void SpawnFlashEffect(Hero hero)
     {
         if (flashEffectPrefab != null && hero != null)
-            hero.SpawnEffect(flashEffectPrefab, transform.position, transform.rotation, flashEffectLifetime);
+            AttackDamageUtil.SpawnCasterEffect(hero, flashEffectPrefab, transform.position, transform.rotation, flashEffectLifetime);
         if (projectileEffect != null)
         {
             projectileEffect.Clear(true);
