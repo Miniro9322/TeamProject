@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading;
 using Cysharp.Threading.Tasks;
 using TMPro;
 using UnityEngine;
@@ -402,7 +403,7 @@ public class WaveSpawner : MonoBehaviour
         foreach(var wave in waveTable.GetWave(1,lookupId))
         {
             int count = GetScaleCount(wave.Count, currentStage); // 라운드가 돌수록 마릿수 스케일업
-            SpawnWaveRout(wave, count).Forget();
+            SpawnWaveRout(wave, count, 0f, this.GetCancellationTokenOnDestroy()).Forget();
             Enemycount += count;
         }
     }
@@ -419,14 +420,14 @@ public class WaveSpawner : MonoBehaviour
         foreach(var wave in waveTable.GetWave(region,lookupId))
         {
             int count = GetScaleCount(wave.Count, scale); // 라운드가 돌수록 마릿수 스케일업
-            SpawnWaveRout(wave, count).Forget();
+            SpawnWaveRout(wave, count, 0f, this.GetCancellationTokenOnDestroy()).Forget();
             Enemycount += count;
         }
         for (int tier = 0; tier < ReinforceTiers(unlockedRegionCount); tier++)
         {
             foreach (var wave in waveTable.GetWave(region, ReinforceBaseId + tier))
             {
-                SpawnWaveRout(wave, wave.Count).Forget(); // 증원은 라운드 배율을 안 붙인다(표에 적은 마릿수 그대로)
+                SpawnWaveRout(wave, wave.Count, 0f, this.GetCancellationTokenOnDestroy()).Forget(); // 증원은 라운드 배율을 안 붙인다(표에 적은 마릿수 그대로)
                 Enemycount += wave.Count;
             }
         }
@@ -438,7 +439,7 @@ public class WaveSpawner : MonoBehaviour
             spawnerManager.BossOpeningDirecting(this.GetCancellationTokenOnDestroy(), bossSpawnDelay - 0.5f).Forget();
             foreach (var w in waveTable.GetWave(1, 5001))
             {
-                SpawnWaveRout(w, w.Count, bossSpawnDelay).Forget();
+                SpawnWaveRout(w, w.Count, bossSpawnDelay, this.GetCancellationTokenOnDestroy()).Forget();
                 Enemycount += w.Count;
             }
         }
@@ -448,7 +449,11 @@ public class WaveSpawner : MonoBehaviour
     }
 
 
-    private async UniTask SpawnWaveRout(WaveTable.Data wave, int count, float startDelay = 0f)
+    // 씬 전환/오브젝트 파괴 시(예: 전투 중 타이틀로 나가기) 대기 중이던 스폰이 알아서 취소되도록
+    // GetCancellationTokenOnDestroy()를 받는다 - BossOpeningDirecting과 같은 패턴. 이게 없으면
+    // WaveSpawner와 GameLifeTimeScope가 이미 파괴된 뒤에 Delay가 끝나 PoolManager.Spawn을 호출하고,
+    // VContainer가 사라진 씬에서 WaveSpawner를 FindComponentProvider로 다시 찾으려다 예외를 던진다.
+    private async UniTask SpawnWaveRout(WaveTable.Data wave, int count, float startDelay, CancellationToken cancellationToken)
     {
         var prefab = waveTable.GetMonsterPrefab(wave);
         if (prefab == null)
@@ -457,8 +462,8 @@ public class WaveSpawner : MonoBehaviour
             return;
         }
         // 시작 지연(보스 지연 등) → 그 위에 웨이브별 SpawnTime을 더한다.
-        if (startDelay > 0f) await UniTask.Delay(TimeSpan.FromSeconds(startDelay));
-        if (wave.SpawnTime > 0f) await UniTask.Delay(TimeSpan.FromSeconds(wave.SpawnTime));
+        if (startDelay > 0f) await UniTask.Delay(TimeSpan.FromSeconds(startDelay), cancellationToken: cancellationToken);
+        if (wave.SpawnTime > 0f) await UniTask.Delay(TimeSpan.FromSeconds(wave.SpawnTime), cancellationToken: cancellationToken);
 
         for (int i = 0; i < count; i++)
         {
@@ -473,7 +478,7 @@ public class WaveSpawner : MonoBehaviour
             }
 
             if (i < count - 1 && wave.Delay > 0f)
-            await UniTask.Delay(TimeSpan.FromSeconds(wave.Delay));
+            await UniTask.Delay(TimeSpan.FromSeconds(wave.Delay), cancellationToken: cancellationToken);
         }
     }
     public void EnemyDieEvent()

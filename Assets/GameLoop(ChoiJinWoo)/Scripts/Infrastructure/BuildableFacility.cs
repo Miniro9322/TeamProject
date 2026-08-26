@@ -16,6 +16,6 @@ public class BuildableFacility
 
     // 슬롯에 표시할 이름은 SO 자체의 이름을 그대로 쓴다(label을 따로 또 입력하지 않도록).
     public string DisplayName => kind == OccupantKind.Resource
-        ? facilityValue != null ? facilityValue.FacilityName : label
-        : houseConfig != null ? houseConfig.HouseName : label;
+        ? facilityValue != null ? facilityValue.FacilityDisplayName : label
+        : houseConfig != null ? houseConfig.HouseDisplayName : label;
 }

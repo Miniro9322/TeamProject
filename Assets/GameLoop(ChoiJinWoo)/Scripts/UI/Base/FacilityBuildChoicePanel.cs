@@ -49,13 +49,9 @@ public class FacilityBuildChoicePanel : MonoBehaviour, IClosablePanel
             optionViews[i].BindClick(OnOption);
         }
 
-        // parentPanel(RegionDetailPanel) 안의 다른 슬롯 버튼을 눌러도 "바깥 클릭"으로 안 잡히게 self로 취급한다.
-        // 이게 없으면 다른 빈 슬롯 클릭 -> 여기 Update()가 먼저 Close() -> 곧이어 parentPanel의 Open()이
-        // 다시 SetActive(true) 하는 순서가 되어 매번 깜빡였다.
+
         outsideCloser = new ClickOutsideCloser((RectTransform)transform, parentPanel != null ? parentPanel.transform : null);
 
-        // 옵션 버튼들은 infoPanel의 자식이 아니라서, 다른 옵션을 고를 때도 같은 이유로 infoPanel이
-        // 먼저 꺼졌다가 OnOption이 다시 켜는 깜빡임이 생긴다 - 옵션 버튼들도 self로 취급한다.
         var optionTransforms = new Transform[optionViews.Count];
         for (int i = 0; i < optionViews.Count; i++) optionTransforms[i] = optionViews[i].transform;
         infoOutsideCloser = new ClickOutsideCloser((RectTransform)infoPanel.transform, optionTransforms);
@@ -65,6 +61,7 @@ public class FacilityBuildChoicePanel : MonoBehaviour, IClosablePanel
     {
         panelStack.Push(this);
         resourcesManager.ProductUpdate += RefreshButtons;
+        LocalizeTextManager.OnLanguageChanged += OnLanguageChanged;
         infoPanel.SetActive(false);
         RefreshButtons();
         outsideCloser.MarkOpened();
@@ -74,10 +71,15 @@ public class FacilityBuildChoicePanel : MonoBehaviour, IClosablePanel
     {
         panelStack.Remove(this);
         resourcesManager.ProductUpdate -= RefreshButtons;
+        LocalizeTextManager.OnLanguageChanged -= OnLanguageChanged;
     }
 
-    // 정보 패널 바깥(그러나 이 패널 안)을 클릭하면 정보 패널만 닫고, 이 패널 바깥을 클릭하면 이 패널 전체를 닫는다.
-    // 스택 맨 위일 때만 반응한다 - 내 위에 다른 패널이 떠 있으면 이 프레임엔 그쪽이 먼저 처리한다.
+    private void OnLanguageChanged()
+    {
+        RefreshButtons();
+        if (infoPanel.activeSelf) RefreshInfoText();
+    }
+
     private void Update()
     {
         if (!panelStack.IsTop(this)) return;
@@ -126,13 +128,25 @@ public class FacilityBuildChoicePanel : MonoBehaviour, IClosablePanel
 
         currentOption = options[index];
         infoIcon.sprite = currentOption.icon;
+        RefreshInfoText();
+        infoPanel.SetActive(true);
+        infoOutsideCloser.MarkOpened();
+    }
+
+    // currentOption 기준으로 infoText를 다시 조립한다 - 언어가 바뀌었을 때도 같은 옵션을 다시 그릴 수 있도록
+    // OnOption에서 분리해뒀다.
+    private void RefreshInfoText()
+    {
+        if (currentOption == null) return;
+
         var sb = new StringBuilder();
+        var table = DataTableManager.StringTable;
 
         if (currentOption.kind == OccupantKind.Resource && currentOption.facilityValue != null)
         {
             var value = currentOption.facilityValue;
             var cost = ProductionFacility.PreviewConstructCost(value, economyConfig, upgradeState);
-            sb.Append($"{value.FacilityName}\n{value.FacilityInfo}\n생산 자원: {value.Type}\n건설 소모 자원\n");
+            sb.Append($"{value.FacilityDisplayName}\n{value.FacilityDisplayInfo}\n{string.Format(table.Get("Ui_ProductionResource"), value.Type)}\n{table.Get("Ui_ConstructionCost")}\n");
             foreach (var c in cost)
             {
                 sb.Append($"{c.Type}: {-c.Amount} ");
@@ -141,15 +155,13 @@ public class FacilityBuildChoicePanel : MonoBehaviour, IClosablePanel
         else if (currentOption.houseConfig != null)
         {
             var config = currentOption.houseConfig;
-            sb.Append($"{config.HouseName}\n{config.HouseInfo}\n건설 소모 자원\n");
+            sb.Append($"{config.HouseDisplayName}\n{config.HouseDisplayInfo}\n{table.Get("Ui_ConstructionCost")}\n");
             foreach (var c in House.PreviewConstructCost(config, economyConfig, upgradeState))
             {
                 sb.Append($"{c.Type}: {-c.Amount} ");
             }
         }
         infoText.text = sb.ToString().Trim();
-        infoPanel.SetActive(true);
-        infoOutsideCloser.MarkOpened();
     }
 
     public void OnBuild()
@@ -163,8 +175,6 @@ public class FacilityBuildChoicePanel : MonoBehaviour, IClosablePanel
         }
     }
 
-    // 저장된 건물 이름(FacilityName/HouseName)으로 이 목록에서 원본 옵션을 찾는다 (로드 복원 전용)
-    // 새 필드를 추가하지 않고, 이미 각 SO에 채워져 있는 이름을 그대로 식별자로 재사용한다.
     public bool TryFindOption(string buildKey, out BuildableFacility option)
     {
         for (int i = 0; i < options.Count; i++)

@@ -6,20 +6,19 @@ public class RegionFacilitySlot
 {
     public object Occupant { get; private set; }
     public Sprite Icon { get; private set; }
-    public string Label { get; private set; }
     public bool IsEmpty => Occupant == null;
 
-    public void Assign(object occupant, Sprite icon, string label)
+    // 표시 이름은 여기서 굽지 않는다 - Occupant(BasicValue/Config)에서 매번 StringTable로 다시
+    // 조회해야 언어를 바꿨을 때도 최신 번역으로 보인다.
+    public void Assign(object occupant, Sprite icon)
     {
         Occupant = occupant;
         Icon = icon;
-        Label = label;
     }
 
     public void Clear()
     {
         Occupant = null;
         Icon = null;
-        Label = null;
     }
 }

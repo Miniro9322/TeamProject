@@ -15,13 +15,12 @@ public class RegionFacilitySlots
     [Tooltip("이 지역의 건설 슬롯 개수. 밸런스 테스트하며 자유롭게 조정.")]
     [SerializeField, Min(1)] private int slotCount = 4;
 
-    [Tooltip("지역 이름(패널 헤더에 표시).")]
-    [SerializeField] private string regionName = "지역";
-
     private List<RegionFacilitySlot> slots;
 
     public int ModuleId => moduleId;
-    public string RegionName => regionName;
+    // 지역 이름(패널 헤더에 표시) - 모든 지역이 "{moduleId} 지역" 형태라 별도 필드 없이 StringTable
+    // 포맷 키에 moduleId만 끼워 넣는다. 언어를 바꿔도 즉시 새 표기로 나온다.
+    public string RegionName => string.Format(DataTableManager.StringTable.Get("Ui_RegionName"), moduleId);
     public IReadOnlyList<RegionFacilitySlot> Slots => EnsureInitialized();
 
     public event Action OnSlotsChanged;
@@ -40,12 +39,12 @@ public class RegionFacilitySlots
         return slots;
     }
 
-    public bool TryAssign(int index, object occupant, Sprite icon, string label)
+    public bool TryAssign(int index, object occupant, Sprite icon)
     {
         var list = EnsureInitialized();
         if (index < 0 || index >= list.Count || !list[index].IsEmpty) return false;
 
-        list[index].Assign(occupant, icon, label);
+        list[index].Assign(occupant, icon);
         OnSlotsChanged?.Invoke();
         return true;
     }

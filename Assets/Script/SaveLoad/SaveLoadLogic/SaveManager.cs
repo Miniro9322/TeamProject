@@ -1,9 +1,11 @@
+using Cysharp.Threading.Tasks;
 using UnityEngine;
+using VContainer.Unity;
 
 // 슬롯·저장 단계와 저장 호출 순서를 조정한다. 로드는 LoadManager가 전담한다.
 // GameManager를 고치지 않기 위해, 이미 있는 ChangeToDay/ChangeToNight 이벤트를 구독만 해서 저장한다
 // (대가: 저장이 실패해도 낮·밤 전환 자체는 막지 않는다 — 직전 정상 저장본은 그대로 안전하게 남는다).
-public class SaveManager
+public class SaveManager : IStartable
 {
 
 
@@ -25,6 +27,45 @@ public class SaveManager
 
         gameManager.ChangeToDay += OnDayTransitioned;
         gameManager.ChangeToNight += OnNightTransitioned;
+    }
+
+    // 새 슬롯 입장 다음 프레임에 최초 1일차 상태를 한 번 저장한다
+    public void Start()
+    {
+        if (!SelectedSaveSlot.IsNewGame)
+        {
+            return;
+        }
+
+        SaveInitial().Forget();
+    }
+
+    // 씬의 Start 초기화가 끝난 다음 프레임까지 기다린 뒤 저장한다
+    private async UniTaskVoid SaveInitial()
+    {
+        await UniTask.NextFrame();
+        SaveInitialNow();
+    }
+
+    // 새 슬롯 최초 상태를 저장하고 파일 쓰기 실패를 알린다
+    private void SaveInitialNow()
+    {
+        if (TutorialInputGate.BlockSave)
+        {
+            return;
+        }
+
+        if (!ToolEnabled)
+        {
+            Debug.LogError("[SaveLoad] 세이브 기능이 OFF라서 새 슬롯 최초 저장을 실행하지 못했습니다.");
+            return;
+        }
+
+        bool saved = TrySave(SavePhase.DayStart, gameManager.DayCount, saveTimeData.DayList);
+        if (!saved)
+        {
+            Debug.LogError("[SaveLoad] 새 슬롯 최초 저장 파일 작성 또는 검증에 실패했습니다.");
+        }
     }
 
     // 새 일차로 전환된 직후(생산 전) 상태를 저장한다

@@ -32,7 +32,7 @@ public class HeroArchiveButton : MonoBehaviour, IExclusiveUiPanel
 
         if (keyboard == null) return;
 
-        if (keyboard[openKey].wasPressedThisFrame)
+        if (keyboard[openKey].wasPressedThisFrame && !TutorialInputGate.BlockHotkeys)
         {
             if (archiveUI.activeSelf)
                 Close();
