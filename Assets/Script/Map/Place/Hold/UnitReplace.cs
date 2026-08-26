@@ -17,6 +17,11 @@ public class UnitReplace
     // 집었다/내려놨다가 바뀔 때마다 알린다(UI가 매 프레임 폴링하지 않게).
     public event Action OnHoldChanged;
 
+    // 재배치가 "성공적으로" 끝났을 때만 알린다 - ReturnHeld(취소)/CancelHeldAndDestroy에서는 안 울린다.
+    // OnHoldChanged는 취소든 성공이든 똑같이 울려서 구분이 안 되므로, "재배치를 한 번 완료했는지"만
+    // 필요한 구독자(튜토리얼 등)를 위해 따로 둔다.
+    public event Action<GameObject, OccupantKind> Replaced;
+
     public bool IsHolding => held.Unit != null;
     public Tile HeldFromTile => held.FromTile;
     public GameObject HeldUnit => held.Unit;
@@ -82,7 +87,10 @@ public class UnitReplace
             hero.SetCurrentTile();
         }
         //
+        GameObject droppedUnit = held.Unit;
+        OccupantKind droppedKind = held.Kind;
         ClearHeld();
+        Replaced?.Invoke(droppedUnit, droppedKind);
         return true;
     }
 

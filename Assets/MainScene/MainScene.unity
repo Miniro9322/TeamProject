@@ -22316,6 +22316,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::HeroCombineManager
   heroRegistry: {fileID: 1508222712}
   game: {fileID: 314587623}
+  combineSoundKey: 
 --- !u!114 &1508222712
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -23977,13 +23978,22 @@ MonoBehaviour:
   - id: 6
     messageKey: 
     waypoints:
+    - target: {fileID: 730561563}
+      activationCheck: {fileID: 0}
+      blockedWhile: {fileID: 0}
+      messageKey: Tutorial_RelocateHero_Step1
+    completesOnAcknowledge: 0
+    pauseTimeWhileActive: 0
+  - id: 7
+    messageKey: 
+    waypoints:
     - target: {fileID: 1680791095}
       activationCheck: {fileID: 0}
       blockedWhile: {fileID: 0}
       messageKey: Tutorial_HeroUpgrade
     completesOnAcknowledge: 1
     pauseTimeWhileActive: 0
-  - id: 7
+  - id: 8
     messageKey: 
     waypoints:
     - target: {fileID: 1280742373}
@@ -23992,7 +24002,7 @@ MonoBehaviour:
       messageKey: Tutorial_HeroMerge
     completesOnAcknowledge: 1
     pauseTimeWhileActive: 0
-  - id: 8
+  - id: 9
     messageKey: 
     waypoints:
     - target: {fileID: 1760085481}
@@ -24001,7 +24011,7 @@ MonoBehaviour:
       messageKey: Tutorial_NightButton
     completesOnAcknowledge: 0
     pauseTimeWhileActive: 0
-  - id: 9
+  - id: 10
     messageKey: 
     waypoints:
     - target: {fileID: 1800664282}
@@ -24010,7 +24020,7 @@ MonoBehaviour:
       messageKey: Tutorial_PlayerSkill
     completesOnAcknowledge: 1
     pauseTimeWhileActive: 1
-  - id: 10
+  - id: 11
     messageKey: 
     waypoints:
     - target: {fileID: 0}
@@ -24020,6 +24030,7 @@ MonoBehaviour:
     completesOnAcknowledge: 1
     pauseTimeWhileActive: 1
   placeHeroMapClickMessageKey: Tutorial_PlaceHero_Step5
+  relocateHeroMapClickMessageKey: Tutorial_RelocateHero_Step2
   completionMessageKey: Tutorial_Complete
 --- !u!4 &1605368764
 Transform:

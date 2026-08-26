@@ -12,6 +12,10 @@ public class TutorialManager : MonoBehaviour
         "이 순간엔 스포트라이트로 짚어줄 UI가 없어 화면 전체를 막지 않고 이 문구만 띄운다.")]
     [SerializeField] private string placeHeroMapClickMessageKey;
 
+    [Tooltip("영웅 재배치 단계에서 재배치 버튼을 누른 뒤(집기/내려놓기 대기 중) 보여줄 문구. " +
+        "PlaceHero의 placeHeroMapClickMessageKey와 같은 이유로 화면 전체를 막지 않는다.")]
+    [SerializeField] private string relocateHeroMapClickMessageKey;
+
     private CitizenManager citizenManager;
     private BaseConstructor baseConstructor;
     private HeroRoster heroRoster;
@@ -21,6 +25,7 @@ public class TutorialManager : MonoBehaviour
     private ResourcesManager resourcesManager;
     private RegionOverviewPanel regionOverviewPanel;
     private MapGame mapGame;
+    private MapView mapView;
     private UiManager uiManager;
     private PlayerSkillPanel playerSkillPanel;
     private EnviromentManager enviromentManager;
@@ -61,7 +66,7 @@ public class TutorialManager : MonoBehaviour
     private void Construct(CitizenManager citizenManager,
         BaseConstructor baseConstructor, HeroRoster heroRoster, PlacePalette placePalette,
         BuildingPanel buildingPanel, GameManager gameManager, ResourcesManager resourcesManager,
-        RegionOverviewPanel regionOverviewPanel, MapGame mapGame, UiManager uiManager,
+        RegionOverviewPanel regionOverviewPanel, MapGame mapGame, MapView mapView, UiManager uiManager,
         PlayerSkillPanel playerSkillPanel, EnviromentManager enviromentManager,
         SaveManager saveManager, TutorialState state)
     {
@@ -74,6 +79,7 @@ public class TutorialManager : MonoBehaviour
         this.resourcesManager = resourcesManager;
         this.regionOverviewPanel = regionOverviewPanel;
         this.mapGame = mapGame;
+        this.mapView = mapView;
         this.uiManager = uiManager;
         this.playerSkillPanel = playerSkillPanel;
         this.enviromentManager = enviromentManager;
@@ -190,6 +196,7 @@ public class TutorialManager : MonoBehaviour
         overlay.AcknowledgeClicked += OnAcknowledgeClicked;
         gameManager.ChangeToNight += OnChangeToNight;
         enviromentManager.OnDay += OnDayTransitionComplete;
+        mapView.Replaced += OnHeroReplaced;
     }
 
     private void OnDisable()
@@ -210,6 +217,7 @@ public class TutorialManager : MonoBehaviour
         overlay.AcknowledgeClicked -= OnAcknowledgeClicked;
         gameManager.ChangeToNight -= OnChangeToNight;
         enviromentManager.OnDay -= OnDayTransitionComplete;
+        mapView.Replaced -= OnHeroReplaced;
     }
 
     // 현재 단계의 waypoints 중 저작한 순서로 가장 깊이 들어간 활성 상태를 스포트라이트하고,
@@ -221,7 +229,11 @@ public class TutorialManager : MonoBehaviour
 
         // 로스터에서 영웅을 고르면(배치 대기 중) 다음 클릭은 UI가 아니라 3D 맵 타일이라 짚어줄
         // 사각형이 없다 - 이 순간만큼은 딤을 전부 끄고 맵을 자유롭게 클릭할 수 있게 한다.
-        bool awaitingMapClick = IsActive(TutorialStepId.PlaceHero) && placePalette.Mode == PlaceMode.Place;
+        bool awaitingPlaceClick = IsActive(TutorialStepId.PlaceHero) && placePalette.Mode == PlaceMode.Place;
+        // 재배치 버튼을 누른 뒤(영웅을 집거나 새 자리에 내려놓는 동안)도 똑같이 3D 맵 타일을 자유롭게
+        // 클릭할 수 있어야 한다.
+        bool awaitingRelocateClick = IsActive(TutorialStepId.RelocateHero) && placePalette.Mode == PlaceMode.Replace;
+        bool awaitingMapClick = awaitingPlaceClick || awaitingRelocateClick;
         // 딤을 끄는 동안엔 스포트라이트 밖의 다른 버튼(지역 슬롯, 거점 화면, 가이드 등)도 함께
         // 풀려버리니, 그런 패널이 마우스로 열리는 것만 따로 막아둔다 - HUD CanvasGroup 차단(아래)의
         // 이중 방어선이다.
@@ -229,7 +241,7 @@ public class TutorialManager : MonoBehaviour
         SetHudBlocked(awaitingMapClick);
         if (awaitingMapClick)
         {
-            ShowUnblockedMessage(placeHeroMapClickMessageKey);
+            ShowUnblockedMessage(awaitingRelocateClick ? relocateHeroMapClickMessageKey : placeHeroMapClickMessageKey);
             return;
         }
 
@@ -446,6 +458,22 @@ public class TutorialManager : MonoBehaviour
                 return;
             }
         }
+    }
+
+    // RelocateHero 단계에서 재배치(집기->내려놓기)가 실제로 성공했을 때만 완료한다 - UnitReplace.Replaced는
+    // 취소(ReturnHeld)에서는 안 울리므로 여기선 성공만 들어온다. kind 체크는 방어적인 것 - 이 스텝에서
+    // 재배치 모드로 집을 수 있는 건 방금 배치한 영웅뿐이라 항상 참이어야 정상이다.
+    private void OnHeroReplaced(GameObject unit, OccupantKind kind)
+    {
+        if (!IsActive(TutorialStepId.RelocateHero)) return;
+        if (kind != OccupantKind.MeleeHero && kind != OccupantKind.RangedHero) return;
+
+        // Replace 모드는 Place와 달리 한 번 내려놨다고 저절로 꺼지지 않는다(연달아 다른 유닛을
+        // 더 옮길 수 있게 하려고 일부러 그렇게 만든 상시 모드) - 튜토리얼 입장에선 한 번의 재배치만
+        // 확인하면 끝이므로, 여기서 직접 꺼줘야 다음 스텝으로 넘어간 뒤에도 Replace 모드가 남아
+        // 엉뚱한 클릭에 다른 유닛을 집어버리는 일이 없다.
+        placePalette.ClearMode();
+        CompleteStep();
     }
 
     // NightMention 단계가 활성일 때 낮/밤 버튼을 실제로 눌러야(ChangeToNight 발생) 완료된다 -
