@@ -68,7 +68,9 @@ public class HeroAttackState : HeroState
 
     protected void RotateToTarget()
     {
-        Vector3 aimVector = hero.Context.target.transform.position - hero.transform.position;
+        Transform aimTarget = hero.AimOverrideTarget != null ? hero.AimOverrideTarget : hero.Context.target;
+        if (aimTarget == null) return;
+        Vector3 aimVector = aimTarget.position - hero.transform.position;
         aimVector.y = 0f;
         if (aimVector.sqrMagnitude > 0.00001f)
         {

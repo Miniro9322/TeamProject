@@ -106,6 +106,7 @@ public class ContinuousBeamStrategy : IAttackDeliveryStrategy
             // 정상 종료/타겟 소실(break)/취소(OperationCanceledException) 어떤 경로로 빠져나가도
             // Bool이 켜진 채로 남지 않도록 반드시 꺼준다.
             if (!string.IsNullOrEmpty(animParam)) ctx.anim.SetBool(animParam, false);
+            hero.AimOverrideTarget = null;
             foreach (var slot in beamSlots)
                 hero.DespawnEffect(data.beamEffectPrefab, slot.beamGo);
             if (selfEffectGo != null) hero.DespawnEffect(data.beamEffectPrefab, selfEffectGo);
@@ -231,6 +232,7 @@ public class ContinuousBeamStrategy : IAttackDeliveryStrategy
 
         for (int i = 0; i < targets.Count; i++)
         {
+            hero.AimOverrideTarget = targets[i].transform;
             FireOneProjectile(hero, data, ctx, pool, targets[i], damage);
             if (i < targets.Count - 1)
                 await UniTask.Delay(TimeSpan.FromSeconds(data.shotInterval), cancellationToken: ct);

@@ -47,6 +47,7 @@ public class RangedAttackExecutor : IAttackExecutor
                 AttackAnimSpeedUtil.SetSpeed(ctx.bowAnim, 1f);
                 AttackAnimSpeedUtil.SetSpeed(ctx.arrowAnim, 1f);
             }
+            ctx.hero.AimOverrideTarget = null;
         }
     }
 
@@ -69,6 +70,7 @@ public class RangedAttackExecutor : IAttackExecutor
         for (int i = 0; i < targets.Count; i++)
         {
             if (targets[i] == null) continue; // 볼리 도중 타겟이 먼저 죽었으면(다른 피해 등) 건너뛴다
+            ctx.hero.AimOverrideTarget = targets[i].transform;
             FireArrow(pool, ctx, targets[i].transform, damage, data);
             if (i < targets.Count - 1)
                 await UniTask.Delay(System.TimeSpan.FromSeconds(data.shotInterval), cancellationToken: ct);
