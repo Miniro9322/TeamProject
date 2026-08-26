@@ -24,6 +24,7 @@ public class MapAssemble : MonoBehaviour
     [SerializeField] private HeroCombineManager combineManager;
     [SerializeField] private DesertZone desertZone;
     [SerializeField] private PlayerSkillPanel playerSkillPanel;
+    [SerializeField] private GimmickPopup gimmickPopup;
 
     private List<PathTrail> pathTrails;
     private List<EnemyLanes> laneModules;
@@ -133,6 +134,7 @@ public class MapAssemble : MonoBehaviour
         ghost = new PlaceGhost(ghostAlpha);
         command.ghost = ghost;
         command.hoverPlace = hoverPlace;
+        command.gimmickPopup = gimmickPopup;
         command.dispatch = new Dictionary<PlaceMode, Action<Tile>>
         {
             { PlaceMode.Off, action.SelectTile },

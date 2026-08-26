@@ -13,6 +13,7 @@ public class BuildModePanel : MonoBehaviour
     [SerializeField] private HeroCreateAmountController heroCreateAmountPanel;
     [SerializeField] private MapView view;
     [SerializeField] private MapGame game;
+    [SerializeField] private BuildPanelSlide panelSlide;
     [SerializeField] private Key closeKey = Key.Escape;
     [SerializeField] private Key upgradeKey = Key.U;
     [SerializeField] private Key replaceKey = Key.R;
@@ -129,6 +130,7 @@ public class BuildModePanel : MonoBehaviour
         }
     }
 
+    // 열린 하위 패널을 닫고 빌드 패널의 퇴장 연출을 시작한다.
     private void DisablePanels()
     {
         if (heroPanel.activeSelf)
@@ -143,12 +145,13 @@ public class BuildModePanel : MonoBehaviour
         {
             heroInventory.SetActive(false);
         }
-        gameObject.SetActive(false);
+        panelSlide.Close();
     }
 
+    // 낮 전환이 끝난 빌드 패널의 등장 연출을 시작한다.
     private void EnablePanel()
     {
-        gameObject.SetActive(true);
+        panelSlide.Open();
     }
 
     public void OnHeroButton()

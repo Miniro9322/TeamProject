@@ -6,7 +6,7 @@ using UnityEngine.UI;
 public abstract class HeldLinkBase : MonoBehaviour
 {
     [SerializeField] private Image buttonImage;
-    [SerializeField] private Color heldTint = new Color(0.502f, 0.361f, 0.204f);
+    [SerializeField] private Color heldTint = new Color(0.55f, 0.7f, 1f);
     [SerializeField] private Color normalTint = Color.white;
 
     private const string HeldParameter = "Held";
