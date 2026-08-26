@@ -144,13 +144,17 @@ public class WaveSpawner : MonoBehaviour
     }
 
     // 이번 라운드에 켤 포탈(레인)을 min~max 범위에서 랜덤 개수만큼 활성화한다.
-    // 낮에 포탈을 세우기 직전(SpawnerManager)에 호출 → 그 집합을 밤 스폰까지 그대로 쓴다.
+    // 포탈 테이블 없이 굴리는 폴백 경로(테스트·보정용)라 시드를 안 쓴다.
     public int RollActivePortals()
-        => RollActivePortals(UnityEngine.Random.Range(minActivePortals, maxActivePortals + 1));
+        => RollActivePortals(UnityEngine.Random.Range(minActivePortals, maxActivePortals + 1), null);
 
     // count개의 레인을 랜덤으로 활성화한다. 유효 경로가 count보다 적으면 있는 만큼만.
     // 반환: 실제 활성화된 포탈 수.
-    public int RollActivePortals(int count)
+    //
+    // rng를 넘기면 그걸로 뽑는다 — 같은 난수기면 항상 같은 포탈이 열리므로,
+    // (게임 시드, 지역, 일차)로 만든 난수기를 주면 세이브를 다시 로드해도 그날 포탈이 재현된다.
+    // null이면 예전처럼 전역 UnityEngine.Random을 쓴다(시드를 못 얻는 테스트 경로용).
+    public int RollActivePortals(int count, System.Random rng = null)
     {
         EnsurePaths();
         _activePaths.Clear();
@@ -172,7 +176,8 @@ public class WaveSpawner : MonoBehaviour
         int take = Mathf.Clamp(count, 1, _laneBuffer.Count);
         for (int i = 0; i < take; i++) // Fisher-Yates 부분 셔플로 take개 뽑기
         {
-            int j = UnityEngine.Random.Range(i, _laneBuffer.Count);
+            // rng.Next(i, n)과 Random.Range(i, n) 둘 다 상한 배타라 뽑는 범위가 같다.
+            int j = rng != null ? rng.Next(i, _laneBuffer.Count) : UnityEngine.Random.Range(i, _laneBuffer.Count);
             (_laneBuffer[i], _laneBuffer[j]) = (_laneBuffer[j], _laneBuffer[i]);
             (_spawnBuffer[i], _spawnBuffer[j]) = (_spawnBuffer[j], _spawnBuffer[i]);
             _activePaths.Add(_laneBuffer[i]);

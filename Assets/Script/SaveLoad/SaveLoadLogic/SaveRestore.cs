@@ -207,6 +207,7 @@ public class SaveRestore
     // 활성 포탈 재구성 (NightReady 저장본만 목록이 차 있다) → SpawnerManager
     private void RestorePortals(SaveData data)
     {
+        if (data.portalList.Length == 0) { spawnerManager.RefreshPortals(); return; }
         for (int i = 0; i < data.portalList.Length; i++)
         {
             PortalSave save = data.portalList[i];
