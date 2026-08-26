@@ -89,7 +89,7 @@ public class RangedAttackExecutor : IAttackExecutor
             {
                 e.TakeDamage(damage);
                 ctx.hero.NotifyHit((e as Component)?.gameObject, damage, false);
-                AttackDamageUtil.ApplyTargetDebuffs(e as Component, data.targetDebuffs, ctx.buffManager, data);
+                AttackDamageUtil.ApplyTargetDebuffs(e as Component, data.targetDebuffs, ctx.buffManager, data, ctx.sc[StatType.ATK]);
                 AttackDamageUtil.ApplyHealOptions(data, ctx.self.position, ctx.hero.Heal,
                     (p, r, s) => ctx.hero.GetObjectsInRange(p, r, s, RangeQueryAffinity.Ally), damage, ctx.sc[StatType.ATK]);
                 AttackDamageUtil.SpawnHitEffect(ctx.hero, data.hitEffect, e as Component, data.hitEffectLifetime);

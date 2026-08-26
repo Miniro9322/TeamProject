@@ -180,7 +180,7 @@ public class Projectile : MonoBehaviour
                 (p, r, s) => cfg.hero.GetObjectsInRange(p, r, s, RangeQueryAffinity.TargetableEnemy), cfg.hero.NotifyHit);
             foreach (GameObject go in hits)
             {
-                AttackDamageUtil.ApplyTargetDebuffs(go.transform, cfg.targetDebuffs, cfg.buffManager, cfg.source);
+                AttackDamageUtil.ApplyTargetDebuffs(go.transform, cfg.targetDebuffs, cfg.buffManager, cfg.source, hero.SC[StatType.ATK]);
                 ApplyHealOptions(damage);
                 SpawnHitEffect(go);
             }
@@ -192,7 +192,7 @@ public class Projectile : MonoBehaviour
                 if (go.GetComponentInParent<IDamageAble>() is not IDamageAble enemy) continue;
                 enemy.TakeDamage((int)damage);
                 cfg.hero.NotifyHit(go, (int)damage, false);
-                AttackDamageUtil.ApplyTargetDebuffs(go.transform, cfg.targetDebuffs, cfg.buffManager, cfg.source);
+                AttackDamageUtil.ApplyTargetDebuffs(go.transform, cfg.targetDebuffs, cfg.buffManager, cfg.source, hero.SC[StatType.ATK]);
                 ApplyHealOptions(damage);
                 SpawnHitEffect(go);
             }
@@ -201,7 +201,7 @@ public class Projectile : MonoBehaviour
         {
             damageable.TakeDamage((int)damage);
             cfg.hero.NotifyHit(target.gameObject, (int)damage, false);
-            AttackDamageUtil.ApplyTargetDebuffs(target, cfg.targetDebuffs, cfg.buffManager, cfg.source);
+            AttackDamageUtil.ApplyTargetDebuffs(target, cfg.targetDebuffs, cfg.buffManager, cfg.source, hero.SC[StatType.ATK]);
             ApplyHealOptions(damage);
             SpawnHitEffect(target.gameObject);
         }
