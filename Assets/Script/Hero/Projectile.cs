@@ -11,6 +11,8 @@ public struct ProjectileAoEConfig
     public int chainRange;
     public int chainCount;
     public float chainFalloff;
+    public GameObject chainEffectPrefab;
+    public float chainEffectLifetime;
     public List<TargetDebuffRef> targetDebuffs;
     public BuffManager buffManager;
     public object source; // 보통 발사한 AttackDataSO 인스턴스
@@ -33,6 +35,8 @@ public struct ProjectileAoEConfig
         chainRange = data.chainRange,
         chainCount = data.chainCount,
         chainFalloff = data.chainFalloff,
+        chainEffectPrefab = data.chainEffectPrefab,
+        chainEffectLifetime = data.chainEffectLifetime,
         casterPos = casterPos,
         targetDebuffs = data.targetDebuffs,
         buffManager = buffManager,
@@ -56,8 +60,16 @@ public class Projectile : MonoBehaviour
     [SerializeField] private float flashEffectLifetime = 1f;
     [SerializeField] private GameObject hitEffectPrefab;
     [SerializeField] private float hitEffectLifetime = 1f;
+    [Tooltip("hitEffectPrefab이 기본 크기(localScale=1)로 나타내는 반경(타일 수). areaRange/이 값 비율로 스케일한다. 0이면 스케일 안 함 — attackType이 Area인 발사체 전용.")]
+    [SerializeField] private float hitEffectVisualRadius = 0f;
     [Tooltip("비행 내내 따라다니는 자식 파티클 — 부모 Transform을 자동으로 따라가므로 재배치 코드 불필요")]
     [SerializeField] private ParticleSystem projectileEffect;
+
+    [Header("사운드")]
+    [Tooltip("발사 시 재생할 EnemySoundManager 키. 비워두면 재생하지 않음")]
+    [SerializeField] private string projectileSoundKey;
+    [Tooltip("명중/착탄 시 재생할 EnemySoundManager 키. 비워두면 재생하지 않음")]
+    [SerializeField] private string hitSoundKey;
 
     private Transform target;
     private Vector3 destination;
@@ -67,6 +79,10 @@ public class Projectile : MonoBehaviour
     private IObjectPool<Projectile> pool;
     private ProjectileAoEConfig cfg;
     private Hero hero;
+    // 라인 관통형 visualOnly 화살 전용 — destination(라인 끝)에 닿기 전에 지나치는 중간 타격 지점들.
+    // 가까운 순으로 미리 정렬해서 넘겨받고, 화살이 실제로 그 지점을 지나칠 때마다 순서대로 소비한다.
+    private List<Vector3> pendingHitPoints;
+    private int nextHitIndex;
 
     public void Launch(Transform target, float damage, IObjectPool<Projectile> pool, ProjectileAoEConfig cfg)
     {
@@ -84,7 +100,7 @@ public class Projectile : MonoBehaviour
         SpawnFlashEffect(cfg.hero);
     }
 
-    public void LaunchVisualOnly(Vector3 destination, IObjectPool<Projectile> pool, Hero hero)
+    public void LaunchVisualOnly(Vector3 destination, IObjectPool<Projectile> pool, Hero hero, List<Vector3> hitPoints = null)
     {
         this.destination = destination;
         this.pool = pool;
@@ -92,6 +108,8 @@ public class Projectile : MonoBehaviour
         this.visualOnly = true;
         this.target = null;
         elapsed = 0f;
+        pendingHitPoints = hitPoints;
+        nextHitIndex = 0;
 
         if (TryLook(destination - transform.position, out Quaternion look))
             transform.rotation = look;
@@ -101,8 +119,9 @@ public class Projectile : MonoBehaviour
 
     private void SpawnFlashEffect(Hero hero)
     {
+        if (!string.IsNullOrEmpty(projectileSoundKey)) EnemySoundManager.Play(projectileSoundKey);
         if (flashEffectPrefab != null && hero != null)
-            hero.SpawnEffect(flashEffectPrefab, transform.position, transform.rotation, flashEffectLifetime);
+            AttackDamageUtil.SpawnCasterEffect(hero, flashEffectPrefab, transform.position, transform.rotation, flashEffectLifetime);
         if (projectileEffect != null)
         {
             projectileEffect.Clear(true);
@@ -128,6 +147,24 @@ public class Projectile : MonoBehaviour
 
         Vector3 newPos = oldPos + transform.forward * speed * Time.deltaTime;
 
+        // 라인 관통형 화살은 destination(끝점)에 닿기 전에 중간 적들을 먼저 지나친다 — 이번 프레임
+        // 이동 구간이 다음 대기 지점을 지나쳤으면 반납하지 않고 히트 이펙트/사운드만 재생한 뒤 계속
+        // 날아간다. 한 프레임에 여러 지점을 동시에 지나칠 수 있어 while로 전부 소비한다.
+        if (visualOnly && pendingHitPoints != null)
+        {
+            while (nextHitIndex < pendingHitPoints.Count)
+            {
+                Vector3 hitPoint = pendingHitPoints[nextHitIndex];
+                Vector3 closestToHit = ClosestPointOnSegment(hitPoint, oldPos, newPos);
+                if ((hitPoint - closestToHit).sqrMagnitude > hitDistance * hitDistance) break;
+                // 적들이 서로 가까우면 화살이 지나는 간격이 0.05초 스로틀보다 짧아 대부분 씹힐 수 있다 —
+                // 한 발이 라인 위 여러 적을 연속으로 맞히는 의도된 다중 히트이므로 스로틀을 우회한다.
+                if (!string.IsNullOrEmpty(hitSoundKey)) EnemySoundManager.Play(hitSoundKey, ignoreThrottle: true);
+                SpawnHitEffect(hitPoint);
+                nextHitIndex++;
+            }
+        }
+
         // 고배속/프레임드랍으로 한 프레임 이동거리가 hitDistance를 넘으면 목표를 관통하거나
         // 옆으로 스쳐 지나갈 수 있다. 이번 프레임 이동 경로(선분) 기준으로 판정해 그런 경우도 잡는다.
         Vector3 closest = ClosestPointOnSegment(dest, oldPos, newPos);
@@ -136,7 +173,7 @@ public class Projectile : MonoBehaviour
             // Hit()의 범위 공격/장판 스폰이 transform.position을 기준으로 하므로,
             // 관통/스쳐 지나간 경우에도 실제 명중 지점(선분상 최근접점)으로 스냅해 둔다.
             transform.position = closest;
-            if (visualOnly) { SpawnHitEffect(dest); Return(); }
+            if (visualOnly) { if (!string.IsNullOrEmpty(hitSoundKey)) EnemySoundManager.Play(hitSoundKey); SpawnHitEffect(dest); Return(); }
             else Hit();
             return;
         }
@@ -164,6 +201,7 @@ public class Projectile : MonoBehaviour
 
     private void Hit()
     {
+        if (!string.IsNullOrEmpty(hitSoundKey)) EnemySoundManager.Play(hitSoundKey);
         RangeShape aoeShape = cfg.areaShape == AreaShape.Square ? RangeShape.Square : RangeShape.Diamond;
 
         if (cfg.areaShape == AreaShape.Chain)
@@ -176,6 +214,9 @@ public class Projectile : MonoBehaviour
                 ApplyHealOptions(damage);
                 SpawnHitEffect(go);
             }
+            // hits[0]은 착탄 지점(캐스터→hits[0] 구간은 발사체 자체가 표현) — 튕긴 대상들 사이만 아크로 잇는다.
+            for (int i = 0; i < hits.Count - 1; i++)
+                cfg.hero.SpawnChainArc(cfg.chainEffectPrefab, hits[i], hits[i + 1], cfg.chainEffectLifetime);
         }
         else if (cfg.attackType == AttackType.Area)
         {
@@ -186,8 +227,8 @@ public class Projectile : MonoBehaviour
                 cfg.hero.NotifyHit(go, (int)damage, false);
                 AttackDamageUtil.ApplyTargetDebuffs(go.transform, cfg.targetDebuffs, cfg.buffManager, cfg.source, hero.SC[StatType.ATK]);
                 ApplyHealOptions(damage);
-                SpawnHitEffect(go);
             }
+            SpawnAreaHitEffect(transform.position, cfg.areaRange);
         }
         else if (target != null && target.GetComponentInParent<IDamageAble>() is IDamageAble damageable)
         {
@@ -214,6 +255,17 @@ public class Projectile : MonoBehaviour
 
     private void SpawnHitEffect(GameObject target)
         => AttackDamageUtil.SpawnHitEffect(hero, hitEffectPrefab, target, hitEffectLifetime);
+
+    // Area 타입 착탄 전용 — 맞은 적마다 따로 띄우지 않고, 착탄 중심에 areaRange 크기로 스케일한
+    // 이펙트 하나만 띄운다. 착탄당 정확히 1회만 호출되므로 SpawnHitEffect(GameObject)와 달리 대상별
+    // 중복 방지 디바운스가 필요 없다.
+    private void SpawnAreaHitEffect(Vector3 pos, int range)
+    {
+        if (hitEffectPrefab == null) return;
+        GameObject go = hero.SpawnEffect(hitEffectPrefab, pos, hitEffectLifetime);
+        if (go != null && hitEffectVisualRadius > 0f)
+            go.transform.localScale = Vector3.one * (range / hitEffectVisualRadius);
+    }
 
     private void ApplyHealOptions(float damageDealt)
     {

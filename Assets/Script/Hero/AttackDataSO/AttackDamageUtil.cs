@@ -22,7 +22,10 @@ public static class AttackDamageUtil
     private static readonly Dictionary<(EnemyBase enemy, GameObject prefab), float> hitEffectBusyUntil = new();
     // lifetime(풀 반납 타이머)과는 무관한 고정 억제 구간 — 이펙트 재생 시간이 스킬마다 달라져도
     // "같은 이펙트가 얼마나 자주 겹치면 생략할지"는 항상 이 값 하나로 판단한다.
-    private const float HitEffectDedupInterval = 0.2f;
+    // Time.unscaledTime 기준 — 배속(Time.timeScale)과 무관하게 "(적, 프리팹) 조합당 초당 최대
+    // 1/interval회"라는 실시간 예산으로 고정한다. Time.time(scaled)을 쓰면 배속이 오를수록 초당
+    // 공격 수도 그만큼 늘어서 억제가 항상 같은 비율만 걸러내고 배속에 전혀 보정이 안 된다.
+    private const float HitEffectDedupInterval = 0.4f;
 
     public static void SpawnHitEffect(Hero hero, GameObject prefab, GameObject target, float lifetime)
     {
@@ -30,7 +33,7 @@ public static class AttackDamageUtil
         if (target.GetComponentInParent<EnemyBase>() is EnemyBase enemy)
         {
             var key = (enemy, prefab);
-            float now = Time.time;
+            float now = Time.unscaledTime;
             if (hitEffectBusyUntil.TryGetValue(key, out float busyUntil) && now < busyUntil) return;
             hitEffectBusyUntil[key] = now + HitEffectDedupInterval;
         }
@@ -39,6 +42,28 @@ public static class AttackDamageUtil
 
     public static void SpawnHitEffect(Hero hero, GameObject prefab, Component target, float lifetime)
         => SpawnHitEffect(hero, prefab, target != null ? target.gameObject : null, lifetime);
+
+    private static readonly Dictionary<(Hero caster, GameObject prefab), float> casterEffectBusyUntil = new();
+    // unscaled 실시간 예산이므로 shotInterval(게임시간, 배속에 비례해 짧아짐)과는 더 이상 같은 축이
+    // 아니다 — 배속이 오를수록 shotInterval(실시간)이 이 값보다 먼저 짧아지고, 그 순간부터는 "볼리
+    // 한 발마다"가 아니라 "볼리 전체에 근원 이펙트 1개"로 자연스럽게 접힌다. 회귀가 아니라 의도:
+    // 배속에서 정확히 줄이고 싶은 지점이 여기다.
+    private const float CasterEffectDedupInterval = 0.15f;
+
+    // attackEffect(스윙/발사 이펙트)·flashEffect(투사체 착탄 플래시)처럼 캐스터 자신이 짧은 간격으로
+    // 반복 스폰하는 "근원" 이펙트 전용 억제. SpawnHitEffect(타겟 기준)와 축이 달라 서로 간섭하지
+    // 않는다 — 절대 Hero.SpawnEffect 안에 넣지 말 것: SpawnHitEffect도 내부적으로 그걸 호출하므로,
+    // 거기서 캐스터 키로 억제하면 같은 캐스터가 AoE로 서로 다른 적 여러 명을 때릴 때 정당한 개별
+    // 히트 이펙트까지 지워진다.
+    public static void SpawnCasterEffect(Hero hero, GameObject prefab, Vector3 pos, Quaternion rot, float lifetime)
+    {
+        if (prefab == null) return;
+        var key = (hero, prefab);
+        float now = Time.unscaledTime;
+        if (casterEffectBusyUntil.TryGetValue(key, out float busyUntil) && now < busyUntil) return;
+        casterEffectBusyUntil[key] = now + CasterEffectDedupInterval;
+        hero.SpawnEffect(prefab, pos, rot, lifetime);
+    }
 
     // 대상이 살아있는 동안은 EffectPosition을 다시 읽고, 파괴되거나 풀에 반납되면 마지막 위치에
     // 고정한다 — 빔/체인 이펙트(BeamLinkEffect.Track)가 매 프레임 스스로 위치를 갱신할 때 쓴다.
@@ -52,7 +77,14 @@ public static class AttackDamageUtil
         };
     }
 
-    public static async UniTask ApplyInstantDamage(AttackDataSO data, AttackContext ctx, CancellationToken ct)
+    // 호출부가 이미 자체적으로(예: 채널링 틱마다) 사운드를 관리하는 경우 playSound=false(기본값)로
+    // 이중 재생을 피한다. true면 아래 attackCount 기반 반복마다 1회씩 재생해 히트 횟수와 맞춘다.
+    private static void PlaySound(AttackDataSO data)
+    {
+        if (!string.IsNullOrEmpty(data.attackSoundKey)) EnemySoundManager.Play(data.attackSoundKey);
+    }
+
+    public static async UniTask ApplyInstantDamage(AttackDataSO data, AttackContext ctx, CancellationToken ct, bool playSound = false)
     {
         float baseDamage = ctx.sc[StatType.ATK] * data.attackPer;
 
@@ -67,6 +99,7 @@ public static class AttackDamageUtil
         {
             for (int i = 0; i < data.attackCount; i++)
             {
+                if (playSound) PlaySound(data);
                 foreach (IDamageAble e in ctx.hero.GetEnemiesInLine(ctx.self.position, ctx.target.position, data.lineLength, data.areaRange, data.AreaUnattackableTarget))
                 {
                     e.TakeDamage((int)baseDamage);
@@ -83,6 +116,7 @@ public static class AttackDamageUtil
 
         if (data.areaShape == AreaShape.Chain)
         {
+            if (playSound) PlaySound(data);
             List<GameObject> hits = ChainResolver.Resolve(ctx.target.gameObject, baseDamage, data.chainRange, data.chainCount,
                 data.chainFalloff, TargetableEnemyQuery, ctx.hero.NotifyHit);
             foreach (GameObject go in hits)
@@ -102,6 +136,7 @@ public static class AttackDamageUtil
         {
             for (int i = 0; i < data.attackCount; i++)
             {
+                if (playSound) PlaySound(data);
                 if (ctx.target.GetComponent<IDamageAble>() is IDamageAble d)
                 {
                     d.TakeDamage((int)baseDamage);
@@ -122,6 +157,7 @@ public static class AttackDamageUtil
             List<GameObject> targets = AttackTargetSelector.SelectTargets(enemies, data.attackCount, data.targetCount);
             await FireEach(targets, t =>
             {
+                if (playSound) PlaySound(data);
                 if (t.GetComponentInParent<IDamageAble>() is not IDamageAble d) return;
                 d.TakeDamage((int)baseDamage);
                 ctx.hero.NotifyHit(t, (int)baseDamage, false);
@@ -139,6 +175,7 @@ public static class AttackDamageUtil
             Vector3 aoeCenter = data.areaCenterOnTarget && ctx.target != null ? ctx.target.position : ctx.self.position;
             for (int i = 0; i < data.attackCount; i++)
             {
+                if (playSound) PlaySound(data);
                 foreach (GameObject go in ctx.hero.GetObjectsInRange(aoeCenter, data.areaRange, aoeShape, RangeQueryAffinity.Enemy, data.AreaUnattackableTarget))
                 {
                     if (go.GetComponentInParent<IDamageAble>() is not IDamageAble e) continue;
@@ -158,6 +195,7 @@ public static class AttackDamageUtil
         List<GameObject> centers = AttackTargetSelector.SelectTargets(enemyObjects, data.attackCount, data.targetCount);
         await FireEach(centers, go =>
         {
+            if (playSound) PlaySound(data);
             foreach (GameObject hit in ctx.hero.GetObjectsInRange(go.transform.position, data.areaRange, aoeShape, RangeQueryAffinity.Enemy, data.AreaUnattackableTarget))
             {
                 if (hit.GetComponentInParent<IDamageAble>() is not IDamageAble e) continue;

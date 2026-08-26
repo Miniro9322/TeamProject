@@ -360,20 +360,30 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
         // 여기서 위치를 폴링하던 EnemyFireTile은 그것과 중복이라 걷어냈다.
         // 화염족 처리(ImmuneDebuffs로 막고 OnDebuffBlocked가 재생·오라 창을 여는 것)는 누가 걸든 그대로 동작한다.
         StunTick();
-        if (Keyboard.current != null)
-        {
-            if (Keyboard.current.numpad1Key.wasPressedThisFrame) Stun(3f);
-            if (Keyboard.current.numpad2Key.wasPressedThisFrame) ApplyDebuff(DebuffLoader.Get("Root_Basic"));
-            if (Keyboard.current.numpad3Key.wasPressedThisFrame) ApplyDebuff(DebuffLoader.Get("Silence_Basic"));
-            if (Keyboard.current.numpad4Key.wasPressedThisFrame) ApplyDebuff(DebuffLoader.Get("Ignite_Basic"));
-            if (Keyboard.current.numpad5Key.wasPressedThisFrame) ApplyDebuff(DebuffLoader.Get("Exhaust_Basic"));
-            if (Keyboard.current.numpad6Key.wasPressedThisFrame) ApplyDebuff(DebuffLoader.Get("Bleed_Basic"));
-            if (Keyboard.current.numpad7Key.wasPressedThisFrame) ApplyDebuff(DebuffLoader.Get("ArmorBreak_Basic"));
-            if (Keyboard.current.numpad8Key.wasPressedThisFrame) ApplyDebuff(DebuffLoader.Get("Frost_Basic"));
-            if (Keyboard.current.numpad9Key.wasPressedThisFrame) ApplyDebuff(DebuffLoader.Get("SandStom_Map"));
-   
-        }
+#if UNITY_EDITOR
+        EditorDebuffHotkeys();
+#endif
     }
+
+#if UNITY_EDITOR
+    // 넘패드로 디버프를 걸어 보는 테스트용 단축키. 에디터 플레이 모드에서만 컴파일된다 —
+    // 빌드(개발 빌드 포함)에는 아예 안 들어가므로 플레이어가 넘패드를 눌러 적을 기절시킬 수 없다.
+    // 호출부도 #if로 같이 감싸야 한다(메서드만 감싸면 Update에서 "없는 메서드"를 부르게 된다).
+    private void EditorDebuffHotkeys()
+    {
+        if (Keyboard.current == null) return;
+
+        if (Keyboard.current.numpad1Key.wasPressedThisFrame) Stun(3f);
+        if (Keyboard.current.numpad2Key.wasPressedThisFrame) ApplyDebuff(DebuffLoader.Get("Root_Basic"));
+        if (Keyboard.current.numpad3Key.wasPressedThisFrame) ApplyDebuff(DebuffLoader.Get("Silence_Basic"));
+        if (Keyboard.current.numpad4Key.wasPressedThisFrame) ApplyDebuff(DebuffLoader.Get("Ignite_Basic"));
+        if (Keyboard.current.numpad5Key.wasPressedThisFrame) ApplyDebuff(DebuffLoader.Get("Exhaust_Basic"));
+        if (Keyboard.current.numpad6Key.wasPressedThisFrame) ApplyDebuff(DebuffLoader.Get("Bleed_Basic"));
+        if (Keyboard.current.numpad7Key.wasPressedThisFrame) ApplyDebuff(DebuffLoader.Get("ArmorBreak_Basic"));
+        if (Keyboard.current.numpad8Key.wasPressedThisFrame) ApplyDebuff(DebuffLoader.Get("Frost_Basic"));
+        if (Keyboard.current.numpad9Key.wasPressedThisFrame) ApplyDebuff(DebuffLoader.Get("SandStom_Map"));
+    }
+#endif
 
     // 체력바는 LateUpdate에서 굴린다 — 이동(Update)과 카메라 회전(CameraInput.Update)이 모두 끝난 뒤라야
     // 빌보드가 한 프레임 밀리지 않는다.
@@ -732,7 +742,6 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
     {
         _damageBlock = Mathf.Max(0f, flatReduce);
         _shieldExpiry = Time.time + duration;
-        Debug.Log($"[Shield] 쉴드 부여 시점 t={Time.time:F2} block={_damageBlock} expiry={_shieldExpiry:F2}", this);
     }
 
     public void TakeDamage(int damage,bool ignore = false)

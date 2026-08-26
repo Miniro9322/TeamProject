@@ -9,6 +9,8 @@ public class HeroCombineManager : MonoBehaviour
 {
     [SerializeField] private HeroRegistry heroRegistry;
     [SerializeField] private MapGame game;
+    [Tooltip("영웅 합성 성공 시 재생할 EnemySoundManager 키. 비워두면 재생하지 않음")]
+    [SerializeField] private string combineSoundKey;
 
     // 특정 MergeKey로 합성 가능한(3개 이상 모인) 후보가 있는지.
     public bool TryGetCombinable(MergeKey key, out List<HeroRosterEntry> candidates)
@@ -146,6 +148,7 @@ public class HeroCombineManager : MonoBehaviour
             }
         }
 
+        if (!string.IsNullOrEmpty(combineSoundKey)) EnemySoundManager.Play(combineSoundKey);
         return true;
     }
 }

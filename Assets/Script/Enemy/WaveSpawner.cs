@@ -144,9 +144,22 @@ public class WaveSpawner : MonoBehaviour
     }
 
     // 이번 라운드에 켤 포탈(레인)을 min~max 범위에서 랜덤 개수만큼 활성화한다.
-    // 포탈 테이블 없이 굴리는 폴백 경로(테스트·보정용)라 시드를 안 쓴다.
-    public int RollActivePortals()
-        => RollActivePortals(UnityEngine.Random.Range(minActivePortals, maxActivePortals + 1), null);
+    // 포탈 테이블 없이 굴리는 폴백 경로(테스트·보정용) — SpawnWave가 "추첨 없이 스폰됐다"를 감지했을 때 부른다.
+    //
+    // pathSeed를 넘기면 개수까지 그 시드로 뽑는다. 안 그러면 이 한 경로만 매번 달라져
+    // "시드를 넣었는데 가끔 포탈이 바뀐다"가 된다 — 실제 게임에서도 SpawnWave 안에서 도달 가능한 길이다.
+    public int RollActivePortals(string pathSeed = null)
+    {
+        int span = Mathf.Max(1, maxActivePortals - minActivePortals + 1);
+        if (string.IsNullOrEmpty(pathSeed))
+            return RollActivePortals(UnityEngine.Random.Range(minActivePortals, maxActivePortals + 1), null);
+
+        // 개수와 조합을 같은 시드에서 뽑되 유도 문자열을 나눈다 — 하나의 난수기를 순차로 쓰면
+        // 개수가 1 달라졌을 때 뒤따르는 조합 추첨까지 통째로 밀린다.
+        var countRng = new System.Random(GameSeeding.Derive($"{pathSeed}:portalcount", 0));
+        return RollActivePortals(minActivePortals + countRng.Next(0, span),
+            new System.Random(GameSeeding.Derive($"{pathSeed}:portalpick", 0)));
+    }
 
     // count개의 레인을 랜덤으로 활성화한다. 유효 경로가 count보다 적으면 있는 만큼만.
     // 반환: 실제 활성화된 포탈 수.
@@ -249,12 +262,20 @@ public class WaveSpawner : MonoBehaviour
         return -1;
     }
 
+    // 인덱스 하나를 뽑는다. rng가 있으면 그걸로(재현됨), 없으면 예전처럼 전역 Random.
+    // System.Random.Next(0,n)과 UnityEngine.Random.Range(0,n) 둘 다 상한 배타라 범위가 같다.
+    private static int Pick(System.Random rng, int count) =>
+        rng != null ? rng.Next(0, count) : UnityEngine.Random.Range(0, count);
+
     /// <summary>이 적이 따라갈 경로. authored=true면 사람이 그린 경로라 적이 재탐색하지 않는다.
     ///
     /// 공중·수영 적은 그 종류의 저작 경로가 있는 포탈에서만 나온다 — 여러 곳에 그려 뒀으면 그중 랜덤.
     /// 활성 포탈에 그 종류 경로가 하나도 없으면 경고를 남기고 기존 자동 경로로 돌아간다
-    /// (웨이브가 비어 라운드가 깨지는 것보다 낫다).</summary>
-    private IReadOnlyList<Vector3> NextSpawnPath(EnemyRouteKind kind, out bool authored)
+    /// (웨이브가 비어 라운드가 깨지는 것보다 낫다).
+    ///
+    /// rng는 이 적 한 마리만의 난수기다(SpawnWaveRout이 마리마다 새로 만든다). null이면 전역 Random —
+    /// 시드를 못 얻는 테스트 경로에서만 그렇게 된다.</summary>
+    private IReadOnlyList<Vector3> NextSpawnPath(EnemyRouteKind kind, System.Random rng, out bool authored)
     {
         authored = false;
 
@@ -273,7 +294,7 @@ public class WaveSpawner : MonoBehaviour
         }
         else
         {
-            IReadOnlyList<Vector3> drawn = AuthoredPath(kind);
+            IReadOnlyList<Vector3> drawn = AuthoredPath(kind, rng);
             if (drawn != null)
             {
                 authored = true;
@@ -282,7 +303,7 @@ public class WaveSpawner : MonoBehaviour
         }
 
         if (_activePaths.Count == 0) return waypoints;
-        return BranchPath(UnityEngine.Random.Range(0, _activePaths.Count));
+        return BranchPath(Pick(rng, _activePaths.Count), rng);
     }
 
     // 종류별로 한 번만 남긴다 — 매 스폰마다 찍으면 콘솔이 잠긴다. 라운드가 바뀌면 다시 낸다.
@@ -295,7 +316,7 @@ public class WaveSpawner : MonoBehaviour
 
     // 이 종류의 저작 경로가 있는 활성 포탈 중 하나를 랜덤으로 골라 웨이포인트를 만든다.
     // 쓸 경로가 없으면 null — 호출부가 기존 자동 경로로 폴백한다.
-    private IReadOnlyList<Vector3> AuthoredPath(EnemyRouteKind kind)
+    private IReadOnlyList<Vector3> AuthoredPath(EnemyRouteKind kind, System.Random rng)
     {
         _routedPortals.Clear();
 
@@ -316,14 +337,14 @@ public class WaveSpawner : MonoBehaviour
             return null;
         }
 
-        int pick = _routedPortals[UnityEngine.Random.Range(0, _routedPortals.Count)];
+        int pick = _routedPortals[Pick(rng, _routedPortals.Count)];
         Vector2Int coord = _spawnTiles[pick].Coord;
 
         // 같은 스폰에 여러 벌 그렸으면 갈래로 보고 랜덤 — 기존 BranchPath와 같은 취급이다.
         enemyRoutes.Collect(kind, coord, _entryBuffer);
         if (_entryBuffer.Count == 0) return null;
 
-        EnemyRouteSet.Entry entry = _entryBuffer[UnityEngine.Random.Range(0, _entryBuffer.Count)];
+        EnemyRouteSet.Entry entry = _entryBuffer[Pick(rng, _entryBuffer.Count)];
         List<Vector3> points = EnemyRoutePath.Build(board, entry);
 
         if (points.Count == 0)
@@ -375,7 +396,7 @@ public class WaveSpawner : MonoBehaviour
     }
 
     // 이 포탈에서 갈라지는 길 중 하나. 갈래가 하나뿐이거나 막혀 있으면 대표 경로 그대로.
-    private IReadOnlyList<Vector3> BranchPath(int pick)
+    private IReadOnlyList<Vector3> BranchPath(int pick, System.Random rng)
     {
         int spawn = _activeSpawns[pick];
         if (enemyLanes == null || spawn == NoSpawn) return _activePaths[pick];
@@ -383,7 +404,7 @@ public class WaveSpawner : MonoBehaviour
         int branches = enemyLanes.BranchCount(spawn);
         if (branches <= 1) return _activePaths[pick];
 
-        var branch = enemyLanes.GetBranchPath(spawn, UnityEngine.Random.Range(0, branches), 0f);
+        var branch = enemyLanes.GetBranchPath(spawn, Pick(rng, branches), 0f);
         if (branch == null || branch.Count == 0) return _activePaths[pick];
         return branch;
     }
@@ -394,16 +415,17 @@ public class WaveSpawner : MonoBehaviour
 
         text.text = string.Empty;
     }
-    public void SpawnWave(int currentStage)
+    public void SpawnWave(int currentStage, string pathSeed = null)
     {
         Enemycount =0;
-        if (_activePaths.Count == 0) RollActivePortals(); // 포탈 추첨 없이 스폰되면(테스트 등) 여기서 보정
+        if (_activePaths.Count == 0) RollActivePortals(pathSeed); // 포탈 추첨 없이 스폰되면(테스트 등) 여기서 보정
         int lookupId = GetStageLookupId(currentStage); // 10일차 초과는 1001~1005 라운드로 순환 조회
 
+        int row = 0;   // 웨이브 행 순번 — 경로 추첨 시드의 일부다(자세한 이유는 SpawnWaveRout 주석)
         foreach(var wave in waveTable.GetWave(1,lookupId))
         {
             int count = GetScaleCount(wave.Count, currentStage); // 라운드가 돌수록 마릿수 스케일업
-            SpawnWaveRout(wave, count, 0f, this.GetCancellationTokenOnDestroy()).Forget();
+            SpawnWaveRout(wave, count, 0f, this.GetCancellationTokenOnDestroy(), pathSeed, row++).Forget();
             Enemycount += count;
         }
     }
@@ -411,23 +433,31 @@ public class WaveSpawner : MonoBehaviour
     private float _roundStartTime;
     private int _roundDayCount;
 
-    public void SpawnWave(int region,int currentStage, int unlockedRegionCount = 1, int? scaleStage = null)
+    /// <param name="pathSeed">이 지역·이 밤의 경로 추첨 시드 문자열. SpawnerManager가 게임 시드로 만들어 넘긴다.
+    /// null이면 예전처럼 전역 Random으로 경로를 뽑는다(시드를 못 얻는 테스트 씬).
+    /// 필드로 들고 있지 않고 매번 인자로 받는 이유 — 포탈은 낮에 굴리고 적은 밤에 스폰되는데,
+    /// 그 사이에 RefreshPortals/RestorePortal이나 일차 복원이 끼어들면 필드에 남은 시드가 다른 날의 것이 된다.
+    /// 스폰하는 그 자리에서 만들어 넘기면 그 어긋남이 구조적으로 불가능하다.</param>
+    public void SpawnWave(int region,int currentStage, int unlockedRegionCount = 1, int? scaleStage = null, string pathSeed = null)
     {
         Enemycount =0;
-        if (_activePaths.Count == 0) RollActivePortals(); // 포탈 추첨 없이 스폰되면 여기서 보정
+        if (_activePaths.Count == 0) RollActivePortals(pathSeed); // 포탈 추첨 없이 스폰되면 여기서 보정
         int lookupId = GetStageLookupId(currentStage);
         int scale = scaleStage ?? currentStage;
+        // 웨이브 행 순번. 일반·증원·보스 세 갈래를 통틀어 하나로 센다 —
+        // 갈래마다 0부터 다시 세면 서로 다른 행의 첫 마리가 같은 시드를 받아 전부 같은 포탈로 몰린다.
+        int row = 0;
         foreach(var wave in waveTable.GetWave(region,lookupId))
         {
             int count = GetScaleCount(wave.Count, scale); // 라운드가 돌수록 마릿수 스케일업
-            SpawnWaveRout(wave, count, 0f, this.GetCancellationTokenOnDestroy()).Forget();
+            SpawnWaveRout(wave, count, 0f, this.GetCancellationTokenOnDestroy(), pathSeed, row++).Forget();
             Enemycount += count;
         }
         for (int tier = 0; tier < ReinforceTiers(unlockedRegionCount); tier++)
         {
             foreach (var wave in waveTable.GetWave(region, ReinforceBaseId + tier))
             {
-                SpawnWaveRout(wave, wave.Count, 0f, this.GetCancellationTokenOnDestroy()).Forget(); // 증원은 라운드 배율을 안 붙인다(표에 적은 마릿수 그대로)
+                SpawnWaveRout(wave, wave.Count, 0f, this.GetCancellationTokenOnDestroy(), pathSeed, row++).Forget(); // 증원은 라운드 배율을 안 붙인다(표에 적은 마릿수 그대로)
                 Enemycount += wave.Count;
             }
         }
@@ -439,7 +469,7 @@ public class WaveSpawner : MonoBehaviour
             spawnerManager.BossOpeningDirecting(this.GetCancellationTokenOnDestroy(), bossSpawnDelay - 0.5f).Forget();
             foreach (var w in waveTable.GetWave(1, 5001))
             {
-                SpawnWaveRout(w, w.Count, bossSpawnDelay, this.GetCancellationTokenOnDestroy()).Forget();
+                SpawnWaveRout(w, w.Count, bossSpawnDelay, this.GetCancellationTokenOnDestroy(), pathSeed, row++).Forget();
                 Enemycount += w.Count;
             }
         }
@@ -453,7 +483,14 @@ public class WaveSpawner : MonoBehaviour
     // GetCancellationTokenOnDestroy()를 받는다 - BossOpeningDirecting과 같은 패턴. 이게 없으면
     // WaveSpawner와 GameLifeTimeScope가 이미 파괴된 뒤에 Delay가 끝나 PoolManager.Spawn을 호출하고,
     // VContainer가 사라진 씬에서 WaveSpawner를 FindComponentProvider로 다시 찾으려다 예외를 던진다.
-    private async UniTask SpawnWaveRout(WaveTable.Data wave, int count, float startDelay, CancellationToken cancellationToken)
+    //
+    // pathSeed·row는 이 웨이브 행에서 나올 적들의 경로를 재현하기 위한 것이다.
+    // 마리마다 (시드, 행 순번, 마릿수 인덱스)로 난수기를 새로 만든다 — 난수기 하나를 돌려 쓰지 않는 이유:
+    // 이 메서드는 웨이브 행마다 .Forget()으로 동시에 돌고 SpawnTime/Delay만큼 await하므로,
+    // 어느 행의 몇 번째 적이 먼저 뽑느냐가 프레임 타이밍에 따라 달라진다. 순차 소비형 난수기였다면
+    // 그 순서가 흔들리는 순간 같은 시드에서도 다른 경로가 나온다. 키에 순번을 박아 두면 순서와 무관해진다.
+    private async UniTask SpawnWaveRout(WaveTable.Data wave, int count, float startDelay, CancellationToken cancellationToken,
+        string pathSeed = null, int row = 0)
     {
         var prefab = waveTable.GetMonsterPrefab(wave);
         if (prefab == null)
@@ -473,7 +510,7 @@ public class WaveSpawner : MonoBehaviour
             {
                 enemy.SetOwner(this);
                 // 공중·수영은 저작 경로가 있는 포탈에서만, 나머지는 활성 포탈 중 랜덤.
-                IReadOnlyList<Vector3> path = NextSpawnPath(enemy.RouteKind, out bool authored);
+                IReadOnlyList<Vector3> path = NextSpawnPath(enemy.RouteKind, PathRng(pathSeed, row, i), out bool authored);
                 enemy.EnterMap(board, path, true, authored);
             }
 
@@ -481,6 +518,14 @@ public class WaveSpawner : MonoBehaviour
             await UniTask.Delay(TimeSpan.FromSeconds(wave.Delay), cancellationToken: cancellationToken);
         }
     }
+    // 적 한 마리의 경로 추첨 난수기. 같은 (게임 시드, 지역, 일차, 웨이브 행, 마릿수 인덱스)면 항상 같은 경로가 나온다.
+    // 시드가 없으면 null — 호출부(Pick)가 전역 Random으로 돌아간다.
+    private static System.Random PathRng(string pathSeed, int row, int index)
+    {
+        if (string.IsNullOrEmpty(pathSeed)) return null;
+        return new System.Random(GameSeeding.Derive($"{pathSeed}:row{row}", index));
+    }
+
     public void EnemyDieEvent()
     {
         Enemycount--;

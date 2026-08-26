@@ -57,7 +57,6 @@ MonoBehaviour:
   hitEffect: {fileID: 0}
   hitEffectLifetime: 0.5
   healReceiveEffect: {fileID: 0}
-  healReceiveEffectLifetime: 0.5
   buffReceiveEffect: {fileID: 1727449606562332922, guid: 3664a609655d90e449ab242e33a3fb07, type: 3}
   visualRadius: 0.5
   selfEffect: {fileID: 8085374830756253496}
@@ -73,6 +72,9 @@ MonoBehaviour:
     value: 0.5
     duration: 10
     maxStacks: 0
+  spawnSoundKey: PlayerBuff1
+  sustainSoundKey: 
+  hitSoundKey: 
 --- !u!1 &8085374830756253496
 GameObject:
   m_ObjectHideFlags: 0

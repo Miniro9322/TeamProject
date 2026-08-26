@@ -36,6 +36,7 @@ public class EnemySoundManager : MonoBehaviour
     {
         public AudioSource source;
         public float endTime;   // Time.unscaledTime 기준
+        public bool manualStop; // true인 동안은 Update()의 자동 종료 스캔에서 제외 — 외부가 직접 Stop()할 때까지 유지되는 루프 전용
     }
     private readonly List<TimedVoice> timedVoices = new List<TimedVoice>();
 
@@ -91,7 +92,11 @@ public class EnemySoundManager : MonoBehaviour
     // 효과음 재생 (중복 재생 허용)
     // soundTime이 0 이하면 클립을 끝까지 재생한다(기존 동작 그대로).
     // soundTime이 들어있으면 그 초가 지날 때 잘라낸다 — 긴 클립을 연출 길이에 맞춰 쓸 때.
-    public static void Play(string key)
+    // ignoreThrottle: 한 발의 공격이 짧은 시간 안에 같은 키를 여러 번 의도적으로 재생해야 하는 경우
+    // (예: 라인 관통 화살이 적을 연속으로 맞힐 때) 아래 스로틀을 우회한다 — 스로틀은 서로 무관한
+    // 소스가 우연히 겹치는 걸 막기 위한 것이라, 한 번의 공격 안에서 일부러 반복 재생하는 경우까지
+    // 막으면 안 된다.
+    public static void Play(string key, bool ignoreThrottle = false)
     {
         if (Instance == null || Instance.db == null) return;
         var e = Instance.db.Get(key);
@@ -99,14 +104,36 @@ public class EnemySoundManager : MonoBehaviour
 
         // 같은 키 중복 재생 스로틀: 런타임 딕셔너리 + 언스케일드 타임(일시정지 timeScale=0 영향 없음)
         float now = Time.unscaledTime;
-        if (Instance.lastPlayTime.TryGetValue(key, out float last) && now - last < PlayThrottle) return;
-        Instance.lastPlayTime[key] = now;
+        if (!ignoreThrottle)
+        {
+            if (Instance.lastPlayTime.TryGetValue(key, out float last) && now - last < PlayThrottle) return;
+            Instance.lastPlayTime[key] = now;
+        }
 
         if (e.soundTime > 0f) { Instance.PlayTimed(e, now); return; }
 
         if (Instance.sfxSource == null) { Debug.LogWarning("sfxSource 미할당"); return; }
         // 카테고리(SFX) 볼륨은 믹서가 담당. 여기선 클립별 상대 볼륨만 적용
         Instance.sfxSource.PlayOneShot(e.clip, e.volume);
+    }
+
+    // 명시적으로 멈출 때까지 유지되는 루프 사운드. PlayThrottle(중복 재생 스로틀)은 적용하지
+    // 않는다 — 같은 키를 쓰는 여러 인스턴스(예: 장판 여러 개)가 동시에 각자 독립적으로 재생/정지
+    // 되어야 하기 때문. 반환된 AudioSource를 호출부가 들고 있다가 필요할 때 직접 Stop()해야 한다.
+    public static AudioSource PlayLoop(string key)
+    {
+        if (Instance == null || Instance.db == null) return null;
+        var e = Instance.db.Get(key);
+        if (e == null) { Debug.LogWarning($"SoundDatabase에 '{key}' 키 없음"); return null; }
+
+        TimedVoice voice = Instance.GetFreeVoice();
+        voice.manualStop = true;
+        AudioSource src = voice.source;
+        src.clip = e.clip;
+        src.volume = e.volume;
+        src.loop = true; // DB entry의 loop 값과 무관하게 강제 루프
+        src.Play();
+        return src;
     }
 
     // soundTime이 있는 클립을 전용 소스로 재생하고 마감 시각을 예약한다.
@@ -116,6 +143,7 @@ public class EnemySoundManager : MonoBehaviour
     private void PlayTimed(EnemySoundDataBase.Entry e, float now)
     {
         TimedVoice voice = GetFreeVoice();
+        voice.manualStop = false; // 이 슬롯이 과거에 PlayLoop로 쓰였던 경우에도 정상적으로 자동 종료되도록 리셋
         AudioSource src = voice.source;
         src.clip = e.clip;
         src.volume = e.volume;
@@ -166,6 +194,7 @@ public class EnemySoundManager : MonoBehaviour
         {
             TimedVoice v = timedVoices[i];
             if (v.source == null || !v.source.isPlaying) continue;
+            if (v.manualStop) continue;
             if (now < v.endTime) continue;
             v.source.Stop();
         }

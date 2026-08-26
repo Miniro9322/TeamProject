@@ -79,12 +79,19 @@ public class RangedAttackExecutor : IAttackExecutor
     {
         Projectile arrow = pool.Get();
         arrow.transform.SetPositionAndRotation(ctx.MuzzleOrSelf.position, ctx.MuzzleOrSelf.rotation);
-        ctx.hero.SpawnEffect(data.attackEffect, ctx.MuzzleOrSelf.position, ctx.MuzzleOrSelf.rotation, data.attackEffectLifetime);
+        AttackDamageUtil.SpawnCasterEffect(ctx.hero, data.attackEffect, ctx.MuzzleOrSelf.position, ctx.MuzzleOrSelf.rotation, data.attackEffectLifetime);
+        if (!string.IsNullOrEmpty(data.attackSoundKey)) EnemySoundManager.Play(data.attackSoundKey);
 
         if (data.attackType == AttackType.Area && data.areaShape == AreaShape.Line)
         {
             Vector2Int dir = ctx.hero.GetCardinalDirection(ctx.self.position, target.position);
-            foreach (IDamageAble e in ctx.hero.GetEnemiesInLine(ctx.self.position, target.position, data.lineLength, data.areaRange, data.AreaUnattackableTarget))
+            List<IDamageAble> enemies = ctx.hero.GetEnemiesInLine(ctx.self.position, target.position, data.lineLength, data.areaRange, data.AreaUnattackableTarget);
+            // 화살이 가까운 적부터 지나가므로, 캐스터 기준 거리순으로 정렬해 지나치는 순서와 맞춘다.
+            enemies.Sort((a, b) =>
+                Vector3.SqrMagnitude(AttackDamageUtil.EffectPosition(a as Component) - ctx.self.position)
+                    .CompareTo(Vector3.SqrMagnitude(AttackDamageUtil.EffectPosition(b as Component) - ctx.self.position)));
+            List<Vector3> hitPoints = new List<Vector3>(enemies.Count);
+            foreach (IDamageAble e in enemies)
             {
                 e.TakeDamage(damage);
                 ctx.hero.NotifyHit((e as Component)?.gameObject, damage, false);
@@ -92,11 +99,12 @@ public class RangedAttackExecutor : IAttackExecutor
                 AttackDamageUtil.ApplyHealOptions(data, ctx.self.position, ctx.hero.Heal,
                     (p, r, s) => ctx.hero.GetObjectsInRange(p, r, s, RangeQueryAffinity.Ally), damage, ctx.sc[StatType.ATK]);
                 AttackDamageUtil.SpawnHitEffect(ctx.hero, data.hitEffect, e as Component, data.hitEffectLifetime);
+                hitPoints.Add(AttackDamageUtil.EffectPosition(e as Component));
             }
             if (data.groundZonePrefab != null)
                 ctx.hero.SpawnGroundZone(data.groundZonePrefab, target.position);
             Vector3 endPoint = ctx.hero.GetLineEndPoint(ctx.self.position, dir, data.lineLength);
-            arrow.LaunchVisualOnly(endPoint, pool, ctx.hero);
+            arrow.LaunchVisualOnly(endPoint, pool, ctx.hero, hitPoints);
             return;
         }
 

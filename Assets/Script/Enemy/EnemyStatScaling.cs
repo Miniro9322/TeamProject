@@ -49,7 +49,7 @@ public static class EnemyStatScaling
     // 표 길이를 넘는 해금 수는 마지막 값으로 고정되므로, 지역이 늘면 칸을 추가하면 된다.
     // 보스 전용 표를 따로 두고, Elite·Normal은 잡몹 표를 공유한다.
     private static readonly float[] RegionHpScaleTable = { 1f, 1f, 1.25f, 1.6f, 2.15f, 3f, 4f };
-    private static readonly float[] RegionBossHpScaleTable = { 1f, 1f, 1.5f, 2.5f, 3.9f, 5.7f, 8f };
+    private static readonly float[] RegionBossHpScaleTable = { 1f, 1f, 1.5f, 2.5f, 4.2f, 7.2f, 10f };
     private static readonly float[] RegionDefenseScaleTable = { 1f, 1f, 1.07f, 1.15f, 1.25f, 1.38f, 1.5f };
     private static readonly float[] RegionBossDefenseScaleTable = { 1f, 1f, 1.2f, 1.35f, 1.5f, 1.72f, 2f };
 
@@ -63,7 +63,7 @@ public static class EnemyStatScaling
     // 경계 뒤에 오르는 단계만 [1]로 붙는다. 그래서 경계일에 배율이 튀지 않고 기울기만 가팔라진다.
     private const int BossStatStepRounds = 10;
     private const int BossStatDeepenDay = 100;
-    private static readonly float[] BossHpStepScale = { 3f, 6f};
+    private static readonly float[] BossHpStepScale = { 2.5f, 6f};
     private static readonly float[] BossDefStepScale = { 0.5f, 1.5f};
     public static float RegionHpScale(EnemyClass cls,int dayCount)
         => RegionScale(RegionHpScaleTable, RegionBossHpScaleTable, cls) + BossFullUnlockHpBonus(cls,dayCount);

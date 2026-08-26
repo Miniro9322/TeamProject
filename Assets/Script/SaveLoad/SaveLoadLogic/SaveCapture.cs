@@ -93,6 +93,7 @@ public class SaveCapture
             save.moduleId = pair.Key;
             save.moduleState = pair.Value.CurrentState;
             save.stageOffset = spawnerManager.GetOffset(pair.Key);
+            save.unlockDay = spawnerManager.GetUnlockDay(pair.Key);
             result[index] = save;
             index++;
         }
