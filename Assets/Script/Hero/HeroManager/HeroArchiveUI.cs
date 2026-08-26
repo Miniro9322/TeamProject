@@ -35,6 +35,12 @@ public class HeroArchiveUI : MonoBehaviour
     //{
     //    ClearList();
     //}
+
+    private void OnEnable()
+    {
+        if (currentHero != null) ApplyHeroText(currentHero);
+    }
+
     private void BuildList()
     {
         //ClearList();
@@ -47,10 +53,15 @@ public class HeroArchiveUI : MonoBehaviour
             BuildDescItems(data);
 
         HeroData heroData = registry.AllHeroDatas[0];
-        mainImage.sprite = heroData.Icon;
-        nameText.text = DataTableManager.StringTable.Get(heroData.HeroNameKey);
-        descText.text = DataTableManager.StringTable.Get(heroData.HeroDescriptionKey);
+        ApplyHeroText(heroData);
         ShowDescItems(heroData);
+    }
+
+    private void ApplyHeroText(HeroData data)
+    {
+        mainImage.sprite = data.Icon;
+        nameText.text = DataTableManager.StringTable.Get(data.HeroNameKey);
+        descText.text = DataTableManager.StringTable.Get(data.HeroDescriptionKey);
     }
 
     private void BuildDescItems(HeroData data)
@@ -82,9 +93,7 @@ public class HeroArchiveUI : MonoBehaviour
     private void OnHeroArchiveClicked(HeroData picked)
     {
         PlayOpenAndReveal();
-        mainImage.sprite = picked.Icon;
-        nameText.text = DataTableManager.StringTable.Get(picked.HeroNameKey);
-        descText.text = DataTableManager.StringTable.Get(picked.HeroDescriptionKey);
+        ApplyHeroText(picked);
         ShowDescItems(picked);
     }
 
