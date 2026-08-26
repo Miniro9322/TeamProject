@@ -235,6 +235,23 @@ public class SpawnerManager : MonoBehaviour
         return new System.Random(GameSeeding.Derive($"{seed}:portal:{region}", day));
     }
 
+    // 이 지역·이 밤의 "적 경로 추첨" 시드 문자열. WaveSpawner가 이걸 받아 적 한 마리마다
+    // (행 순번, 마릿수 인덱스)를 덧붙여 난수기를 만든다 — 같은 시드·같은 날이면 어느 적이 어느 포탈에서
+    // 어느 갈래로 나오는지까지 그대로 재현된다.
+    //
+    // 포탈 추첨(PortalRng)과 유도 문자열을 나눠 둔다("portal" vs "path"). 같은 문자열을 쓰면
+    // 포탈 개수 하나만 바뀌어도 경로 배분까지 통째로 달라져, 둘 중 무엇 때문에 바뀌었는지 못 가린다.
+    //
+    // 스폰하는 그 자리에서 만들어 넘긴다(WaveSpawner에 필드로 심어 두지 않는다) —
+    // RefreshPortals·RestorePortal이나 로드 직후 일차 복원이 낮과 밤 사이에 끼어들 수 있어서다.
+    private string PathSeed(int region)
+    {
+        int day = CurrentDay;   // 이 게터가 _gameManager를 resolve한다 — seed를 먼저 읽으면 아직 null일 수 있다
+        string seed = _gameManager != null ? _gameManager.GameSeed : null;
+        if (string.IsNullOrEmpty(seed)) return null;   // PortalRng가 이미 한 번 경고했다
+        return $"{seed}:path:{region}:{day}";
+    }
+
     // 세이브 로드가 끝난 뒤 포탈을 다시 뽑는다.
     //
     // 왜 필요한가: LoadManager는 모든 Start()가 끝난 '다음 프레임'에 복원한다(UniTask.Yield).
@@ -427,7 +444,7 @@ public class SpawnerManager : MonoBehaviour
         var unlocked = UnlockedRegions();
         // 웨이브 조합(어떤 몹이 나올지)은 지역별 LocalStage, 마릿수 배율은 글로벌 DayCount 기준으로 유지한다.
         foreach (int region in unlocked)
-            _byRegion[region].SpawnWave(region, LocalStage(region), unlocked.Count, CurrentDay);
+            _byRegion[region].SpawnWave(region, LocalStage(region), unlocked.Count, CurrentDay, PathSeed(region));
     }
 
 
@@ -435,7 +452,7 @@ public class SpawnerManager : MonoBehaviour
     {
         if (!IsUnlocked(region)) return;
         if (_byRegion.TryGetValue(region, out WaveSpawner s))
-            s.SpawnWave(region, LocalStage(region), UnlockedCount(), CurrentDay);
+            s.SpawnWave(region, LocalStage(region), UnlockedCount(), CurrentDay, PathSeed(region));
     }
     private void OnRegionClear() //몹 다잡았을때
     {
@@ -564,7 +581,7 @@ public class SpawnerManager : MonoBehaviour
             Time.timeScale = savedTimeScale;
             guardPanel?.SetActive(false);
             isDirecting = false;
-            // EnemySoundManager.PlayBgm("BossBGM");
+            EnemySoundManager.PlayBgm("BossBGM");
         }
     }
 
