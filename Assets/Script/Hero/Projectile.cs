@@ -59,6 +59,12 @@ public class Projectile : MonoBehaviour
     [Tooltip("비행 내내 따라다니는 자식 파티클 — 부모 Transform을 자동으로 따라가므로 재배치 코드 불필요")]
     [SerializeField] private ParticleSystem projectileEffect;
 
+    [Header("사운드")]
+    [Tooltip("발사 시 재생할 EnemySoundManager 키. 비워두면 재생하지 않음")]
+    [SerializeField] private string projectileSoundKey;
+    [Tooltip("명중/착탄 시 재생할 EnemySoundManager 키. 비워두면 재생하지 않음")]
+    [SerializeField] private string hitSoundKey;
+
     private Transform target;
     private Vector3 destination;
     private bool visualOnly;
@@ -101,6 +107,7 @@ public class Projectile : MonoBehaviour
 
     private void SpawnFlashEffect(Hero hero)
     {
+        if (!string.IsNullOrEmpty(projectileSoundKey)) EnemySoundManager.Play(projectileSoundKey);
         if (flashEffectPrefab != null && hero != null)
             AttackDamageUtil.SpawnCasterEffect(hero, flashEffectPrefab, transform.position, transform.rotation, flashEffectLifetime);
         if (projectileEffect != null)
@@ -136,7 +143,7 @@ public class Projectile : MonoBehaviour
             // Hit()의 범위 공격/장판 스폰이 transform.position을 기준으로 하므로,
             // 관통/스쳐 지나간 경우에도 실제 명중 지점(선분상 최근접점)으로 스냅해 둔다.
             transform.position = closest;
-            if (visualOnly) { SpawnHitEffect(dest); Return(); }
+            if (visualOnly) { if (!string.IsNullOrEmpty(hitSoundKey)) EnemySoundManager.Play(hitSoundKey); SpawnHitEffect(dest); Return(); }
             else Hit();
             return;
         }
@@ -164,6 +171,7 @@ public class Projectile : MonoBehaviour
 
     private void Hit()
     {
+        if (!string.IsNullOrEmpty(hitSoundKey)) EnemySoundManager.Play(hitSoundKey);
         RangeShape aoeShape = cfg.areaShape == AreaShape.Square ? RangeShape.Square : RangeShape.Diamond;
 
         if (cfg.areaShape == AreaShape.Chain)

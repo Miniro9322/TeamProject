@@ -36,6 +36,7 @@ public class EnemySoundManager : MonoBehaviour
     {
         public AudioSource source;
         public float endTime;   // Time.unscaledTime 기준
+        public bool manualStop; // true인 동안은 Update()의 자동 종료 스캔에서 제외 — 외부가 직접 Stop()할 때까지 유지되는 루프 전용
     }
     private readonly List<TimedVoice> timedVoices = new List<TimedVoice>();
 
@@ -109,6 +110,25 @@ public class EnemySoundManager : MonoBehaviour
         Instance.sfxSource.PlayOneShot(e.clip, e.volume);
     }
 
+    // 명시적으로 멈출 때까지 유지되는 루프 사운드. PlayThrottle(중복 재생 스로틀)은 적용하지
+    // 않는다 — 같은 키를 쓰는 여러 인스턴스(예: 장판 여러 개)가 동시에 각자 독립적으로 재생/정지
+    // 되어야 하기 때문. 반환된 AudioSource를 호출부가 들고 있다가 필요할 때 직접 Stop()해야 한다.
+    public static AudioSource PlayLoop(string key)
+    {
+        if (Instance == null || Instance.db == null) return null;
+        var e = Instance.db.Get(key);
+        if (e == null) { Debug.LogWarning($"SoundDatabase에 '{key}' 키 없음"); return null; }
+
+        TimedVoice voice = Instance.GetFreeVoice();
+        voice.manualStop = true;
+        AudioSource src = voice.source;
+        src.clip = e.clip;
+        src.volume = e.volume;
+        src.loop = true; // DB entry의 loop 값과 무관하게 강제 루프
+        src.Play();
+        return src;
+    }
+
     // soundTime이 있는 클립을 전용 소스로 재생하고 마감 시각을 예약한다.
     // 마감 시각을 unscaledTime으로 잡는 게 핵심 — 이 기능을 처음 쓰는 곳이 보스 연출인데
     // 거기는 Time.timeScale=0으로 얼려놓고 돌아간다(SpawnerManager.BossOpeningDirecting).
@@ -116,6 +136,7 @@ public class EnemySoundManager : MonoBehaviour
     private void PlayTimed(EnemySoundDataBase.Entry e, float now)
     {
         TimedVoice voice = GetFreeVoice();
+        voice.manualStop = false; // 이 슬롯이 과거에 PlayLoop로 쓰였던 경우에도 정상적으로 자동 종료되도록 리셋
         AudioSource src = voice.source;
         src.clip = e.clip;
         src.volume = e.volume;
@@ -166,6 +187,7 @@ public class EnemySoundManager : MonoBehaviour
         {
             TimedVoice v = timedVoices[i];
             if (v.source == null || !v.source.isPlaying) continue;
+            if (v.manualStop) continue;
             if (now < v.endTime) continue;
             v.source.Stop();
         }
