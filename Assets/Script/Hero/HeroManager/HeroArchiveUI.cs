@@ -88,6 +88,15 @@ public class HeroArchiveUI : MonoBehaviour
         ShowDescItems(picked);
     }
 
+    public void Refresh()
+    {
+        PlayOpenAndReveal();
+        mainImage.sprite = currentHero.Icon;
+        nameText.text = DataTableManager.StringTable.Get(currentHero.HeroNameKey);
+        descText.text = DataTableManager.StringTable.Get(currentHero.HeroDescriptionKey);
+        ShowDescItems(currentHero);
+    }
+
     private void PlayOpenAndReveal()
     {
         CancelReveal();

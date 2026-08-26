@@ -15,5 +15,7 @@ public class HeroTabButton : MonoBehaviour
         button.onClick.AddListener(() => onClick());
     }
 
+    public void SetLabel(string text) => label.text = text;
+
     public void SetSelected(bool selected) => selectedHighlight.gameObject.SetActive(selected);
 }
