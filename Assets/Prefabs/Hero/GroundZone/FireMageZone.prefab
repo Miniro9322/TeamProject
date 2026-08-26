@@ -59,10 +59,15 @@ MonoBehaviour:
     scale: 1
   hitEffect: {fileID: 8930407324495507328, guid: 8b9b200fb1cb96747a69156334e20a08, type: 3}
   hitEffectLifetime: 0.2
+  healReceiveEffect: {fileID: 0}
+  buffReceiveEffect: {fileID: 0}
   visualRadius: 2
   selfEffect: {fileID: 8321206605522834764}
   selfEffectVisualRadius: 2
   allyBuffs: []
+  spawnSoundKey: 
+  sustainSoundKey: HeroFireLoop1
+  hitSoundKey: HeroFireHit1
 --- !u!1001 &5387622115713189041
 PrefabInstance:
   m_ObjectHideFlags: 0

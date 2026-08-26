@@ -59,10 +59,15 @@ MonoBehaviour:
     scale: 1
   hitEffect: {fileID: 0}
   hitEffectLifetime: 0.5
+  healReceiveEffect: {fileID: 0}
+  buffReceiveEffect: {fileID: 0}
   visualRadius: 0.5
   selfEffect: {fileID: 4848304714424484945}
   selfEffectVisualRadius: 0.5
   allyBuffs: []
+  spawnSoundKey: PlayerSlow1
+  sustainSoundKey: 
+  hitSoundKey: 
 --- !u!1 &4848304714424318253
 GameObject:
   m_ObjectHideFlags: 0

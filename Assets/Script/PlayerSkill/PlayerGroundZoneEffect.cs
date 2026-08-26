@@ -39,6 +39,14 @@ public class PlayerGroundZoneEffect : MonoBehaviour
     [Tooltip("mode==Buff: 범위 안 아군에게 적용할 버프 목록. duration/maxStacks는 무시된다 — 범위에 머무는 동안 유지되고 벗어나면 즉시 제거된다.")]
     public List<BuffEffect> allyBuffs = new();
 
+    [Header("사운드")]
+    [Tooltip("장판 생성 시 재생할 EnemySoundManager 키. 비워두면 재생하지 않음")]
+    public string spawnSoundKey;
+    [Tooltip("장판이 살아있는 동안 계속 루프 재생할 EnemySoundManager 키. 소멸 시 정지. 비워두면 재생하지 않음")]
+    public string sustainSoundKey;
+    [Tooltip("장판이 대상에게 데미지/힐을 적용할 때 재생할 EnemySoundManager 키. 비워두면 재생하지 않음")]
+    public string hitSoundKey;
+
     private MapBoard board;
     private BuffManager buffManager;
     private Action<GameObject> release;
@@ -49,6 +57,7 @@ public class PlayerGroundZoneEffect : MonoBehaviour
     private readonly HashSet<Hero> healPresentAllies = new();
     private readonly Dictionary<Hero, GameObject> healEffectInstances = new();
     private GameManager gameManager;
+    private AudioSource sustainVoice;
 
     // 스폰 직후 호출한다. release가 null이면 만료 시 스스로 Destroy된다(풀링 없음).
     public void Init(MapBoard board, BuffManager buffManager, Action<GameObject> release = null, GameManager gameManager = null)
@@ -60,6 +69,8 @@ public class PlayerGroundZoneEffect : MonoBehaviour
         if (this.gameManager != null) this.gameManager.ChangeToDay += ForceEnd;
         ApplyVisualScale();
         SpawnSelfEffect();
+        if (!string.IsNullOrEmpty(spawnSoundKey)) EnemySoundManager.Play(spawnSoundKey);
+        if (!string.IsNullOrEmpty(sustainSoundKey)) sustainVoice = EnemySoundManager.PlayLoop(sustainSoundKey);
         if (duration > 0f) FitParticlesToDuration(duration);
     }
 
@@ -97,6 +108,10 @@ public class PlayerGroundZoneEffect : MonoBehaviour
         catch (OperationCanceledException) { }
         finally
         {
+            // sustainVoice는 EnemySoundManager 쪽 오브젝트에 속한 별개의 AudioSource라, this(장판
+            // 자신)가 이미 파괴된 상태여도 안전하게 정지할 수 있다.
+            if (sustainVoice != null) { sustainVoice.Stop(); sustainVoice = null; }
+
             if (mode == GroundZoneMode.Buff)
                 ClearAllyBuffs();
             else if (mode == GroundZoneMode.Heal)
@@ -206,6 +221,7 @@ public class PlayerGroundZoneEffect : MonoBehaviour
             Debug.Log(heal);
             if (heal <= 0f) return;
             target.Heal(heal);
+            if (!string.IsNullOrEmpty(hitSoundKey)) EnemySoundManager.Play(hitSoundKey);
             SpawnHitEffect(transform.position);
             return;
         }
@@ -246,6 +262,7 @@ public class PlayerGroundZoneEffect : MonoBehaviour
             if (dmg > 0 && go.GetComponentInParent<IDamageAble>() is IDamageAble d)
             {
                 d.TakeDamage(dmg);
+                if (!string.IsNullOrEmpty(hitSoundKey)) EnemySoundManager.Play(hitSoundKey);
                 SpawnHitEffect(go.transform.position);
             }
 

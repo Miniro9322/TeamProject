@@ -12,6 +12,7 @@ public class AttackDataSOEditor : Editor
     private static bool sContinuous = true;
     private static bool sAnim = true;
     private static bool sFx = true;
+    private static bool sSound = true;
     private static bool sMisc = true;
     private static bool sHeal = true;
 
@@ -47,6 +48,7 @@ public class AttackDataSOEditor : Editor
 
         Group("애니메이션", ref sAnim, "selectMode", "animTriggers", "clipLength");
         Group("이펙트", ref sFx, "attackEffect", "attackEffectLifetime", "hitEffect", "hitEffectLifetime");
+        Group("사운드", ref sSound, "attackSoundKey");
         // projectilePrefab은 조건부로 숨기지 않는다 — 근접/원거리 구분이 데이터에 없어
         // (IAttackExecutor 주입이 유일한 권위) 숨길 조건을 만들 근거가 없다.
         Group("버프 / 장판 / 투사체", ref sMisc, "buffList", "targetDebuffs", "groundZonePrefab", "projectilePrefab");

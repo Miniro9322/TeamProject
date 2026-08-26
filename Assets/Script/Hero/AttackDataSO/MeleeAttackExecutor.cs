@@ -23,7 +23,7 @@ public class MeleeAttackExecutor : IAttackExecutor
             {
                 ctx.hero.SpawnEffect(data.attackEffect, ctx.self.position, ctx.self.rotation, data.attackEffectLifetime);
                 FireVisualProjectile(data, ctx);
-                await AttackDamageUtil.ApplyInstantDamage(data, ctx, token);
+                await AttackDamageUtil.ApplyInstantDamage(data, ctx, token, playSound: true);
             }, ct);
         }
         finally

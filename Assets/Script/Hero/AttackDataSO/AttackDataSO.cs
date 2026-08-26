@@ -89,6 +89,10 @@ public class AttackDataSO : ScriptableObject
     [Tooltip("hitEffect가 풀로 회수되기까지의 시간(초). 0 이하면 회수 타이머를 걸지 않음")]
     public float hitEffectLifetime = 1f;
 
+    [Header("사운드")]
+    [Tooltip("EnemySoundManager의 EnemySoundDataBase에 등록된 키. 비워두면 사운드를 재생하지 않는다.")]
+    public string attackSoundKey;
+
     [Header("아군 힐 / 피흡")]
     public float lifestealPercent = 0f;
     public float allyHealAmount = 0f;
