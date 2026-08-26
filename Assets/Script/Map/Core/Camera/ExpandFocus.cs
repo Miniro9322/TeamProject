@@ -19,7 +19,6 @@ public class ExpandFocus : MonoBehaviour
     private CameraRig rig;
     private CameraInput input;
     private readonly CameraLimit limit = new();
-    private readonly HashSet<int> openedSeen = new();   // 이미 카메라가 다녀온 해금 모듈
 
     private bool moving;
     private Vector3 moveTarget;
@@ -41,7 +40,6 @@ public class ExpandFocus : MonoBehaviour
         rig.SuspendClamp(); // 사용자가 직접 조작하기 전까지는 울타리를 걸지 않는다.
         RebuildLimit();
         BindModules();
-        MarkOpened();   // 시작 시 이미 열린 모듈은 이동 대상에서 제외
         input.UserMoved += OnUserMoved;
         FogController.RevealDone += OnFogDone;
     }
@@ -152,12 +150,13 @@ public class ExpandFocus : MonoBehaviour
             rig.SetArea(limit.Area);
         }
     }
-    // 새로 열린 모듈이 있으면 그쪽으로 부드럽게 이동한다. 없으면 그냥 경계만 확장한다.
+    // 모듈의 상태 변경과 신규 해금을 각각 다른 창구로 구독한다.
     private void BindModules()
     {
         foreach (ModuleLogic module in registry.AllModules.Values)
         {
             module.OnStateChanged += OnModuleState;
+            module.OnUnlocked += ModuleUnlocked;
         }
     }
     // 해금 모듈이 하나도 없으면 경계가 없다 → 클램프를 걸지 않는다(0 크기 박스면 카메라가 원점에 박힌다).
@@ -166,43 +165,20 @@ public class ExpandFocus : MonoBehaviour
         foreach (ModuleLogic module in registry.AllModules.Values)
         {
             module.OnStateChanged -= OnModuleState;
+            module.OnUnlocked -= ModuleUnlocked;
         }
     }
-    // 모듈이 해금되면 경계를 확장하고, 새로 열린 모듈이 있으면 그쪽으로 부드럽게 이동한다.
+    // 모듈 상태가 바뀌면(세이브 복원 포함) 카메라를 옮기지 않고 이동 경계만 다시 잡는다.
     private void OnModuleState(ModuleState state)
     {
         rig.SuspendClamp();   // 경계를 바꾸는 순간 지금 화면이 즉시 밀리지 않게 먼저 끈다
         RebuildLimit();   // 경계 먼저 확장(새 모듈 포함)
-        ModuleLogic opened = NewOpened();
-        if (opened != null)
-        {
-            StartMove(opened);
-        }
-    }
-    
-    // 이미 카메라가 다녀온 해금 모듈은 이동 대상에서 제외한다.
-    private void MarkOpened()
-    {
-        foreach (ModuleLogic module in registry.AllModules.Values)
-        {
-            if (module.IsUnlocked)
-            {
-                openedSeen.Add(module.ModuleId);
-            }
-        }
     }
 
-    // 아직 안 다녀온 '새로 해금된' 모듈 하나. 없으면 null(낮/밤 전이는 여기서 걸러진다).
-    private ModuleLogic NewOpened()
+    // 게임 중 새로 해금된 모듈로만 카메라를 부드럽게 이동시킨다.
+    private void ModuleUnlocked(ModuleLogic module)
     {
-        foreach (ModuleLogic module in registry.AllModules.Values)
-        {
-            if (module.IsUnlocked && openedSeen.Add(module.ModuleId))   // 처음 보는 해금이면 true
-            {
-                return module;
-            }
-        }
-        return null;
+        StartMove(module);
     }
 
     // focus·거리 목표를 해당 모듈 중앙·화면 꽉 채움으로. 울타리는 OnModuleState에서 이미 꺼둔 상태다.
