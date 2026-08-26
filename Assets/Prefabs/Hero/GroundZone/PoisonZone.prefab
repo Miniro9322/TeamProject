@@ -47,9 +47,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GroundZoneEffect
   mode: 0
   shape: 1
-  radius: 3
-  tickInterval: 0.2
-  damagePer: 0.1
+  radius: 2
+  tickInterval: 0.5
+  damagePer: 0.2
   healPer: 0
   hpHealPer: 0
   duration: 2
@@ -64,9 +64,9 @@ MonoBehaviour:
   hitEffectLifetime: 0.5
   healReceiveEffect: {fileID: 0}
   buffReceiveEffect: {fileID: 0}
-  visualRadius: 2.5
+  visualRadius: 1.6
   selfEffect: {fileID: 8099317681061738363}
-  selfEffectVisualRadius: 2.5
+  selfEffectVisualRadius: 1.6
   allyBuffs: []
   spawnSoundKey: HeroPoisonSpawn1
   sustainSoundKey: HeroPoisonSustain1
