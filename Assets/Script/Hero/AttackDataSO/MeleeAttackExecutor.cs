@@ -22,9 +22,8 @@ public class MeleeAttackExecutor : IAttackExecutor
             await AttackEventWindow.RunHits(ctx.animEvents, windowDuration, async token =>
             {
                 ctx.hero.SpawnEffect(data.attackEffect, ctx.self.position, ctx.self.rotation, data.attackEffectLifetime);
-                if (!string.IsNullOrEmpty(data.attackSoundKey)) EnemySoundManager.Play(data.attackSoundKey);
                 FireVisualProjectile(data, ctx);
-                await AttackDamageUtil.ApplyInstantDamage(data, ctx, token);
+                await AttackDamageUtil.ApplyInstantDamage(data, ctx, token, playSound: true);
             }, ct);
         }
         finally

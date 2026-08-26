@@ -80,8 +80,7 @@ public class ContinuousBeamStrategy : IAttackDeliveryStrategy
                         if (!anyEnemyNearby) break;
                     }
                     if (selfEffectGo != null) selfEffectGo.transform.position = ctx.self.position;
-                    if (!string.IsNullOrEmpty(data.attackSoundKey)) EnemySoundManager.Play(data.attackSoundKey);
-                    await AttackDamageUtil.ApplyInstantDamage(data, hero.Context, ct);
+                    await AttackDamageUtil.ApplyInstantDamage(data, hero.Context, ct, playSound: true);
                 }
                 else
                 {

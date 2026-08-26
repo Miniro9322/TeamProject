@@ -92,7 +92,11 @@ public class EnemySoundManager : MonoBehaviour
     // 효과음 재생 (중복 재생 허용)
     // soundTime이 0 이하면 클립을 끝까지 재생한다(기존 동작 그대로).
     // soundTime이 들어있으면 그 초가 지날 때 잘라낸다 — 긴 클립을 연출 길이에 맞춰 쓸 때.
-    public static void Play(string key)
+    // ignoreThrottle: 한 발의 공격이 짧은 시간 안에 같은 키를 여러 번 의도적으로 재생해야 하는 경우
+    // (예: 라인 관통 화살이 적을 연속으로 맞힐 때) 아래 스로틀을 우회한다 — 스로틀은 서로 무관한
+    // 소스가 우연히 겹치는 걸 막기 위한 것이라, 한 번의 공격 안에서 일부러 반복 재생하는 경우까지
+    // 막으면 안 된다.
+    public static void Play(string key, bool ignoreThrottle = false)
     {
         if (Instance == null || Instance.db == null) return;
         var e = Instance.db.Get(key);
@@ -100,8 +104,11 @@ public class EnemySoundManager : MonoBehaviour
 
         // 같은 키 중복 재생 스로틀: 런타임 딕셔너리 + 언스케일드 타임(일시정지 timeScale=0 영향 없음)
         float now = Time.unscaledTime;
-        if (Instance.lastPlayTime.TryGetValue(key, out float last) && now - last < PlayThrottle) return;
-        Instance.lastPlayTime[key] = now;
+        if (!ignoreThrottle)
+        {
+            if (Instance.lastPlayTime.TryGetValue(key, out float last) && now - last < PlayThrottle) return;
+            Instance.lastPlayTime[key] = now;
+        }
 
         if (e.soundTime > 0f) { Instance.PlayTimed(e, now); return; }
 

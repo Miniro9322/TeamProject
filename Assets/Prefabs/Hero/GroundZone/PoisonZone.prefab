@@ -62,10 +62,15 @@ MonoBehaviour:
     scale: 1
   hitEffect: {fileID: 830777661335609111, guid: f66bb8bf2396cc247a35c9d2eee237ae, type: 3}
   hitEffectLifetime: 0.5
+  healReceiveEffect: {fileID: 0}
+  buffReceiveEffect: {fileID: 0}
   visualRadius: 2.5
   selfEffect: {fileID: 8099317681061738363}
   selfEffectVisualRadius: 2.5
   allyBuffs: []
+  spawnSoundKey: HeroPoisonSpawn1
+  sustainSoundKey: HeroPoisonSustain1
+  hitSoundKey: HeroPoisonHit1
 --- !u!1 &8099317681061727207
 GameObject:
   m_ObjectHideFlags: 0

@@ -77,7 +77,14 @@ public static class AttackDamageUtil
         };
     }
 
-    public static async UniTask ApplyInstantDamage(AttackDataSO data, AttackContext ctx, CancellationToken ct)
+    // 호출부가 이미 자체적으로(예: 채널링 틱마다) 사운드를 관리하는 경우 playSound=false(기본값)로
+    // 이중 재생을 피한다. true면 아래 attackCount 기반 반복마다 1회씩 재생해 히트 횟수와 맞춘다.
+    private static void PlaySound(AttackDataSO data)
+    {
+        if (!string.IsNullOrEmpty(data.attackSoundKey)) EnemySoundManager.Play(data.attackSoundKey);
+    }
+
+    public static async UniTask ApplyInstantDamage(AttackDataSO data, AttackContext ctx, CancellationToken ct, bool playSound = false)
     {
         float baseDamage = ctx.sc[StatType.ATK] * data.attackPer;
 
@@ -92,6 +99,7 @@ public static class AttackDamageUtil
         {
             for (int i = 0; i < data.attackCount; i++)
             {
+                if (playSound) PlaySound(data);
                 foreach (IDamageAble e in ctx.hero.GetEnemiesInLine(ctx.self.position, ctx.target.position, data.lineLength, data.areaRange, data.AreaUnattackableTarget))
                 {
                     e.TakeDamage((int)baseDamage);
@@ -108,6 +116,7 @@ public static class AttackDamageUtil
 
         if (data.areaShape == AreaShape.Chain)
         {
+            if (playSound) PlaySound(data);
             List<GameObject> hits = ChainResolver.Resolve(ctx.target.gameObject, baseDamage, data.chainRange, data.chainCount,
                 data.chainFalloff, TargetableEnemyQuery, ctx.hero.NotifyHit);
             foreach (GameObject go in hits)
@@ -127,6 +136,7 @@ public static class AttackDamageUtil
         {
             for (int i = 0; i < data.attackCount; i++)
             {
+                if (playSound) PlaySound(data);
                 if (ctx.target.GetComponent<IDamageAble>() is IDamageAble d)
                 {
                     d.TakeDamage((int)baseDamage);
@@ -147,6 +157,7 @@ public static class AttackDamageUtil
             List<GameObject> targets = AttackTargetSelector.SelectTargets(enemies, data.attackCount, data.targetCount);
             await FireEach(targets, t =>
             {
+                if (playSound) PlaySound(data);
                 if (t.GetComponentInParent<IDamageAble>() is not IDamageAble d) return;
                 d.TakeDamage((int)baseDamage);
                 ctx.hero.NotifyHit(t, (int)baseDamage, false);
@@ -164,6 +175,7 @@ public static class AttackDamageUtil
             Vector3 aoeCenter = data.areaCenterOnTarget && ctx.target != null ? ctx.target.position : ctx.self.position;
             for (int i = 0; i < data.attackCount; i++)
             {
+                if (playSound) PlaySound(data);
                 foreach (GameObject go in ctx.hero.GetObjectsInRange(aoeCenter, data.areaRange, aoeShape, RangeQueryAffinity.Enemy, data.AreaUnattackableTarget))
                 {
                     if (go.GetComponentInParent<IDamageAble>() is not IDamageAble e) continue;
@@ -183,6 +195,7 @@ public static class AttackDamageUtil
         List<GameObject> centers = AttackTargetSelector.SelectTargets(enemyObjects, data.attackCount, data.targetCount);
         await FireEach(centers, go =>
         {
+            if (playSound) PlaySound(data);
             foreach (GameObject hit in ctx.hero.GetObjectsInRange(go.transform.position, data.areaRange, aoeShape, RangeQueryAffinity.Enemy, data.AreaUnattackableTarget))
             {
                 if (hit.GetComponentInParent<IDamageAble>() is not IDamageAble e) continue;
