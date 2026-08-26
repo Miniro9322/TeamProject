@@ -95,6 +95,12 @@ public class TutorialOverlayUI : MonoBehaviour
     // target의 월드 코너 -> 스크린 좌표 -> dimmerRoot 로컬 좌표. 두 캔버스의 렌더 모드가 달라도 안전하다.
     private Rect ComputeLocalRect(RectTransform target)
     {
+        // target이 막 활성화됐거나 Layout Group/ContentSizeFitter의 자식이면, 실제 리빌드는 이번 프레임
+        // 렌더 직전에야 일어나서 GetWorldCorners가 아직 옛/기본 위치를 반환한다 - 그래서 첫 프레임엔
+        // 스포트라이트가 엉뚱한 자리에 잡혔다가 다음 프레임에 제자리로 "튀는" 것처럼 보인다. 좌표를
+        // 읽기 전에 대기 중인 리빌드를 강제로 끝내 같은 프레임 안에서 최종 위치가 나오게 한다.
+        Canvas.ForceUpdateCanvases();
+
         var corners = new Vector3[4];
         target.GetWorldCorners(corners); // [0] bottom-left, [2] top-right
 

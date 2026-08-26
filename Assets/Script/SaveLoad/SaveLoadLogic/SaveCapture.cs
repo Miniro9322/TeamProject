@@ -15,6 +15,7 @@ public class SaveCapture
     private readonly HeroTierUpgradeState tierState;
     private readonly HeroClassUpgradeState classState;
     private readonly MapGame mapGame;
+    private readonly TutorialState tutorialState;
 
     public SaveCapture(
         GameManager gameManager,
@@ -26,7 +27,8 @@ public class SaveCapture
         HeroRoster heroRoster,
         HeroTierUpgradeState tierState,
         HeroClassUpgradeState classState,
-        MapGame mapGame)
+        MapGame mapGame,
+        TutorialState tutorialState)
     {
         this.gameManager = gameManager;
         this.resourcesManager = resourcesManager;
@@ -38,6 +40,7 @@ public class SaveCapture
         this.tierState = tierState;
         this.classState = classState;
         this.mapGame = mapGame;
+        this.tutorialState = tutorialState;
     }
 
     // 저장 단계에 맞는 전체 세이브 데이터를 한 번에 만든다
@@ -74,6 +77,7 @@ public class SaveCapture
         data.classList = CaptureClasses();
         data.portalList = CapturePortals(phase);
         data.archiveList = CaptureArchive();
+        data.tutorialSeen = tutorialState.Seen;
         return data;
     }
 

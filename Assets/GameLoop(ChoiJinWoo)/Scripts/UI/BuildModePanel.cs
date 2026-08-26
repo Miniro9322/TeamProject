@@ -143,6 +143,11 @@ public class BuildModePanel : MonoBehaviour
         {
             heroInventory.SetActive(false);
         }
+        // 이 GameObject가 바로 아래에서 꺼지면 Update()의 ESC 우선순위 체인도 같이 멈춘다 - 영웅
+        // 도감은 자기 ESC 처리를 그 체인에만 맡겨두므로(HeroArchiveButton.cs 참고), 열려있는 채로
+        // 밤을 맞으면 낮이 될 때까지 ESC/바깥클릭/P키 그 무엇으로도 못 닫는 상태가 된다. 다른
+        // 패널들처럼 여기서 미리 닫아준다.
+        heroArchiveButton?.Close();
         gameObject.SetActive(false);
     }
 
@@ -206,6 +211,11 @@ public class BuildModePanel : MonoBehaviour
 
     public void OnClassUpgradeButton()
     {
+        // 튜토리얼이 이 버튼을 스포트라이트로 짚어 "언급"만 하는 중일 땐 실제로 눌려서 패널이
+        // 열리면 안 된다 - TutorialInputGate.BlockHeroUpgradeOpen 참고. 이 버튼은 인스펙터에서
+        // 곧바로 이 메서드에 연결돼 HeroTierUpgradeMenu.Toggle()을 거치지 않으므로 여기서도 따로 막는다.
+        if (TutorialInputGate.BlockHeroUpgradeOpen) return;
+
         if (classUpgradePanel.activeSelf)
         {
             classUpgradePanel.SetActive(false);

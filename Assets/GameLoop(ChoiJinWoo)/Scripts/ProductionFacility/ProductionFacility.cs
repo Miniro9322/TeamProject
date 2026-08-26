@@ -58,7 +58,7 @@ public class ProductionFacility : IUpgradableOccupant
     public (ProductionType Type, int Amount)[] ConstructCostPaid => constructCostPaid;
     public (ProductionType Type, int Amount)[] TotalUpgradeSpent => totalUpgradeSpent;
 
-    private string nextUpgradeInfo = "자원 생산량 증가";
+    private string nextUpgradeInfo = "Ui_UpgradeInfo_ProductAmount";
 
     public ProductionFacility(
         ProductionValue basicValue,
@@ -176,18 +176,18 @@ public class ProductionFacility : IUpgradableOccupant
         {
             amountUpgrade++;
             productAmount += amountUpgrade * 10;
-            nextUpgradeInfo = "시민 배치 수 증가";
+            nextUpgradeInfo = "Ui_UpgradeInfo_Worker";
         }
         else
         {
             citizenUpgrade++;
             maxWorker = basicValue.DefaultMaxWorker + citizenUpgrade;
-            nextUpgradeInfo = "자원 생산량 증가";
+            nextUpgradeInfo = "Ui_UpgradeInfo_ProductAmount";
         }
 
         if(upgradeCount == maxUpgrade)
         {
-            nextUpgradeInfo = "최대 업그레이드";
+            nextUpgradeInfo = "Ui_UpgradeInfo_MaxUpgrade";
         }
 
         resourcesManager.ProductChanged(upgradeCostCopy);

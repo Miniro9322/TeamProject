@@ -22,6 +22,7 @@ public class TutorialManager : MonoBehaviour
     private RegionOverviewPanel regionOverviewPanel;
     private MapGame mapGame;
     private UiManager uiManager;
+    private PlayerSkillPanel playerSkillPanel;
     private EnviromentManager enviromentManager;
     private SaveManager saveManager;
     private TutorialState state;
@@ -35,6 +36,23 @@ public class TutorialManager : MonoBehaviour
     private bool sequenceFinished;
     private bool dayZeroResetDone;
 
+    // 상시 HUD를 감싸는 두 최상위 Canvas(씬 정적 "Canvas": RegionOverviewPanel/HeroInventory/
+    // DayNightButton 등, UiManager 런타임 "Canvas": 가이드/메뉴/배속 등) - PlaceHero 맵 클릭 대기
+    // 중에만 CanvasGroup으로 통째로 잠근다. ResolveHudGroups 참고.
+    private CanvasGroup sceneHudGroup;
+    private CanvasGroup uiManagerHudGroup;
+    private bool hudBlocked;
+
+    // GameSpeedMention/PlayerSkillMention도 HeroUpgradeMention과 같은 순수 언급 스텝이다 - 스포트라이트
+    // 구멍으로 실제 배속/스킬 버튼이 눌리면 배속이 바뀌거나 스킬이 나가버린다. 각 패널 자체에
+    // CanvasGroup을 붙여 그 스텝인 동안만 막는다. TutorialManager가 uiManager.GameSpeedUi.OnButtonClick을
+    // 코드로 직접 호출해 배속을 걸 때(pauseTimeWhileActive)는 CanvasGroup과 무관한 일반 메서드 호출이라
+    // 영향받지 않는다 - blocksRaycasts는 EventSystem 레이캐스트에만 관여한다.
+    private CanvasGroup gameSpeedGroup;
+    private CanvasGroup playerSkillGroup;
+    private bool gameSpeedBlocked;
+    private bool playerSkillBlocked;
+
     [Tooltip("0일차 리셋이 끝난 뒤(진짜 1일차 시작) 한 번 보여줄 완료 메시지 키.")]
     [SerializeField] private string completionMessageKey;
     private bool showingCompletionMessage;
@@ -44,7 +62,8 @@ public class TutorialManager : MonoBehaviour
         BaseConstructor baseConstructor, HeroRoster heroRoster, PlacePalette placePalette,
         BuildingPanel buildingPanel, GameManager gameManager, ResourcesManager resourcesManager,
         RegionOverviewPanel regionOverviewPanel, MapGame mapGame, UiManager uiManager,
-        EnviromentManager enviromentManager, SaveManager saveManager, TutorialState state)
+        PlayerSkillPanel playerSkillPanel, EnviromentManager enviromentManager,
+        SaveManager saveManager, TutorialState state)
     {
         this.citizenManager = citizenManager;
         this.baseConstructor = baseConstructor;
@@ -56,6 +75,7 @@ public class TutorialManager : MonoBehaviour
         this.regionOverviewPanel = regionOverviewPanel;
         this.mapGame = mapGame;
         this.uiManager = uiManager;
+        this.playerSkillPanel = playerSkillPanel;
         this.enviromentManager = enviromentManager;
         this.saveManager = saveManager;
         this.state = state;
@@ -64,6 +84,7 @@ public class TutorialManager : MonoBehaviour
     private void Start()
     {
         WireRuntimeWaypoints();
+        ResolveHudGroups();
 
         if (state.Seen || steps.Length == 0)
         {
@@ -85,6 +106,73 @@ public class TutorialManager : MonoBehaviour
                 if (waypoint != null) waypoint.target = uiManager.GameSpeedUiRect;
             }
         }
+    }
+
+    // MapInput.cs는 맵 클릭을 처리하기 전에 EventSystem.IsPointerOverGameObject()로 UI 위인지부터
+    // 본다 - 그래서 화면을 덮는 raycastTarget UI가 하나라도 있으면 맵 클릭 자체가 막힌다. PlaceHero
+    // 단계가 맵 클릭을 기다리며 오버레이 딤/fullscreenBlocker를 전부 꺼야 하는 이유가 이것이다.
+    // 문제는 그 순간 스포트라이트 밖의 다른 버튼(가이드, 메뉴, 지역, 영웅 로스터, 낮/밤, 배속 등)도
+    // 전부 눌려버린다는 것 - 상시 HUD가 서로 다른 최상위 Canvas 두 개(씬 정적 "Canvas"와 UiManager
+    // 런타임 "Canvas")에 나뉘어 있어 하나로 감쌀 공통 부모가 없으므로, 각 Canvas에 CanvasGroup을
+    // 찾거나 붙여 레퍼런스만 들고 있는다 - 매 프레임 SetHudBlocked가 blocksRaycasts만 껐다 켠다.
+    // (fullscreenBlocker처럼 Graphic 자체를 지우는 게 아니라 레이캐스트 대상에서만 빼는 것이라
+    // IsPointerOverGameObject()는 자연히 false가 되어 맵 클릭은 그대로 통과한다.)
+    private void ResolveHudGroups()
+    {
+        sceneHudGroup = ResolveHudGroup(regionOverviewPanel.transform);
+        uiManagerHudGroup = ResolveHudGroup(uiManager.GameSpeedUiRect);
+
+        // 이 둘은 조상 Canvas가 아니라 패널 자기 자신만 막는다 - GameSpeedUi가 속한 Canvas를 통째로
+        // 막아버리면(uiManagerHudGroup) 그 안의 가이드/메뉴 등 무관한 버튼까지 같이 막히기 때문.
+        gameSpeedGroup = GetOrAddCanvasGroup(uiManager.GameSpeedUiRect);
+        playerSkillGroup = GetOrAddCanvasGroup(playerSkillPanel != null ? playerSkillPanel.transform : null);
+    }
+
+    private static CanvasGroup ResolveHudGroup(Transform anchor)
+    {
+        if (anchor == null) return null;
+
+        // RegionOverviewPanel/GameSpeedUi 모두 기본적으로 SetActive(false)로 시작하는 패널이라
+        // (RegionOverviewPanel.Close, UiManager.Awake의 gameSpeedUi.SetActive(false)), 비활성
+        // 상태에서도 조상 Canvas를 찾을 수 있도록 includeInactive를 켠다.
+        Canvas canvas = anchor.GetComponentInParent<Canvas>(true);
+        if (canvas == null) return null;
+
+        return GetOrAddCanvasGroup(canvas.transform);
+    }
+
+    private static CanvasGroup GetOrAddCanvasGroup(Transform target)
+    {
+        if (target == null) return null;
+
+        CanvasGroup group = target.GetComponent<CanvasGroup>();
+        return group != null ? group : target.gameObject.AddComponent<CanvasGroup>();
+    }
+
+    // 두 HUD Canvas를 한꺼번에 잠그거나 푼다 - 값이 실제로 바뀔 때만 건드린다.
+    private void SetHudBlocked(bool blocked)
+    {
+        if (hudBlocked == blocked) return;
+        hudBlocked = blocked;
+
+        SetGroupBlocked(sceneHudGroup, blocked);
+        SetGroupBlocked(uiManagerHudGroup, blocked);
+    }
+
+    private void SetBlocked(CanvasGroup group, ref bool current, bool blocked)
+    {
+        if (current == blocked) return;
+        current = blocked;
+        SetGroupBlocked(group, blocked);
+    }
+
+    private static void SetGroupBlocked(CanvasGroup group, bool blocked)
+    {
+        if (group == null) return;
+        // interactable은 안 건드린다 - Selectable의 disabledColor 트랜지션이 걸려, 이미지가 여러
+        // 장인 버튼은 target graphic만 탁하게 변해 다른 이미지들과 색이 어긋나 보인다(Button 인스펙터
+        // Transition 참고). blocksRaycasts만 꺼도 클릭 자체가 전혀 안 먹히니 충분하다.
+        group.blocksRaycasts = !blocked;
     }
 
     private void OnEnable()
@@ -109,6 +197,12 @@ public class TutorialManager : MonoBehaviour
         TutorialInputGate.BlockEscapeClose = false;
         TutorialInputGate.BlockHotkeys = false;
         TutorialInputGate.BlockSave = false;
+        TutorialInputGate.BlockPanelOpen = false;
+        TutorialInputGate.BlockHeroUpgradeOpen = false;
+        TutorialInputGate.BlockHeroPlacementFromInventory = false;
+        SetHudBlocked(false);
+        SetBlocked(gameSpeedGroup, ref gameSpeedBlocked, false);
+        SetBlocked(playerSkillGroup, ref playerSkillBlocked, false);
         citizenManager.CitizenChanged -= OnCitizenChanged;
         baseConstructor.Built -= OnBuilt;
         heroRoster.Changed -= OnHeroRosterChanged;
@@ -127,11 +221,29 @@ public class TutorialManager : MonoBehaviour
 
         // 로스터에서 영웅을 고르면(배치 대기 중) 다음 클릭은 UI가 아니라 3D 맵 타일이라 짚어줄
         // 사각형이 없다 - 이 순간만큼은 딤을 전부 끄고 맵을 자유롭게 클릭할 수 있게 한다.
-        if (IsActive(TutorialStepId.PlaceHero) && placePalette.Mode == PlaceMode.Place)
+        bool awaitingMapClick = IsActive(TutorialStepId.PlaceHero) && placePalette.Mode == PlaceMode.Place;
+        // 딤을 끄는 동안엔 스포트라이트 밖의 다른 버튼(지역 슬롯, 거점 화면, 가이드 등)도 함께
+        // 풀려버리니, 그런 패널이 마우스로 열리는 것만 따로 막아둔다 - HUD CanvasGroup 차단(아래)의
+        // 이중 방어선이다.
+        TutorialInputGate.BlockPanelOpen = awaitingMapClick;
+        SetHudBlocked(awaitingMapClick);
+        if (awaitingMapClick)
         {
             ShowUnblockedMessage(placeHeroMapClickMessageKey);
             return;
         }
+
+        // HeroUpgradeMention은 스포트라이트로 강화 버튼을 짚어 언급만 할 뿐 실제로 눌러서 완료되는
+        // 스텝이 아니다 - 그 구멍으로 진짜 버튼이 눌려 메뉴가 열리는 걸 막는다.
+        TutorialInputGate.BlockHeroUpgradeOpen = IsActive(TutorialStepId.HeroUpgradeMention);
+        // HeroCombineMention은 합성(더블클릭/일괄합성)은 그대로 두되, 로스터 아이콘 단일 클릭으로
+        // 배치 모드에 들어가는 것만 막는다.
+        TutorialInputGate.BlockHeroPlacementFromInventory = IsActive(TutorialStepId.HeroCombineMention);
+
+        // GameSpeedMention/PlayerSkillMention도 스포트라이트로 짚어 언급만 하는 스텝이라, 그 구멍으로
+        // 실제 버튼이 눌리는 걸 막는다.
+        SetBlocked(gameSpeedGroup, ref gameSpeedBlocked, IsActive(TutorialStepId.GameSpeedMention));
+        SetBlocked(playerSkillGroup, ref playerSkillBlocked, IsActive(TutorialStepId.PlayerSkillMention));
 
         var step = steps[currentIndex];
         var waypoint = ResolveWaypoint();
@@ -140,13 +252,18 @@ public class TutorialManager : MonoBehaviour
         // 끝나기 전이라 PlayerSkillPanel/배속 패널이 아직 안 켜진 순간. 이럴 땐 엉뚱한 문구(키 없음
         // 등)를 보여주는 대신 오버레이를 잠깐 숨기고, 실제로 켜지는 순간 다시 나타난다. waypoint를
         // 아예 안 쓰는 스텝(순수 문구 안내)까지 숨기면 안 되니 그 경우는 그대로 둔다.
+        // 오버레이 딤이 꺼진 동안엔 스포트라이트 보호가 없어지므로, awaitingMapClick과 마찬가지로
+        // HUD(메뉴/가이드/도감 등)는 계속 잠가둔다 - 안 그러면 낮->밤 전환 같은 이 대기 구간에
+        // 그런 버튼들이 그대로 눌려버린다.
         if (waypoint == null && step.waypoints != null && step.waypoints.Length > 0)
         {
             overlay.Hide();
+            SetHudBlocked(true);
             lastShownMessageKey = null;
             return;
         }
 
+        SetHudBlocked(false);
         overlay.Show(step.completesOnAcknowledge);
         // 메시지를 먼저 갱신해야 SetSpotlight가 그 문구로 리빌드된 messageBox 크기를 보고 위치를
         // 잡는다 - 순서가 바뀌면 문구가 바뀌는 첫 프레임에 직전 문구 크기로 잘못 배치된다.
@@ -236,6 +353,12 @@ public class TutorialManager : MonoBehaviour
         overlay.Hide();
         TutorialInputGate.BlockEscapeClose = false;
         TutorialInputGate.BlockHotkeys = false;
+        TutorialInputGate.BlockPanelOpen = false;
+        TutorialInputGate.BlockHeroUpgradeOpen = false;
+        TutorialInputGate.BlockHeroPlacementFromInventory = false;
+        SetHudBlocked(false);
+        SetBlocked(gameSpeedGroup, ref gameSpeedBlocked, false);
+        SetBlocked(playerSkillGroup, ref playerSkillBlocked, false);
         sequenceFinished = true;
         TryFullyDisable();
     }

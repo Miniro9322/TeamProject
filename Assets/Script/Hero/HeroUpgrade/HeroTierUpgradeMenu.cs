@@ -52,6 +52,10 @@ public class HeroTierUpgradeMenu : MonoBehaviour, IClosablePanel
 
     public void Toggle()
     {
+        // 튜토리얼이 이 버튼을 스포트라이트로 짚어 "언급"만 하는 중일 땐 실제로 눌려서 메뉴가
+        // 열리면 안 된다 - TutorialInputGate.BlockHeroUpgradeOpen 참고.
+        if (TutorialInputGate.BlockHeroUpgradeOpen) return;
+
         if (gameObject.activeSelf)
         {
             Close();

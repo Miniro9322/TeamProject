@@ -127,7 +127,10 @@ public class EnemyArchiveManager : MonoBehaviour, IExclusiveUiPanel
     private void OnEscInput()
     {
         if (Keyboard.current == null) return;
-        if(Time.timeScale==0)return;
+        // 여기서만 Time.timeScale==0일 때 건너뛰면, 튜토리얼의 pauseTimeWhileActive 단계나
+        // 완료 메시지(ShowCompletionMessage)처럼 배속을 0으로 걸어두는 동안 도감이 열려 있으면
+        // ESC로 못 닫는다 - 같은 파일의 닫기 버튼(infoCloseButton)/바깥 클릭(hidePanal)은 이 체크가
+        // 없어 그때도 정상 작동하니, ESC만 막을 이유가 없다.
         if (TutorialInputGate.BlockEscapeClose) return;
         if (Keyboard.current.escapeKey.wasPressedThisFrame&&isOpenCheck)
             OnClickCloseArchive();   // 동일 닫기 창구 재사용

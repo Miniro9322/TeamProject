@@ -120,28 +120,16 @@ public class UiManager : MonoBehaviour
 
     public void OpenGameOverUI(int daycount, int point)
     {
-        dayText.text = $"Survive Day : {daycount}";
+        dayText.text = string.Format(DataTableManager.StringTable.Get("Ui_GameOverSurviveDay"), daycount);
         upgradeResourceText.text = $"{point}";
         gamaOverUi.SetActive(true);
     }
 
-    public void OnTitle()
-    {
-        SceneManager.LoadScene("TempTitle");
-        Time.timeScale = 1f;
-    }
-
-    public void OnQuit()
-    {
-#if UNITY_EDITOR
-        EditorApplication.isPlaying = false;
-#endif
-
-        Application.Quit();
-    }
-
     public void OpenMenuPanel()
     {
+        // 튜토리얼이 영웅 배치 대기 중일 땐 이 패널이 맵을 덮어 배치를 끝낼 수 없게 된다 - TutorialInputGate.cs 참고.
+        if (TutorialInputGate.BlockPanelOpen) return;
+
         if(menuPanel.activeSelf == false)
             menuPanel.SetActive(true);
         else
@@ -150,6 +138,9 @@ public class UiManager : MonoBehaviour
 
     public void OpenGuide()
     {
+        // 튜토리얼이 영웅 배치 대기 중일 땐 이 패널이 맵을 덮어 배치를 끝낼 수 없게 된다 - TutorialInputGate.cs 참고.
+        if (TutorialInputGate.BlockPanelOpen) return;
+
         if (guidePanel.activeSelf == false)
             guidePanel.SetActive(true);
         else
