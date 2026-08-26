@@ -15,7 +15,7 @@ public class HeroClassUpgradeMenuUI : MonoBehaviour
     [SerializeField] private HeroUpgradeResourcesUI resourceInfoPrefab;
     [SerializeField] private Button upgradeButton;
     [SerializeField] private List<ResourceIcon> resourceIcons;
-    [SerializeField] private TextMeshProUGUI upgradeTierText;
+    [SerializeField] private LocalizeText upgradeTierText;
     [SerializeField] private TextMeshProUGUI currentLevelText;
 
     private HeroClassUpgradeState upgradeState;
@@ -68,7 +68,8 @@ public class HeroClassUpgradeMenuUI : MonoBehaviour
         this.heroType = heroType;
         banner.sprite = panelImageList[heroType];
         upgradeIcon.sprite = upgradeIconList[heroType];
-        upgradeTierText.text = heroType == 0 ? "근거리 업그레이드" : "원거리 업그레이드";
+        //
+        upgradeTierText.SetKey(heroType == 0 ? "Hero_Melee_Upgrade" : "Hero_Ranged_Upgrade");
     }
 
     private void RefreshUpgradeButton()

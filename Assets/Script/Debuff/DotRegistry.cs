@@ -94,9 +94,13 @@ public static class DotRegistry
     public static bool Apply(IDamageAble target, DebuffType type, float percentPerTick, float interval, float duration, GameManager gm,
         float atkDamage = 0f, bool ignoreGuard = false)
     {
-        if (target == null || percentPerTick <= 0f || duration <= 0f)
+        // 두 몫(최대 체력 비율 / 공격력 비율) 중 하나만 있어도 피해가 나온다.
+        // 예전엔 percentPerTick<=0을 무조건 거절했는데, 그러면 "비율 피해가 너무 세서 0으로 두고
+        // 공격력 비례로만 굴린다"는 저작(Poison_Hunter: PercentPerTick=0, AtkPercent=8)이 통째로 안 걸렸다.
+        // 둘 다 0일 때만 거절한다 — 그건 피해가 0인 디버프라 아이콘만 남는다.
+        if (target == null || (percentPerTick <= 0f && atkDamage <= 0f) || duration <= 0f)
         {
-            DebuffDebug.Log($"DotRegistry {type} 거부 — target={(target != null ? "O" : "null")}, 틱비율={percentPerTick}%, 지속={duration}");
+            DebuffDebug.Log($"DotRegistry {type} 거부 — target={(target != null ? "O" : "null")}, 틱비율={percentPerTick}%, 공격력몫={atkDamage}, 지속={duration}");
             return false;
         }
         if (target.Hp <= 0f)

@@ -21,6 +21,7 @@ public class HeroInventory : MonoBehaviour
 
     private enum FilterKind { All, Tier, Placed, Available }
     private readonly List<HeroTabButton> tabs = new();
+    private readonly List<(FilterKind kind, int tierValue)> tabMeta = new();
     private FilterKind currentFilter = FilterKind.All;
     private int currentTierValue = -1;
 
@@ -53,6 +54,17 @@ public class HeroInventory : MonoBehaviour
     //    game.HeroRoster.Changed -= Refresh;
     //}
 
+    private void OnEnable()
+    {
+        LocalizeTextManager.OnLanguageChanged += RelocalizeTabs;
+        RelocalizeTabs();
+    }
+
+    private void OnDisable()
+    {
+        LocalizeTextManager.OnLanguageChanged -= RelocalizeTabs;
+    }
+
     private void OnDestroy()
     {
         game.HeroRoster.Changed -= Refresh;
@@ -61,19 +73,35 @@ public class HeroInventory : MonoBehaviour
 
     private void BuildTabs()
     {
-        AddTab("전체", FilterKind.All, -1);
+        AddTab(FilterKind.All, -1);
         for (int tier = 1; tier <= 4; tier++)
-            AddTab($"{tier}티어", FilterKind.Tier, tier);
-        AddTab("배치됨", FilterKind.Placed, -1);
-        AddTab("미배치", FilterKind.Available, -1);
+            AddTab(FilterKind.Tier, tier);
+        AddTab(FilterKind.Placed, -1);
+        AddTab(FilterKind.Available, -1);
 
         if (tabs.Count > 0) SelectTab(tabs[0], FilterKind.All, -1);
     }
-    private void AddTab(string label, FilterKind kind, int tierValue)
+    private void AddTab(FilterKind kind, int tierValue)
     {
         HeroTabButton tab = Instantiate(tabButtonPrefab, tabBarContainer);
-        tab.Set(label, () => SelectTab(tab, kind, tierValue));
+        tab.Set(GetTabLabel(kind, tierValue), () => SelectTab(tab, kind, tierValue));
         tabs.Add(tab);
+        tabMeta.Add((kind, tierValue));
+    }
+    private string GetTabLabel(FilterKind kind, int tierValue)
+    {
+        switch (kind)
+        {
+            case FilterKind.Tier: return string.Format(DataTableManager.StringTable.Get("Hero_Inventory_TierFormat"), tierValue);
+            case FilterKind.Placed: return DataTableManager.StringTable.Get("Hero_Inventory_Placed");
+            case FilterKind.Available: return DataTableManager.StringTable.Get("Hero_Inventory_Unplaced");
+            default: return DataTableManager.StringTable.Get("Hero_Inventory_All");
+        }
+    }
+    private void RelocalizeTabs()
+    {
+        for (int i = 0; i < tabs.Count; i++)
+            tabs[i].SetLabel(GetTabLabel(tabMeta[i].kind, tabMeta[i].tierValue));
     }
     private void SelectTab(HeroTabButton tab, FilterKind kind, int tierValue)
     {
