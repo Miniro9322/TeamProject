@@ -78,7 +78,10 @@ public class FireZoneSO : AttackSkillDataSO
 
         // DotRegistry와 같은 하한. 0이면 매 프레임 때려서 순삭이 된다.
         interval = Mathf.Max(0.05f, interval);
-        percentPerTick = Mathf.Max(0.01f, percentPerTick);
+        // 공격력 몫이 있으면 최대 체력 비율은 0이어도 된다 — 0.01%를 억지로 끼워 넣으면
+        // "비율 0 + 공격력 비례" 저작이 불 칸에서만 조용히 달라진다.
+        if (atkPercent <= 0f) percentPerTick = Mathf.Max(0.01f, percentPerTick);
+        else percentPerTick = Mathf.Max(0f, percentPerTick);
 
         if (!loggedNumbers)
         {

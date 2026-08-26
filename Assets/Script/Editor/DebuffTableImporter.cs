@@ -147,9 +147,12 @@ public static class DebuffTableImporter
                 dot.atkPercent = Mathf.Max(0f, FirstValue(rows, r => r.AtkPercent) ?? 0f);
                 // 방어무시도 선택 칸이다 — 비우면 false라 방어력이 적용된 피해로 들어간다.
                 dot.ignoreGuard = FirstValue(rows, r => r.IgnoreGuard) ?? false;
-                if (dot.percentPerTick <= 0f)
+                // PercentPerTick만 0인 것은 정상 저작이다 — 공격력 비례(AtkPercent)로만 굴리는 디버프.
+                // 둘 다 비어 있을 때만 피해가 0이라 거절한다.
+                if (dot.percentPerTick <= 0f && dot.atkPercent <= 0f)
                 {
-                    Debug.LogWarning($"DebuffTableImporter: '{id}'의 PercentPerTick이 비었거나 0 이하다 (대상 최대 체력의 %, 0.5 = 0.5%)");
+                    Debug.LogWarning($"DebuffTableImporter: '{id}'의 PercentPerTick과 AtkPercent가 둘 다 비었거나 0 이하다 " +
+                        $"— 피해가 0이라 디버프가 걸리지 않는다 (PercentPerTick은 대상 최대 체력의 %, AtkPercent는 시전자 공격력의 %)");
                     return false;
                 }
                 // 고정 피해 시절 값(4, 5 ...)을 그대로 옮겨 적으면 한 틱에 최대 체력의 4~5%가 들어간다.

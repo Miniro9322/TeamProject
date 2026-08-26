@@ -12,8 +12,10 @@ using UnityEngine;
 public class DotDebuffSO : DebuffSO
 {
     [Tooltip("한 번 틱에 들어가는 피해 — 대상 최대 체력의 몇 %인가(2 = 2%, 0.5 = 0.5%). " +
-             "방어력을 무시할지는 아래 ignoreGuard가 정한다. 실제 피해값은 틱마다 대상의 현재 최대 체력으로 다시 계산된다.")]
-    [Min(0.01f)] public float percentPerTick = 1f;
+             "방어력을 무시할지는 아래 ignoreGuard가 정한다. 실제 피해값은 틱마다 대상의 현재 최대 체력으로 다시 계산된다.\n" +
+             "0으로 두면 이 몫이 빠지고 아래 atkPercent(공격력 비례)만 들어간다 — 최대 체력 비율 피해가 너무 셀 때 쓴다. " +
+             "둘 다 0이면 피해가 없어 DotRegistry가 아예 안 건다.")]
+    [Min(0f)] public float percentPerTick = 1f;
 
     [Tooltip("틱 간격(초). 0.05초 미만은 DotRegistry가 0.05로 보정한다.")]
     [Min(0.05f)] public float interval = 1f;
