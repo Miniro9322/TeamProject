@@ -8,4 +8,5 @@ public class RegionSave
     public ModuleState moduleState;   // 잠김/해금 상태
     public int stageOffset;
     public int unlockDay;
+    public bool gimmickSeen;          // 이 지역 기믹 안내를 이미 봤는지
 }

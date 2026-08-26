@@ -20,6 +20,7 @@ public class SaveRestore
     private readonly MapGame mapGame;
     private readonly MapAssemble mapAssemble;
     private readonly FacilityManager facilityManager;
+    private readonly GimmickTileData gimmickTileData;
 
     public SaveRestore(
         GameManager gameManager,
@@ -36,7 +37,8 @@ public class SaveRestore
         HeroClassUpgradeState classState,
         MapGame mapGame,
         MapAssemble mapAssemble,
-        FacilityManager facilityManager)
+        FacilityManager facilityManager,
+        GimmickTileData gimmickTileData)
     {
         this.gameManager = gameManager;
         this.resourcesManager = resourcesManager;
@@ -53,6 +55,7 @@ public class SaveRestore
         this.mapGame = mapGame;
         this.mapAssemble = mapAssemble;
         this.facilityManager = facilityManager;
+        this.gimmickTileData = gimmickTileData;
     }
 
     // 문서 §14.3 로드 순서대로 저장 데이터 전체를 게임에 적용한다
@@ -98,6 +101,7 @@ public class SaveRestore
                 module.SetState(save.moduleState);
             }
             spawnerManager.RestoreOffset(save.moduleId, save.stageOffset, save.unlockDay);
+            gimmickTileData.RestoreShown(save.moduleId, save.gimmickSeen);
         }
     }
 

@@ -15,6 +15,7 @@ public class SaveCapture
     private readonly HeroTierUpgradeState tierState;
     private readonly HeroClassUpgradeState classState;
     private readonly MapGame mapGame;
+    private readonly GimmickTileData gimmickTileData;
 
     public SaveCapture(
         GameManager gameManager,
@@ -26,7 +27,8 @@ public class SaveCapture
         HeroRoster heroRoster,
         HeroTierUpgradeState tierState,
         HeroClassUpgradeState classState,
-        MapGame mapGame)
+        MapGame mapGame,
+        GimmickTileData gimmickTileData)
     {
         this.gameManager = gameManager;
         this.resourcesManager = resourcesManager;
@@ -38,6 +40,7 @@ public class SaveCapture
         this.tierState = tierState;
         this.classState = classState;
         this.mapGame = mapGame;
+        this.gimmickTileData = gimmickTileData;
     }
 
     // 저장 단계에 맞는 전체 세이브 데이터를 한 번에 만든다
@@ -90,6 +93,7 @@ public class SaveCapture
             save.moduleState = pair.Value.CurrentState;
             save.stageOffset = spawnerManager.GetOffset(pair.Key);
             save.unlockDay = spawnerManager.GetUnlockDay(pair.Key);
+            save.gimmickSeen = gimmickTileData.WasShown(pair.Key);
             result[index] = save;
             index++;
         }

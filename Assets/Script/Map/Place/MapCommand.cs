@@ -102,11 +102,11 @@ public class MapCommand : MonoBehaviour
         {
             return;
         }
-        if (tile.Gimmick == GimmickType.None)
+        if (!GimmickTileCalc.IsGimmickTile(tile))
         {
             return;
         }
-        gimmickPopup.Show();
+        gimmickPopup.Show(GimmickKeyCalc.MakeNameKey(tile), GimmickKeyCalc.MakeDescKey(tile));
     }
 
     // 제자리 우클릭(뗄 때까지 거의 안 움직임)이면 스킬 시전 취소. 우클릭 드래그는 카메라 팬/회전이라 무시한다.

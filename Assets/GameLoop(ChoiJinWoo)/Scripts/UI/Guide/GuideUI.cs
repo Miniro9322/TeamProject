@@ -12,6 +12,8 @@ public class GuideUI : MonoBehaviour, IExclusiveUiPanel
     [SerializeField] private List<SpecificGuide> heroGuides;
     [SerializeField] private List<SpecificGuide> baseGuides;
     [SerializeField] private List<SpecificGuide> enemyGuides;
+    [SerializeField] private List<SpecificGuide> gimmickGuides;
+    [SerializeField] private GimmickTileData gimmickTileData;
     [SerializeField] private Image guideImage;
     [SerializeField] private TextMeshProUGUI guideText;
     [SerializeField] private Animator guideCopyAnimator;
@@ -105,6 +107,42 @@ public class GuideUI : MonoBehaviour, IExclusiveUiPanel
             activatedButtons.Add(guide);
         }
 
+        ShowSpecificGuide(activatedButtons[0]);
+    }
+
+    public void OnGimmickGuide()
+    {
+        DisableButtons();
+
+        foreach (var guide in gimmickGuides)
+        {
+            AddWhenRevealed(guide);
+        }
+
+        ShowFirstOrEmpty();
+    }
+
+    // 그 지역을 이미 봤을 때만 항목을 켠다.
+    private void AddWhenRevealed(SpecificGuide guide)
+    {
+        if (!gimmickTileData.WasShown(guide.GetComponent<GimmickGuideTag>().ModuleId))
+        {
+            return;
+        }
+        guide.gameObject.SetActive(true);
+        guide.GuideButton.onClick.AddListener(() => ShowSpecificGuide(guide));
+        activatedButtons.Add(guide);
+    }
+
+    // 보여줄 항목이 없으면 본문을 비우고, 있으면 첫 항목을 연다.
+    private void ShowFirstOrEmpty()
+    {
+        if (activatedButtons.Count == 0)
+        {
+            guideImage.gameObject.SetActive(false);
+            guideText.text = string.Empty;
+            return;
+        }
         ShowSpecificGuide(activatedButtons[0]);
     }
 

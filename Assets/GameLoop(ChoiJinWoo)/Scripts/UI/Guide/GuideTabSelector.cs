@@ -8,11 +8,13 @@ public class GuideTabSelector : MonoBehaviour
     [SerializeField] private Image heroImage;
     [SerializeField] private Image baseImage;
     [SerializeField] private Image enemyImage;
+    [SerializeField] private Image gimmickImage;
 
     [SerializeField] private TextMeshProUGUI gamePlayText;
     [SerializeField] private TextMeshProUGUI heroText;
     [SerializeField] private TextMeshProUGUI baseText;
     [SerializeField] private TextMeshProUGUI enemyText;
+    [SerializeField] private TextMeshProUGUI gimmickText;
 
     [SerializeField] private Color selectedTint = new Color(0.502f, 0.361f, 0.204f);
     [SerializeField] private Color normalTint = Color.white;
@@ -28,6 +30,13 @@ public class GuideTabSelector : MonoBehaviour
         SetTabState(heroImage, heroText, gamePlayImage);
         SetTabState(baseImage, baseText, gamePlayImage);
         SetTabState(enemyImage, enemyText, gamePlayImage);
+        SetTabState(gimmickImage, gimmickText, gamePlayImage);
+    }
+
+    // 기믹 탭을 선택 상태로 표시한다
+    public void SelectGimmickTab()
+    {
+        ApplySelection(gimmickImage);
     }
 
     // 게임 플레이 탭을 선택 상태로 표시한다
@@ -61,6 +70,7 @@ public class GuideTabSelector : MonoBehaviour
         SetTabState(heroImage, heroText, selectedImage);
         SetTabState(baseImage, baseText, selectedImage);
         SetTabState(enemyImage, enemyText, selectedImage);
+        SetTabState(gimmickImage, gimmickText, selectedImage);
     }
 
     // 탭 하나의 배경색과 글씨색을 선택 여부에 맞게 반영한다
