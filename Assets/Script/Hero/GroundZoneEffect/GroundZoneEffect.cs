@@ -244,7 +244,7 @@ public class GroundZoneEffect : MonoBehaviour
                 SpawnDamageHitEffect(go);
             }
 
-            AttackDamageUtil.ApplyTargetDebuffs(go.transform, targetDebuffs, owner.Buffs, this);
+            AttackDamageUtil.ApplyTargetDebuffs(go.transform, targetDebuffs, owner.Buffs, this, owner.SC[StatType.ATK]);
         }
     }
 
