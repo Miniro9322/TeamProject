@@ -103,10 +103,6 @@ public class UiManager : MonoBehaviour
 
     public void ToggleGameSpeedUi(bool value)
     {
-        // 씬 언로드/도메인 리로드 중에도 EnemyBase.OnDisable이 죽음 이벤트를 흘려보내
-        // 여기까지 도달할 수 있다(EnemyBase.cs OnDisable 주석 참고) - 그 시점엔 이미
-        // gameSpeedUi가 파괴됐을 수 있으므로 접근 전에 확인한다.
-        if (gameSpeedUi == null) return;
         gameSpeedUi.SetActive(value);
     }
 
@@ -127,6 +123,21 @@ public class UiManager : MonoBehaviour
         dayText.text = string.Format(DataTableManager.StringTable.Get("Ui_GameOverSurviveDay"), daycount);
         upgradeResourceText.text = $"{point}";
         gamaOverUi.SetActive(true);
+    }
+
+    public void OnTitle()
+    {
+        Time.timeScale = 1f;
+        SceneManager.LoadScene("Title");
+    }
+
+    public void OnQuit()
+    {
+#if UNITY_EDITOR
+        EditorApplication.isPlaying = false;
+#endif
+
+        Application.Quit();
     }
 
     public void OpenMenuPanel()
