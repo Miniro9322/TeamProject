@@ -1446,6 +1446,7 @@ GameObject:
   - component: {fileID: 64402129}
   - component: {fileID: 64402128}
   - component: {fileID: 64402132}
+  - component: {fileID: 64402133}
   m_Layer: 5
   m_Name: Remove
   m_TagString: Untagged
@@ -1603,6 +1604,22 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &64402133
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 64402126}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 936fab61cce00104cb63ae31172fbc65, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RemoveHeldLink
+  buttonImage: {fileID: 64402130}
+  heldTint: {r: 0.502, g: 0.361, b: 0.204, a: 1}
+  normalTint: {r: 1, g: 1, b: 1, a: 1}
+  view: {fileID: 314587628}
 --- !u!1001 &65327962
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -3982,10 +3999,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ccc802eb137019f438af0bca2928597b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ButtonHeldLink
-  watchedPanel: {fileID: 1091409380}
   buttonImage: {fileID: 158157036}
   heldTint: {r: 0.502, g: 0.361, b: 0.204, a: 1}
   normalTint: {r: 1, g: 1, b: 1, a: 1}
+  watchedPanel: {fileID: 1091409380}
 --- !u!1 &161547002
 GameObject:
   m_ObjectHideFlags: 0
@@ -5706,6 +5723,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d30247fc5ff868d4abfa65ca5b1ba91d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ModuleLogic
+--- !u!1 &217809832 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 3627482285149250960, guid: 1d9e1c1b6881e06499b0174cb6684aa2, type: 3}
+  m_PrefabInstance: {fileID: 487753840}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &220153798
 GameObject:
   m_ObjectHideFlags: 0
@@ -6994,6 +7016,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 1429036061297627050, guid: f352c1935167394408fe119a26e75b74, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1560230789}
+    - targetCorrespondingSourceObject: {fileID: 1429036061297627050, guid: f352c1935167394408fe119a26e75b74, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1560230793}
   m_SourcePrefab: {fileID: 100100000, guid: f352c1935167394408fe119a26e75b74, type: 3}
 --- !u!224 &253371028 stripped
 RectTransform:
@@ -14704,7 +14729,7 @@ MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 6750451673353576079, guid: 1d9e1c1b6881e06499b0174cb6684aa2, type: 3}
   m_PrefabInstance: {fileID: 487753840}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
+  m_GameObject: {fileID: 217809832}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 66f1d8f5c8237894ea5728e1070043f1, type: 3}
@@ -14997,6 +15022,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 1429036061297627050, guid: ab9477e367096a3478d852f3825c07f3, type: 3}
       insertIndex: -1
       addedObject: {fileID: 608758925}
+    - targetCorrespondingSourceObject: {fileID: 1429036061297627050, guid: ab9477e367096a3478d852f3825c07f3, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 608758929}
   m_SourcePrefab: {fileID: 100100000, guid: ab9477e367096a3478d852f3825c07f3, type: 3}
 --- !u!224 &608758917 stripped
 RectTransform:
@@ -15047,6 +15075,35 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &608758927 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 3203090404691086579, guid: ab9477e367096a3478d852f3825c07f3, type: 3}
+  m_PrefabInstance: {fileID: 608758916}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 157932473}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+--- !u!114 &608758929
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 157932473}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a32ec16bd71c69c46ac0a27355e6cd1e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HeroCreateIconHeldLink
+  buttonImage: {fileID: 608758927}
+  heldTint: {r: 0.502, g: 0.361, b: 0.204, a: 1}
+  normalTint: {r: 1, g: 1, b: 1, a: 1}
+  watchedPanel: {fileID: 217809832}
+  ownerSource: {fileID: 1309041910}
+  ownerIdentity: {fileID: 608758919}
 --- !u!1 &619189167
 GameObject:
   m_ObjectHideFlags: 0
@@ -19400,10 +19457,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ccc802eb137019f438af0bca2928597b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ButtonHeldLink
-  watchedPanel: {fileID: 2001846024}
   buttonImage: {fileID: 726167673}
   heldTint: {r: 0.502, g: 0.361, b: 0.204, a: 1}
   normalTint: {r: 1, g: 1, b: 1, a: 1}
+  watchedPanel: {fileID: 2001846024}
 --- !u!1 &730561562
 GameObject:
   m_ObjectHideFlags: 0
@@ -19418,6 +19475,7 @@ GameObject:
   - component: {fileID: 730561565}
   - component: {fileID: 730561564}
   - component: {fileID: 730561568}
+  - component: {fileID: 730561569}
   m_Layer: 5
   m_Name: Replace
   m_TagString: Untagged
@@ -19575,6 +19633,22 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &730561569
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 730561562}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 31d28d890c875fd4ab98447954567a81, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ReplaceHeldLink
+  buttonImage: {fileID: 730561566}
+  heldTint: {r: 0.502, g: 0.361, b: 0.204, a: 1}
+  normalTint: {r: 1, g: 1, b: 1, a: 1}
+  view: {fileID: 314587628}
 --- !u!1 &732519375
 GameObject:
   m_ObjectHideFlags: 0
@@ -33778,10 +33852,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ccc802eb137019f438af0bca2928597b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ButtonHeldLink
-  watchedPanel: {fileID: 196020502}
   buttonImage: {fileID: 1221242827}
   heldTint: {r: 0.502, g: 0.361, b: 0.204, a: 1}
   normalTint: {r: 1, g: 1, b: 1, a: 1}
+  watchedPanel: {fileID: 196020502}
 --- !u!1001 &1222289865
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -42915,10 +42989,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ccc802eb137019f438af0bca2928597b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ButtonHeldLink
-  watchedPanel: {fileID: 1309041908}
   buttonImage: {fileID: 1550034623}
   heldTint: {r: 0.502, g: 0.361, b: 0.204, a: 1}
   normalTint: {r: 1, g: 1, b: 1, a: 1}
+  watchedPanel: {fileID: 1309041908}
 --- !u!21 &1558219823
 Material:
   serializedVersion: 8
@@ -43013,6 +43087,35 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &1560230791 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 3203090404691086579, guid: f352c1935167394408fe119a26e75b74, type: 3}
+  m_PrefabInstance: {fileID: 253371027}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1560230785}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+--- !u!114 &1560230793
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1560230785}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a32ec16bd71c69c46ac0a27355e6cd1e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HeroCreateIconHeldLink
+  buttonImage: {fileID: 1560230791}
+  heldTint: {r: 0.502, g: 0.361, b: 0.204, a: 1}
+  normalTint: {r: 1, g: 1, b: 1, a: 1}
+  watchedPanel: {fileID: 217809832}
+  ownerSource: {fileID: 1309041910}
+  ownerIdentity: {fileID: 253371030}
 --- !u!1001 &1560477431
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -46404,10 +46507,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ccc802eb137019f438af0bca2928597b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ButtonHeldLink
-  watchedPanel: {fileID: 627099352}
   buttonImage: {fileID: 1680791098}
   heldTint: {r: 0.502, g: 0.361, b: 0.204, a: 1}
   normalTint: {r: 1, g: 1, b: 1, a: 1}
+  watchedPanel: {fileID: 627099352}
 --- !u!1 &1681537968
 GameObject:
   m_ObjectHideFlags: 0
@@ -48010,10 +48113,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ccc802eb137019f438af0bca2928597b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ButtonHeldLink
-  watchedPanel: {fileID: 1128999294}
   buttonImage: {fileID: 1711542348}
   heldTint: {r: 0.502, g: 0.361, b: 0.204, a: 1}
   normalTint: {r: 1, g: 1, b: 1, a: 1}
+  watchedPanel: {fileID: 1128999294}
 --- !u!1 &1714074719
 GameObject:
   m_ObjectHideFlags: 0
