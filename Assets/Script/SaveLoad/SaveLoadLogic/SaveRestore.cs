@@ -84,6 +84,7 @@ public class SaveRestore
         gameManager.RestoreGameSeed(data.gameSeed);
         gameManager.RestoreHeroDrawCounts(data.heroDrawMeleeCount, data.heroDrawRangedCount);
         gameManager.RestoreHeroCombineCounts(data.heroCombineMeleeCounts, data.heroCombineRangedCounts);
+        gameManager.ChangeRequest(data.dayCount > 0 && data.dayCount % 10 == 0);
     }
 
     // 지역 상태·오프셋 넣기          → ModuleLogic / SpawnerManager
@@ -96,7 +97,7 @@ public class SaveRestore
             {
                 module.SetState(save.moduleState);
             }
-            spawnerManager.RestoreOffset(save.moduleId, save.stageOffset);
+            spawnerManager.RestoreOffset(save.moduleId, save.stageOffset, save.unlockDay);
         }
     }
 
