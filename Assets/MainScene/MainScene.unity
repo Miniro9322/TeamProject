@@ -27554,7 +27554,7 @@ MonoBehaviour:
   edgeWidth: 0.06
   edgeLift: 0.025
   campfireEdgeMat: {fileID: 2100000, guid: 92de717b2dc04d4facf0865c35d27968, type: 2}
-  hoverEdgeMat: {fileID: 0}
+  hoverEdgeMat: {fileID: 2100000, guid: 51b142977f188d149916e1f5f7756ec0, type: 2}
 --- !u!4 &1235437631
 Transform:
   m_ObjectHideFlags: 0
@@ -33253,6 +33253,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::HeroCombineManager
   heroRegistry: {fileID: 1508222712}
   game: {fileID: 314587623}
+  combineSoundKey: 
 --- !u!114 &1508222712
 MonoBehaviour:
   m_ObjectHideFlags: 0

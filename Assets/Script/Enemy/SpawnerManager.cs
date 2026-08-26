@@ -132,14 +132,28 @@ public class SpawnerManager : MonoBehaviour
     // 오프셋은 해금되는 그 순간(UnlockRegion 호출 시점)이 아니라, 이 지역 정보가 처음 조회되는 시점에 확정한다.
     // ResultState처럼 UnlockNextModule()이 OnDay()로 DayCount가 오르기 "직전"에 불리는 경로가 있어서,
     // 해금 시점에 바로 계산하면 아직 안 오른 DayCount 기준으로 오프셋이 고정되어 그 지역이 영구히 하루씩 밀린다.
-    public int LocalStage(int region)
+    public int LocalStage(int region) => CurrentDay - EnsureOffset(region);
+
+    /// <summary>
+    /// 이 지역의 오프셋을 돌려주고, 아직 없으면 지금 일차를 1일차로 삼아 정해 넣는다.
+    ///
+    /// 오프셋을 굳히는 곳은 여기 하나뿐이라야 한다 — LocalStage와 GetOffset이 각자 굳히던 때는
+    /// 세이브(GetUnlockDay→GetOffset)가 먼저 굳혀 버리면 아래 로그가 아예 안 찍혀서,
+    /// "제대로 잡혔는데 로그가 안 뜬 것"과 "여전히 틀린 것"을 구분할 수 없었다.
+    ///
+    /// 로그를 남기는 이유: 오프셋은 지역당 한 번만 정해지고, 한 번 틀리면 그 지역 웨이브가 영구히 어긋난다
+    /// (0으로 굳으면 나중에 열린 지역이 첫 밤부터 1001 대역으로 스폰된다). 게다가 이제는 그 값이
+    /// RegionSave.unlockDay로 세이브에 박히므로 되돌릴 수도 없다. 지역 수만큼만 찍혀 콘솔을 어지럽히지 않는다.
+    /// </summary>
+    private int EnsureOffset(int region)
     {
-        if (!_unlockOffset.TryGetValue(region, out int off))
-        {
-            off = CurrentDay - 1;
-            _unlockOffset[region] = off;
-        }
-        return CurrentDay - off;
+        if (_unlockOffset.TryGetValue(region, out int off)) return off;
+
+        off = CurrentDay - 1;
+        _unlockOffset[region] = off;
+        Debug.Log($"SpawnerManager: {region}지역 진행도 기준 확정 — 오프셋 {off} " +
+                  $"(글로벌 {CurrentDay}일차 = 이 지역 {CurrentDay - off}일차)", this);
+        return off;
     }
 
     void Start()
@@ -187,7 +201,7 @@ public class SpawnerManager : MonoBehaviour
         if (region == 1 && CurrentDay > 0 && CurrentDay % 10 == 0)
             spawner.ActivateCornerPortal();
         else
-            spawner.RollActivePortals(PortalCount(region));
+            spawner.RollActivePortals(PortalCount(region), PortalRng(region));
         var paths = spawner.ActivePaths;
         if (paths == null || paths.Count == 0) return;
 
@@ -203,6 +217,68 @@ public class SpawnerManager : MonoBehaviour
         if (table == null) return 1;
         int id = WaveSpawner.GetStageLookupId(LocalStage(region));
         return table.GetCount(region, id, 1);
+    }
+
+    // 이 지역·이 일차의 포탈을 뽑을 난수기.
+    // 같은 (게임 시드, 지역, 일차)면 항상 같은 포탈이 열린다 — 세이브를 다시 로드해도 그날 포탈이 그대로 재현된다.
+    //
+    // 영웅 뽑기(ConsumeHeroDraw)처럼 저장되는 순번이 필요 없는 이유:
+    // 뽑기는 플레이어가 임의 횟수로 부르지만 포탈은 지역·일차마다 정확히 한 번만 굴리므로,
+    // (지역, 일차) 쌍 자체가 순번 노릇을 한다. 그래서 SaveData에 추가할 필드가 없다.
+    //
+    // 일차는 LocalStage가 아니라 CurrentDay를 쓴다 — LocalStage는 지역마다 값이 겹치고
+    // 10일차 넘어가면 순환하지만, CurrentDay는 밤마다 전역에서 유일하다.
+    private bool _warnedNoSeed;
+
+    private System.Random PortalRng(int region)
+    {
+        int day = CurrentDay;   // 이 게터가 필요하면 _gameManager를 여기서 resolve한다
+        string seed = _gameManager != null ? _gameManager.GameSeed : null;
+        // 시드를 못 얻으면(테스트 씬 등) null을 돌려 예전처럼 전역 Random으로 굴리게 둔다.
+        // 다만 조용히 넘기면 "왜 아직도 포탈이 매번 다르지"의 원인을 못 찾는다 — 한 번만 알린다.
+        if (string.IsNullOrEmpty(seed))
+        {
+            if (!_warnedNoSeed)
+            {
+                _warnedNoSeed = true;
+                Debug.LogWarning("SpawnerManager: GameManager의 시드를 얻지 못해 포탈을 전역 Random으로 뽑습니다 " +
+                                 "— 로드할 때마다 포탈이 달라집니다.", this);
+            }
+            return null;
+        }
+        return new System.Random(GameSeeding.Derive($"{seed}:portal:{region}", day));
+    }
+
+    // 이 지역·이 밤의 "적 경로 추첨" 시드 문자열. WaveSpawner가 이걸 받아 적 한 마리마다
+    // (행 순번, 마릿수 인덱스)를 덧붙여 난수기를 만든다 — 같은 시드·같은 날이면 어느 적이 어느 포탈에서
+    // 어느 갈래로 나오는지까지 그대로 재현된다.
+    //
+    // 포탈 추첨(PortalRng)과 유도 문자열을 나눠 둔다("portal" vs "path"). 같은 문자열을 쓰면
+    // 포탈 개수 하나만 바뀌어도 경로 배분까지 통째로 달라져, 둘 중 무엇 때문에 바뀌었는지 못 가린다.
+    //
+    // 스폰하는 그 자리에서 만들어 넘긴다(WaveSpawner에 필드로 심어 두지 않는다) —
+    // RefreshPortals·RestorePortal이나 로드 직후 일차 복원이 낮과 밤 사이에 끼어들 수 있어서다.
+    private string PathSeed(int region)
+    {
+        int day = CurrentDay;   // 이 게터가 _gameManager를 resolve한다 — seed를 먼저 읽으면 아직 null일 수 있다
+        string seed = _gameManager != null ? _gameManager.GameSeed : null;
+        if (string.IsNullOrEmpty(seed)) return null;   // PortalRng가 이미 한 번 경고했다
+        return $"{seed}:path:{region}:{day}";
+    }
+
+    // 세이브 로드가 끝난 뒤 포탈을 다시 뽑는다.
+    //
+    // 왜 필요한가: LoadManager는 모든 Start()가 끝난 '다음 프레임'에 복원한다(UniTask.Yield).
+    // 그런데 이 매니저의 Start()는 그 전 프레임에 이미 ShowAllPortals()로 포탈을 굴려버린다 —
+    // 그 시점의 DayCount는 아직 복원 전 값이라, 시드 유도식이 엉뚱한 일차로 계산된다.
+    // 예전엔 어차피 랜덤이라 티가 안 났지만 시드를 쓰면 '항상 같지만 틀린' 포탈이 나온다.
+    // 복원이 끝난 뒤 이걸 한 번 불러주면 올바른 일차로 다시 뽑는다.
+    //
+    // NightReady 저장본은 RestorePortal이 좌표를 그대로 되살리므로 부르면 안 된다(그 밤의 포탈이 바뀐다).
+    public void RefreshPortals()
+    {
+        HideAllPortals();
+        ShowAllPortals();
     }
 
     private void HideAllPortals()
@@ -336,12 +412,6 @@ public class SpawnerManager : MonoBehaviour
         return count;
     }
 
-    // 전 지역 해금을 처음 확인한 라운드(=DayCount). 아직이면 -1.
-    // 해금되는 순간(UnlockRegion)에 잡지 않고 처음 조회되는 시점에 확정하는 이유는 _unlockOffset과 같다 —
-    // UnlockNextModule()이 OnDay()로 DayCount가 오르기 "직전"에 불리는 경로가 있어서,
-    // 그때 잡으면 아직 안 오른 DayCount로 굳어 기준이 영구히 하루 밀린다.
-    private int _fullUnlockDay = -1;
-
     /// <summary>
     /// 전 지역이 해금된 뒤 지난 라운드 수(=DayCount 차이). 아직 다 안 열렸으면 0.
     /// 지역 해금 배율이 표 마지막 칸에서 멈춘 뒤에도 보스가 계속 세지게 하는 데 쓴다
@@ -355,8 +425,32 @@ public class SpawnerManager : MonoBehaviour
         if (_byRegion.Count == 0) return 0;
         if (UnlockedCount() < _byRegion.Count) return 0;
 
-        if (_fullUnlockDay < 0) _fullUnlockDay = CurrentDay;
-        return Mathf.Max(0, CurrentDay - _fullUnlockDay);
+        return Mathf.Max(0, CurrentDay - FullUnlockDay());
+    }
+
+    // 전 지역 해금이 끝난 일차.
+    //
+    // 예전에는 "전부 해금된 뒤 처음 조회되는 시점의 DayCount"를 런타임 필드에 걸어 잠갔다.
+    // 그런데 그 필드가 세이브에 안 들어가서, 로드할 때마다 기준이 그날로 리셋됐다 —
+    // 200일차 세이브를 열면 그동안 쌓인 보스 보너스가 통째로 0이 되어버렸다.
+    //
+    // 지금은 이미 저장되고 있는 값에서 유도한다. 지역별 해금일이 RegionSave.unlockDay로 저장·복원되므로
+    // (SaveCapture가 GetUnlockDay로 담고 RestoreOffset이 되돌린다),
+    // 마지막으로 열린 지역의 해금일이 곧 전 지역 해금일이다. 기존 세이브도 그대로 구제된다.
+    //
+    // 매번 다시 계산한다 — 지역 수만큼(6칸) 딕셔너리를 훑는 게 전부고,
+    // 캐싱해두면 로드로 오프셋이 복원되기 전 값이 굳어 지금 고치는 버그를 그대로 되풀이한다.
+    private int FullUnlockDay()
+    {
+        int last = 1;   // 처음부터 열려 있는 지역은 해금일 1일차
+        foreach (var kv in _byRegion)
+        {
+            // 잠긴 지역은 0을 돌려주므로 last를 밀지 않는다.
+            // 오프셋이 아직 안 잡힌 지역은 GetUnlockDay 안의 GetOffset이 지금 기준으로 정해 넣는다(그 값도 세이브를 탄다).
+            int unlockDay = GetUnlockDay(kv.Key);
+            if (unlockDay > last) last = unlockDay;
+        }
+        return last;
     }
 
     public void SpawnWave(int round) //해당라운드 전체소환 (round는 GameManager.DayCount와 항상 같음 — 지역별 진행도는 LocalStage로 따로 계산)
@@ -364,7 +458,7 @@ public class SpawnerManager : MonoBehaviour
         var unlocked = UnlockedRegions();
         // 웨이브 조합(어떤 몹이 나올지)은 지역별 LocalStage, 마릿수 배율은 글로벌 DayCount 기준으로 유지한다.
         foreach (int region in unlocked)
-            _byRegion[region].SpawnWave(region, LocalStage(region), unlocked.Count, CurrentDay);
+            _byRegion[region].SpawnWave(region, LocalStage(region), unlocked.Count, CurrentDay, PathSeed(region));
     }
 
 
@@ -372,7 +466,7 @@ public class SpawnerManager : MonoBehaviour
     {
         if (!IsUnlocked(region)) return;
         if (_byRegion.TryGetValue(region, out WaveSpawner s))
-            s.SpawnWave(region, LocalStage(region), UnlockedCount(), CurrentDay);
+            s.SpawnWave(region, LocalStage(region), UnlockedCount(), CurrentDay, PathSeed(region));
     }
     private void OnRegionClear() //몹 다잡았을때
     {
@@ -404,18 +498,37 @@ public class SpawnerManager : MonoBehaviour
     {
         // 이미 정해진 오프셋이 있으면 그 값을 그대로 돌려준다
         if (_unlockOffset.TryGetValue(region, out int off)) return off;
-        // 아직 안 열린 지역이면 오프셋이 필요 없으니 0을 돌려준다
+        // 아직 안 열린 지역이면 오프셋이 필요 없으니 0을 돌려준다(굳히지도 않는다 — 열릴 때 잡아야 한다)
         if (!IsUnlocked(region)) return 0;
 
         // 열려있는데 값이 없으면, 지금 날짜 기준으로 새로 정해서 저장해둔다
-        off = CurrentDay - 1;
-        _unlockOffset[region] = off;
-        return off;
+        return EnsureOffset(region);
+    }
+
+    /// <summary>
+    /// 이 지역이 해금된 날(1-base). 0은 "해금일이 없다" — 아직 잠긴 지역이다.
+    /// 세이브에 담을 값이며, 이 값이 있으면 로드가 오프셋을 추측할 필요가 없어진다
+    /// (오프셋 0이 "1일차 해금"인지 "아직 안 열림"인지 구분이 안 되는 게 아래 RestoreOffset의 골칫거리였다).
+    /// </summary>
+    public int GetUnlockDay(int region)
+    {
+        if (!IsUnlocked(region)) return 0;
+        return GetOffset(region) + 1;   // 오프셋이 아직 없으면 GetOffset이 지금 기준으로 정해 넣는다
     }
 
     // 저장해뒀던 오프셋 숫자를 그대로 다시 집어넣는다. 로드할 때 부른다.
-    public void RestoreOffset(int region, int offset)
+    //
+    // unlockDay: 세이브에 기록된 해금일(1-base). 0이면 그 칸이 없는 옛 세이브라는 뜻이고,
+    // 그때만 아래 offset 추측 규칙으로 넘어간다. 값이 있으면 그게 곧 정답이라 추측할 게 없다.
+    public void RestoreOffset(int region, int offset, int unlockDay = 0)
     {
+        // 해금일이 저장된 세이브 — 잠김/1일차 해금이 숫자로 구분되므로 그대로 쓴다.
+        if (unlockDay > 0)
+        {
+            _unlockOffset[region] = unlockDay - 1;
+            return;
+        }
+        if (offset <= 0 && !IsUnlocked(region)) return;
         // 계산 없이 저장된 값 그대로 넣는다
         _unlockOffset[region] = offset;
     }
@@ -501,7 +614,7 @@ public class SpawnerManager : MonoBehaviour
             Time.timeScale = savedTimeScale;
             guardPanel?.SetActive(false);
             isDirecting = false;
-            // EnemySoundManager.PlayBgm("BossBGM");
+            EnemySoundManager.PlayBgm("BossBGM");
         }
     }
 

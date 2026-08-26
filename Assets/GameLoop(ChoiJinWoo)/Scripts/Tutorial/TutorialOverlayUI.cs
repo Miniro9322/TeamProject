@@ -27,9 +27,10 @@ public class TutorialOverlayUI : MonoBehaviour
     public event Action AcknowledgeClicked;
 
     // "다음" 버튼으로 넘어가는 단계는 진행에 타겟 클릭이 필요 없으니, 안내창이 도저히 안 들어가는
-    // 상황(예: HeroMergeMention처럼 문구+버튼까지 있는데 타겟이 화면 대부분을 차지)에서는 화면 밖으로
-    // 나가는 것보다 타겟 쪽으로 살짝 겹치는 걸 감수한다. 반대로 실제 target 클릭으로 완료되는
-    // 단계는 겹치면 클릭을 막아버리니 화면 경계보다 타겟 회피가 항상 우선이어야 한다.
+    // 상황에서는 화면 밖으로 나가는 것보다 타겟 쪽으로 살짝 겹치는 걸 감수한다(ClampPreferring 참고).
+    // 반대로 실제 target 클릭으로 완료되는 단계는 겹치면 클릭이 막히니 되도록 겹치지 않으려 하되,
+    // 어느 쪽이든 화면 경계를 벗어나는 것보다는 우선순위가 낮다 - 안내창이 아예 안 보이는 것보다
+    // 타겟과 살짝 겹치는 채로라도 화면 안에 보이는 쪽이 낫다.
     private bool targetClickRequired;
 
     private void Awake()
@@ -48,7 +49,6 @@ public class TutorialOverlayUI : MonoBehaviour
     public void SetMessage(string messageKey)
     {
         messageText.text = DataTableManager.StringTable.Get(messageKey);
-
         LayoutRebuilder.ForceRebuildLayoutImmediate(messageBox);
     }
 
@@ -149,8 +149,8 @@ public class TutorialOverlayUI : MonoBehaviour
 
         // 남는 공간이 가장 넓은 방향이 아니라, 안내창이 실제로 그 공간에 다 들어가고도 얼마나
         // 남는지(공간 - 박스 크기 - 여백)로 방향을 고른다. HeroInventory처럼 폭이 넓은 타겟은
-        // 좌우 여유가 넓어 보여도(예: 360px) 안내창 고정 폭(예: 820px)보다 작아서 못 들어가면,
-        // 상/하처럼 실제로 들어가는 방향을 우선해야 화면 밖으로 밀려나거나 타겟과 겹치지 않는다.
+        // 좌우 여유가 넓어 보여도 안내창 폭보다 작아서 못 들어가면, 상/하처럼 실제로 들어가는
+        // 방향을 우선해야 화면 밖으로 밀려나거나 타겟과 겹치지 않는다.
         float fitTop = spaceTop - size.y - messageOffset.y;
         float fitBottom = spaceBottom - size.y - messageOffset.y;
         float fitLeft = spaceLeft - size.x - messageOffset.x;
@@ -187,14 +187,11 @@ public class TutorialOverlayUI : MonoBehaviour
         messageBox.anchoredPosition = ClampToBounds(anchor + offset, targetLocal);
     }
 
-    // TooltipUi.ClampToCanvas와 같은 방식으로 화면 밖으로 잘려나가지 않게 누르되, 안내창이 향하는
-    // 쪽(pivot이 타겟을 바라보는 축)에서는 화면 경계보다 타겟 사각형을 우선 존중해서 절대 겹치지
-    // 않게 한다 - target을 실제로 클릭해야 다음 단계로 넘어가는 경우 겹치면 클릭이 막혀버리기 때문.
-    // 반대로 completesOnAcknowledge 단계("다음" 버튼으로 넘어가서 target 클릭이 필요 없는 경우, 이
-    // targetClickRequired == false)는 문구+버튼까지 들어가 박스가 커지면 타겟 회피 여유 공간
-    // (HeroInventory처럼 타겟이 화면 대부분을 차지하면 상하좌우 여백이 다 좁다) 안에 다 못 들어갈
-    // 수 있는데, 이때는 화면 밖으로 나가 문구가 잘리는 것보다 타겟과 살짝 겹치는 쪽을 택한다 -
-    // 어차피 그 자리를 클릭할 필요가 없으니 잠깐 겹쳐도 진행에 지장이 없다.
+    // 화면 경계를 항상 최우선으로 지킨다 - 안내창이 화면 밖으로 나가는 일은 없어야 한다. 타겟과
+    // 안 겹치는 것(target을 클릭해야 진행되는 단계에서 클릭을 막지 않기 위함)은 "가능하면" 지키는
+    // 2순위 선호일 뿐이라, 화면 안에 두면서 동시에 타겟도 피할 공간이 없을 때는 화면 안에 두는
+    // 쪽을 선택하고 타겟과의 겹침은 감수한다 - 완전히 화면 밖으로 사라지는 것보다 타겟과 살짝
+    // 겹친 채로라도 보이는 편이 사용자가 진행 상황을 파악하기에 낫다.
     private Vector2 ClampToBounds(Vector2 desired, Rect targetLocal)
     {
         Rect bounds = dimmerRoot.rect;
@@ -207,37 +204,49 @@ public class TutorialOverlayUI : MonoBehaviour
         float maxY = bounds.yMax - anchorPoint.y - (messageBox.rect.height - pivotOffset.y);
 
         float x;
-        if (messageBox.pivot.x == 1f) // 타겟 좌측에 배치 - 오른쪽 경계(=박스 우측)가 타겟 좌측을 넘지 못한다.
+        if (messageBox.pivot.x == 1f) // 타겟 좌측에 배치 - 가능하면 오른쪽 경계(=박스 우측)가 타겟 좌측을 안 넘게.
         {
-            if (targetClickRequired) maxX = Mathf.Min(maxX, targetLocal.xMin);
-            x = minX <= maxX ? Mathf.Clamp(desired.x, minX, maxX) : (targetClickRequired ? maxX : minX);
+            float? preferredMax = targetClickRequired ? Mathf.Min(maxX, targetLocal.xMin) : (float?)null;
+            x = ClampPreferring(desired.x, minX, maxX, null, preferredMax);
         }
-        else if (messageBox.pivot.x == 0f) // 타겟 우측에 배치 - 왼쪽 경계(=박스 좌측)가 타겟 우측을 넘지 못한다.
+        else if (messageBox.pivot.x == 0f) // 타겟 우측에 배치 - 가능하면 왼쪽 경계(=박스 좌측)가 타겟 우측을 안 넘게.
         {
-            if (targetClickRequired) minX = Mathf.Max(minX, targetLocal.xMax);
-            x = minX <= maxX ? Mathf.Clamp(desired.x, minX, maxX) : minX;
+            float? preferredMin = targetClickRequired ? Mathf.Max(minX, targetLocal.xMax) : (float?)null;
+            x = ClampPreferring(desired.x, minX, maxX, preferredMin, null);
         }
         else
         {
-            x = minX <= maxX ? Mathf.Clamp(desired.x, minX, maxX) : minX;
+            x = ClampPreferring(desired.x, minX, maxX, null, null);
         }
 
         float y;
-        if (messageBox.pivot.y == 0f) // 타겟 상단에 배치 - 아래쪽 경계(=박스 하단)가 타겟 상단을 넘지 못한다.
+        if (messageBox.pivot.y == 0f) // 타겟 상단에 배치 - 가능하면 아래쪽 경계(=박스 하단)가 타겟 상단을 안 넘게.
         {
-            if (targetClickRequired) minY = Mathf.Max(minY, targetLocal.yMax);
-            y = minY <= maxY ? Mathf.Clamp(desired.y, minY, maxY) : minY;
+            float? preferredMin = targetClickRequired ? Mathf.Max(minY, targetLocal.yMax) : (float?)null;
+            y = ClampPreferring(desired.y, minY, maxY, preferredMin, null);
         }
-        else if (messageBox.pivot.y == 1f) // 타겟 하단에 배치 - 위쪽 경계(=박스 상단)가 타겟 하단을 넘지 못한다.
+        else if (messageBox.pivot.y == 1f) // 타겟 하단에 배치 - 가능하면 위쪽 경계(=박스 상단)가 타겟 하단을 안 넘게.
         {
-            if (targetClickRequired) maxY = Mathf.Min(maxY, targetLocal.yMin);
-            y = minY <= maxY ? Mathf.Clamp(desired.y, minY, maxY) : (targetClickRequired ? maxY : minY);
+            float? preferredMax = targetClickRequired ? Mathf.Min(maxY, targetLocal.yMin) : (float?)null;
+            y = ClampPreferring(desired.y, minY, maxY, null, preferredMax);
         }
         else
         {
-            y = minY <= maxY ? Mathf.Clamp(desired.y, minY, maxY) : minY;
+            y = ClampPreferring(desired.y, minY, maxY, null, null);
         }
 
         return new Vector2(x, y);
+    }
+
+    // screenMin/screenMax(화면 경계, 항상 지켜야 함) 안에서, preferredMin/preferredMax(타겟 회피,
+    // 되면 좋은 것)까지 같이 만족하는 값이 있으면 그걸 쓰고, 없으면 화면 경계만 지키는 값으로
+    // 물러난다. screenMin > screenMax(안내창 자체가 화면보다 큼)인 극단적인 경우에만 최소한으로 넘친다.
+    private static float ClampPreferring(float desired, float screenMin, float screenMax, float? preferredMin, float? preferredMax)
+    {
+        float rMin = preferredMin ?? screenMin;
+        float rMax = preferredMax ?? screenMax;
+        if (rMin <= rMax) return Mathf.Clamp(desired, rMin, rMax);
+        if (screenMin <= screenMax) return Mathf.Clamp(desired, screenMin, screenMax);
+        return screenMin;
     }
 }

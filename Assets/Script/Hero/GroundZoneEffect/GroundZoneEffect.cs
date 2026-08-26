@@ -41,6 +41,14 @@ public class GroundZoneEffect : MonoBehaviour
     [Tooltip("mode==Buff: 범위 안 아군에게 적용할 버프 목록. duration/maxStacks는 무시된다 — 범위에 머무는 동안 유지되고 벗어나면 즉시 제거된다.")]
     public List<BuffEffect> allyBuffs = new();
 
+    [Header("사운드")]
+    [Tooltip("장판 생성 시 재생할 EnemySoundManager 키. 비워두면 재생하지 않음")]
+    public string spawnSoundKey;
+    [Tooltip("장판이 살아있는 동안 계속 루프 재생할 EnemySoundManager 키. 소멸 시 정지. 비워두면 재생하지 않음")]
+    public string sustainSoundKey;
+    [Tooltip("장판이 대상에게 데미지/힐을 적용할 때 재생할 EnemySoundManager 키. 비워두면 재생하지 않음")]
+    public string hitSoundKey;
+
     private MapBoard board;
     private Hero owner;
     private bool followOwner;
@@ -51,6 +59,7 @@ public class GroundZoneEffect : MonoBehaviour
     private readonly Dictionary<Hero, GameObject> buffEffectInstances = new();
     private readonly HashSet<Hero> healPresentAllies = new();
     private readonly Dictionary<Hero, GameObject> healEffectInstances = new();
+    private AudioSource sustainVoice;
 
     // Hero.SpawnGroundZone이 풀에서 꺼낸 직후 호출한다. followOwner는 오라(소유자를 따라다녀야 하는
     // 장판)인지, 스킬/공격이 심어놓고 떠나는 장판인지를 호출부가 명시한다(duration 값으로는 구분 불가 —
@@ -63,6 +72,8 @@ public class GroundZoneEffect : MonoBehaviour
         this.release = release;
         ApplyVisualScale();
         SpawnSelfEffect();
+        if (!string.IsNullOrEmpty(spawnSoundKey)) EnemySoundManager.Play(spawnSoundKey);
+        if (!string.IsNullOrEmpty(sustainSoundKey)) sustainVoice = EnemySoundManager.PlayLoop(sustainSoundKey);
         if (duration > 0f) FitParticlesToDuration(duration);
     }
 
@@ -97,6 +108,10 @@ public class GroundZoneEffect : MonoBehaviour
         catch (OperationCanceledException) { }
         finally
         {
+            // sustainVoice는 EnemySoundManager 쪽 오브젝트에 속한 별개의 AudioSource라, this(장판
+            // 자신)가 이미 파괴된 상태여도 안전하게 정지할 수 있다.
+            if (sustainVoice != null) { sustainVoice.Stop(); sustainVoice = null; }
+
             if (mode == GroundZoneMode.Buff)
                 ClearAllyBuffs();
             else if (mode == GroundZoneMode.Heal)
@@ -200,6 +215,7 @@ public class GroundZoneEffect : MonoBehaviour
             if (target == null) return;
             heal = heal + target.SC[StatType.HP] * hpHealPer;
             target.Heal(heal);
+            if (!string.IsNullOrEmpty(hitSoundKey)) EnemySoundManager.Play(hitSoundKey);
             SpawnHitEffect(transform.position);
             return;
         }
@@ -241,10 +257,11 @@ public class GroundZoneEffect : MonoBehaviour
             {
                 d.TakeDamage(dmg);
                 owner.NotifyHit(go, dmg, false);
+                if (!string.IsNullOrEmpty(hitSoundKey)) EnemySoundManager.Play(hitSoundKey);
                 SpawnDamageHitEffect(go);
             }
 
-            AttackDamageUtil.ApplyTargetDebuffs(go.transform, targetDebuffs, owner.Buffs, this);
+            AttackDamageUtil.ApplyTargetDebuffs(go.transform, targetDebuffs, owner.Buffs, this, owner.SC[StatType.ATK]);
         }
     }
 

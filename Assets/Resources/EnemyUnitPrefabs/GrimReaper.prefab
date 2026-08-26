@@ -588,7 +588,6 @@ MonoBehaviour:
   skills: []
   cloakSettings: {fileID: 0}
   attackClipLength: 0
-  burrowMarkerPrefab: {fileID: 0}
   burrowTimeout: 3
   swimTimeout: 3
   swimSpeedMultiplier: 1.5
@@ -604,12 +603,14 @@ MonoBehaviour:
   debuffIconSet: {fileID: 0}
   <Hp>k__BackingField: 0
   IsSpawnInvincible: 0
-  animator: {fileID: 0}
+  animator: {fileID: 2586406266690699488}
   arriveSqr: 0.0004
   stunEffectAnchor: {fileID: 5333456698556615893}
   bodyEffectAnchor: {fileID: 7905834887248472571}
   immuneDebuffs: 0
   subAttackClipLength: 2
+  subAttackStart: 0.7
+  subAttackBlend: 0.12
 --- !u!1 &4787629142113599786
 GameObject:
   m_ObjectHideFlags: 0

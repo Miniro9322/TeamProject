@@ -40,6 +40,12 @@ public class GrimReaper : EnemyBase
             // base의 WaitForAttackAnim을 쓰지 않는 이유: 그쪽은 클립 길이만큼 통째로 Delay라
             // 1타의 마무리 동작까지 다 끝난 뒤에야 2타로 넘어간다(= 끊겨 보인다).
             await WaitForStateProgress("Attack", subAttackStart, 5f, token);
+            // 죽었으면 2타를 내보내지 않는다. 이 검사가 없으면 사망 애니가 통째로 날아간다 —
+            // Die()가 SetTrigger("Die")로 시작한 전이가 아직 진행 중일 때(0.25초) 아래 CrossFade가
+            // 그것을 덮어써 SubAttack으로 끌고 가고, Die 트리거는 이미 소비돼 다시 걸리지 않는다.
+            // 그러면 WaitForDeathAnim이 5초 타임아웃까지 "Die 스테이트를 찾지 못함"으로 헛돈다.
+            // (스킬 토큰 skillCts는 OnDisable에서야 취소되므로 사망만으로는 이 워치독이 안 끊긴다.)
+            if (IsDead) return;
             // 트리거 대신 CrossFade — 전이를 컨트롤러에 그리지 않아도 되고, 겹치는 시간을 여기서 직접 정한다.
             // (트리거 방식은 전이가 언제 시작될지가 Exit Time에 묶여 이 시점 제어가 안 된다.)
             if (animator != null) animator.CrossFadeInFixedTime("SubAttack", subAttackBlend, 0);
@@ -48,6 +54,9 @@ public class GrimReaper : EnemyBase
         catch (OperationCanceledException) { }
         finally
         {
+            // 아래 세 줄은 base.AttackWatchdog과 같게 유지한다 — 사망 시에도 그대로 돌지만
+            // Die()가 speed를 이미 1로 돌려놨고, _move.Resume()은 Update의 _move.Tick(!IsDead && ...)이
+            // 막아 주므로 무해하다. 여기만 IsDead로 갈라 두면 베이스가 버그처럼 보인다.
             if (animator != null) animator.speed = 1f; // 공격 배속 원복(전역 speed이므로 이동/사망 애니에 안 새게)
             _attacking = false; // 2타까지 끝난 뒤에야 스킬/다음 공격 허용
             _move.Resume();
@@ -64,6 +73,10 @@ public class GrimReaper : EnemyBase
         bool entered = false;
         while (animator != null)
         {
+            // 죽으면 즉시 빠진다. 사망은 연출을 이기므로 2타를 기다릴 이유가 없고,
+            // 여기서 계속 돌면 타임아웃 경고까지 겹쳐 나온다.
+            if (IsDead) return;
+
             var info = animator.GetCurrentAnimatorStateInfo(layer);
             if (info.IsName(stateName))
             {
@@ -95,6 +108,8 @@ public class GrimReaper : EnemyBase
         {
             EnemySoundAttack();
             dmg.TakeDamage(Mathf.RoundToInt(AttackPower * mul));
+            string key = _hitIndex==1 ? "ReaperFirstAttack" : "DebuffBleed";
+            EnemySoundManager.Play(key);
         }
     }
 }

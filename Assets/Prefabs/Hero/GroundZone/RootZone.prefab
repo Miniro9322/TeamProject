@@ -50,6 +50,7 @@ MonoBehaviour:
   tickInterval: 1
   damagePer: 0
   healPer: 0
+  hpHealPer: 0
   duration: 999
   targetDebuffs:
   - debuff: {fileID: 11400000, guid: 8116fe18a0c03e84da563ba015037fc4, type: 2}
@@ -57,7 +58,12 @@ MonoBehaviour:
     scale: 0
   hitEffect: {fileID: 0}
   hitEffectLifetime: 0.45
+  healReceiveEffect: {fileID: 0}
+  buffReceiveEffect: {fileID: 0}
   visualRadius: 0
   selfEffect: {fileID: 153348, guid: 99094c67e41de524fa73b5df484241b0, type: 3}
   selfEffectVisualRadius: 0.45
   allyBuffs: []
+  spawnSoundKey: 
+  sustainSoundKey: 
+  hitSoundKey: HeroRootHit1
