@@ -16,8 +16,6 @@ public class GuideUI : MonoBehaviour, IExclusiveUiPanel
     [SerializeField] private TextMeshProUGUI guideText;
     [SerializeField] private Animator guideCopyAnimator;
     [SerializeField] private Animator guidePictureAnimator;
-    [SerializeField] private GameObject shadeObject;
-    [SerializeField] private Animator shadeAnimator;
 
     private List<SpecificGuide> activatedButtons = new();
 
@@ -33,14 +31,12 @@ public class GuideUI : MonoBehaviour, IExclusiveUiPanel
     private void OnEnable()
     {
         ExclusiveUiCoordinator.NotifyOpened(this);
-        ShowShade();
         OnGamePlayGuide(true);
     }
 
     private void OnDisable()
     {
         ExclusiveUiCoordinator.NotifyClosed(this);
-        HideShade();
         DisableButtons();
     }
 
@@ -55,21 +51,6 @@ public class GuideUI : MonoBehaviour, IExclusiveUiPanel
     }
 
     public void RequestClose() => OnCloseButton();
-
-    // 배경 셰이드를 켜고 페이드인 연출을 재생한다
-    private void ShowShade()
-    {
-        if (shadeObject == null) return;
-        shadeObject.SetActive(true);
-        if (shadeAnimator != null) shadeAnimator.Play("FadeIn", -1, 0f);
-    }
-
-    // 배경 셰이드를 즉시 끈다
-    private void HideShade()
-    {
-        if (shadeObject == null) return;
-        shadeObject.SetActive(false);
-    }
 
     public void OnGamePlayGuide(bool isInitialOpen = false)
     {

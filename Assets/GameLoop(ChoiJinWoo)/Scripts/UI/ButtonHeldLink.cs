@@ -41,7 +41,18 @@ public class ButtonHeldLink : MonoBehaviour
     private void ApplyHeld(bool held)
     {
         buttonAnimator.SetBool(HeldParameter, held);
+        ClearOtherTriggers();
         buttonImage.color = SelectTint(held);
+    }
+
+    // 대기 중인 다른 트리거가 있으면 Held 전환을 가로채므로, 전환할 때마다 비워 둔다
+    private void ClearOtherTriggers()
+    {
+        buttonAnimator.ResetTrigger("Normal");
+        buttonAnimator.ResetTrigger("Highlighted");
+        buttonAnimator.ResetTrigger("Pressed");
+        buttonAnimator.ResetTrigger("Selected");
+        buttonAnimator.ResetTrigger("Disabled");
     }
 
     // 눌림 여부에 맞는 색을 고른다
