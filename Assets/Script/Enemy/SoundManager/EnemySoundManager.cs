@@ -40,6 +40,15 @@ public class EnemySoundManager : MonoBehaviour
     }
     private readonly List<TimedVoice> timedVoices = new List<TimedVoice>();
 
+    // BGM 크로스페이드 상태. 코루틴이 아니라 Update로 도는 이유는 위 timedVoices와 같다
+    // (씬 전환/오브젝트 비활성화 시에도 안전하게 끊기도록).
+    private enum BgmFadeState { None, FadeOut, FadeIn }
+    private BgmFadeState fadeState = BgmFadeState.None;
+    private float fadeTimer;
+    private float fadeDuration;
+    private float fadeStartVolume;
+    private EnemySoundDataBase.Entry pendingBgmEntry;
+
     void Awake()
     {
         if (Instance != null && Instance != this) { Destroy(gameObject); return; }
@@ -187,21 +196,26 @@ public class EnemySoundManager : MonoBehaviour
     // 코루틴 대신 Update로 도는 이유: 오브젝트가 꺼지거나 씬이 바뀔 때 코루틴만 죽고 소리가 남는 걸 피한다.
     private void Update()
     {
-        if (timedVoices.Count == 0) return;
-
-        float now = Time.unscaledTime;
-        for (int i = 0; i < timedVoices.Count; i++)
+        if (timedVoices.Count > 0)
         {
-            TimedVoice v = timedVoices[i];
-            if (v.source == null || !v.source.isPlaying) continue;
-            if (v.manualStop) continue;
-            if (now < v.endTime) continue;
-            v.source.Stop();
+            float now = Time.unscaledTime;
+            for (int i = 0; i < timedVoices.Count; i++)
+            {
+                TimedVoice v = timedVoices[i];
+                if (v.source == null || !v.source.isPlaying) continue;
+                if (v.manualStop) continue;
+                if (now < v.endTime) continue;
+                v.source.Stop();
+            }
         }
+
+        UpdateBgmFade();
     }
 
-    // BGM 재생 (같은 곡이면 무시, 다르면 교체)
-    public static void PlayBgm(string key)
+    // BGM 재생 (같은 곡이면 무시, 다르면 교체).
+    // fadeDuration이 0이면 기존과 동일하게 즉시 교체(보스 등장 등 임팩트가 필요한 전환용).
+    // fadeDuration > 0이면 현재 곡을 그만큼 페이드 아웃한 뒤 새 곡을 페이드 인한다.
+    public static void PlayBgm(string key, float fadeDuration = 0f)
     {
         if (Instance == null || Instance.db == null) return;
         var e = Instance.db.Get(key);
@@ -210,16 +224,83 @@ public class EnemySoundManager : MonoBehaviour
 
         var src = Instance.bgmSource;
         if (src.isPlaying && src.clip == e.clip) return;
-        
-        src.clip = e.clip;
-        src.volume = e.volume;
-        src.loop = e.loop;
-        src.Play();
+
+        if (fadeDuration <= 0f)
+        {
+            Instance.fadeState = BgmFadeState.None; // 진행 중이던 페이드가 있으면 취소하고 즉시 전환
+            src.clip = e.clip;
+            src.volume = e.volume;
+            src.loop = e.loop;
+            src.Play();
+            return;
+        }
+
+        Instance.StartBgmFade(e, fadeDuration);
+    }
+
+    private void StartBgmFade(EnemySoundDataBase.Entry entry, float duration)
+    {
+        pendingBgmEntry = entry;
+        fadeDuration = duration;
+        fadeTimer = 0f;
+
+        if (bgmSource.isPlaying)
+        {
+            fadeStartVolume = bgmSource.volume;
+            fadeState = BgmFadeState.FadeOut;
+        }
+        else
+        {
+            // 최초 재생: 페이드 아웃할 대상이 없으니 바로 새 곡을 볼륨 0으로 깔고 페이드 인만 한다.
+            bgmSource.clip = entry.clip;
+            bgmSource.loop = entry.loop;
+            bgmSource.volume = 0f;
+            bgmSource.Play();
+            fadeState = BgmFadeState.FadeIn;
+        }
+    }
+
+    private void UpdateBgmFade()
+    {
+        if (fadeState == BgmFadeState.None) return;
+
+        fadeTimer += Time.unscaledDeltaTime;
+        float t = fadeDuration > 0f ? Mathf.Clamp01(fadeTimer / fadeDuration) : 1f;
+
+        if (fadeState == BgmFadeState.FadeOut)
+        {
+            bgmSource.volume = Mathf.Lerp(fadeStartVolume, 0f, t);
+            if (t >= 1f)
+            {
+                bgmSource.clip = pendingBgmEntry.clip;
+                bgmSource.loop = pendingBgmEntry.loop;
+                bgmSource.Play();
+                fadeState = BgmFadeState.FadeIn;
+                fadeTimer = 0f;
+            }
+        }
+        else // FadeIn
+        {
+            bgmSource.volume = Mathf.Lerp(0f, pendingBgmEntry.volume, t);
+            if (t >= 1f)
+            {
+                bgmSource.volume = pendingBgmEntry.volume;
+                fadeState = BgmFadeState.None;
+            }
+        }
     }
 
     public static void StopBgm()
     {
         if (Instance == null || Instance.bgmSource == null) return;
+        Instance.fadeState = BgmFadeState.None;
         Instance.bgmSource.Stop();
+    }
+
+    // 후보 키 중 하나를 무작위로 골라 PlayBgm으로 재생한다. 낮/밤처럼 곡을 여러 개 돌려쓰고 싶을 때 사용.
+    public static void PlayRandomBgm(string[] keys, float fadeDuration = 0f)
+    {
+        if (keys == null || keys.Length == 0) return;
+        PlayBgm(keys[UnityEngine.Random.Range(0, keys.Length)], fadeDuration);
     }
 }
