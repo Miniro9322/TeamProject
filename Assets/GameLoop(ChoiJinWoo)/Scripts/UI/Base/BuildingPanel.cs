@@ -19,6 +19,7 @@ public class BuildingPanel : MonoBehaviour, IClosablePanel
     [SerializeField] private RegionDetailPanel parentPanel; // 이 패널을 여는 쪽 - 그 안의 슬롯 버튼 클릭은 "바깥 클릭"이 아니다
     [SerializeField] private GameObject UpgradeResources;
     [SerializeField] private Image maxImage;
+    [SerializeField] private GameObject demolishCheckPanel;
     private ProductionFacility facility;
     private House house;
     private IUpgradableOccupant Occupant => facility != null ? (IUpgradableOccupant)facility : house;
@@ -28,14 +29,16 @@ public class BuildingPanel : MonoBehaviour, IClosablePanel
     private UiPanelStack panelStack;
     private BaseConstructor constructor;
     private ResourceIconSet resourceIconSet;
+    private ResourcesManager resourcesManager;
     private ClickOutsideCloser outsideCloser;
 
     [Inject]
-    private void Construct(UiPanelStack panelStack, BaseConstructor constructor, ResourceIconSet resourceIconSet)
+    private void Construct(UiPanelStack panelStack, BaseConstructor constructor, ResourceIconSet resourceIconSet, ResourcesManager resourcesManager)
     {
         this.panelStack = panelStack;
         this.constructor = constructor;
         this.resourceIconSet = resourceIconSet;
+        this.resourcesManager = resourcesManager;
     }
 
     private void Awake()
@@ -48,6 +51,7 @@ public class BuildingPanel : MonoBehaviour, IClosablePanel
         panelStack.Push(this);
         outsideCloser.MarkOpened();
         LocalizeTextManager.OnLanguageChanged += UpdatePanel;
+        demolishCheckPanel.gameObject.SetActive(false);
     }
 
     public void Close()
@@ -103,7 +107,9 @@ public class BuildingPanel : MonoBehaviour, IClosablePanel
             if (perProductText != null) perProductText.text = $"{facility.ProductAmount * facility.WorkerAmount}{table.Get("Ui_PerDay")}";
         }
 
-        upgradeButton.interactable = occupant.CheckCanUpgrade();
+        // 자원 부족은 더 이상 버튼을 비활성화하지 않는다 - 눌렀을 때 메시지로 안내한다(OnUpgrade 참고).
+        // 최대 레벨일 때는 아래에서 버튼 자체를 SetActive(false)로 숨기므로 이 값은 영향이 없다.
+        upgradeButton.interactable = true;
 
         var costs = occupant.UpgradeCostCopy;
         for (int i = 0; i < upgradeCostRows.Count; i++)
@@ -141,8 +147,6 @@ public class BuildingPanel : MonoBehaviour, IClosablePanel
         }
     }
 
-    // ProductionFacility/House 어느 쪽이든 이 하나로 받는다 - 둘 다 IUpgradableOccupant라
-    // 레벨/강화 UI 쪼는 공통으로 그리고, 인력 UI 쪼만 facility일 때 추가로 채운다.
     public void InitOccupant(object occupant, RegionFacilitySlots region, int slotIndex)
     {
         // 이미 열려있던 채로 다른 칸을 골랐을 수 있으니, 이전 점유물 구독부터 정리한다.
@@ -181,6 +185,12 @@ public class BuildingPanel : MonoBehaviour, IClosablePanel
     {
         if (Occupant == null) return;
 
+        if (!resourcesManager.CheckResources(Occupant.UpgradeCostCopy))
+        {
+            CenterFeedbackUi.Instance.Show("UI_Base_NotEnoughResources");
+            return;
+        }
+
         Occupant.Upgrade();
         Upgraded?.Invoke();
 
@@ -188,11 +198,22 @@ public class BuildingPanel : MonoBehaviour, IClosablePanel
         EventSystem.current.SetSelectedGameObject(null);
     }
 
+    public void CheckDemolish()
+    {
+        demolishCheckPanel.gameObject.SetActive(true);
+    }
+
     public void OnDemolish()
     {
-        if (region == null || facility == null) return; // House는 철거 버튼 자체를 비활성화해뒀지만, 방어적으로 한 번 더 막는다
+        if (region == null || facility == null) return;
 
         constructor.Demolish(region, slotIndex);
+        demolishCheckPanel.gameObject.SetActive(false);
         Close();
+    }
+
+    public void OnDemolishCancel()
+    {
+        demolishCheckPanel.gameObject.SetActive(false);
     }
 }
