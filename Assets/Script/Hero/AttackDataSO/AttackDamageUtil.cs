@@ -13,31 +13,41 @@ public static class AttackDamageUtil
 
     public static Vector3 EffectPosition(Component c) => EffectPosition(c.gameObject);
 
-    // 한 적에게 여러 히트가 짧은 시간 안에 겹치면(다단히트/AoE/장판 틱/다수 영웅 동시 타격) 그 수만큼
-    // 히트 파티클이 동시에 재생되어 렉을 유발한다. (적, 프리팹) 쌍을 키로 써서 같은 대상에 같은 이펙트가
-    // 겹칠 때만 억제하고, 서로 다른 이펙트는 항상 각자 재생되게 한다 — 적은 자식 콜라이더 GameObject로
-    // 넘어올 수 있어 GameObject 자체가 아니라 GetComponentInParent<EnemyBase>()로 얻는 컴포넌트를 키로
-    // 쓴다. 적은 풀링(비활성화/재활성화)되는 오브젝트라 컴포넌트 참조가 계속 살아있고 (적, 프리팹) 조합
-    // 수도 풀 용량 × 이펙트 종류 수만큼으로 유한해 정리 없이 누적돼도 된다.
-    private static readonly Dictionary<(EnemyBase enemy, GameObject prefab), float> hitEffectBusyUntil = new();
-    // lifetime(풀 반납 타이머)과는 무관한 고정 억제 구간 — 이펙트 재생 시간이 스킬마다 달라져도
-    // "같은 이펙트가 얼마나 자주 겹치면 생략할지"는 항상 이 값 하나로 판단한다.
-    // Time.unscaledTime 기준 — 배속(Time.timeScale)과 무관하게 "(적, 프리팹) 조합당 초당 최대
-    // 1/interval회"라는 실시간 예산으로 고정한다. Time.time(scaled)을 쓰면 배속이 오를수록 초당
-    // 공격 수도 그만큼 늘어서 억제가 항상 같은 비율만 걸러내고 배속에 전혀 보정이 안 된다.
-    private const float HitEffectDedupInterval = 0.4f;
+    // 한 적에게 짧은 시간 안에 여러 히트가 겹치면(다단히트/AoE/장판 틱/다수 영웅 동시 타격)
+    // 이펙트 종류와 무관하게 그 수만큼 파티클이 동시에 재생되어 렉을 유발한다. 같은 대상에게
+    // "현재 재생 중인" 히트 이펙트 개수를 세어 상한을 두고, 상한을 넘으면 스폰 자체를 생략한다
+    // (프리팹이 달라도 카운트에 포함 — 대상 기준으로만 제한). 적은 자식 콜라이더 GameObject로
+    // 넘어올 수 있어 GameObject 자체가 아니라 GetComponentInParent<EnemyBase>()로 얻는 컴포넌트를
+    // 키로 쓴다. 적은 풀링(비활성화/재활성화)되는 오브젝트라 컴포넌트 참조가 계속 살아있어 별도
+    // 정리 없이 키가 누적돼도 된다.
+    private static readonly Dictionary<EnemyBase, int> activeHitEffectCount = new();
+    private const int MaxConcurrentHitEffectsPerTarget = 3;
 
     public static void SpawnHitEffect(Hero hero, GameObject prefab, GameObject target, float lifetime)
     {
         if (prefab == null || target == null) return;
         if (target.GetComponentInParent<EnemyBase>() is EnemyBase enemy)
         {
-            var key = (enemy, prefab);
-            float now = Time.unscaledTime;
-            if (hitEffectBusyUntil.TryGetValue(key, out float busyUntil) && now < busyUntil) return;
-            hitEffectBusyUntil[key] = now + HitEffectDedupInterval;
+            activeHitEffectCount.TryGetValue(enemy, out int count);
+            if (count >= MaxConcurrentHitEffectsPerTarget) return;
+            // lifetime<=0(영구 이펙트, 자동 반납 없음)은 슬롯을 영원히 점유하게 되므로 카운트 대상에서 제외.
+            if (lifetime > 0f)
+            {
+                activeHitEffectCount[enemy] = count + 1;
+                ReleaseHitEffectSlotAfter(enemy, lifetime).Forget();
+            }
         }
         hero.SpawnEffect(prefab, EffectPosition(target), lifetime);
+    }
+
+    // Hero.ReturnEffectAfter(실제 파티클을 풀에 반납하는 시점)와 같은 기본 UniTask.Delay(scaled time)를
+    // 써서, 파티클이 실제로 사라지는 타이밍과 카운터 슬롯 반환 타이밍이 어긋나지 않게 한다.
+    private static async UniTask ReleaseHitEffectSlotAfter(EnemyBase enemy, float delay)
+    {
+        await UniTask.Delay(TimeSpan.FromSeconds(delay));
+        if (!activeHitEffectCount.TryGetValue(enemy, out int count)) return;
+        if (count <= 1) activeHitEffectCount.Remove(enemy);
+        else activeHitEffectCount[enemy] = count - 1;
     }
 
     public static void SpawnHitEffect(Hero hero, GameObject prefab, Component target, float lifetime)

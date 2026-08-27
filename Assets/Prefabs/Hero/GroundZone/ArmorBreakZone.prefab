@@ -223,7 +223,7 @@ ParticleSystem:
       serializedVersion: 2
       minMaxState: 0
       minColor: {r: 1, g: 1, b: 1, a: 1}
-      maxColor: {r: 0.67058825, g: 0.47843137, b: 1, a: 0.09803922}
+      maxColor: {r: 0.67058825, g: 0.47843137, b: 1, a: 0.15686275}
       maxGradient:
         serializedVersion: 2
         key0: {r: 1, g: 1, b: 1, a: 1}
@@ -445,7 +445,7 @@ ParticleSystem:
         m_RotationOrder: 4
     startRotationX:
       serializedVersion: 2
-      minMaxState: 0
+      minMaxState: 3
       scalar: 1
       minScalar: 0
       maxCurve:
@@ -498,7 +498,7 @@ ParticleSystem:
         m_RotationOrder: 4
     startRotationY:
       serializedVersion: 2
-      minMaxState: 0
+      minMaxState: 3
       scalar: 1
       minScalar: 0
       maxCurve:
@@ -5054,7 +5054,7 @@ ParticleSystem:
       serializedVersion: 2
       minMaxState: 0
       minColor: {r: 1, g: 1, b: 1, a: 1}
-      maxColor: {r: 0.10980392, g: 0.007843138, b: 1, a: 0.52156866}
+      maxColor: {r: 0.10980392, g: 0.007843138, b: 1, a: 0.19607843}
       maxGradient:
         serializedVersion: 2
         key0: {r: 1, g: 1, b: 1, a: 1}
@@ -9919,7 +9919,7 @@ ParticleSystem:
       serializedVersion: 2
       minMaxState: 0
       minColor: {r: 1, g: 1, b: 1, a: 1}
-      maxColor: {r: 0, g: 0, b: 1, a: 1}
+      maxColor: {r: 0, g: 0, b: 1, a: 0.39215687}
       maxGradient:
         serializedVersion: 2
         key0: {r: 1, g: 1, b: 1, a: 1}
@@ -14617,7 +14617,12 @@ MonoBehaviour:
     scale: 1
   hitEffect: {fileID: 0}
   hitEffectLifetime: 0.5
+  healReceiveEffect: {fileID: 0}
+  buffReceiveEffect: {fileID: 0}
   visualRadius: 0.45
   selfEffect: {fileID: 3830189520897756545}
   selfEffectVisualRadius: 0.45
   allyBuffs: []
+  spawnSoundKey: 
+  sustainSoundKey: 
+  hitSoundKey: 
