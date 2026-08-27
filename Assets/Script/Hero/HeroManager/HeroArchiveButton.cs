@@ -8,6 +8,8 @@ public class HeroArchiveButton : MonoBehaviour, IExclusiveUiPanel
 {
     [SerializeField] private GameObject archiveUI;
     [SerializeField] private Key openKey = Key.P;
+    [Tooltip("페이지 UI 컴포넌트. 비워두면 archiveUI 하위에서 찾는다.")]
+    [SerializeField] private HeroArchiveUI heroArchiveUI;
     private CancellationTokenSource cts;
     private bool isOpen;
     private ClickOutsideCloser outsideCloser;
@@ -73,6 +75,16 @@ public class HeroArchiveButton : MonoBehaviour, IExclusiveUiPanel
         ExclusiveUiCoordinator.NotifyOpened(this);
         ResetCts();
         OpenArchiveCor(cts.Token).Forget();
+
+        if (TryGetArchiveUI(out HeroArchiveUI ui)) ui.Refresh();
+    }
+
+    // archiveUI 하위의 HeroArchiveUI를 늦게 찾아 캐시한다. 인스펙터에 안 꽂아도 동작하게.
+    private bool TryGetArchiveUI(out HeroArchiveUI ui)
+    {
+        if (heroArchiveUI == null) heroArchiveUI = archiveUI.GetComponentInChildren<HeroArchiveUI>(true);
+        ui = heroArchiveUI;
+        return ui != null;
     }
 
     public void Close()
