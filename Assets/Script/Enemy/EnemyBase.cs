@@ -891,6 +891,7 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
         StunTick();
         if (animator != null) animator.speed = 1f; // 공격 배속 등 남은 속도 조작까지 원복
         _move.Stop();
+        DieSound();
         if (Board != null) Board.RemoveEnemy(gameObject);
         if (skillCts == null) { SendDieEvent(); Despawn(); return; }
         DieRoutine(skillCts.Token).Forget();
@@ -926,6 +927,10 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
             DeathStep(Despawn, "디스폰");
         }
     }
+    public virtual void DieSound()
+    {
+        
+    }
 
     // 사망 처리 한 단계를 감싼다. 실패해도 다음 단계로 넘어가되, 무슨 단계가 왜 깨졌는지는 남긴다.
     private void DeathStep(Action step, string what)
@@ -935,17 +940,14 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
     }
 
     // 등급별 특수 자원 지급량. ResourcesManager.GetSpecial()이 한 번에 1개씩만 주므로 횟수로 준다.
-    private const int EliteSpecialDrop = 1;
+    // private const int EliteSpecialDrop = 1;
     private const int BossSpecialDrop = 5;
     // 주입 누락 경고는 한 번만 — 적이 죽을 때마다 찍으면 콘솔이 잠긴다.
     private static bool _warnedNoResourceManager;
 
     private void GetSpecial()
     {
-        if (Class == EnemyClass.Normal) return;
-
-        // 주입이 안 된 경우(테스트 씬, 씬에 직접 배치한 적)엔 자원만 못 줄 뿐,
-        // 사망 처리는 그대로 이어져야 한다.
+        if (Class == EnemyClass.Normal||Class==EnemyClass.Elite) return;
         if (resourceManager == null)
         {
             if (!_warnedNoResourceManager)
@@ -957,8 +959,9 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
             return;
         }
 
-        int amount = Class == EnemyClass.Boss ? BossSpecialDrop : EliteSpecialDrop;
-        for (int i = 0; i < amount; i++) resourceManager.GetSpecial();
+        // int amount = Class == EnemyClass.Boss ? BossSpecialDrop : EliteSpecialDrop;
+        // for (int i = 0; i < amount; i++) resourceManager.GetSpecial();
+        for (int i = 0; i < BossSpecialDrop; i++) resourceManager.GetSpecial();
     }
     private async UniTask WaitForDeathAnim(string stateName, float timeout, CancellationToken token)
     {

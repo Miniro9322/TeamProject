@@ -27,6 +27,19 @@ public static class EnemyAttributeText
         var parts = new List<string>();
         var seen = new HashSet<string>();   // 같은 토큰을 두 번 적어도 한 번만 표기
 
+        // 잠복(Burrow)은 피격 판정 때문에 은신(Cloaking) 비트를 CSV에 같이 달고 다닌다 —
+        // 설명엔 잠복만 세우고 은신은 감춘다(표기 순서와 무관하게 미리 훑는다).
+        bool hasBurrow = false;
+        if (!string.IsNullOrEmpty(raw))
+        {
+            foreach (string t in raw.Split(new[] { '|', ';' }, StringSplitOptions.RemoveEmptyEntries))
+                if (string.Equals(t.Trim(), nameof(EnemyAttribute.Burrow), StringComparison.OrdinalIgnoreCase))
+                {
+                    hasBurrow = true;
+                    break;
+                }
+        }
+
         if (!string.IsNullOrEmpty(raw))
         {
             // 표시 순서는 CSV에 적은 순서를 그대로 따른다(enum 선언 순서가 아니다) — 저작자가 순서를 쥔다.
@@ -38,6 +51,7 @@ public static class EnemyAttributeText
                 if (Enum.TryParse(id, true, out EnemyAttribute flag))
                 {
                     if (flag == EnemyAttribute.None) continue;   // "None"을 적은 경우 — 아래 폴백이 처리한다
+                    if (hasBurrow && flag == EnemyAttribute.Cloaking) continue; // 잠복이 있으면 은신은 겹치므로 생략
                     parts.Add(Link(flag.ToString(), st.Get(flag.ToString()),
                                    attrColor != null ? attrColor(flag) : (Color?)null));
                     continue;

@@ -11,6 +11,12 @@ using UnityEngine.UI;
 /// </summary>
 public class WarningDirectingBuilder : EditorWindow
 {
+    // 맥동(스케일)과 색 틴트를 도트에만 걸기 위한 중간 컨테이너 이름.
+    // 루트에 직접 걸면 루트의 다른 자식(화살표 바 등 손으로 붙인 연출)까지 같이 커졌다 작아지고
+    // 색이 물든다 — Transform 스케일은 자식이 개별적으로 빠져나갈 방법이 없으므로 계층을 나눈다.
+    // CanvasGroup 알파(페이드)와 배경 Image는 루트에 그대로 둬서 다른 자식도 같이 사라진다.
+    const string DotsContainerName = "Dots";
+
     // ── 대상 ──────────────────────────────────────────────
     RectTransform root;
     AnimationClip clip;
@@ -157,8 +163,18 @@ public class WarningDirectingBuilder : EditorWindow
         Undo.SetCurrentGroupName("Build Warning Dots");
         int group = Undo.GetCurrentGroup();
 
+        RectTransform container = EnsureDotsContainer();
+
+        // 컨테이너 안(=이전 도트)만 지운다. 루트 직속 자식은 손으로 붙인 연출이므로 건드리지 않는다.
+        for (int i = container.childCount - 1; i >= 0; i--)
+            Undo.DestroyObjectImmediate(container.GetChild(i).gameObject);
+        // 컨테이너를 쓰기 전 버전이 루트에 바로 꽂아둔 도트 정리 — 이름으로만 골라 다른 자식은 남긴다.
         for (int i = root.childCount - 1; i >= 0; i--)
-            Undo.DestroyObjectImmediate(root.GetChild(i).gameObject);
+        {
+            Transform c = root.GetChild(i);
+            if (c != container && c.name.StartsWith("Dot_"))
+                Undo.DestroyObjectImmediate(c.gameObject);
+        }
 
         for (int i = 0; i < cells.Count; i++)
         {
@@ -167,7 +183,7 @@ public class WarningDirectingBuilder : EditorWindow
             go.layer = root.gameObject.layer;
 
             var rt = (RectTransform)go.transform;
-            rt.SetParent(root, false);
+            rt.SetParent(container, false);
             rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0.5f, 0.5f);
             rt.sizeDelta = new Vector2(dotSize, dotSize);
             rt.anchoredPosition = cells[i];
@@ -180,17 +196,53 @@ public class WarningDirectingBuilder : EditorWindow
         }
 
         // 색 펄스를 커브 1개로 처리하기 위한 컴포넌트
-        var tint = root.GetComponent<WarningDotTint>();
-        if (tint == null) tint = Undo.AddComponent<WarningDotTint>(root.gameObject);
+        EnsureTint(container);
+
+        Undo.CollapseUndoOperations(group);
+        EditorUtility.SetDirty(root);
+        Debug.Log("[Warning Builder] 도트 " + cells.Count + "개 배치 완료.");
+    }
+
+    /// 도트를 담을 중간 컨테이너를 찾거나 만든다. 맥동/틴트가 여기에만 걸리므로 루트의 다른 자식은
+    /// 영향을 받지 않는다. Transform은 반드시 무보정(위치0·스케일1·회전0)이어야 도트 좌표가 안 밀린다.
+    RectTransform EnsureDotsContainer()
+    {
+        Transform found = root.Find(DotsContainerName);
+        var container = found as RectTransform;
+        if (container == null)
+        {
+            if (found != null) Undo.DestroyObjectImmediate(found.gameObject); // 이름만 같고 RectTransform이 아님
+            var go = new GameObject(DotsContainerName, typeof(RectTransform));
+            Undo.RegisterCreatedObjectUndo(go, "Create Dots Container");
+            go.layer = root.gameObject.layer;
+            container = (RectTransform)go.transform;
+            container.SetParent(root, false);
+        }
+
+        Undo.RecordObject(container, "Configure Dots Container");
+        container.anchorMin = container.anchorMax = container.pivot = new Vector2(0.5f, 0.5f);
+        container.anchoredPosition = Vector2.zero;
+        container.sizeDelta = Vector2.zero;
+        container.localScale = Vector3.one;
+        container.localRotation = Quaternion.identity;
+        return container;
+    }
+
+    /// 틴트도 컨테이너에 붙인다 — WarningDotTint는 자기 아래 Graphic을 전부 물들이므로 루트에 있으면
+    /// 화살표 바 같은 다른 자식 색까지 덮어쓴다. 예전 버전이 루트에 붙여둔 건 지운다(둘이 매 프레임 싸운다).
+    WarningDotTint EnsureTint(RectTransform container)
+    {
+        var stale = root.GetComponent<WarningDotTint>();
+        if (stale != null) Undo.DestroyObjectImmediate(stale);
+
+        var tint = container.GetComponent<WarningDotTint>();
+        if (tint == null) tint = Undo.AddComponent<WarningDotTint>(container.gameObject);
         Undo.RecordObject(tint, "Configure Tint");
         tint.baseColor = baseColor;
         tint.subColor = subColor;
         tint.blend = 0f;
         tint.Refresh();
-
-        Undo.CollapseUndoOperations(group);
-        EditorUtility.SetDirty(root);
-        Debug.Log("[Warning Builder] 도트 " + cells.Count + "개 배치 완료.");
+        return tint;
     }
 
     /// 텍스트를 도트 좌표 리스트로. 캡하이트(0~6행) 기준 세로 중앙 정렬 후 textTilt 만큼 회전.
@@ -239,10 +291,19 @@ public class WarningDirectingBuilder : EditorWindow
     // ══════════════════════════════════════════════════════
     void BuildClip()
     {
-        var dots = new List<RectTransform>();
-        for (int i = 0; i < root.childCount; i++)
+        // 루트 자식이 아니라 컨테이너 자식만 도트로 센다 — 그래야 손으로 붙인 다른 연출(화살표 바 등)이
+        // 개수에 섞여 아래 불일치 검사에 걸리지 않는다.
+        var container = root.Find(DotsContainerName) as RectTransform;
+        if (container == null)
         {
-            var rt = root.GetChild(i) as RectTransform;
+            Debug.LogWarning("[Warning Builder] '" + DotsContainerName + "' 컨테이너가 없습니다. 1번 먼저 실행하세요.");
+            return;
+        }
+
+        var dots = new List<RectTransform>();
+        for (int i = 0; i < container.childCount; i++)
+        {
+            var rt = container.GetChild(i) as RectTransform;
             if (rt != null) dots.Add(rt);
         }
         if (dots.Count == 0)
@@ -338,20 +399,16 @@ public class WarningDirectingBuilder : EditorWindow
         Flatten(scale);
         Flatten(tintCurve);
 
-        SetCurve("", typeof(RectTransform), "m_LocalScale.x", scale);
-        SetCurve("", typeof(RectTransform), "m_LocalScale.y", scale);
-        SetCurve("", typeof(RectTransform), "m_LocalScale.z",
+        // 맥동은 루트가 아니라 컨테이너에 — 루트에 걸면 화살표 바 등 다른 자식까지 같이 바운스한다.
+        root.localScale = Vector3.one;   // 예전 버전이 루트에 구워둔 맥동이 씬에 남아 있을 수 있다
+        SetCurve(DotsContainerName, typeof(RectTransform), "m_LocalScale.x", scale);
+        SetCurve(DotsContainerName, typeof(RectTransform), "m_LocalScale.y", scale);
+        SetCurve(DotsContainerName, typeof(RectTransform), "m_LocalScale.z",
                  new AnimationCurve(new Keyframe(0f, 1f), new Keyframe(endTime, 1f)));
 
         // 색 전환: 도트마다 m_Color 를 잡지 않고 WarningDotTint.blend 커브 1개로
-        var tint = root.GetComponent<WarningDotTint>();
-        if (tint == null) tint = Undo.AddComponent<WarningDotTint>(root.gameObject);
-        Undo.RecordObject(tint, "Configure Tint");
-        tint.baseColor = baseColor;
-        tint.subColor = subColor;
-        tint.blend = 0f;
-        tint.Refresh();
-        SetCurve("", typeof(WarningDotTint), "blend", tintCurve);
+        EnsureTint(container);
+        SetCurve(DotsContainerName, typeof(WarningDotTint), "blend", tintCurve);
 
         // 전체 알파는 CanvasGroup 하나로. (도트마다 Image.color.a 잡지 않는다)
         var cg = root.GetComponent<CanvasGroup>();

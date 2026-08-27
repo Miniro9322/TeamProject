@@ -24,7 +24,19 @@ public class Bat : EnemyBase
         GameObject go = FindAttackTarget();
         if (go == null || attackPrefab == null) return; // 히트 프레임에 대상 이탈/사망 or 프리팹 로드 실패 시 헛발사 방지
         GameObject attack = Pool.Spawn(attackPrefab,transform.position,Quaternion.identity);
+        EnemySoundAttack();
         AttackTarget(go,attack).Forget();
+    }
+    public override void EnemySoundAttack()
+    {
+        base.EnemySoundAttack();
+        EnemySoundManager.Play("DashSkill");
+
+    }
+    public override void DieSound()
+    {
+        base.DieSound();
+        EnemySoundManager.Play("FlyDie");
     }
 
     private async UniTask AttackTarget(GameObject target,GameObject attackprefab)
@@ -44,7 +56,10 @@ public class Bat : EnemyBase
             attackprefab.transform.position = end;
             // 도착 시점에 대상이 살아있으면 데미지. 영웅은 IDamageAble이 부모에 있을 수 있어 InParent로 탐색.
             if (target != null && target.GetComponentInParent<IDamageAble>() is IDamageAble dmg)
+            {
                 dmg.TakeDamage(Mathf.FloorToInt(Stats[StatType.ATK]));
+                EnemySoundManager.Play("SpiderAttack");
+            }
         }
         catch(System.OperationCanceledException)
         {

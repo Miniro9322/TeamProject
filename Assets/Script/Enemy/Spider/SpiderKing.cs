@@ -19,4 +19,9 @@ public class SpiderKing : EnemyBase
         base.EnemySoundAttack();
         EnemySoundManager.Play("SpiderAttack");
     }
+    public override void DieSound()
+    {
+        base.DieSound();
+        EnemySoundManager.Play("SpiderKingDie");
+    }
 }
