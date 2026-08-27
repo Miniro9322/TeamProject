@@ -21308,6 +21308,7 @@ MonoBehaviour:
   cam: {fileID: 755029713}
   guardPanel: {fileID: 250998268}
   directingUi: {fileID: 1756177633}
+  directingArrowSlide: {fileID: 1756177634}
   directingStateName: Directing
   directingTimeout: 5
   isDirecting: 0
@@ -26804,7 +26805,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6321183948446204995, guid: 5e9ddc2e3683dac41ba7ced3d89a7247, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -26821,6 +26822,17 @@ Animator:
   m_CorrespondingSourceObject: {fileID: 7207859227421989782, guid: 5e9ddc2e3683dac41ba7ced3d89a7247, type: 3}
   m_PrefabInstance: {fileID: 1756177631}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &1756177634 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 4606625691819542524, guid: 5e9ddc2e3683dac41ba7ced3d89a7247, type: 3}
+  m_PrefabInstance: {fileID: 1756177631}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5be480f409180964294687df83a3e4fc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WarningArrowSlide
 --- !u!1 &1760085480
 GameObject:
   m_ObjectHideFlags: 0
