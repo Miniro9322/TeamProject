@@ -38,6 +38,13 @@ public class TutorialManager : MonoBehaviour
     private string lastShownMessageKey;
     private readonly HashSet<HeroRosterEntry> placedSnapshot = new();
 
+    // "지금 어떤 waypoint가 활성인지"는 매 프레임 다시 훑지 않고, TutorialActivityWatcher가 알려줄
+    // 때만(target/activationCheck/blockedWhile의 activeInHierarchy가 실제로 바뀔 때) 다시 계산한다.
+    // 스포트라이트 위치(SetSpotlight)는 애니메이션/레이아웃으로 계속 움직일 수 있어 그 대상이 바뀌지
+    // 않아도 여전히 매 프레임 다시 구해야 하므로, 이 캐시는 "어떤 waypoint인가"에만 적용된다.
+    private TutorialWaypoint currentWaypoint;
+    private bool waypointDirty = true;
+
     private bool sequenceFinished;
     private bool dayZeroResetDone;
 
@@ -104,14 +111,36 @@ public class TutorialManager : MonoBehaviour
 
     private void WireRuntimeWaypoints()
     {
+        var watched = new HashSet<GameObject>();
         foreach (var step in steps)
         {
-            if (step.id != TutorialStepId.GameSpeedMention || step.waypoints == null) continue;
+            if (step.id == TutorialStepId.GameSpeedMention && step.waypoints != null)
+            {
+                foreach (var waypoint in step.waypoints)
+                {
+                    if (waypoint != null) waypoint.target = uiManager.GameSpeedUiRect;
+                }
+            }
+
+            if (step.waypoints == null) continue;
             foreach (var waypoint in step.waypoints)
             {
-                if (waypoint != null) waypoint.target = uiManager.GameSpeedUiRect;
+                if (waypoint == null) continue;
+                EnsureActivityWatcher(waypoint.target != null ? waypoint.target.gameObject : null, watched);
+                EnsureActivityWatcher(waypoint.activationCheck, watched);
+                EnsureActivityWatcher(waypoint.blockedWhile, watched);
             }
         }
+    }
+
+    // ResolveWaypoint가 activeInHierarchy를 확인하는 오브젝트들(target/activationCheck/blockedWhile)
+    // 전부에 TutorialActivityWatcher를 붙여둔다 - 씬/프리팹을 직접 건드리지 않고 런타임에 동적으로
+    // 붙이므로 어떤 패널의 소스 코드도 튜토리얼을 알 필요가 없다. 여러 waypoint가 같은 오브젝트를
+    // 공유할 수 있어 watched로 중복 부착을 막는다.
+    private static void EnsureActivityWatcher(GameObject go, HashSet<GameObject> watched)
+    {
+        if (go == null || !watched.Add(go)) return;
+        if (go.GetComponent<TutorialActivityWatcher>() == null) go.AddComponent<TutorialActivityWatcher>();
     }
 
     // MapInput.cs는 맵 클릭을 처리하기 전에 EventSystem.IsPointerOverGameObject()로 UI 위인지부터
@@ -192,6 +221,7 @@ public class TutorialManager : MonoBehaviour
         // PlaceHero 이후 스텝들이 "배치된 영웅이 있음"을 전제하므로, 인벤토리에서 임의로 회수해서
         // 그 전제를 깨는 걸 튜토리얼 전 구간(BlockSave와 같은 생명주기) 동안 막는다.
         TutorialInputGate.BlockHeroRetrieve = true;
+        TutorialActivityWatcher.Changed += OnWaypointActivityChanged;
         citizenManager.CitizenChanged += OnCitizenChanged;
         baseConstructor.Built += OnBuilt;
         heroRoster.Changed += OnHeroRosterChanged;
@@ -211,6 +241,7 @@ public class TutorialManager : MonoBehaviour
         TutorialInputGate.BlockPanelOpen = false;
         TutorialInputGate.BlockHeroUpgradeOpen = false;
         TutorialInputGate.BlockHeroPlacementFromInventory = false;
+        TutorialActivityWatcher.Changed -= OnWaypointActivityChanged;
         SetHudBlocked(false);
         SetBlocked(gameSpeedGroup, ref gameSpeedBlocked, false);
         SetBlocked(playerSkillGroup, ref playerSkillBlocked, false);
@@ -262,7 +293,15 @@ public class TutorialManager : MonoBehaviour
         SetBlocked(playerSkillGroup, ref playerSkillBlocked, IsActive(TutorialStepId.PlayerSkillMention));
 
         var step = steps[currentIndex];
-        var waypoint = ResolveWaypoint();
+        // "어떤 waypoint가 활성인가"는 TutorialActivityWatcher가 변화를 알려줄 때만 다시 계산한다 -
+        // 위치(SetSpotlight)는 waypoint가 그대로여도 애니메이션/레이아웃으로 움직일 수 있어 아래에서
+        // 여전히 매 프레임 다시 구한다.
+        if (waypointDirty)
+        {
+            currentWaypoint = ResolveWaypoint();
+            waypointDirty = false;
+        }
+        var waypoint = currentWaypoint;
 
         // waypoint가 지정돼는 있는데 아직 하나도 활성화 안 된 상태 - 예를 들어 밤 전환 애니메이션이
         // 끝나기 전이라 PlayerSkillPanel/배속 패널이 아직 안 켜진 순간. 이럴 땐 엉뚱한 문구(키 없음
@@ -299,6 +338,10 @@ public class TutorialManager : MonoBehaviour
         lastShownMessageKey = messageKey;
         overlay.SetMessage(messageKey);
     }
+
+    // TutorialActivityWatcher가 target/activationCheck/blockedWhile 중 하나의 activeInHierarchy가
+    // 바뀌었다고 알려줄 때만 불린다 - 다음 Update()에서 ResolveWaypoint를 다시 계산하게 표시만 해둔다.
+    private void OnWaypointActivityChanged() => waypointDirty = true;
 
     private TutorialWaypoint ResolveWaypoint()
     {
@@ -344,8 +387,11 @@ public class TutorialManager : MonoBehaviour
         SnapshotPlacedHeroes();
 
         lastShownMessageKey = null; // 새 단계 진입 - 문구를 무조건 다시 갱신하게 한다
+        // 새 단계는 waypoint 배열 자체가 바뀌므로 캐시를 무조건 새로 계산한다.
+        currentWaypoint = ResolveWaypoint();
+        waypointDirty = false;
         overlay.Show(step.completesOnAcknowledge);
-        RefreshMessage(ResolveWaypoint());
+        RefreshMessage(currentWaypoint);
     }
 
     private void SnapshotPlacedHeroes()

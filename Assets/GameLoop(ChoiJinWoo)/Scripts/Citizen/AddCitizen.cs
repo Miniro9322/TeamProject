@@ -82,17 +82,25 @@ public class AddCitizen : MonoBehaviour
         costText.color = resourcesManager.CheckResources(GetCost()) ? Color.white : Color.red;
     }
 
-    public void ChangeAmount(string amount)
+    public void ChangeAmount(string text)
     {
-        if (int.TryParse(amount, out this.amount))
+        int max = Mathf.Max(0, citizenManager.MaxCitizen - citizenManager.CurrentCitizen);
+
+        if (string.IsNullOrEmpty(text))
         {
-            this.amount = Mathf.Clamp(this.amount, 0, citizenManager.MaxCitizen - citizenManager.CurrentCitizen);
-            UpdatePanel();
+            amount = 0;
+        }
+        else if (long.TryParse(text, out long parsed))
+        {
+            amount = (int)Math.Clamp(parsed, 0, max);
         }
         else
         {
-            UpdatePanel();
+            // long 범위조차 넘는 큰 수 입력 시 최대값으로 처리
+            amount = max;
         }
+
+        UpdatePanel();
     }
 
     public void IncreaseAmount()
