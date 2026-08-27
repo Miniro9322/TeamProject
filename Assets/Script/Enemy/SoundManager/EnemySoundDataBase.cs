@@ -7,6 +7,7 @@ public class EnemySoundDataBase : ScriptableObject
     {
         Sfx,
         Bgm,
+        System,
     }
 
     [System.Serializable]

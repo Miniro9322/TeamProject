@@ -23,6 +23,10 @@ public class EnemyArchiveManager : MonoBehaviour, IExclusiveUiPanel
 
     private CancellationTokenSource cts;
     private bool isOpenCheck;
+    // "열려는 의도". isOpenCheck는 열기 애니메이션이 끝나야 true가 되므로 토글 판단에 쓸 수 없다 —
+    // 펼쳐지는 도중에 버튼을 다시 누르면 아직 false라 또 열기로 가서 안 닫힌다.
+    // 이 값은 열기/닫기가 시작되는 순간 바로 뒤집혀서 애니메이션 어느 지점에서 눌러도 반대로 간다.
+    private bool isOpenRequested;
     private Keyboard keyboard;
     private Key openKey = Key.O;
 
@@ -63,6 +67,7 @@ public class EnemyArchiveManager : MonoBehaviour, IExclusiveUiPanel
         archive.SetActive(false);
         archive.transform.localScale = Vector3.zero; // 닫힘 = 스케일 0 기준 (resume 로직이 진행도를 스케일로 읽음)
         isOpenCheck = false;
+        isOpenRequested = false;
         guardPanal.SetActive(false);
         hidePanal.gameObject.SetActive(false);
         ResetCts();
@@ -92,7 +97,11 @@ public class EnemyArchiveManager : MonoBehaviour, IExclusiveUiPanel
         }
         if (keyboard[openKey].wasPressedThisFrame && !TutorialInputGate.BlockHotkeys)
         {
-            if (archiveList.gameObject.activeSelf)
+            // 버튼을 그대로 Invoke하는 이유: 인스펙터에 손으로 걸어둔 onClick 항목(튜토리얼 훅 등)도
+            // 단축키에서 똑같이 돌아야 한다. 판단은 archiveList.activeSelf가 아니라 isOpenRequested로 —
+            // archiveList는 인스펙터 미할당 시 null이라 여기서 NRE가 났고, 자식 오브젝트의 activeSelf는
+            // 도감 열림 상태와 애초에 무관하다(껐다 켜는 건 archive 루트다).
+            if (isOpenRequested)
                 infoCloseButton.onClick?.Invoke();
             else
                 infoOpenButton.onClick?.Invoke();
@@ -140,11 +149,16 @@ public class EnemyArchiveManager : MonoBehaviour, IExclusiveUiPanel
         if (Keyboard.current.escapeKey.wasPressedThisFrame&&isOpenCheck)
             OnClickCloseArchive();   // 동일 닫기 창구 재사용
     }
-    // 도감 버튼으로 여는 경로 — 마지막으로 보던 페이지(없으면 기본 적)로 되돌린다.
-    private void OnClickOpenArchive() => OpenArchive(restoreLastPage: true);
+    // 도감 버튼(과 O 키)이 쓰는 토글 창구 — 닫혀 있으면 열고, 열려 있으면 같은 버튼으로 닫는다.
+    private void OnClickOpenArchive()
+    {
+        if (isOpenRequested) OnClickCloseArchive();
+        else OpenArchive(restoreLastPage: true);   // 마지막으로 보던 페이지(없으면 기본 적)로 되돌린다
+    }
 
     private void OpenArchive(bool restoreLastPage)
     {
+        isOpenRequested = true;
         ExclusiveUiCoordinator.NotifyOpened(this);
         ResetCts();
         OpenArchiveCor(cts.Token).Forget();
@@ -161,6 +175,7 @@ public class EnemyArchiveManager : MonoBehaviour, IExclusiveUiPanel
     // 버튼/판넬/ESC 공용 닫기 창구 — 진행 중이던 열기 코루틴을 취소하고 닫는다(동시 실행 방지)
     private void OnClickCloseArchive()
     {
+        isOpenRequested = false;
         ExclusiveUiCoordinator.NotifyClosed(this);
         ResetCts();
         CloseArchiveCor(cts.Token).Forget();

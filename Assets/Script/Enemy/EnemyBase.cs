@@ -360,15 +360,9 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
         // 여기서 위치를 폴링하던 EnemyFireTile은 그것과 중복이라 걷어냈다.
         // 화염족 처리(ImmuneDebuffs로 막고 OnDebuffBlocked가 재생·오라 창을 여는 것)는 누가 걸든 그대로 동작한다.
         StunTick();
-#if UNITY_EDITOR
-        EditorDebuffHotkeys();
-#endif
     }
 
 #if UNITY_EDITOR
-    // 넘패드로 디버프를 걸어 보는 테스트용 단축키. 에디터 플레이 모드에서만 컴파일된다 —
-    // 빌드(개발 빌드 포함)에는 아예 안 들어가므로 플레이어가 넘패드를 눌러 적을 기절시킬 수 없다.
-    // 호출부도 #if로 같이 감싸야 한다(메서드만 감싸면 Update에서 "없는 메서드"를 부르게 된다).
     private void EditorDebuffHotkeys()
     {
         if (Keyboard.current == null) return;
