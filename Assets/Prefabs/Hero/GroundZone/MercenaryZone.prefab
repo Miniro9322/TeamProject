@@ -51,6 +51,7 @@ MonoBehaviour:
   tickInterval: 0.2
   damagePer: 0
   healPer: 0
+  hpHealPer: 0
   duration: 999
   targetDebuffs:
   - debuff: {fileID: 11400000, guid: 5e837fa60ba609c4e93a33746beb35d6, type: 2}
@@ -58,10 +59,15 @@ MonoBehaviour:
     scale: 1
   hitEffect: {fileID: 0}
   hitEffectLifetime: 0.5
+  healReceiveEffect: {fileID: 0}
+  buffReceiveEffect: {fileID: 0}
   visualRadius: 0.45
   selfEffect: {fileID: 6905456873136677653}
   selfEffectVisualRadius: 0.45
   allyBuffs: []
+  spawnSoundKey: 
+  sustainSoundKey: 
+  hitSoundKey: 
 --- !u!1 &6905456873136457499
 GameObject:
   m_ObjectHideFlags: 0
@@ -285,7 +291,7 @@ ParticleSystem:
       serializedVersion: 2
       minMaxState: 0
       minColor: {r: 1, g: 1, b: 1, a: 1}
-      maxColor: {r: 1, g: 0, b: 1, a: 0.21568628}
+      maxColor: {r: 1, g: 0, b: 1, a: 0.078431375}
       maxGradient:
         serializedVersion: 2
         key0: {r: 1, g: 1, b: 1, a: 1}
@@ -507,7 +513,7 @@ ParticleSystem:
         m_RotationOrder: 4
     startRotationX:
       serializedVersion: 2
-      minMaxState: 0
+      minMaxState: 3
       scalar: 1
       minScalar: 0
       maxCurve:
@@ -560,7 +566,7 @@ ParticleSystem:
         m_RotationOrder: 4
     startRotationY:
       serializedVersion: 2
-      minMaxState: 0
+      minMaxState: 3
       scalar: 1
       minScalar: 0
       maxCurve:
@@ -5117,7 +5123,7 @@ ParticleSystem:
       serializedVersion: 2
       minMaxState: 0
       minColor: {r: 1, g: 1, b: 1, a: 1}
-      maxColor: {r: 1, g: 1, b: 1, a: 1}
+      maxColor: {r: 1, g: 1, b: 1, a: 0.19607843}
       maxGradient:
         serializedVersion: 2
         key0: {r: 1, g: 1, b: 1, a: 1}
