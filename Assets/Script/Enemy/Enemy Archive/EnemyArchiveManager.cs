@@ -19,6 +19,8 @@ public class EnemyArchiveManager : MonoBehaviour, IExclusiveUiPanel
     [SerializeField] private EnemyArchive archiveList;
     [Tooltip("여기 등록한 오브젝트가 하나라도 켜지면 도감을 닫는다. 다른 UI의 루트 패널을 넣으면 된다.")]
     [SerializeField] private GameObject[] closeWhenOpened;
+    [SerializeField] private GameObject basepanal;
+
     private CancellationTokenSource cts;
     private bool isOpenCheck;
     private Keyboard keyboard;
@@ -84,7 +86,10 @@ public class EnemyArchiveManager : MonoBehaviour, IExclusiveUiPanel
         CloseIfOtherUiOpened();
 
         if (keyboard == null) return;
-
+        if (basepanal != null&&basepanal.activeSelf==true)
+        {
+            return;
+        }
         if (keyboard[openKey].wasPressedThisFrame && !TutorialInputGate.BlockHotkeys)
         {
             if (archiveList.gameObject.activeSelf)
