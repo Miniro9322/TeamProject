@@ -17,9 +17,6 @@ public class UpgradeUI : MonoBehaviour
     [SerializeField] private BaseUpgradeButton buttonPrefab;
     [SerializeField] private TextMeshProUGUI pointsText;
     [SerializeField] private RectTransform openButtonRect; // 이 패널을 여는 버튼 — 바깥 클릭 판정에서 제외
-
-    [Header("치트 (테스트용)")]
-    [SerializeField] private Key cheatAddPointsKey = Key.F1;
     [SerializeField] private int cheatAddPointsAmount = 100;
 
     private UpgradeState upgradeState;
@@ -39,12 +36,6 @@ public class UpgradeUI : MonoBehaviour
 
     private void Update()
     {
-        if (Keyboard.current[cheatAddPointsKey].wasPressedThisFrame)
-        {
-            upgradeState.AddPoints(cheatAddPointsAmount);
-            RefreshAll();
-        }
-
         if (outsideCloser.ShouldClose())
         {
             gameObject.SetActive(false);
