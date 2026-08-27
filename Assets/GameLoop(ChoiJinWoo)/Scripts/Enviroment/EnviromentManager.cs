@@ -22,6 +22,11 @@ public class EnviromentManager : MonoBehaviour
     [SerializeField] private Color nightAmbient = new Color(0.05f, 0.05f, 0.1f);
     [SerializeField] private Material nightSkybox;
 
+    [Header("BGM")]
+    [SerializeField] private string[] dayBgmKeys = { "DayBGM1", "DayBGM2", "DayBGM3" };
+    [SerializeField] private string[] nightBgmKeys = { "NightBGM1", "NightBGM2", "NightBGM3" };
+    [SerializeField] private float bgmFadeDuration = 1.5f;
+
     private bool isNight = false;
     private GameManager gameManager;
     private ResourcesManager resourcesManager;
@@ -45,6 +50,7 @@ public class EnviromentManager : MonoBehaviour
     private void Start()
     {
         SetDay();
+        EnemySoundManager.PlayRandomBgm(dayBgmKeys, bgmFadeDuration);
     }
 
     public void ToggleDayNight()
@@ -80,6 +86,10 @@ public class EnviromentManager : MonoBehaviour
     private async UniTaskVoid TransitionRoutine(bool toNight)
     {
         if (sunLight == null) return;
+
+        // 버튼을 클릭한 이 시점(첫 await 이전 = 동기 실행 구간)에 BGM 페이드를 바로 시작한다.
+        // 조명 보간이 끝난 뒤(SetDay/SetNight)에 걸면 버튼 클릭과 소리 전환 사이에 지연이 생긴다.
+        EnemySoundManager.PlayRandomBgm(toNight ? nightBgmKeys : dayBgmKeys, bgmFadeDuration);
 
         Color startColor = sunLight.color;
         Color targetColor = toNight ? nightColor : dayColor;
