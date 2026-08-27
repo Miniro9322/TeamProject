@@ -17,6 +17,8 @@ public class BuildingPanel : MonoBehaviour, IClosablePanel
     [SerializeField] private Button demolishButton; // House는 철거를 지원하지 않아 비활성화한다
     [SerializeField] private GameObject workerButtonsContainer; // +/- 인력 버튼을 감싸는 오브젝트 - House에는 없는 개념이라 통째로 숨김
     [SerializeField] private RegionDetailPanel parentPanel; // 이 패널을 여는 쪽 - 그 안의 슬롯 버튼 클릭은 "바깥 클릭"이 아니다
+    [SerializeField] private GameObject UpgradeResources;
+    [SerializeField] private Image maxImage;
     private ProductionFacility facility;
     private House house;
     private IUpgradableOccupant Occupant => facility != null ? (IUpgradableOccupant)facility : house;
@@ -38,9 +40,6 @@ public class BuildingPanel : MonoBehaviour, IClosablePanel
 
     private void Awake()
     {
-        // parentPanel(RegionDetailPanel) 안의 다른 슬롯 버튼을 눌러도 "바깥 클릭"으로 안 잡히게 self로
-        // 취급한다 - 안 그러면 다른 지어진 칸 클릭 -> 여기 Update()가 먼저 Close() -> 곧이어
-        // RegionDetailPanel이 다시 SetActive(true)하는 순서가 되어 매번 깜빡였다.
         outsideCloser = new ClickOutsideCloser((RectTransform)transform, parentPanel != null ? parentPanel.transform : null);
     }
 
@@ -90,7 +89,6 @@ public class BuildingPanel : MonoBehaviour, IClosablePanel
 
         var table = DataTableManager.StringTable;
 
-        // 인력/생산량은 ProductionFacility에만 있는 개념이라, House를 보는 중이면 숨긴다.
         bool isFacility = facility != null;
         if (workerText != null) workerText.gameObject.SetActive(isFacility);
         if (productIcon != null) productIcon.gameObject.SetActive(isFacility);
@@ -127,6 +125,19 @@ public class BuildingPanel : MonoBehaviour, IClosablePanel
             string currentLevel = string.Format(table.Get("Ui_LevelFormat"), isMaxLevel ? table.Get("Ui_MaxLevel") : occupant.UpgradeCount.ToString());
             string nextLevel = isMaxLevel ? string.Empty : $"→ {string.Format(table.Get("Ui_LevelFormat"), occupant.UpgradeCount + 1)}";
             NextLevelInfoText.text = $"{currentLevel}{nextLevel}\n{table.Get(occupant.NextUpgradeInfo)}";
+        }
+
+        if (UpgradeResources != null && occupant.UpgradeCount == occupant.MaxUpgrade)
+        {
+            UpgradeResources.SetActive(false);
+            maxImage.gameObject.SetActive(true);
+            upgradeButton.gameObject.SetActive(false);
+        }
+        else
+        {
+            UpgradeResources.SetActive(true);
+            maxImage.gameObject.SetActive(false);
+            upgradeButton.gameObject.SetActive(true);
         }
     }
 
