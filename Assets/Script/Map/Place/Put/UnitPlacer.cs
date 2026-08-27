@@ -12,13 +12,12 @@ public class UnitPlacer
     {
         placedUnit = null;
 
-        GameObject unit = Create(slot);
+        GameObject unit = Create(slot, data.Area.Board);
         if (unit == null)
         {
             return false;
         }
 
-        BindBoard(unit, data.Area.Board);
         AreaPlace.Place(data, unit, slot.kind);
         unitList.Add(unit, data.Area);
         placedUnit = unit;
@@ -26,7 +25,7 @@ public class UnitPlacer
     }
 
     // 슬롯의 프리팹으로 영웅 오브젝트를 만든다.
-    private GameObject Create(Placeable slot)
+    private GameObject Create(Placeable slot, MapBoard board)
     {
         CheckPrefab(slot);
 
@@ -38,6 +37,9 @@ public class UnitPlacer
 
         // 위치는 의미 없음 — 곧바로 AreaPlace.Place가 unit.transform.position을 다시 세팅한다.
         GameObject unit = PoolManager.Instance.Spawn(slot.prefab, Vector3.zero, Quaternion.identity);
+        // PrepareForSpawn()이 SpawnAuraZones()를 통해 Board를 바로 참조하므로(오라 보유 영웅), 그 전에
+        // 반드시 SetBoard부터 해줘야 한다 — 순서가 바뀌면 Board가 null인 채로 참조돼 예외가 터진다.
+        BindBoard(unit, board);
         if (unit.TryGetComponent(out Hero hero)) hero.PrepareForSpawn();
         return unit;
     }

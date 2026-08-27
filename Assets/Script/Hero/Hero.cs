@@ -704,6 +704,11 @@ public class Hero : MonoBehaviour, IDamageAble, IUnit, IStunAble, IDebuffCarrier
         skillCts?.Cancel();
         skillCts?.Dispose();
         skillCts = null;
+        // GameObject가 SetActive(false)되면 Update()가 멈춰 CurrentState가 그대로 얼어붙는다 — 공격/스킬
+        // 중이었다면 그 상태의 attackCts/cts는 Destroy 토큰에만 묶여 있어(비활성화로는 안 풀림) 진행 중이던
+        // UniTask 루프(특히 Continuous 채널링)가 비활성 인스턴스 뒤에서 계속 돌 수 있다. 다음 스폰까지
+        // 기다리지 않고 여기서 즉시 idle로 되돌려 현재 상태의 Exit()(CTS 취소)을 지금 실행시킨다.
+        stateMachine.ChangeState(idleState);
     }
 
     public void SetCurrentTile()
