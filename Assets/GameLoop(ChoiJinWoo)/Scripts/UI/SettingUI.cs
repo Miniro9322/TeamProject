@@ -172,8 +172,7 @@ public class SettingUI : MonoBehaviour
 
     private void ApplyVolume(string paramName, float sliderValue)
     {
-        float dB = sliderValue > 0.0001f ? Mathf.Log10(sliderValue) * 20f : -80f;
-        gameAudioMixer.SetFloat(paramName, dB);
+        gameAudioMixer.SetFloat(paramName, AudioVolumeUtil.LinearToDb(sliderValue));
     }
 
     private void RefreshDropdown()

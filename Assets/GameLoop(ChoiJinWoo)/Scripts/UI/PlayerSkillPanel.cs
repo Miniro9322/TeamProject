@@ -46,7 +46,13 @@ public class PlayerSkillPanel : MonoBehaviour
         foreach (Entry entry in entries)
         {
             PlayerSkillSlot slot = entry.skill;
-            entry.button.onClick.AddListener(() => cast?.ArmSkill(slot));
+            entry.button.onClick.AddListener(() =>
+            {
+                // PlayerSkillMention 튜토리얼 스텝에서는 언급만 하고 실제 발동은 막는다 - 자세한
+                // 이유는 TutorialInputGate.BlockPlayerSkillCast 주석 참고.
+                if (TutorialInputGate.BlockPlayerSkillCast) return;
+                cast?.ArmSkill(slot);
+            });
             if (entry.button.GetComponent<TooltipTrigger>() is TooltipTrigger tooltip)
             {
                 tooltip.SetMessaege(string.Format(DataTableManager.StringTable.Get(slot.skillDescKey), slot.manaCost));

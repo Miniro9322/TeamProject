@@ -65,19 +65,15 @@ public class TitleUI : MonoBehaviour
 
     private async UniTaskVoid ApplyVolume()
     {
+        // ApplyResolution과 같은 이유 - Awake 시점엔 오디오 믹서가 아직 초기화 중이라
+        // 여기서 바로 SetFloat을 부르면 값이 씹힌다. 한 프레임 양보한 뒤에 적용한다.
         await UniTask.Yield();
 
-        ApplyVolumeParam("MasterVolume");
-        ApplyVolumeParam("BgmVolume");
-        ApplyVolumeParam("SfxVolume");
-        ApplyVolumeParam("System");
-    }
-
-    private void ApplyVolumeParam(string paramName)
-    {
-        float sliderValue = PlayerPrefs.GetFloat(paramName, 1f);
-        float dB = sliderValue > 0.0001f ? Mathf.Log10(sliderValue) * 20f : -80f;
-        mixer.SetFloat(paramName, dB);
+        // PlayerPrefs엔 선형(0~1) 슬라이더 값이 저장돼 있다 - SettingUI와 동일하게 dB로 변환해서 넣어야 한다.
+        mixer.SetFloat("MasterVolume", AudioVolumeUtil.LinearToDb(PlayerPrefs.GetFloat("MasterVolume", 1f)));
+        mixer.SetFloat("BgmVolume", AudioVolumeUtil.LinearToDb(PlayerPrefs.GetFloat("BgmVolume", 1f)));
+        mixer.SetFloat("SfxVolume", AudioVolumeUtil.LinearToDb(PlayerPrefs.GetFloat("SfxVolume", 1f)));
+        mixer.SetFloat("System", AudioVolumeUtil.LinearToDb(PlayerPrefs.GetFloat("System", 1f)));
     }
 
     // "시작" 버튼과 "새 게임" 버튼 모두 여기로 온다 - 슬롯을 먼저 고르게 한다.
