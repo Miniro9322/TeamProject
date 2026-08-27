@@ -19,4 +19,9 @@ public class DeathAttacker : EnemyBase
         EnemySoundManager.Play("DeathNormalAttack");
         EnemySoundManager.Play("DeathNormalAttack2");
     }
+    public override void DieSound()
+    {
+        base.DieSound();
+        EnemySoundManager.Play("DeathDie");
+    }
 }
