@@ -16,6 +16,8 @@ public class HeroInventory : MonoBehaviour
     [SerializeField] private Transform tabBarContainer;
     [SerializeField] private CanvasGroup canvasGroup;
     [SerializeField] private Button combineAllButton;
+    [Tooltip("영웅 회수 성공 시 재생할 EnemySoundManager 키. 비워두면 재생하지 않음")]
+    [SerializeField] private string retrieveSoundKey;
     private readonly Dictionary<HeroRosterEntry, HeroRosterIcon> icons = new();
     private ObjectPool<HeroRosterIcon> iconPool;
 
@@ -219,6 +221,7 @@ public class HeroInventory : MonoBehaviour
 
         entry.MarkAvailable();
         game.HeroRoster.NotifyStateChanged();
+        if (!string.IsNullOrEmpty(retrieveSoundKey)) EnemySoundManager.Play(retrieveSoundKey);
 
         if (hero != null)
         {

@@ -4807,6 +4807,8 @@ MonoBehaviour:
   tilePaintView: {fileID: 1235437630}
   rangeInput: {fileID: 314587633}
   combineManager: {fileID: 1508222711}
+  placeSoundKey: HeroPlace
+  removeSoundKey: HeroRetrieve
   desertZone: {fileID: 886515118}
   playerSkillPanel: {fileID: 1800664283}
   gimmickPopup: {fileID: 2019734433}
@@ -10171,7 +10173,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8f2d6f72bef598f49b548a8ede56ca7e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CameraInput
-  rotateSensitivity: 0.098
   zoomStep: 0.1
   dragSpeed: 0.5
   keySpeed: 20
@@ -17744,6 +17745,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::HeroArchiveButton
   archiveUI: {fileID: 196020502}
   openKey: 30
+  heroArchiveUI: {fileID: 0}
 --- !u!114 &1221242826
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -18201,6 +18203,7 @@ MonoBehaviour:
   edgeWidth: 0.06
   edgeLift: 0.025
   campfireEdgeMat: {fileID: 2100000, guid: 92de717b2dc04d4facf0865c35d27968, type: 2}
+  windwallEdgeMat: {fileID: 0}
   hoverEdgeMat: {fileID: 2100000, guid: 51b142977f188d149916e1f5f7756ec0, type: 2}
 --- !u!4 &1235437631
 Transform:
@@ -22436,6 +22439,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::HeroCreateManager
   heroRegistry: {fileID: 1508222712}
   game: {fileID: 314587623}
+  createSoundKey: HeroCreateEvent
   probabilityByStage:
   - tierWeights: 63000000010000000000000000000000
   - tierWeights: 5a000000090000000100000000000000
@@ -22455,7 +22459,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::HeroCombineManager
   heroRegistry: {fileID: 1508222712}
   game: {fileID: 314587623}
-  combineSoundKey: 
+  combineSoundKey: HeroCombineEvent
 --- !u!114 &1508222712
 MonoBehaviour:
   m_ObjectHideFlags: 0
