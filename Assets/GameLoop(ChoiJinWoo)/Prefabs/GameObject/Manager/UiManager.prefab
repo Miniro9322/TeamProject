@@ -18390,10 +18390,7 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 7860301527596727159, guid: b9d9c332b4774af48a77d69973713a34, type: 3}
       insertIndex: -1
       addedObject: {fileID: 3549827144311423647}
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 1313724518907205916, guid: b9d9c332b4774af48a77d69973713a34, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 3458784389417265477}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: b9d9c332b4774af48a77d69973713a34, type: 3}
 --- !u!224 &932411953143053633 stripped
 RectTransform:
@@ -18455,21 +18452,3 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
---- !u!1 &8349313419817049898 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 1313724518907205916, guid: b9d9c332b4774af48a77d69973713a34, type: 3}
-  m_PrefabInstance: {fileID: 7054309565994075702}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &3458784389417265477
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8349313419817049898}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 49beb084dd5019e45a90f32e065ce6f6, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::LocalizeText
-  key: UI_System_Setting
