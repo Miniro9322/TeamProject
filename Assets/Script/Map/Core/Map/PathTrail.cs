@@ -12,6 +12,7 @@ public class PathTrail : MonoBehaviour
         public Transform Runner;
         public float Length;
         public int Index;
+        public Vector3 LastAdded;
     }
 
     [SerializeField] private TrailRenderer trailPrefab;
@@ -208,6 +209,7 @@ public class PathTrail : MonoBehaviour
         run.Trail.Clear();
         run.Trail.emitting = true;
         run.Trail.AddPosition(run.Points[0]);
+        run.LastAdded = run.Points[0];
         run.Index = 1;
     }
 
@@ -241,19 +243,28 @@ public class PathTrail : MonoBehaviour
             {
                 Vector3 position = Vector3.MoveTowards(start, target, distance);
                 run.Runner.position = position;
-                if (position == start) return;
-
-                run.Trail.AddPosition(position);
+                KeepPosition(run, position);
                 return;
             }
 
             distance -= length;
             if (i < run.Index) continue;
-            run.Trail.AddPosition(target);
+            KeepPosition(run, target);
             run.Index = i + 1;
         }
 
         run.Runner.position = run.Points[run.Points.Count - 1];
+    }
+
+    // 직전에 넣은 점과 좌표가 다를 때만 Trail에 점을 넣는다.
+    // 일시정지 중에는 같은 좌표가 매 프레임 들어오는데 Trail 수명은 스케일드 시간이라
+    // 점이 사라지지도 않아, 막지 않으면 한 자리에 점이 무한히 쌓인다.
+    private void KeepPosition(TrailRun run, Vector3 position)
+    {
+        if (run.LastAdded == position) return;
+
+        run.Trail.AddPosition(position);
+        run.LastAdded = position;
     }
 
     // 모든 Trail의 방출을 동시에 끝내고 반복 여부를 처리합니다.
