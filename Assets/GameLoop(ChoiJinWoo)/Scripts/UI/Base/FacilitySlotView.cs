@@ -9,6 +9,8 @@ public class FacilitySlotView : MonoBehaviour
 {
     [SerializeField] private Image icon;
     [SerializeField] private TextMeshProUGUI nameText;
+    [SerializeField] private TextMeshProUGUI levelText;
+    [SerializeField] private TextMeshProUGUI emptyText;
     [SerializeField] private Button button;
 
     private int index;
@@ -22,7 +24,9 @@ public class FacilitySlotView : MonoBehaviour
     public void ShowEmpty()
     {
         if (icon != null) icon.gameObject.SetActive(false);
-        if (nameText != null) nameText.text = DataTableManager.StringTable.Get("Ui_EmptySlot");
+        if (levelText != null) levelText.text = string.Empty;
+        if (emptyText != null) emptyText.text = DataTableManager.StringTable.Get("Ui_EmptySlot");
+        if (nameText != null) nameText.text = string.Empty;
     }
 
     public void ShowBuilt(Sprite facilityIcon, string label, string level, string workers)
@@ -32,7 +36,9 @@ public class FacilitySlotView : MonoBehaviour
             icon.sprite = facilityIcon;
             icon.gameObject.SetActive(true);
         }
-        if (nameText != null) nameText.text = $"{level} {label}\n{workers}".Trim();
+        if (levelText != null) levelText.text = $"{level}";
+        if (nameText != null) nameText.text = $"{label}\n{workers}".Trim();
+        if (emptyText != null) emptyText.text = string.Empty;
     }
 
     public void BindClick(Action<int> onClick)
