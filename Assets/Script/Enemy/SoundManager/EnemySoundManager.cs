@@ -39,6 +39,15 @@ public class EnemySoundManager : MonoBehaviour
     private AudioMixerGroup SfxGroup => sfxGroupCached != null ? sfxGroupCached : (sfxGroupCached = ResolveGroup(sfxGroup, "SFX"));
     private AudioMixerGroup SystemGroup => systemGroupCached != null ? systemGroupCached : (systemGroupCached = ResolveGroup(systemGroup, "System"));
 
+    // DB 항목의 SoundType이 실제 출력 경로를 정한다. 이 두 함수 말고 다른 곳에서 그룹/소스를 고르지 않는다.
+    // Bgm으로 표시된 항목을 Play로 부르면 효과음 취급이다 — BGM은 곡 교체/페이드가 필요해 PlayBgm이 따로 있다.
+    private AudioMixerGroup GroupFor(EnemySoundDataBase.SoundType type)
+        => type == EnemySoundDataBase.SoundType.System ? SystemGroup : SfxGroup;
+
+    // System 소스가 인스펙터에 안 꽂혀 있으면 조용히 사라지지 않도록 SFX 소스로 떨어뜨린다.
+    private AudioSource SourceFor(EnemySoundDataBase.SoundType type)
+        => type == EnemySoundDataBase.SoundType.System && systemSource != null ? systemSource : sfxSource;
+
     // 덕킹 상태. 믹서의 노출 파라미터(SfxVolume/BgmVolume)는 SettingUI 소유라 절대 건드리지 않는다 —
     // 대신 AudioSource.volume(소스별 배율)만 곱한다. 이건 믹서 볼륨과 독립이라 유저 설정을 덮어쓰지 않는다.
     //
@@ -82,6 +91,9 @@ public class EnemySoundManager : MonoBehaviour
         Instance = this;
         if (sfxSource != null) sfxSource.playOnAwake = false;
         if (bgmSource != null) { bgmSource.playOnAwake = false; bgmSource.loop = true; }
+        // 프리팹의 세 소스 모두 Play On Awake가 켜져 있다. 지금은 클립이 비어 있어 조용하지만,
+        // System 소스를 실제로 쓰기 시작했으니 여기서도 꺼둔다(나중에 클립을 꽂으면 씬 시작하자마자 울린다).
+        if (systemSource != null) systemSource.playOnAwake = false;
 
         RouteToMixer();
     }
@@ -146,11 +158,14 @@ public class EnemySoundManager : MonoBehaviour
             Instance.lastPlayTime[key] = now;
         }
 
-        if (e.soundTime > 0f) { Instance.PlayTimed(e, now, Instance.SfxGroup); return; }
+        // 출력 경로는 DB 항목의 type이 정한다 — System으로 표시한 항목(버튼음 등)은 System 그룹으로 나가
+        // 설정창의 System 슬라이더를 따르고, 효과음 무리와 채널이 분리된다.
+        if (e.soundTime > 0f) { Instance.PlayTimed(e, now, Instance.GroupFor(e.type)); return; }
 
-        if (Instance.sfxSource == null) { Debug.LogWarning("sfxSource 미할당"); return; }
-        // 카테고리(SFX) 볼륨은 믹서가 담당. 여기선 클립별 상대 볼륨만 적용
-        Instance.sfxSource.PlayOneShot(e.clip, e.volume);
+        AudioSource src = Instance.SourceFor(e.type);
+        if (src == null) { Debug.LogWarning($"'{e.key}'를 낼 AudioSource 미할당(type={e.type})"); return; }
+        // 카테고리 볼륨은 믹서가 담당. 여기선 클립별 상대 볼륨만 적용
+        src.PlayOneShot(e.clip, e.volume);
     }
 
     /// <summary>
@@ -180,11 +195,15 @@ public class EnemySoundManager : MonoBehaviour
         float length = e.soundTime > 0f ? e.soundTime : (e.clip != null ? e.clip.length : 0f);
         duckUntil = Mathf.Max(duckUntil, now + length);   // 연달아 불려도 더 늦은 쪽을 남긴다
 
-        AudioMixerGroup group = importantUsesSystemGroup ? SystemGroup : SfxGroup;
+        // 이 플래그가 켜져 있으면 DB의 type을 무시하고 System으로 밀어올린다(중요 사운드의 존재 이유).
+        // 꺼두면 평소 Play와 같은 규칙 — 항목에 적힌 type을 그대로 따른다.
+        AudioMixerGroup group = importantUsesSystemGroup ? SystemGroup : GroupFor(e.type);
         if (e.soundTime > 0f) { PlayTimed(e, now, group); return; }
 
         // soundTime이 없으면 중간에 끊을 일이 없으니 전용 슬롯이 필요 없다 — 그룹만 맞춰 원샷.
-        AudioSource src = importantUsesSystemGroup && systemSource != null ? systemSource : sfxSource;
+        AudioSource src = importantUsesSystemGroup
+            ? SourceFor(EnemySoundDataBase.SoundType.System)
+            : SourceFor(e.type);
         if (src == null) { Debug.LogWarning("중요 사운드를 낼 AudioSource가 없음(systemSource/sfxSource 미할당)"); return; }
         src.PlayOneShot(e.clip, e.volume);
     }
@@ -201,8 +220,8 @@ public class EnemySoundManager : MonoBehaviour
         TimedVoice voice = Instance.GetFreeVoice();
         voice.manualStop = true;
         AudioSource src = voice.source;
-        // 슬롯은 재사용된다 — 직전에 PlayImportant가 쓴 슬롯이면 System 그룹에 물려 있으므로 매번 되돌린다.
-        src.outputAudioMixerGroup = Instance.SfxGroup;
+        // 슬롯은 재사용된다 — 직전 재생이 다른 그룹을 썼을 수 있으므로 매번 이 항목의 type으로 다시 지정한다.
+        src.outputAudioMixerGroup = Instance.GroupFor(e.type);
         src.clip = e.clip;
         src.volume = e.volume;
         src.loop = true; // DB entry의 loop 값과 무관하게 강제 루프

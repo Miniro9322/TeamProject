@@ -112,7 +112,7 @@ MonoBehaviour:
   - key: Warning!
     clip: {fileID: 8300000, guid: 90afd6ec92d1549519e8ad0a06529995, type: 3}
     volume: 0.5
-    type: 0
+    type: 2
     loop: 0
     soundTime: 3
   - key: HeroMeleeAttack1
@@ -553,3 +553,9 @@ MonoBehaviour:
     type: 1
     loop: 1
     soundTime: 0
+  - key: WarningHit
+    clip: {fileID: 8300000, guid: a7e7f8c97edd82044894815b6c44eefa, type: 3}
+    volume: 0
+    type: 2
+    loop: 0
+    soundTime: 0.1
