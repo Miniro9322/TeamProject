@@ -26,14 +26,20 @@ public abstract class HeldLinkBase : MonoBehaviour
         ApplyHeld(lastHeld);
     }
 
-    // 눌림 여부가 바뀐 순간만 골라 버튼 표시를 갱신한다
+    // 눌림 여부가 바뀐 순간엔 표시를 갱신하고, 눌린 채로 유지되는 동안엔 매 프레임 남은 트리거를 계속 청소한다
+    // (다른 버튼 클릭으로 포커스를 빼앗기면 Selectable이 몰래 Normal 트리거를 쏘는데, 그걸 그때그때 지워야
+    // Held 상태가 Any State 전이에 떠밀려 풀리지 않는다)
     protected virtual void Update()
     {
         bool held = CheckHeld();
-        if (held == lastHeld) return;
+        if (held != lastHeld)
+        {
+            lastHeld = held;
+            ApplyHeld(held);
+            return;
+        }
 
-        lastHeld = held;
-        ApplyHeld(held);
+        if (held) ClearOtherTriggers();
     }
 
     // 지금 눌린 상태로 봐야 하는지는 파생 클래스가 판단한다

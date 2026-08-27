@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using VContainer;
 
@@ -53,26 +54,31 @@ public class CenterHubPanel : MonoBehaviour, IClosablePanel
             tradeFoodButton.onClick.AddListener(() => {
                 resourcesManager.TradeResource(ProductionType.Food);
                 RefreshButton();
+                ClearButtonFocus();
             });
         if (tradeIronButton != null)
             tradeIronButton.onClick.AddListener(() => {
                 resourcesManager.TradeResource(ProductionType.Iron);
                 RefreshButton();
+                ClearButtonFocus();
             });
         if (tradeWoodButton != null)
             tradeWoodButton.onClick.AddListener(() => {
                 resourcesManager.TradeResource(ProductionType.Wood);
                 RefreshButton();
+                ClearButtonFocus();
             });
         if (tradeGoldButton != null)
             tradeGoldButton.onClick.AddListener(() => {
                 resourcesManager.TradeResource(ProductionType.Gold);
                 RefreshButton();
+                ClearButtonFocus();
             });
         if (tradeStoneButton != null)
             tradeStoneButton.onClick.AddListener(() => {
                 resourcesManager.TradeResource(ProductionType.Stone);
                 RefreshButton();
+                ClearButtonFocus();
             });
 
         if (tradeWoodText != null) tradeWoodText.text = $"{resourcesManager.TradeAmount}";
@@ -103,6 +109,12 @@ public class CenterHubPanel : MonoBehaviour, IClosablePanel
     {
         if (addCitizenPanel != null && addCitizenPanel.gameObject.activeSelf) return;
         if (panelStack.IsTop(this) && outsideCloser.ShouldClose()) Close();
+    }
+
+    // Selected 상태가 Pressed와 같은 클립이라, 포커스를 안 풀면 눌린 모양이 계속 남는다
+    private void ClearButtonFocus()
+    {
+        EventSystem.current.SetSelectedGameObject(null);
     }
 
     private void RefreshButton()

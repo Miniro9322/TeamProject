@@ -133,6 +133,7 @@ GameObject:
   - component: {fileID: 3970160}
   - component: {fileID: 3970158}
   - component: {fileID: 3970163}
+  - component: {fileID: 3970164}
   m_Layer: 5
   m_Name: Region6
   m_TagString: Untagged
@@ -280,6 +281,23 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &3970164
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3970157}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e1e131a8019ed354e9f29420c99f56fc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RegionNodeHeldLink
+  buttonImage: {fileID: 3970159}
+  heldTint: {r: 1, g: 1, b: 1, a: 1}
+  normalTint: {r: 1, g: 1, b: 1, a: 1}
+  detailPanel: {fileID: 331712667}
+  nodeView: {fileID: 3970158}
 --- !u!1001 &5595180
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -882,6 +900,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 3099756548543125106, guid: e1db6ef8e65714440a58e4a1c791dcd5, type: 3}
       insertIndex: -1
       addedObject: {fileID: 41220373}
+    - targetCorrespondingSourceObject: {fileID: 3099756548543125106, guid: e1db6ef8e65714440a58e4a1c791dcd5, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1505263876}
   m_SourcePrefab: {fileID: 100100000, guid: e1db6ef8e65714440a58e4a1c791dcd5, type: 3}
 --- !u!224 &41220365 stripped
 RectTransform:
@@ -1143,7 +1164,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4892937063378487115, guid: e1db6ef8e65714440a58e4a1c791dcd5, type: 3}
       propertyPath: m_fontSize
-      value: 28.1
+      value: 32.1
       objectReference: {fileID: 0}
     - target: {fileID: 4892937063378487115, guid: e1db6ef8e65714440a58e4a1c791dcd5, type: 3}
       propertyPath: m_margin.x
@@ -1180,6 +1201,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 3099756548543125106, guid: e1db6ef8e65714440a58e4a1c791dcd5, type: 3}
       insertIndex: -1
       addedObject: {fileID: 143329367}
+    - targetCorrespondingSourceObject: {fileID: 3099756548543125106, guid: e1db6ef8e65714440a58e4a1c791dcd5, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 143329371}
   m_SourcePrefab: {fileID: 100100000, guid: e1db6ef8e65714440a58e4a1c791dcd5, type: 3}
 --- !u!114 &49080710 stripped
 MonoBehaviour:
@@ -1302,6 +1326,7 @@ GameObject:
   - component: {fileID: 50852691}
   - component: {fileID: 50852690}
   - component: {fileID: 50852694}
+  - component: {fileID: 50852695}
   m_Layer: 5
   m_Name: Base
   m_TagString: Untagged
@@ -1432,6 +1457,22 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &50852695
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 50852689}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ccc802eb137019f438af0bca2928597b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ButtonHeldLink
+  buttonImage: {fileID: 50852691}
+  heldTint: {r: 0.502, g: 0.361, b: 0.204, a: 1}
+  normalTint: {r: 1, g: 1, b: 1, a: 1}
+  watchedPanel: {fileID: 75546168}
 --- !u!1 &64402126
 GameObject:
   m_ObjectHideFlags: 0
@@ -3500,6 +3541,35 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &143329369 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7428529991124180465, guid: e1db6ef8e65714440a58e4a1c791dcd5, type: 3}
+  m_PrefabInstance: {fileID: 49080709}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 143329363}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+--- !u!114 &143329371
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 143329363}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b33ddac11d686ee4189253b4830bdf1e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FacilitySlotHeldLink
+  buttonImage: {fileID: 143329369}
+  heldTint: {r: 1, g: 1, b: 1, a: 1}
+  normalTint: {r: 1, g: 1, b: 1, a: 1}
+  buildingPanel: {fileID: 1160295835}
+  choicePanel: {fileID: 2086405550}
+  slotView: {fileID: 49080710}
 --- !u!1 &145955783
 GameObject:
   m_ObjectHideFlags: 0
@@ -4828,9 +4898,9 @@ RectTransform:
   - {fileID: 370389396}
   m_Father: {fileID: 287188943}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 260, y: -22.5}
   m_SizeDelta: {x: 160, y: 45}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &180307013
@@ -5236,9 +5306,9 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 957663349}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 12.5, y: -12.5}
   m_SizeDelta: {x: 25, y: 25}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &192083452
@@ -6050,6 +6120,7 @@ GameObject:
   - component: {fileID: 220153801}
   - component: {fileID: 220153799}
   - component: {fileID: 220153804}
+  - component: {fileID: 220153805}
   m_Layer: 5
   m_Name: Region5
   m_TagString: Untagged
@@ -6197,6 +6268,23 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &220153805
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 220153798}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e1e131a8019ed354e9f29420c99f56fc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RegionNodeHeldLink
+  buttonImage: {fileID: 220153800}
+  heldTint: {r: 1, g: 1, b: 1, a: 1}
+  normalTint: {r: 1, g: 1, b: 1, a: 1}
+  detailPanel: {fileID: 331712667}
+  nodeView: {fileID: 220153799}
 --- !u!1 &222292984
 GameObject:
   m_ObjectHideFlags: 0
@@ -7697,7 +7785,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4892937063378487115, guid: e1db6ef8e65714440a58e4a1c791dcd5, type: 3}
       propertyPath: m_fontSize
-      value: 28.1
+      value: 32.1
       objectReference: {fileID: 0}
     - target: {fileID: 4892937063378487115, guid: e1db6ef8e65714440a58e4a1c791dcd5, type: 3}
       propertyPath: m_margin.x
@@ -7734,6 +7822,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 3099756548543125106, guid: e1db6ef8e65714440a58e4a1c791dcd5, type: 3}
       insertIndex: -1
       addedObject: {fileID: 601681040}
+    - targetCorrespondingSourceObject: {fileID: 3099756548543125106, guid: e1db6ef8e65714440a58e4a1c791dcd5, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 601681044}
   m_SourcePrefab: {fileID: 100100000, guid: e1db6ef8e65714440a58e4a1c791dcd5, type: 3}
 --- !u!114 &262898421 stripped
 MonoBehaviour:
@@ -8026,6 +8117,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 3099756548543125106, guid: e1db6ef8e65714440a58e4a1c791dcd5, type: 3}
       insertIndex: -1
       addedObject: {fileID: 274691985}
+    - targetCorrespondingSourceObject: {fileID: 3099756548543125106, guid: e1db6ef8e65714440a58e4a1c791dcd5, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 588761793}
   m_SourcePrefab: {fileID: 100100000, guid: e1db6ef8e65714440a58e4a1c791dcd5, type: 3}
 --- !u!224 &274691977 stripped
 RectTransform:
@@ -8295,7 +8389,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: -216.5}
-  m_SizeDelta: {x: 0, y: 0}
+  m_SizeDelta: {x: 340, y: 45}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &287188944
 MonoBehaviour:
@@ -10676,7 +10770,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 69}
-  m_SizeDelta: {x: 0, y: 0}
+  m_SizeDelta: {x: 250, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1001 &392634754
 PrefabInstance:
@@ -10776,9 +10870,9 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 1724655069}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 12.5, y: -12.5}
   m_SizeDelta: {x: 25, y: 25}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &395618314
@@ -11786,9 +11880,9 @@ RectTransform:
   - {fileID: 276981353}
   m_Father: {fileID: 287188943}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 80, y: -22.5}
   m_SizeDelta: {x: 160, y: 45}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &436896311
@@ -12783,6 +12877,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 3099756548543125106, guid: e1db6ef8e65714440a58e4a1c791dcd5, type: 3}
       insertIndex: -1
       addedObject: {fileID: 482458565}
+    - targetCorrespondingSourceObject: {fileID: 3099756548543125106, guid: e1db6ef8e65714440a58e4a1c791dcd5, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1128718861}
   m_SourcePrefab: {fileID: 100100000, guid: e1db6ef8e65714440a58e4a1c791dcd5, type: 3}
 --- !u!114 &482458557 stripped
 MonoBehaviour:
@@ -14735,6 +14832,17 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 546689697}
   m_CullTransparentMesh: 1
+--- !u!114 &554018259 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7428529991124180465, guid: e1db6ef8e65714440a58e4a1c791dcd5, type: 3}
+  m_PrefabInstance: {fileID: 2136883599}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2136883603}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
 --- !u!21 &554566322
 Material:
   serializedVersion: 8
@@ -15369,6 +15477,34 @@ RectTransform:
   m_AnchoredPosition: {x: 145, y: -60}
   m_SizeDelta: {x: 250, y: 80}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &588761792 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7428529991124180465, guid: e1db6ef8e65714440a58e4a1c791dcd5, type: 3}
+  m_PrefabInstance: {fileID: 274691976}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 274691980}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+--- !u!114 &588761793
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 274691980}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1ed9b7e97690ec24a8d256df9d9dc2b9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BuildOptionHeldLink
+  buttonImage: {fileID: 588761792}
+  heldTint: {r: 0.502, g: 0.361, b: 0.204, a: 1}
+  normalTint: {r: 1, g: 1, b: 1, a: 1}
+  choicePanel: {fileID: 2086405550}
+  optionView: {fileID: 274691982}
 --- !u!114 &590470317 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 6750451673353576079, guid: 1d9e1c1b6881e06499b0174cb6684aa2, type: 3}
@@ -15489,6 +15625,35 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &601681042 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7428529991124180465, guid: e1db6ef8e65714440a58e4a1c791dcd5, type: 3}
+  m_PrefabInstance: {fileID: 262898420}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 601681036}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+--- !u!114 &601681044
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 601681036}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b33ddac11d686ee4189253b4830bdf1e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FacilitySlotHeldLink
+  buttonImage: {fileID: 601681042}
+  heldTint: {r: 1, g: 1, b: 1, a: 1}
+  normalTint: {r: 1, g: 1, b: 1, a: 1}
+  buildingPanel: {fileID: 1160295835}
+  choicePanel: {fileID: 2086405550}
+  slotView: {fileID: 262898421}
 --- !u!1001 &607293706
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -18505,9 +18670,9 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 392412220}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 25, y: -25}
   m_SizeDelta: {x: 50, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &687787096
@@ -20895,6 +21060,7 @@ GameObject:
   - component: {fileID: 753500173}
   - component: {fileID: 753500172}
   - component: {fileID: 753500175}
+  - component: {fileID: 753500176}
   m_Layer: 5
   m_Name: Citizen
   m_TagString: Untagged
@@ -21038,6 +21204,22 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &753500176
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 753500170}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ccc802eb137019f438af0bca2928597b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ButtonHeldLink
+  buttonImage: {fileID: 753500173}
+  heldTint: {r: 0.502, g: 0.361, b: 0.204, a: 1}
+  normalTint: {r: 1, g: 1, b: 1, a: 1}
+  watchedPanel: {fileID: 1443857517}
 --- !u!1 &755029708
 GameObject:
   m_ObjectHideFlags: 0
@@ -21573,6 +21755,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 3099756548543125106, guid: e1db6ef8e65714440a58e4a1c791dcd5, type: 3}
       insertIndex: -1
       addedObject: {fileID: 765516600}
+    - targetCorrespondingSourceObject: {fileID: 3099756548543125106, guid: e1db6ef8e65714440a58e4a1c791dcd5, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 765516604}
   m_SourcePrefab: {fileID: 100100000, guid: e1db6ef8e65714440a58e4a1c791dcd5, type: 3}
 --- !u!114 &765516590 stripped
 MonoBehaviour:
@@ -21639,6 +21824,35 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &765516602 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7428529991124180465, guid: e1db6ef8e65714440a58e4a1c791dcd5, type: 3}
+  m_PrefabInstance: {fileID: 765516589}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 171203401}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+--- !u!114 &765516604
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 171203401}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b33ddac11d686ee4189253b4830bdf1e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FacilitySlotHeldLink
+  buttonImage: {fileID: 765516602}
+  heldTint: {r: 1, g: 1, b: 1, a: 1}
+  normalTint: {r: 1, g: 1, b: 1, a: 1}
+  buildingPanel: {fileID: 1160295835}
+  choicePanel: {fileID: 2086405550}
+  slotView: {fileID: 765516590}
 --- !u!1001 &774233272
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -22344,6 +22558,17 @@ Transform:
   - {fileID: 632962368}
   m_Father: {fileID: 709182699}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &809943059 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7428529991124180465, guid: e1db6ef8e65714440a58e4a1c791dcd5, type: 3}
+  m_PrefabInstance: {fileID: 2020702309}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2020702313}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
 --- !u!1001 &811485647
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -22746,6 +22971,7 @@ GameObject:
   - component: {fileID: 821044674}
   - component: {fileID: 821044672}
   - component: {fileID: 821044677}
+  - component: {fileID: 821044678}
   m_Layer: 5
   m_Name: Region1
   m_TagString: Untagged
@@ -22893,6 +23119,23 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &821044678
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 821044671}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e1e131a8019ed354e9f29420c99f56fc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RegionNodeHeldLink
+  buttonImage: {fileID: 821044673}
+  heldTint: {r: 1, g: 1, b: 1, a: 1}
+  normalTint: {r: 1, g: 1, b: 1, a: 1}
+  detailPanel: {fileID: 331712667}
+  nodeView: {fileID: 821044672}
 --- !u!1 &823824405
 GameObject:
   m_ObjectHideFlags: 0
@@ -23598,9 +23841,9 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 1529531761}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 12.5, y: -12.5}
   m_SizeDelta: {x: 25, y: 25}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &855546308
@@ -26444,9 +26687,9 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 2121242713}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 12.5, y: -12.5}
   m_SizeDelta: {x: 25, y: 25}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &949560834
@@ -26595,7 +26838,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: -11.5, y: -87}
-  m_SizeDelta: {x: 0, y: 0}
+  m_SizeDelta: {x: 225, y: 25}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &957663350
 MonoBehaviour:
@@ -29123,6 +29366,7 @@ GameObject:
   - component: {fileID: 1061730221}
   - component: {fileID: 1061730219}
   - component: {fileID: 1061730224}
+  - component: {fileID: 1061730225}
   m_Layer: 5
   m_Name: Region3
   m_TagString: Untagged
@@ -29270,6 +29514,23 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &1061730225
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1061730218}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e1e131a8019ed354e9f29420c99f56fc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RegionNodeHeldLink
+  buttonImage: {fileID: 1061730220}
+  heldTint: {r: 1, g: 1, b: 1, a: 1}
+  normalTint: {r: 1, g: 1, b: 1, a: 1}
+  detailPanel: {fileID: 331712667}
+  nodeView: {fileID: 1061730219}
 --- !u!1 &1066152995
 GameObject:
   m_ObjectHideFlags: 0
@@ -31517,6 +31778,34 @@ Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 174ef68548ea1174a97d647c0b4ef52b, type: 3}
   m_PrefabInstance: {fileID: 1126337822}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &1128718860 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7428529991124180465, guid: e1db6ef8e65714440a58e4a1c791dcd5, type: 3}
+  m_PrefabInstance: {fileID: 482458556}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 482458561}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+--- !u!114 &1128718861
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 482458561}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1ed9b7e97690ec24a8d256df9d9dc2b9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BuildOptionHeldLink
+  buttonImage: {fileID: 1128718860}
+  heldTint: {r: 0.502, g: 0.361, b: 0.204, a: 1}
+  normalTint: {r: 1, g: 1, b: 1, a: 1}
+  choicePanel: {fileID: 2086405550}
+  optionView: {fileID: 482458562}
 --- !u!1 &1128999294
 GameObject:
   m_ObjectHideFlags: 0
@@ -32798,6 +33087,17 @@ Transform:
   - {fileID: 807711135}
   m_Father: {fileID: 709182699}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1155797653 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7428529991124180465, guid: e1db6ef8e65714440a58e4a1c791dcd5, type: 3}
+  m_PrefabInstance: {fileID: 1778135180}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1778135184}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
 --- !u!1 &1155977935
 GameObject:
   m_ObjectHideFlags: 0
@@ -34508,9 +34808,9 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 392412220}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 225, y: -25}
   m_SizeDelta: {x: 50, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1199655981
@@ -36500,6 +36800,7 @@ GameObject:
   - component: {fileID: 1272942706}
   - component: {fileID: 1272942704}
   - component: {fileID: 1272942709}
+  - component: {fileID: 1272942710}
   m_Layer: 5
   m_Name: Region2
   m_TagString: Untagged
@@ -36647,6 +36948,23 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &1272942710
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1272942703}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e1e131a8019ed354e9f29420c99f56fc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RegionNodeHeldLink
+  buttonImage: {fileID: 1272942705}
+  heldTint: {r: 1, g: 1, b: 1, a: 1}
+  normalTint: {r: 1, g: 1, b: 1, a: 1}
+  detailPanel: {fileID: 331712667}
+  nodeView: {fileID: 1272942704}
 --- !u!1001 &1274766593
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -37232,9 +37550,9 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 1529531761}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 125, y: -12.5}
   m_SizeDelta: {x: 200, y: 25}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1288970464
@@ -39346,7 +39664,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4892937063378487115, guid: e1db6ef8e65714440a58e4a1c791dcd5, type: 3}
       propertyPath: m_fontSize
-      value: 28.1
+      value: 32.1
       objectReference: {fileID: 0}
     - target: {fileID: 4892937063378487115, guid: e1db6ef8e65714440a58e4a1c791dcd5, type: 3}
       propertyPath: m_margin.x
@@ -39383,6 +39701,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 3099756548543125106, guid: e1db6ef8e65714440a58e4a1c791dcd5, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1359179133}
+    - targetCorrespondingSourceObject: {fileID: 3099756548543125106, guid: e1db6ef8e65714440a58e4a1c791dcd5, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1359179137}
   m_SourcePrefab: {fileID: 100100000, guid: e1db6ef8e65714440a58e4a1c791dcd5, type: 3}
 --- !u!114 &1359179124 stripped
 MonoBehaviour:
@@ -39444,6 +39765,35 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &1359179135 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7428529991124180465, guid: e1db6ef8e65714440a58e4a1c791dcd5, type: 3}
+  m_PrefabInstance: {fileID: 1359179123}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 521670213}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+--- !u!114 &1359179137
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 521670213}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b33ddac11d686ee4189253b4830bdf1e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FacilitySlotHeldLink
+  buttonImage: {fileID: 1359179135}
+  heldTint: {r: 1, g: 1, b: 1, a: 1}
+  normalTint: {r: 1, g: 1, b: 1, a: 1}
+  buildingPanel: {fileID: 1160295835}
+  choicePanel: {fileID: 2086405550}
+  slotView: {fileID: 1359179124}
 --- !u!1 &1364162280
 GameObject:
   m_ObjectHideFlags: 0
@@ -41460,9 +41810,9 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 2121242713}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 125, y: -12.5}
   m_SizeDelta: {x: 200, y: 25}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1428565676
@@ -43199,6 +43549,34 @@ RectTransform:
   m_AnchoredPosition: {x: 145, y: -1050}
   m_SizeDelta: {x: 250, y: 80}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1505263875 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7428529991124180465, guid: e1db6ef8e65714440a58e4a1c791dcd5, type: 3}
+  m_PrefabInstance: {fileID: 41220364}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 41220368}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+--- !u!114 &1505263876
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 41220368}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1ed9b7e97690ec24a8d256df9d9dc2b9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BuildOptionHeldLink
+  buttonImage: {fileID: 1505263875}
+  heldTint: {r: 0.502, g: 0.361, b: 0.204, a: 1}
+  normalTint: {r: 1, g: 1, b: 1, a: 1}
+  choicePanel: {fileID: 2086405550}
+  optionView: {fileID: 41220370}
 --- !u!1 &1508222708
 GameObject:
   m_ObjectHideFlags: 0
@@ -44148,7 +44526,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: -11.5, y: -175}
-  m_SizeDelta: {x: 0, y: 0}
+  m_SizeDelta: {x: 225, y: 25}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1529531762
 MonoBehaviour:
@@ -49081,9 +49459,9 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 957663349}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 125, y: -12.5}
   m_SizeDelta: {x: 200, y: 25}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1692650503
@@ -49604,9 +49982,9 @@ RectTransform:
   - {fileID: 1988323093}
   m_Father: {fileID: 392412220}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 125, y: -25}
   m_SizeDelta: {x: 150, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1708336341
@@ -50603,7 +50981,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: -11.5, y: -116}
-  m_SizeDelta: {x: 0, y: 0}
+  m_SizeDelta: {x: 225, y: 25}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1724655070
 MonoBehaviour:
@@ -52051,6 +52429,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 3099756548543125106, guid: e1db6ef8e65714440a58e4a1c791dcd5, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1778135191}
+    - targetCorrespondingSourceObject: {fileID: 3099756548543125106, guid: e1db6ef8e65714440a58e4a1c791dcd5, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1778135192}
   m_SourcePrefab: {fileID: 100100000, guid: e1db6ef8e65714440a58e4a1c791dcd5, type: 3}
 --- !u!224 &1778135181 stripped
 RectTransform:
@@ -52132,6 +52513,23 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &1778135192
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1778135184}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1ed9b7e97690ec24a8d256df9d9dc2b9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BuildOptionHeldLink
+  buttonImage: {fileID: 1155797653}
+  heldTint: {r: 0.502, g: 0.361, b: 0.204, a: 1}
+  normalTint: {r: 1, g: 1, b: 1, a: 1}
+  choicePanel: {fileID: 2086405550}
+  optionView: {fileID: 1778135186}
 --- !u!1 &1779818615
 GameObject:
   m_ObjectHideFlags: 0
@@ -56706,9 +57104,9 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 1724655069}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 125, y: -12.5}
   m_SizeDelta: {x: 200, y: 25}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1940097962
@@ -57311,7 +57709,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4892937063378487115, guid: e1db6ef8e65714440a58e4a1c791dcd5, type: 3}
       propertyPath: m_fontSize
-      value: 28.1
+      value: 32.1
       objectReference: {fileID: 0}
     - target: {fileID: 4892937063378487115, guid: e1db6ef8e65714440a58e4a1c791dcd5, type: 3}
       propertyPath: m_margin.x
@@ -57348,6 +57746,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 3099756548543125106, guid: e1db6ef8e65714440a58e4a1c791dcd5, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1956271745}
+    - targetCorrespondingSourceObject: {fileID: 3099756548543125106, guid: e1db6ef8e65714440a58e4a1c791dcd5, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1956271749}
   m_SourcePrefab: {fileID: 100100000, guid: e1db6ef8e65714440a58e4a1c791dcd5, type: 3}
 --- !u!114 &1956271734 stripped
 MonoBehaviour:
@@ -57409,6 +57810,35 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &1956271747 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7428529991124180465, guid: e1db6ef8e65714440a58e4a1c791dcd5, type: 3}
+  m_PrefabInstance: {fileID: 1956271733}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1591357594}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+--- !u!114 &1956271749
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1591357594}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b33ddac11d686ee4189253b4830bdf1e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FacilitySlotHeldLink
+  buttonImage: {fileID: 1956271747}
+  heldTint: {r: 1, g: 1, b: 1, a: 1}
+  normalTint: {r: 1, g: 1, b: 1, a: 1}
+  buildingPanel: {fileID: 1160295835}
+  choicePanel: {fileID: 2086405550}
+  slotView: {fileID: 1956271734}
 --- !u!1 &1957094220
 GameObject:
   m_ObjectHideFlags: 0
@@ -58471,9 +58901,9 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 1708336340}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 100, y: -25}
   m_SizeDelta: {x: 100, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &1988323094
@@ -58608,9 +59038,9 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 1708336340}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 25, y: -25}
   m_SizeDelta: {x: 50, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1992866366
@@ -59462,6 +59892,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 3099756548543125106, guid: e1db6ef8e65714440a58e4a1c791dcd5, type: 3}
       insertIndex: -1
       addedObject: {fileID: 2020702320}
+    - targetCorrespondingSourceObject: {fileID: 3099756548543125106, guid: e1db6ef8e65714440a58e4a1c791dcd5, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2020702321}
   m_SourcePrefab: {fileID: 100100000, guid: e1db6ef8e65714440a58e4a1c791dcd5, type: 3}
 --- !u!224 &2020702310 stripped
 RectTransform:
@@ -59543,6 +59976,23 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &2020702321
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2020702313}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1ed9b7e97690ec24a8d256df9d9dc2b9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BuildOptionHeldLink
+  buttonImage: {fileID: 809943059}
+  heldTint: {r: 0.502, g: 0.361, b: 0.204, a: 1}
+  normalTint: {r: 1, g: 1, b: 1, a: 1}
+  choicePanel: {fileID: 2086405550}
+  optionView: {fileID: 2020702315}
 --- !u!1001 &2021553764
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -60345,6 +60795,7 @@ GameObject:
   - component: {fileID: 2058586489}
   - component: {fileID: 2058586487}
   - component: {fileID: 2058586492}
+  - component: {fileID: 2058586493}
   m_Layer: 5
   m_Name: Region4
   m_TagString: Untagged
@@ -60492,6 +60943,23 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &2058586493
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2058586486}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e1e131a8019ed354e9f29420c99f56fc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RegionNodeHeldLink
+  buttonImage: {fileID: 2058586488}
+  heldTint: {r: 1, g: 1, b: 1, a: 1}
+  normalTint: {r: 1, g: 1, b: 1, a: 1}
+  detailPanel: {fileID: 331712667}
+  nodeView: {fileID: 2058586487}
 --- !u!1001 &2063077669
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -61997,7 +62465,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4892937063378487115, guid: e1db6ef8e65714440a58e4a1c791dcd5, type: 3}
       propertyPath: m_fontSize
-      value: 28.1
+      value: 32.1
       objectReference: {fileID: 0}
     - target: {fileID: 4892937063378487115, guid: e1db6ef8e65714440a58e4a1c791dcd5, type: 3}
       propertyPath: m_margin.x
@@ -62034,6 +62502,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 3099756548543125106, guid: e1db6ef8e65714440a58e4a1c791dcd5, type: 3}
       insertIndex: -1
       addedObject: {fileID: 2095735104}
+    - targetCorrespondingSourceObject: {fileID: 3099756548543125106, guid: e1db6ef8e65714440a58e4a1c791dcd5, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2095735108}
   m_SourcePrefab: {fileID: 100100000, guid: e1db6ef8e65714440a58e4a1c791dcd5, type: 3}
 --- !u!114 &2095735093 stripped
 MonoBehaviour:
@@ -62095,6 +62566,35 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &2095735106 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7428529991124180465, guid: e1db6ef8e65714440a58e4a1c791dcd5, type: 3}
+  m_PrefabInstance: {fileID: 2095735092}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1608048242}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+--- !u!114 &2095735108
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1608048242}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b33ddac11d686ee4189253b4830bdf1e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FacilitySlotHeldLink
+  buttonImage: {fileID: 2095735106}
+  heldTint: {r: 1, g: 1, b: 1, a: 1}
+  normalTint: {r: 1, g: 1, b: 1, a: 1}
+  buildingPanel: {fileID: 1160295835}
+  choicePanel: {fileID: 2086405550}
+  slotView: {fileID: 2095735093}
 --- !u!1001 &2096028192
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -62830,7 +63330,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: -11.5, y: -144}
-  m_SizeDelta: {x: 0, y: 0}
+  m_SizeDelta: {x: 225, y: 25}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &2121242714
 MonoBehaviour:
@@ -63642,6 +64142,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 3099756548543125106, guid: e1db6ef8e65714440a58e4a1c791dcd5, type: 3}
       insertIndex: -1
       addedObject: {fileID: 2136883610}
+    - targetCorrespondingSourceObject: {fileID: 3099756548543125106, guid: e1db6ef8e65714440a58e4a1c791dcd5, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2136883611}
   m_SourcePrefab: {fileID: 100100000, guid: e1db6ef8e65714440a58e4a1c791dcd5, type: 3}
 --- !u!224 &2136883600 stripped
 RectTransform:
@@ -63723,6 +64226,23 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &2136883611
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2136883603}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1ed9b7e97690ec24a8d256df9d9dc2b9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BuildOptionHeldLink
+  buttonImage: {fileID: 554018259}
+  heldTint: {r: 0.502, g: 0.361, b: 0.204, a: 1}
+  normalTint: {r: 1, g: 1, b: 1, a: 1}
+  choicePanel: {fileID: 2086405550}
+  optionView: {fileID: 2136883605}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
