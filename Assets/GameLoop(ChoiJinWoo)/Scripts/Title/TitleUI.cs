@@ -44,6 +44,11 @@ public class TitleUI : MonoBehaviour
         RefreshLoad();
     }
 
+    private void Start()
+    {
+        EnemySoundManager.PlayBgm("TitleBGM");
+    }
+
     private async UniTaskVoid ApplyResolution()
     {
         await UniTask.Yield();
