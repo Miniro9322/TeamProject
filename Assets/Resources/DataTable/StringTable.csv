@@ -510,10 +510,10 @@ Guide_FireButton,불 지대,Fire Zone,炎地帯
 Guide_CampfireButton,모닥불,Campfire,焚き火
 Guide_WindwallButton,바람막이,Windwall,風よけ
 Guide_WaterButton,물길,Water,水路
-Guide_FireInfo,이 위에 올라선 유닛은 지속 피해를 입는다.,Units standing here take damage over time.,この上に乗ったユニットは継続ダメージを受ける。
-Guide_CampfireInfo,추위 디버프를 막아주는 고정 모닥불이다.,A fixed campfire that blocks the cold debuff.,寒さデバフを防いでくれる固定の焚き火だ。
-Guide_WindwallInfo,언덕 위 바위 가림막이다. 바람이 불어가는 쪽 몇 칸의 바람 효과를 막아준다.,A rock windbreak on high ground. It blocks the wind effect for a few tiles downwind.,丘の上の岩の風よけだ。風下側の数マスの風効果を防いでくれる。
-Guide_WaterInfo,아군을 배치할 수 없는 칸이다. 수영 속성을 가진 적이 이 칸을 타고 온다.,Allies cannot be placed here. Enemies with the swim attribute cross this tile.,味方を配置できないマスだ。水泳属性を持つ敵がこのマスを渡ってくる。
+Guide_FireInfo,밤이 되면 이 칸에 불이 붙는다.\n칸에 서 있는 아군과 지상 적은 1초마다\n최대 체력의 1%만큼 화상 피해를 입는다.\n칸을 벗어난 뒤에도 3초 동안 더 타오른다.\n공중을 나는 적에게는 불이 붙지 않는다.,"This tile catches fire at night.\nAllies and ground enemies standing on it take 1% of their max HP as burn damage every second, and keep burning for 3 more seconds after leaving.\nFlying enemies are never set alight.",夜になるとこのマスに火がつく。\nマスに立っている味方と地上の敵は1秒ごとに最大体力の1%の火傷ダメージを受け、マスを離れた後も3秒間燃え続ける。\n空を飛ぶ敵には火がつかない。
+Guide_CampfireInfo,얼음 지역은 밤이 되면 아군 전원의\n공격 속도와 방어력이 절반으로 떨어진다.\n모닥불에서 2칸 안(마름모 모양)에 선 아군은\n이 추위를 받지 않는다.\n모닥불 칸에는 아무것도 배치할 수 없다.,In the ice region every ally loses half their attack speed and defense at nightfall.\nAllies within 2 tiles of a campfire (a diamond shape) are immune to that cold.\nNothing can be placed on a campfire tile.,氷の地域では夜になると味方全員の攻撃速度と防御力が半分に下がる。\n焚き火から2マス以内（ひし形）に立つ味方はこの寒さを受けない。\n焚き火のマスには何も配置できない。
+Guide_WindwallInfo,사막 지역은 밤이 되면 바람 맞은 아군이\n0.5초마다 최대 체력의 1%씩 깎인다.\n모래폭풍이라 방어력으로 막지 못한다.\n바람 방향은 낮마다 바뀌며 화살표로 알린다.\n언덕 위 바람막이는 바람 불어가는 쪽\n2칸을 막아준다. 옆 칸의 언덕이나\n바로 뒤의 아군도 바람을 막는다.,"In the desert region allies caught in the wind take 1% of their max HP as sandstorm damage every 0.5 seconds, and defense does not reduce it.\nThe wind direction changes each day and is shown with an arrow.\nA windwall on high ground shields 2 tiles downwind. An adjacent hill or an ally standing right behind also blocks the wind.",砂漠の地域では夜になると風にさらされた味方が0.5秒ごとに最大体力の1%の砂嵐ダメージを受ける。防御力では防げない。\n風向きは昼ごとに変わり、矢印で知らせてくれる。\n丘の上の風よけは風下側2マスを守る。隣のマスの丘や真後ろに立つ味方も風を防ぐ。
+Guide_WaterInfo,아군 영웅을 이 칸에 배치할 수 없다.\n걸어오는 적은 이 칸을 지나갈 수 없다.\n수영 특성을 가진 적만 잠수해 헤엄쳐\n이 물길로 들어온다.,Allied heroes cannot be placed on this tile.\nWalking enemies cannot cross it.\nOnly enemies with the swim trait dive in and swim up this waterway.,味方のヒーローはこのマスに配置できない。\n歩いてくる敵はこのマスを通れない。\n水泳属性を持つ敵だけが潜って泳ぎ、この水路から入ってくる。
 Hero_Ranged_Upgrade,원거리 영웅 업그레이드,Ranged Hero Upgrade,遠距離ヒーローのアップグレード
 UI_Base_UpgradeCost,업그레이드 비용,Upgrade Cost,アップグレードコスト
 Ui_GameOverSurviveDay,생존 일수 : {0}일차,Days Survived : {0},生存日数：{0}日目
