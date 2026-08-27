@@ -30,7 +30,7 @@ public class TitleUI : MonoBehaviour
     private void Awake()
     {
         ApplyResolution().Forget();
-        ApplyVolume();
+        ApplyVolume().Forget();
         settingPanel.SetActive(false);
         QuitAlert.SetActive(false);
         upgradePanel.SetActive(false);
@@ -63,12 +63,21 @@ public class TitleUI : MonoBehaviour
         Screen.SetResolution(width, height, mode);
     }
 
-    private void ApplyVolume()
+    private async UniTaskVoid ApplyVolume()
     {
-        mixer.SetFloat("MasterVolume", PlayerPrefs.GetFloat("MasterVolume", 0f));
-        mixer.SetFloat("BgmVolume", PlayerPrefs.GetFloat("BgmVolume", 0f));
-        mixer.SetFloat("SfxVolume", PlayerPrefs.GetFloat("SfxVolume", 0f));
-        mixer.SetFloat("System", PlayerPrefs.GetFloat("System", 0f));
+        await UniTask.Yield();
+
+        ApplyVolumeParam("MasterVolume");
+        ApplyVolumeParam("BgmVolume");
+        ApplyVolumeParam("SfxVolume");
+        ApplyVolumeParam("System");
+    }
+
+    private void ApplyVolumeParam(string paramName)
+    {
+        float sliderValue = PlayerPrefs.GetFloat(paramName, 1f);
+        float dB = sliderValue > 0.0001f ? Mathf.Log10(sliderValue) * 20f : -80f;
+        mixer.SetFloat(paramName, dB);
     }
 
     // "시작" 버튼과 "새 게임" 버튼 모두 여기로 온다 - 슬롯을 먼저 고르게 한다.
