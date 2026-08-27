@@ -84,7 +84,7 @@ public class MapView : MonoBehaviour
     // ---- 읽기(TilePaintView가 본다) ----
 
     public bool IsHolding { get { return _replace != null && _replace.IsHolding; } }
-    public bool InputBlocked { get { return input.Blocked; } }
+    public bool InputBlocked { get { return input.WorldBlocked; } }
     public GameObject HeldUnit { get { return replace.HeldUnit; } }
     public OccupantKind HeldKind { get { return replace.HeldKind; } }
     public Tile HoverTile
@@ -92,6 +92,11 @@ public class MapView : MonoBehaviour
         get
         {
             if (pointerPick == null)
+            {
+                return null;
+            }
+
+            if (InputBlocked)
             {
                 return null;
             }

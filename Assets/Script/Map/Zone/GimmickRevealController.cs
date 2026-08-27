@@ -32,7 +32,7 @@ public class GimmickRevealController : MonoBehaviour
     // 외곽선 그리기 도구를 준비한다.
     private void Awake()
     {
-        edgeView = new CampfireEdgeView(transform, edgeMaterial, edgeWidth, edgeLift);
+        edgeView = new CampfireEdgeView(transform, edgeMaterial, edgeWidth, edgeLift, "GimmickRevealEdge");
     }
 
     private void OnEnable()

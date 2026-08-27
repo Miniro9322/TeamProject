@@ -11,6 +11,7 @@ public class TilePaintView : MonoBehaviour
     [SerializeField] private float edgeWidth = 0.06f;
     [SerializeField] private float edgeLift = 0.025f;
     [SerializeField] private Material campfireEdgeMat;
+    [SerializeField] private Material windwallEdgeMat;
     [SerializeField] private Material hoverEdgeMat;
 
     // MapAssemble이 조립 시점에 넣어준다.
@@ -21,6 +22,7 @@ public class TilePaintView : MonoBehaviour
     private readonly List<Tile> cellPainted = new();
     private PlaceEdgeView edgeView;
     private CampfireEdgeView campfireEdgeView;
+    private CampfireEdgeView windwallEdgeView;
     private HoverEdgeView hoverEdgeView;
 
     // 외곽선 출력기와 대상 맵 보드를 준비합니다.
@@ -28,7 +30,8 @@ public class TilePaintView : MonoBehaviour
     {
         edgeView = new PlaceEdgeView(transform, edgeMat, edgeWidth, edgeLift);
         edgeView.Setup(boards);
-        campfireEdgeView = new CampfireEdgeView(transform, campfireEdgeMat, edgeWidth, edgeLift);
+        campfireEdgeView = new CampfireEdgeView(transform, campfireEdgeMat, edgeWidth, edgeLift, "CampfireEdge");
+        windwallEdgeView = new CampfireEdgeView(transform, windwallEdgeMat, edgeWidth, edgeLift, "WindwallEdge");
         hoverEdgeView = new HoverEdgeView(transform, hoverEdgeMat, edgeWidth, edgeLift);
     }
 
@@ -42,6 +45,7 @@ public class TilePaintView : MonoBehaviour
         bool changed = sync.TryBuildPlan(out List<PaintEntry> plan);
         ShowEdges();
         ShowCampfireEdges();
+        ShowWindwallEdges();
         ShowHoverEdge();
 
         if (changed)
@@ -69,6 +73,15 @@ public class TilePaintView : MonoBehaviour
         }
     }
 
+    // 클릭한 가림막의 범위 외곽선을 표시합니다.
+    private void ShowWindwallEdges()
+    {
+        if (windwallEdgeView != null)
+        {
+            windwallEdgeView.Show(sync.WindwallEdgeTiles, sync.WindwallEdgeVersion);
+        }
+    }
+
     // 커서 아래 타일의 테두리를 표시합니다.
     private void ShowHoverEdge()
     {
@@ -83,6 +96,7 @@ public class TilePaintView : MonoBehaviour
     {
         edgeView?.Dispose();
         campfireEdgeView?.Dispose();
+        windwallEdgeView?.Dispose();
         hoverEdgeView?.Dispose();
     }
 

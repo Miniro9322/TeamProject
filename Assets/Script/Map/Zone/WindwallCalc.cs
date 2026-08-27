@@ -36,6 +36,8 @@ public class WindwallCalc
     private static void KeepArms(IReadOnlyDictionary<Vector2Int, Tile> cells, WindwallData data, Vector2Int origin, int reach)
     {
         List<Tile> range = new();
+        KeepOrigin(cells, origin, range);
+
         for (int index = 0; index < GridCalculator.Directions.Length; index++)
         {
             Vector2Int wind = GridCalculator.Directions[index];
@@ -43,6 +45,16 @@ public class WindwallCalc
         }
 
         data.KeepRange(origin, range);
+    }
+
+    // 표시용 범위 목록에만 원점(가림막 자신)을 담는다.
+    // 판정용 팔(KeepArm)은 원점을 비보호로 그대로 두고, 윤곽선만 원점까지 이어진 한 덩어리로 그려지게 한다.
+    private static void KeepOrigin(IReadOnlyDictionary<Vector2Int, Tile> cells, Vector2Int origin, List<Tile> range)
+    {
+        if (cells.TryGetValue(origin, out Tile tile))
+        {
+            range.Add(tile);
+        }
     }
 
     // 한 방향으로 reach 칸까지 보호 칸을 보관하고, 실제 타일이 있는 칸은 범위 목록에도 담는다.

@@ -33,6 +33,22 @@ public class RangeCalc
         return TryGetRangeAtCenter(unitTile.OccupantObject, unitTile, out range);
     }
 
+    // 클릭한 칸의 범위를 무엇으로 그릴지 가른다. 유닛 사거리처럼 채워 그릴 범위는 None이다.
+    public static RangeEdgeKind ResolveEdgeKind(Tile tile)
+    {
+        if (tile.IsCampfire)
+        {
+            return RangeEdgeKind.Campfire;
+        }
+
+        if (tile.IsWindwall)
+        {
+            return RangeEdgeKind.Windwall;
+        }
+
+        return RangeEdgeKind.None;
+    }
+
     // 모닥불 칸이면 유닛을 찾지 않고, 그 모닥불이 미리 계산해 둔 자기 범위를 그대로 가져온다.
     private static bool TryGetCampfireRange(Tile campfireTile, out List<Tile> range)
     {

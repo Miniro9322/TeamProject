@@ -29,13 +29,13 @@ public class ExpandTester : MonoBehaviour
     {
         bool opened = registry.UnlockNextModule();
         Debug.Log(opened ? "[ExpandTester] 다음 모듈 해금" : "[ExpandTester] 더 해금할 모듈 없음");
-        mapGame.Rule.OnDay();
+    
     }
 
     // 밤 이벤트를 강제로 재현한다(지대 디버프 확인용).
     private void EnterNight()
     {
-        mapGame.Rule.OnNight();
+        
         Debug.Log("[ExpandTester] 밤 강제 진입");
     }
 }
