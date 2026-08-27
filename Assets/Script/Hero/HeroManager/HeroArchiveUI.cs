@@ -92,6 +92,7 @@ public class HeroArchiveUI : MonoBehaviour
 
     private void OnHeroArchiveClicked(HeroData picked)
     {
+        EnemySoundManager.Play("BookPage");
         PlayOpenAndReveal();
         ApplyHeroText(picked);
         ShowDescItems(picked);

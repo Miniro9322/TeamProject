@@ -15,6 +15,8 @@ public class PlaceAction
     public PlayerSkillCastController playerSkillCast;
     public HeroCombineManager combineManager;
     public HoverPlaceData hoverPlace;
+    public string placeSoundKey;
+    public string removeSoundKey;
 
     private Hero lastClickedHero;
     private float lastClickTime;
@@ -101,6 +103,7 @@ public class PlaceAction
         if (IsAreaBlocked(data)) return;
         if (IsNightTime()) { Debug.Log("밤에는 배치할 수 없습니다."); return; } // 테스트용
         if (!placer.TryPlace(data, slot, out GameObject placedUnit)) return;
+        if (!string.IsNullOrEmpty(placeSoundKey)) EnemySoundManager.Play(placeSoundKey);
 
         MarkRosterPlaced(entry, placedUnit);
         view.Select(tile);
@@ -139,6 +142,7 @@ public class PlaceAction
     {
         bool wasHero = TryGetHero(tile, out Hero hero);   // 지운 뒤엔 칸이 비어 물어볼 수 없다
         if (!remover.TryRemoveUnit(tile)) return;
+        if (!string.IsNullOrEmpty(removeSoundKey)) EnemySoundManager.Play(removeSoundKey);
         if (view.IsSelected(tile)) view.ClearSelection();
 
         if (wasHero)
@@ -150,8 +154,9 @@ public class PlaceAction
     public void PickUpUnit(Tile tile)
     {
         if (IsNightTime()) return; 
-        bool hasHero = TryGetHero(tile, out Hero hero); 
+        bool hasHero = TryGetHero(tile, out Hero hero);
         if (!replace.PickUp(tile)) return;
+        if (hasHero && !string.IsNullOrEmpty(removeSoundKey)) EnemySoundManager.Play(removeSoundKey);
         view.Select(tile);
 
         if (hasHero)
@@ -162,7 +167,9 @@ public class PlaceAction
 
     public void Drop(PlaceData data)
     {
+        bool wasHero = replace.HeldUnit != null && replace.HeldUnit.TryGetComponent<Hero>(out _);
         if (!replace.TryDrop(data)) return;
+        if (wasHero && !string.IsNullOrEmpty(placeSoundKey)) EnemySoundManager.Play(placeSoundKey);
 
         // 선택 표시는 칸 하나에 붙으므로 덮은 칸 중 시작 칸을 대표로 쓴다.
         if (data.Area.Board.TryGetCell(data.Area.Origin, out Tile tile)) view.Select(tile);

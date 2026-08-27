@@ -11,6 +11,8 @@ public class HeroCreateManager : MonoBehaviour
 {
     [SerializeField] private HeroRegistry heroRegistry;
     [SerializeField] private MapGame game;
+    [Tooltip("영웅 생성 성공 시 재생할 EnemySoundManager 키. 비워두면 재생하지 않음")]
+    [SerializeField] private string createSoundKey;
 
     [Serializable]
     public class TierWeightRow
@@ -72,6 +74,7 @@ public class HeroCreateManager : MonoBehaviour
             if (heroRegistry.TryGetHeroDatas(tier, kind, out List<HeroData> candidates))
             {
                 result = candidates[rng.Next(candidates.Count)];
+                if (!string.IsNullOrEmpty(createSoundKey)) EnemySoundManager.Play(createSoundKey);
                 return true;
             }
             tier--; // 그 티어 데이터가 아직 없으면 한 단계 낮은 티어로 대신 채운다.

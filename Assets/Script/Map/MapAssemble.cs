@@ -22,6 +22,10 @@ public class MapAssemble : MonoBehaviour
     [SerializeField] private TilePaintView tilePaintView;
     [SerializeField] private RangeInput rangeInput;
     [SerializeField] private HeroCombineManager combineManager;
+    [Tooltip("영웅 배치 성공 시 재생할 EnemySoundManager 키. 비워두면 재생하지 않음")]
+    [SerializeField] private string placeSoundKey;
+    [Tooltip("영웅 회수(필드에서 제거) 성공 시 재생할 EnemySoundManager 키. 비워두면 재생하지 않음")]
+    [SerializeField] private string removeSoundKey;
     [SerializeField] private DesertZone desertZone;
     [SerializeField] private PlayerSkillPanel playerSkillPanel;
     [SerializeField] private GimmickPopup gimmickPopup;
@@ -124,6 +128,8 @@ public class MapAssemble : MonoBehaviour
         action.skillCast = skillCast;
         action.playerSkillCast = playerSkillCast;
         action.combineManager = combineManager;
+        action.placeSoundKey = placeSoundKey;
+        action.removeSoundKey = removeSoundKey;
         action.hoverPlace = hoverPlace;
 
         command.pointerPick = pointerPick;
