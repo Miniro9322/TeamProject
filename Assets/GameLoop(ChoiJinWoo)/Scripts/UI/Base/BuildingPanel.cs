@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using VContainer;
 
@@ -21,6 +22,7 @@ public class BuildingPanel : MonoBehaviour, IClosablePanel
     private IUpgradableOccupant Occupant => facility != null ? (IUpgradableOccupant)facility : house;
     private RegionFacilitySlots region;
     private int slotIndex;
+    public int SlotIndex => slotIndex;
     private UiPanelStack panelStack;
     private BaseConstructor constructor;
     private ResourceIconSet resourceIconSet;
@@ -65,6 +67,9 @@ public class BuildingPanel : MonoBehaviour, IClosablePanel
         {
             facility.DecreaseWorker();
         }
+
+        // Selected 상태가 Pressed와 같은 클립이라, 포커스를 안 풀면 눌린 모양이 계속 남는다
+        EventSystem.current.SetSelectedGameObject(null);
     }
 
     public void OnPlusButton()
@@ -73,6 +78,9 @@ public class BuildingPanel : MonoBehaviour, IClosablePanel
         {
             facility.IncreaseWorker();
         }
+
+        // Selected 상태가 Pressed와 같은 클립이라, 포커스를 안 풀면 눌린 모양이 계속 남는다
+        EventSystem.current.SetSelectedGameObject(null);
     }
 
     private void UpdatePanel()
@@ -164,6 +172,9 @@ public class BuildingPanel : MonoBehaviour, IClosablePanel
 
         Occupant.Upgrade();
         Upgraded?.Invoke();
+
+        // Selected 상태가 Pressed와 같은 클립이라, 포커스를 안 풀면 눌린 모양이 계속 남는다
+        EventSystem.current.SetSelectedGameObject(null);
     }
 
     public void OnDemolish()

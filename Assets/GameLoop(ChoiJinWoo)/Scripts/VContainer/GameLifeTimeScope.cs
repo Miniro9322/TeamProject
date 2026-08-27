@@ -63,6 +63,8 @@ public class GameLifeTimeScope : LifetimeScope
         });
         builder.Register<UiPanelStack>(Lifetime.Singleton).AsSelf();
         builder.Register<TutorialState>(Lifetime.Singleton).AsSelf();
+        // 씬 오브젝트가 아니라 컨테이너가 소유한다 - 연출용 오브젝트가 없는 씬에서도 세이브 쪽이 안전하게 받는다.
+        builder.Register<GimmickTileData>(Lifetime.Singleton).AsSelf();
 
         // 세이브·로드 담당들. File/은 서로 의존하고, Logic/은 씬의 각 매니저를 읽고 쓴다.
         builder.Register<SaveCheck>(Lifetime.Singleton).AsSelf();

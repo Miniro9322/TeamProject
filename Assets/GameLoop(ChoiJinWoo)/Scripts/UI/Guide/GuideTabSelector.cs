@@ -8,16 +8,20 @@ public class GuideTabSelector : MonoBehaviour
     [SerializeField] private Image heroImage;
     [SerializeField] private Image baseImage;
     [SerializeField] private Image enemyImage;
+    [SerializeField] private Image gimmickImage;
 
     [SerializeField] private TextMeshProUGUI gamePlayText;
     [SerializeField] private TextMeshProUGUI heroText;
     [SerializeField] private TextMeshProUGUI baseText;
     [SerializeField] private TextMeshProUGUI enemyText;
+    [SerializeField] private TextMeshProUGUI gimmickText;
 
     [SerializeField] private Color selectedTint = new Color(0.502f, 0.361f, 0.204f);
     [SerializeField] private Color normalTint = Color.white;
     [SerializeField] private Color selectedTextColor = Color.white;
     [SerializeField] private Color normalTextColor = new Color(0.196f, 0.196f, 0.196f);
+
+    private const string HeldParameter = "Held";
 
     // 시작할 때 게임 플레이 탭이 선택된 모습으로 맞춰둔다 (스파크 없이)
     private void Awake()
@@ -26,6 +30,13 @@ public class GuideTabSelector : MonoBehaviour
         SetTabState(heroImage, heroText, gamePlayImage);
         SetTabState(baseImage, baseText, gamePlayImage);
         SetTabState(enemyImage, enemyText, gamePlayImage);
+        SetTabState(gimmickImage, gimmickText, gamePlayImage);
+    }
+
+    // 기믹 탭을 선택 상태로 표시한다
+    public void SelectGimmickTab()
+    {
+        ApplySelection(gimmickImage);
     }
 
     private void OnEnable()
@@ -64,11 +75,14 @@ public class GuideTabSelector : MonoBehaviour
         SetTabState(heroImage, heroText, selectedImage);
         SetTabState(baseImage, baseText, selectedImage);
         SetTabState(enemyImage, enemyText, selectedImage);
+        SetTabState(gimmickImage, gimmickText, selectedImage);
     }
 
     // 탭 하나의 배경색과 글씨색을 선택 여부에 맞게 반영한다
     private void SetTabState(Image image, TextMeshProUGUI text, Image selectedImage)
     {
+        SetTabHeld(image, image == selectedImage);
+
         if (image == selectedImage)
         {
             image.color = selectedTint;
@@ -77,5 +91,11 @@ public class GuideTabSelector : MonoBehaviour
         }
         image.color = normalTint;
         text.color = normalTextColor;
+    }
+
+    // 탭 버튼이 눌린 모양으로 남아 있을지를 애니메이터에 알린다
+    private void SetTabHeld(Image image, bool held)
+    {
+        image.GetComponent<Animator>().SetBool(HeldParameter, held);
     }
 }

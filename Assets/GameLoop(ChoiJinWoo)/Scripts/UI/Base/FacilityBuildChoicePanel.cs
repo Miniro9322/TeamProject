@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using VContainer;
 
@@ -29,7 +30,11 @@ public class FacilityBuildChoicePanel : MonoBehaviour, IClosablePanel
     private UiPanelStack panelStack;
     private RegionFacilitySlots region;
     private int slotIndex;
+    public int SlotIndex => slotIndex;
     private BuildableFacility currentOption;
+    private int selectedIndex = -1;
+    public int SelectedIndex => selectedIndex;
+    public bool IsInfoOpen => infoPanel.activeSelf;
     private ClickOutsideCloser outsideCloser;
     private ClickOutsideCloser infoOutsideCloser;
 
@@ -102,6 +107,7 @@ public class FacilityBuildChoicePanel : MonoBehaviour, IClosablePanel
         region = target;
         slotIndex = index;
         currentOption = null;
+        selectedIndex = -1;
         infoPanel.SetActive(false);
 
         bool wasActive = gameObject.activeSelf;
@@ -131,6 +137,7 @@ public class FacilityBuildChoicePanel : MonoBehaviour, IClosablePanel
         if (index < 0 || index >= options.Count) return;
 
         currentOption = options[index];
+        selectedIndex = index;
         infoIcon.sprite = currentOption.icon;
         RefreshInfoText();
         infoPanel.SetActive(true);
@@ -188,6 +195,11 @@ public class FacilityBuildChoicePanel : MonoBehaviour, IClosablePanel
         {
             infoPanel.SetActive(false);
             Close();
+        }
+        else
+        {
+            // 건설 실패 시엔 패널이 안 닫혀서, Selected 상태가 Pressed와 같은 클립이라 안 풀면 눌린 모양이 남는다
+            EventSystem.current.SetSelectedGameObject(null);
         }
     }
 

@@ -155,9 +155,21 @@ public class FogController : MonoBehaviour
             if (_modules[i].IsUnlocked)
             {
                 _revealed[i] = true;
-                RevealArea(i).Forget();
+                OpenStartArea(i);
             }
         }
+    }
+
+    // 새 게임이면 시작 지역을 연출로 열고, 이어하기면 연출 없이 즉시 연다.
+    private void OpenStartArea(int index)
+    {
+        if (SelectedSaveSlot.IsNewGame)
+        {
+            RevealArea(index).Forget();
+            return;
+        }
+
+        OpenArea(index);
     }
 
     private void BindModules()
@@ -165,10 +177,11 @@ public class FogController : MonoBehaviour
         foreach (ModuleLogic module in _modules)
         {
             module.OnStateChanged += ModuleChanged;
+            module.OnUnlocked += ModuleUnlocked;
         }
     }
 
-    // 개방된 모듈마다 한 번만 구멍을 연다. 이미 열린 뒤의 상태 변화(낮↔밤)는 무시.
+    // 개방된 모듈마다 한 번만 구멍을 연다. 세이브 복원으로 열린 지역은 연출 없이 즉시 걷는다.
     private void ModuleChanged(ModuleState state)
     {
         for (int index = 0; index < _modules.Count; index++)
@@ -183,8 +196,25 @@ public class FogController : MonoBehaviour
             }
 
             _revealed[index] = true;
-            RevealArea(index).Forget();
+            OpenArea(index);
         }
+    }
+
+    // 게임 중 새로 해금된 지역만 안개가 걷히는 연출로 연다.
+    private void ModuleUnlocked(ModuleLogic module)
+    {
+        int index = _modules.IndexOf(module);
+        if (index < 0) return;
+
+        _revealed[index] = true;
+        RevealArea(index).Forget();
+    }
+
+    // 지정한 지역의 안개를 연출 없이 즉시 다 걷어낸다 (완료 알림도 보내지 않는다).
+    private void OpenArea(int index)
+    {
+        _opens[index] = 1f;
+        ApplyOpenState();
     }
 
     private async UniTaskVoid RevealArea(int index)
@@ -254,6 +284,7 @@ public class FogController : MonoBehaviour
             if (module != null)
             {
                 module.OnStateChanged -= ModuleChanged;
+                module.OnUnlocked -= ModuleUnlocked;
             }
         }
     }

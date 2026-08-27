@@ -15,6 +15,7 @@ public class SaveCapture
     private readonly HeroTierUpgradeState tierState;
     private readonly HeroClassUpgradeState classState;
     private readonly MapGame mapGame;
+    private readonly GimmickTileData gimmickTileData;
     private readonly TutorialState tutorialState;
 
     public SaveCapture(
@@ -28,6 +29,7 @@ public class SaveCapture
         HeroTierUpgradeState tierState,
         HeroClassUpgradeState classState,
         MapGame mapGame,
+        GimmickTileData gimmickTileData,
         TutorialState tutorialState)
     {
         this.gameManager = gameManager;
@@ -40,6 +42,7 @@ public class SaveCapture
         this.tierState = tierState;
         this.classState = classState;
         this.mapGame = mapGame;
+        this.gimmickTileData = gimmickTileData;
         this.tutorialState = tutorialState;
     }
 
@@ -94,6 +97,7 @@ public class SaveCapture
             save.moduleState = pair.Value.CurrentState;
             save.stageOffset = spawnerManager.GetOffset(pair.Key);
             save.unlockDay = spawnerManager.GetUnlockDay(pair.Key);
+            save.gimmickSeen = gimmickTileData.WasShown(pair.Key);
             result[index] = save;
             index++;
         }

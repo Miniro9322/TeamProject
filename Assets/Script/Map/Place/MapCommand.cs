@@ -17,6 +17,7 @@ public class MapCommand : MonoBehaviour
     public PlaceAction action;
     public PlaceGhost ghost;
     public HoverPlaceData hoverPlace;
+    public GimmickPopup gimmickPopup;
     public Dictionary<PlaceMode, Action<Tile>> dispatch;
 
     private void OnEnable()
@@ -72,6 +73,8 @@ public class MapCommand : MonoBehaviour
         dragDetect.MarkPress();
         Tile tile = pointerPick.UnderPointer();
 
+        NotifyGimmickTile(tile);
+
         if (palette.Mode == PlaceMode.Replace)
         {
             ReplacePress(tile);
@@ -90,6 +93,20 @@ public class MapCommand : MonoBehaviour
         }
 
         dispatch[palette.Mode](tile);
+    }
+
+    // 어떤 모드든 상관없이 기믹이 걸린 타일을 눌렀으면 팝업을 띄운다.
+    private void NotifyGimmickTile(Tile tile)
+    {
+        if (tile == null)
+        {
+            return;
+        }
+        if (!GimmickTileCalc.IsGimmickTile(tile))
+        {
+            return;
+        }
+        gimmickPopup.Show(GimmickKeyCalc.MakeNameKey(tile), GimmickKeyCalc.MakeDescKey(tile));
     }
 
     // 제자리 우클릭(뗄 때까지 거의 안 움직임)이면 스킬 시전 취소. 우클릭 드래그는 카메라 팬/회전이라 무시한다.
