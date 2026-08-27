@@ -610,7 +610,9 @@ public class SpawnerManager : MonoBehaviour
 
                 directingUi.SetTrigger(directingStateName);
 
-                EnemySoundManager.Play("Warning!");
+                // 일반 Play가 아니라 PlayImportant — System 그룹으로 빼고, 남아 울리던 효과음을 끊고,
+                // 재생 동안 BGM을 눌러서 다른 소리에 묻히지 않게 한다.
+                EnemySoundManager.PlayImportant("Warning!");
                 await WaitForDirectingAnim(directingUi, directingStateName, directingTimeout, token);
             }
         }
