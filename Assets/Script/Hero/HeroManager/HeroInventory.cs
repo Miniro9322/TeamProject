@@ -145,8 +145,9 @@ public class HeroInventory : MonoBehaviour
                 icons.Remove(entry);
             }
 
-        // 밤에는 회수 불가 — 콜백 자체를 넘기지 않아 아이콘 쪽에서 회수 버튼을 숨기게 한다.
-        Action<HeroRosterEntry> retrieveCallback = CanBuildNow() ? OnRetrieveClicked : null;
+        // 밤에는 회수 불가, 튜토리얼 중에도 회수 불가(TutorialInputGate.BlockHeroRetrieve 참고) —
+        // 콜백 자체를 넘기지 않아 아이콘 쪽에서 회수 버튼을 숨기게 한다.
+        Action<HeroRosterEntry> retrieveCallback = CanBuildNow() && !TutorialInputGate.BlockHeroRetrieve ? OnRetrieveClicked : null;
 
         foreach (HeroRosterEntry entry in FilteredEntries())
         {
@@ -202,6 +203,7 @@ public class HeroInventory : MonoBehaviour
     private void OnRetrieveClicked(HeroRosterEntry entry)
     {
         if (!CanBuildNow()) return; // 밤에는 회수 불가
+        if (TutorialInputGate.BlockHeroRetrieve) return; // 튜토리얼 중에는 회수 불가
         if (entry == null || entry.State != HeroRosterState.Placed) return;
 
         GameObject unit = entry.PlacedUnit;

@@ -189,6 +189,9 @@ public class TutorialManager : MonoBehaviour
         // SaveManager가 저장하지 못하게 막는다 - 컴포넌트가 완전히 꺼질 때(0일차 리셋까지 끝난
         // 뒤)까지 유지한다.
         TutorialInputGate.BlockSave = true;
+        // PlaceHero 이후 스텝들이 "배치된 영웅이 있음"을 전제하므로, 인벤토리에서 임의로 회수해서
+        // 그 전제를 깨는 걸 튜토리얼 전 구간(BlockSave와 같은 생명주기) 동안 막는다.
+        TutorialInputGate.BlockHeroRetrieve = true;
         citizenManager.CitizenChanged += OnCitizenChanged;
         baseConstructor.Built += OnBuilt;
         heroRoster.Changed += OnHeroRosterChanged;
@@ -204,6 +207,7 @@ public class TutorialManager : MonoBehaviour
         TutorialInputGate.BlockEscapeClose = false;
         TutorialInputGate.BlockHotkeys = false;
         TutorialInputGate.BlockSave = false;
+        TutorialInputGate.BlockHeroRetrieve = false;
         TutorialInputGate.BlockPanelOpen = false;
         TutorialInputGate.BlockHeroUpgradeOpen = false;
         TutorialInputGate.BlockHeroPlacementFromInventory = false;
@@ -287,6 +291,9 @@ public class TutorialManager : MonoBehaviour
     private void ShowUnblockedMessage(string messageKey)
     {
         overlay.ShowUnblocked();
+        // 이 구간엔 스포트라이트 대상이 없어 SetSpotlight가 안 불리니, 안내창이 이전 위치(직전
+        // waypoint를 짚어주던 자리)에 그대로 남지 않도록 매 프레임 중앙 최하단으로 고정한다.
+        overlay.PositionMessageBoxBottomCenter();
         if (lastShownMessageKey == messageKey) return;
 
         lastShownMessageKey = messageKey;

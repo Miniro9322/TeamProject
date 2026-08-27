@@ -36,4 +36,9 @@ public static class TutorialInputGate
     // PlaceHero 스텝도 아닌데 배치 모드로 들어가버려 튜토리얼이 꼬인다. 합성은 막지 않고 이
     // "단일 클릭으로 배치 시작" 경로만 막는 데 쓴다.
     public static bool BlockHeroPlacementFromInventory { get; set; }
+
+    // 튜토리얼 중 인벤토리에서 영웅을 회수하면 PlaceHero 이후 스텝들(RelocateHero, HeroUpgradeMention,
+    // HeroCombineMention 등)이 전제하는 "배치된 영웅"이 사라져 진행이 꼬인다. BlockSave와 같은 생명주기
+    // (TutorialManager.OnEnable~OnDisable 전체 구간) 동안 true - HeroInventory가 회수 버튼 자체를 숨긴다.
+    public static bool BlockHeroRetrieve { get; set; }
 }

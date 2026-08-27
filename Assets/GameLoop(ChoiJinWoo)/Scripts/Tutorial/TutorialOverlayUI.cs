@@ -1,4 +1,5 @@
 using System;
+using System.Text;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -24,6 +25,11 @@ public class TutorialOverlayUI : MonoBehaviour
     [SerializeField] private Button acknowledgeButton; // "다음" - completesOnAcknowledge 단계에서만 보인다
     [SerializeField] private Vector2 messageOffset = new(24f, 24f);
 
+    [Tooltip("한 줄에 허용할 최대 글자 수(공백 포함). messageBox가 ContentSizeFitter(PreferredSize)로 " +
+        "텍스트 폭에 맞춰 늘어나는 구조라 TMP 자동 줄바꿈이 걸리지 않으므로, 표시 직전에 이 길이를 " +
+        "넘는 줄을 직접 잘라 넣는다. StringTable에 저작해둔 \\n(문단 구분)은 그대로 존중한다.")]
+    [SerializeField] private int maxLineLength = 20;
+
     public event Action AcknowledgeClicked;
 
     // "다음" 버튼으로 넘어가는 단계는 진행에 타겟 클릭이 필요 없으니, 안내창이 도저히 안 들어가는
@@ -48,8 +54,58 @@ public class TutorialOverlayUI : MonoBehaviour
 
     public void SetMessage(string messageKey)
     {
-        messageText.text = DataTableManager.StringTable.Get(messageKey);
+        string message = DataTableManager.StringTable.Get(messageKey);
+        messageText.text = WrapLongLines(message, maxLineLength);
         LayoutRebuilder.ForceRebuildLayoutImmediate(messageBox);
+    }
+
+    // 문단(\n)은 그대로 두고, 문단 각각을 maxLineLength 기준으로 다시 줄바꿈한다.
+    private static string WrapLongLines(string text, int maxLineLength)
+    {
+        string[] paragraphs = text.Split('\n');
+        for (int i = 0; i < paragraphs.Length; i++)
+        {
+            paragraphs[i] = WrapParagraph(paragraphs[i], maxLineLength);
+        }
+        return string.Join("\n", paragraphs);
+    }
+
+    // 공백 단위로 단어를 누적하다가, 다음 단어를 더하면 maxLineLength를 넘는 지점에서 줄바꿈한다.
+    // 일본어처럼 애초에 공백이 없는 언어는 문단 전체가 "단어" 하나로 들어와 maxLineLength를 훨씬
+    // 넘어도 공백 기준으로는 못 끊이므로, maxLineLength보다 긴 단어는 글자 수 기준으로 강제로 끊는다.
+    private static string WrapParagraph(string paragraph, int maxLineLength)
+    {
+        if (paragraph.Length <= maxLineLength) return paragraph;
+
+        var sb = new StringBuilder(paragraph.Length + 4);
+        int lineLength = 0;
+        string[] words = paragraph.Split(' ');
+        foreach (string word in words)
+        {
+            if (lineLength > 0 && lineLength + 1 + word.Length > maxLineLength)
+            {
+                sb.Append('\n');
+                lineLength = 0;
+            }
+            else if (lineLength > 0)
+            {
+                sb.Append(' ');
+                lineLength += 1;
+            }
+
+            int index = 0;
+            while (word.Length - index > maxLineLength - lineLength)
+            {
+                int take = Mathf.Max(1, maxLineLength - lineLength);
+                sb.Append(word, index, take);
+                sb.Append('\n');
+                index += take;
+                lineLength = 0;
+            }
+            sb.Append(word, index, word.Length - index);
+            lineLength += word.Length - index;
+        }
+        return sb.ToString();
     }
 
     public void Hide()
@@ -141,6 +197,16 @@ public class TutorialOverlayUI : MonoBehaviour
     {
         messageBox.pivot = new Vector2(0.5f, 0.5f);
         messageBox.anchoredPosition = dimmerRoot.rect.center;
+    }
+
+    // 배치/재배치 대기 중(맵 타일 클릭을 기다리는 동안, TutorialManager.ShowUnblockedMessage)에 쓴다 -
+    // 그동안엔 스포트라이트가 없어 SetSpotlight가 아예 안 불리므로, 이전 프레임에 짚어주던 위치에
+    // 안내창이 그대로 남아있게 된다. 맵 중앙을 가리지 않도록 화면 중앙 최하단으로 고정해서 보여준다.
+    public void PositionMessageBoxBottomCenter()
+    {
+        Rect bounds = dimmerRoot.rect;
+        messageBox.pivot = new Vector2(0.5f, 0f);
+        messageBox.anchoredPosition = new Vector2(bounds.center.x, bounds.yMin + messageOffset.y);
     }
 
     private void PositionMessageBox(Rect targetLocal)
