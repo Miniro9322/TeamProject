@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using TMPro;
 using UnityEngine;
 
 // 기믹 타일 클릭 시 등장해 잠시 머물다 자동으로 닫히는 슬라이드 팝업.
@@ -12,6 +13,9 @@ public class GimmickPopup : MonoBehaviour
     private static readonly int InHash = Animator.StringToHash("GimmickIn");
     private static readonly int OutHash = Animator.StringToHash("GimmickOut");
 
+    [SerializeField] private TextMeshProUGUI nameText;
+    [SerializeField] private TextMeshProUGUI descText;
+
     private Animator slideAnim;
     private CancellationTokenSource closeTimer;
 
@@ -19,6 +23,14 @@ public class GimmickPopup : MonoBehaviour
     private void Awake()
     {
         slideAnim = GetComponent<Animator>();
+    }
+
+    // 이름·설명을 채운 뒤 패널을 연다.
+    public void Show(string nameKey, string descKey)
+    {
+        nameText.text = DataTableManager.StringTable.Get(nameKey);
+        descText.text = DataTableManager.StringTable.Get(descKey);
+        Show();
     }
 
     // 패널을 열고, 일정 시간 뒤 자동으로 닫히는 타이머를 건다.

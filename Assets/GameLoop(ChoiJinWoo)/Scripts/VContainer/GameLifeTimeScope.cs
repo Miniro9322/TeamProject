@@ -101,6 +101,7 @@ public class GameLifeTimeScope : LifetimeScope
         builder.RegisterComponentInHierarchy<MapGame>();
         builder.RegisterComponentInHierarchy<MapRegistry>();
         builder.RegisterComponentInHierarchy<MapAssemble>();
+        builder.RegisterComponentInHierarchy<GimmickTileData>();
         builder.RegisterComponentInHierarchy<HeroRegistry>();
         builder.RegisterComponentInHierarchy<AddCitizen>();
         builder.RegisterComponentInHierarchy<SpawnerManager>().AsSelf();
