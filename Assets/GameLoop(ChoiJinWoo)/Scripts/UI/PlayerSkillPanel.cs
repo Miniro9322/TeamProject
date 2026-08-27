@@ -17,6 +17,7 @@ public class PlayerSkillPanel : MonoBehaviour
 
     [SerializeField] private List<Entry> entries;
     [SerializeField] private Slider manaBar;
+    [SerializeField] private SkillSlide skillSlide;
 
     private GameManager gameManager;
     private EnviromentManager enviromentManager;
@@ -57,7 +58,7 @@ public class PlayerSkillPanel : MonoBehaviour
         // 전환 애니메이션 진행 중). OnNight은 그 전환이 실제로 다 끝난 시점에 발동한다.
         enviromentManager.OnNight += Show;
         gameManager.ChangeToDay += Hide;
-        Hide(); // 시작은 낮이므로 꺼둔다
+        skillSlide.HideNow(); // 시작은 낮이므로 연출 없이 꺼둔다
     }
 
     private void OnDestroy()
@@ -66,8 +67,17 @@ public class PlayerSkillPanel : MonoBehaviour
         gameManager.ChangeToDay -= Hide;
     }
 
-    private void Show() => gameObject.SetActive(true);
-    private void Hide() => gameObject.SetActive(false);
+    // 밤 전환이 끝난 패널의 등장 연출을 시작한다.
+    private void Show()
+    {
+        skillSlide.Open();
+    }
+
+    // 낮 전환이 시작된 패널의 퇴장 연출을 시작한다.
+    private void Hide()
+    {
+        skillSlide.Close();
+    }
 
     private void Update()
     {
