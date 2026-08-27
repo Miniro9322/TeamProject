@@ -4,13 +4,17 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-// 화면을 딤 처리하되 스포트라이트 대상(target)만 뚫어두는 튜토리얼 오버레이.
-// 딤 이미지 4장(상하좌우)으로 타겟 사각형 둘레만 감싸는 "액자" 형태라 타겟 위에는 아무것도
-// 그려지지 않고, 그래서 GraphicRaycaster가 자연스럽게 실제 타겟 버튼으로 클릭을 통과시킨다.
+// 화면은 그대로 두고 스포트라이트 대상(target) 둘레에 색상 테두리만 그려서 강조하는 튜토리얼
+// 오버레이. dimTop/Bottom/Left/Right/fullscreenBlocker는 더 이상 화면을 어둡게 칠하지 않는다(색
+// 알파를 0으로 만들어 완전히 투명하게 둔다) - 대신 타겟 둘레를 뺀 나머지 화면 전체를 계속 덮어
+// raycastTarget으로 클릭만 차단하는 "투명 차단막" 역할만 한다. 실제로 눈에 보이는 강조는
+// highlightTop/Bottom/Left/Right 4장이 타겟 사각형 테두리를 얇게 두르는 것으로 대신한다(raycastTarget
+// 꺼짐 - 시각 전용이라 클릭을 가로채면 안 된다).
 //
 // 인스펙터 요구사항: dimmerRoot는 부모(overlayCanvas)에 풀스트레치 + pivot(0.5,0.5)로 두고,
-// dimTop/Bottom/Left/Right/fullscreenBlocker/messageBox는 전부 dimmerRoot의 자식으로
-// anchorMin=anchorMax=(0.5,0.5)로 둔다 - 그래야 dimmerRoot.rect의 로컬 좌표가 곧 anchoredPosition이 된다.
+// dimTop/Bottom/Left/Right/fullscreenBlocker/highlightTop/Bottom/Left/Right/messageBox는 전부
+// dimmerRoot의 자식으로 anchorMin=anchorMax=(0.5,0.5)로 둔다 - 그래야 dimmerRoot.rect의 로컬
+// 좌표가 곧 anchoredPosition이 된다.
 public class TutorialOverlayUI : MonoBehaviour
 {
     [SerializeField] private Canvas overlayCanvas;
@@ -24,6 +28,22 @@ public class TutorialOverlayUI : MonoBehaviour
     [SerializeField] private TextMeshProUGUI messageText;
     [SerializeField] private Button acknowledgeButton; // "다음" - completesOnAcknowledge 단계에서만 보인다
     [SerializeField] private Vector2 messageOffset = new(24f, 24f);
+
+    [Tooltip("타겟 사각형 둘레를 두르는 강조 테두리 4장(상하좌우). dimTop/Bottom/Left/Right와 같은 " +
+        "구조(anchorMin=anchorMax=(0.5,0.5))로 dimmerRoot 밑에 두되, raycastTarget은 꺼서 타겟 클릭을 " +
+        "가로채지 않게 한다 - 실제 클릭 차단은 여전히 투명해진 dim 4장이 담당한다.")]
+    [SerializeField] private RectTransform highlightTop;
+    [SerializeField] private RectTransform highlightBottom;
+    [SerializeField] private RectTransform highlightLeft;
+    [SerializeField] private RectTransform highlightRight;
+    [SerializeField] private float highlightBorderThickness = 4f;
+    [SerializeField] private Color highlightBorderColor = new(1f, 0.82f, 0.2f, 1f);
+
+    [Tooltip("테두리가 숨쉬듯 밝아졌다 옅어지는 펄스 속도/최저 밝기(0~1, highlightBorderColor의 알파에 곱해짐). " +
+        "Time.unscaledTime 기준이라 튜토리얼이 Time.timeScale을 0으로 멈추는 구간(pauseTimeWhileActive)에도 " +
+        "계속 애니메이션된다.")]
+    [SerializeField] private float highlightPulseSpeed = 2.5f;
+    [SerializeField, Range(0f, 1f)] private float highlightPulseMinAlpha = 0.35f;
 
     [Tooltip("한 줄에 허용할 최대 글자 수(공백 포함). messageBox가 ContentSizeFitter(PreferredSize)로 " +
         "텍스트 폭에 맞춰 늘어나는 구조라 TMP 자동 줄바꿈이 걸리지 않으므로, 표시 직전에 이 길이를 " +
@@ -42,7 +62,41 @@ public class TutorialOverlayUI : MonoBehaviour
     private void Awake()
     {
         acknowledgeButton.onClick.AddListener(() => AcknowledgeClicked?.Invoke());
+
+        HideDimVisually(dimTop);
+        HideDimVisually(dimBottom);
+        HideDimVisually(dimLeft);
+        HideDimVisually(dimRight);
+        HideDimVisually(fullscreenBlocker);
+
+        SetupHighlightBorder(highlightTop);
+        SetupHighlightBorder(highlightBottom);
+        SetupHighlightBorder(highlightLeft);
+        SetupHighlightBorder(highlightRight);
+
         gameObject.SetActive(false);
+    }
+
+    // 딤은 더 이상 화면을 어둡게 칠하지 않는다 - Image 색 알파만 0으로 만들어 완전히 투명하게 두되,
+    // raycastTarget은 인스펙터 설정 그대로 둬서(보통 true) 클릭 차단 역할은 그대로 유지한다.
+    private static void HideDimVisually(RectTransform rt)
+    {
+        if (rt != null && rt.TryGetComponent(out Image image))
+        {
+            Color c = image.color;
+            c.a = 0f;
+            image.color = c;
+        }
+    }
+
+    // 하이라이트 테두리는 순수 시각 요소다 - 타겟 클릭을 가로채면 안 되므로 raycastTarget을 끈다.
+    private void SetupHighlightBorder(RectTransform rt)
+    {
+        if (rt != null && rt.TryGetComponent(out Image image))
+        {
+            image.color = highlightBorderColor;
+            image.raycastTarget = false;
+        }
     }
 
     public void Show(bool showAcknowledgeButton)
@@ -120,6 +174,7 @@ public class TutorialOverlayUI : MonoBehaviour
         dimLeft.gameObject.SetActive(false);
         dimRight.gameObject.SetActive(false);
         fullscreenBlocker.gameObject.SetActive(false);
+        SetHighlightActive(false);
     }
 
     // 매 프레임 TutorialManager가 호출한다 - target이 패널 토글로 나타났다 사라졌다 하므로 매번 다시 계산한다.
@@ -132,6 +187,7 @@ public class TutorialOverlayUI : MonoBehaviour
             dimBottom.gameObject.SetActive(false);
             dimLeft.gameObject.SetActive(false);
             dimRight.gameObject.SetActive(false);
+            SetHighlightActive(false);
 
             PositionMessageBoxCenter();
             return;
@@ -142,10 +198,49 @@ public class TutorialOverlayUI : MonoBehaviour
         dimBottom.gameObject.SetActive(true);
         dimLeft.gameObject.SetActive(true);
         dimRight.gameObject.SetActive(true);
+        SetHighlightActive(true);
 
         Rect targetLocal = ComputeLocalRect(target);
         LayoutDimmers(targetLocal);
+        LayoutHighlightBorder(targetLocal);
         PositionMessageBox(targetLocal);
+    }
+
+    private void SetHighlightActive(bool active)
+    {
+        highlightTop.gameObject.SetActive(active);
+        highlightBottom.gameObject.SetActive(active);
+        highlightLeft.gameObject.SetActive(active);
+        highlightRight.gameObject.SetActive(active);
+    }
+
+    // 테두리가 켜져 있는 동안만 밝기를 사인파로 진동시킨다 - GameSpeedMention 등 pauseTimeWhileActive
+    // 스텝에서 Time.timeScale이 0이 돼도 계속 움직여야 하므로 Time.time이 아니라 unscaledTime을 쓴다.
+    private void Update()
+    {
+        if (!highlightTop.gameObject.activeInHierarchy) return;
+
+        float wave = (Mathf.Sin(Time.unscaledTime * highlightPulseSpeed) + 1f) * 0.5f; // 0..1
+        float alpha = Mathf.Lerp(highlightPulseMinAlpha, 1f, wave) * highlightBorderColor.a;
+        SetHighlightAlpha(alpha);
+    }
+
+    private void SetHighlightAlpha(float alpha)
+    {
+        SetImageAlpha(highlightTop, alpha);
+        SetImageAlpha(highlightBottom, alpha);
+        SetImageAlpha(highlightLeft, alpha);
+        SetImageAlpha(highlightRight, alpha);
+    }
+
+    private void SetImageAlpha(RectTransform rt, float alpha)
+    {
+        if (rt != null && rt.TryGetComponent(out Image image))
+        {
+            Color c = highlightBorderColor;
+            c.a = alpha;
+            image.color = c;
+        }
     }
 
     // target의 월드 코너 -> 스크린 좌표 -> dimmerRoot 로컬 좌표. 두 캔버스의 렌더 모드가 달라도 안전하다.
@@ -182,6 +277,18 @@ public class TutorialOverlayUI : MonoBehaviour
         SetRect(dimBottom, full.xMin, full.yMin, full.xMax, t.yMin);
         SetRect(dimLeft, full.xMin, t.yMin, t.xMin, t.yMax);
         SetRect(dimRight, t.xMax, t.yMin, full.xMax, t.yMax);
+    }
+
+    // 타겟 사각형 테두리를 얇은 띠 4장으로 두른다 - dim은 이제 투명해서 클릭 차단 용도로만 남으니,
+    // 실제로 뭘 봐야 하는지는 이 테두리가 알려준다. 모서리가 겹치도록 top/bottom은 폭 전체(코너 포함),
+    // left/right는 그 사이 높이만 채운다.
+    private void LayoutHighlightBorder(Rect t)
+    {
+        float half = highlightBorderThickness * 0.5f;
+        SetRect(highlightTop, t.xMin - half, t.yMax - half, t.xMax + half, t.yMax + half);
+        SetRect(highlightBottom, t.xMin - half, t.yMin - half, t.xMax + half, t.yMin + half);
+        SetRect(highlightLeft, t.xMin - half, t.yMin - half, t.xMin + half, t.yMax + half);
+        SetRect(highlightRight, t.xMax - half, t.yMin - half, t.xMax + half, t.yMax + half);
     }
 
     private static void SetRect(RectTransform rt, float xMin, float yMin, float xMax, float yMax)
