@@ -22,6 +22,42 @@ public class EnemySoundManager : MonoBehaviour
     [SerializeField] private AudioMixerGroup bgmGroup;
     [SerializeField] private AudioMixerGroup systemGroup;
 
+    [Header("중요 사운드(Warning 등) — 다른 소리에 묻히지 않게 한다")]
+    [Tooltip("PlayImportant로 낸 소리를 SFX가 아니라 System 그룹으로 내보낸다 — 효과음 무리와 채널이 분리되고 SFX 슬라이더에도 안 깎인다.")]
+    [SerializeField] private bool importantUsesSystemGroup = true;
+    [Tooltip("중요 사운드를 낼 때 이미 울리고 있던 효과음 잔향을 끊는다. 보스 연출은 timeScale=0이라 새 효과음은 안 나고 직전 프레임 잔향만 남아 덮는다.")]
+    [SerializeField] private bool importantCutsSfxTails = true;
+    [Tooltip("중요 사운드가 나는 동안 BGM을 이 배율로 줄인다(덕킹). 1=안 줄임, 0=무음.")]
+    [Range(0f, 1f)][SerializeField] private float importantBgmDuck = 0.25f;
+    [Tooltip("눌리는 데 걸리는 시간(초). 짧을수록 딱 끊기듯 들어간다.")]
+    [SerializeField] private float duckFadeIn = 0.08f;
+    [Tooltip("원래 볼륨으로 돌아오는 시간(초). 길수록 자연스럽다.")]
+    [SerializeField] private float duckRelease = 0.5f;
+
+    // 매번 FindMatchingGroups를 돌지 않도록 캐시. 보이스를 재사용할 때 그룹을 다시 지정해야 해서 자주 쓴다.
+    private AudioMixerGroup sfxGroupCached, systemGroupCached;
+    private AudioMixerGroup SfxGroup => sfxGroupCached != null ? sfxGroupCached : (sfxGroupCached = ResolveGroup(sfxGroup, "SFX"));
+    private AudioMixerGroup SystemGroup => systemGroupCached != null ? systemGroupCached : (systemGroupCached = ResolveGroup(systemGroup, "System"));
+
+    // DB 항목의 SoundType이 실제 출력 경로를 정한다. 이 두 함수 말고 다른 곳에서 그룹/소스를 고르지 않는다.
+    // Bgm으로 표시된 항목을 Play로 부르면 효과음 취급이다 — BGM은 곡 교체/페이드가 필요해 PlayBgm이 따로 있다.
+    private AudioMixerGroup GroupFor(EnemySoundDataBase.SoundType type)
+        => type == EnemySoundDataBase.SoundType.System ? SystemGroup : SfxGroup;
+
+    // System 소스가 인스펙터에 안 꽂혀 있으면 조용히 사라지지 않도록 SFX 소스로 떨어뜨린다.
+    private AudioSource SourceFor(EnemySoundDataBase.SoundType type)
+        => type == EnemySoundDataBase.SoundType.System && systemSource != null ? systemSource : sfxSource;
+
+    // 덕킹 상태. 믹서의 노출 파라미터(SfxVolume/BgmVolume)는 SettingUI 소유라 절대 건드리지 않는다 —
+    // 대신 AudioSource.volume(소스별 배율)만 곱한다. 이건 믹서 볼륨과 독립이라 유저 설정을 덮어쓰지 않는다.
+    //
+    // bgmSource.volume에 쓰는 곳은 ApplyBgmVolume 하나뿐이다 — 크로스페이드와 덕킹이 둘 다 BGM 볼륨을
+    // 건드리므로, 각자 직접 쓰면 서로 덮어써서 페이드 중에 덕킹이 풀리거나 그 반대가 된다.
+    // 페이드는 "원래 얼마여야 하는가"(bgmBaseVolume)만 정하고, 덕킹은 거기에 배율만 곱한다.
+    private float bgmBaseVolume = 1f;   // 덕킹을 빼고 봤을 때의 BGM 볼륨. 페이드가 이 값을 움직인다.
+    private float duckUntil;            // Time.unscaledTime 기준. 이 시각까지 눌러 둔다.
+    private float duckLevel;            // 0=원래 볼륨 / 1=완전히 눌림
+
     // 같은 키 효과음이 너무 짧은 간격으로 중복 재생되는 것만 막는 스로틀.
     // 상태를 SoundDatabase(SO 에셋)에 저장하면 에디터 세션 간에 값이 남아 소리가 안 나므로,
     // 런타임 전용 딕셔너리에 보관한다(세션마다 초기화).
@@ -55,6 +91,9 @@ public class EnemySoundManager : MonoBehaviour
         Instance = this;
         if (sfxSource != null) sfxSource.playOnAwake = false;
         if (bgmSource != null) { bgmSource.playOnAwake = false; bgmSource.loop = true; }
+        // 프리팹의 세 소스 모두 Play On Awake가 켜져 있다. 지금은 클립이 비어 있어 조용하지만,
+        // System 소스를 실제로 쓰기 시작했으니 여기서도 꺼둔다(나중에 클립을 꽂으면 씬 시작하자마자 울린다).
+        if (systemSource != null) systemSource.playOnAwake = false;
 
         RouteToMixer();
     }
@@ -119,11 +158,54 @@ public class EnemySoundManager : MonoBehaviour
             Instance.lastPlayTime[key] = now;
         }
 
-        if (e.soundTime > 0f) { Instance.PlayTimed(e, now); return; }
+        // 출력 경로는 DB 항목의 type이 정한다 — System으로 표시한 항목(버튼음 등)은 System 그룹으로 나가
+        // 설정창의 System 슬라이더를 따르고, 효과음 무리와 채널이 분리된다.
+        if (e.soundTime > 0f) { Instance.PlayTimed(e, now, Instance.GroupFor(e.type)); return; }
 
-        if (Instance.sfxSource == null) { Debug.LogWarning("sfxSource 미할당"); return; }
-        // 카테고리(SFX) 볼륨은 믹서가 담당. 여기선 클립별 상대 볼륨만 적용
-        Instance.sfxSource.PlayOneShot(e.clip, e.volume);
+        AudioSource src = Instance.SourceFor(e.type);
+        if (src == null) { Debug.LogWarning($"'{e.key}'를 낼 AudioSource 미할당(type={e.type})"); return; }
+        // 카테고리 볼륨은 믹서가 담당. 여기선 클립별 상대 볼륨만 적용
+        src.PlayOneShot(e.clip, e.volume);
+    }
+
+    /// <summary>
+    /// 반드시 들려야 하는 소리(보스 Warning 등). Play와 달리 세 가지를 같이 한다:
+    ///   ① System 그룹으로 내보내 효과음 무리와 채널을 분리하고,
+    ///   ② 이미 울리고 있던 효과음 잔향을 끊고,
+    ///   ③ 재생하는 동안 BGM을 눌러(덕킹) 자리를 비운다.
+    /// AudioSource.priority로는 해결되지 않는다 — 그건 보이스 한계를 넘길 때만 쓰이는 값이고,
+    /// 효과음은 전부 sfxSource 하나로 나가서 우선순위가 애초에 동일하다.
+    /// </summary>
+    public static void PlayImportant(string key)
+    {
+        if (Instance == null || Instance.db == null) return;
+        var e = Instance.db.Get(key);
+        if (e == null) { Debug.LogWarning($"SoundDatabase에 '{key}' 키 없음"); return; }
+        Instance.PlayImportantInternal(e);
+    }
+
+    private void PlayImportantInternal(EnemySoundDataBase.Entry e)
+    {
+        // sfxSource.Stop()은 그 소스에서 울리던 원샷을 전부 죽인다 — 평소엔 단점이지만 여기선 목적 그대로다.
+        // timedVoices는 각자 다른 AudioSource라 여기 안 걸린다(진행 중인 PlayLoop는 계속 울린다).
+        if (importantCutsSfxTails && sfxSource != null) sfxSource.Stop();
+
+        float now = Time.unscaledTime;
+        // soundTime으로 잘리는 클립이면 그 길이, 아니면 클립 전체 길이만큼 눌러 둔다.
+        float length = e.soundTime > 0f ? e.soundTime : (e.clip != null ? e.clip.length : 0f);
+        duckUntil = Mathf.Max(duckUntil, now + length);   // 연달아 불려도 더 늦은 쪽을 남긴다
+
+        // 이 플래그가 켜져 있으면 DB의 type을 무시하고 System으로 밀어올린다(중요 사운드의 존재 이유).
+        // 꺼두면 평소 Play와 같은 규칙 — 항목에 적힌 type을 그대로 따른다.
+        AudioMixerGroup group = importantUsesSystemGroup ? SystemGroup : GroupFor(e.type);
+        if (e.soundTime > 0f) { PlayTimed(e, now, group); return; }
+
+        // soundTime이 없으면 중간에 끊을 일이 없으니 전용 슬롯이 필요 없다 — 그룹만 맞춰 원샷.
+        AudioSource src = importantUsesSystemGroup
+            ? SourceFor(EnemySoundDataBase.SoundType.System)
+            : SourceFor(e.type);
+        if (src == null) { Debug.LogWarning("중요 사운드를 낼 AudioSource가 없음(systemSource/sfxSource 미할당)"); return; }
+        src.PlayOneShot(e.clip, e.volume);
     }
 
     // 명시적으로 멈출 때까지 유지되는 루프 사운드. PlayThrottle(중복 재생 스로틀)은 적용하지
@@ -138,6 +220,8 @@ public class EnemySoundManager : MonoBehaviour
         TimedVoice voice = Instance.GetFreeVoice();
         voice.manualStop = true;
         AudioSource src = voice.source;
+        // 슬롯은 재사용된다 — 직전 재생이 다른 그룹을 썼을 수 있으므로 매번 이 항목의 type으로 다시 지정한다.
+        src.outputAudioMixerGroup = Instance.GroupFor(e.type);
         src.clip = e.clip;
         src.volume = e.volume;
         src.loop = true; // DB entry의 loop 값과 무관하게 강제 루프
@@ -149,11 +233,13 @@ public class EnemySoundManager : MonoBehaviour
     // 마감 시각을 unscaledTime으로 잡는 게 핵심 — 이 기능을 처음 쓰는 곳이 보스 연출인데
     // 거기는 Time.timeScale=0으로 얼려놓고 돌아간다(SpawnerManager.BossOpeningDirecting).
     // 스케일드 시간으로 재면 얼어있는 동안 시계가 안 흘러 영영 안 끊긴다.
-    private void PlayTimed(EnemySoundDataBase.Entry e, float now)
+    private void PlayTimed(EnemySoundDataBase.Entry e, float now, AudioMixerGroup group)
     {
         TimedVoice voice = GetFreeVoice();
         voice.manualStop = false; // 이 슬롯이 과거에 PlayLoop로 쓰였던 경우에도 정상적으로 자동 종료되도록 리셋
         AudioSource src = voice.source;
+        // 슬롯 재사용 때문에 그룹은 매번 명시한다 — 안 하면 직전 재생의 그룹이 그대로 남는다.
+        src.outputAudioMixerGroup = group;
         src.clip = e.clip;
         src.volume = e.volume;
         src.loop = e.loop;      // 루프 + soundTime = "이 초 동안만 반복"
@@ -209,7 +295,28 @@ public class EnemySoundManager : MonoBehaviour
             }
         }
 
+        // 덕킹을 먼저 굴려 duckLevel을 이번 프레임 값으로 만든 뒤 페이드가 최종 볼륨을 쓴다.
+        // 둘 다 timedVoices 가드 바깥이어야 한다 — 타임드 보이스가 하나도 없어도 돌아야 하므로.
+        TickDuck();
         UpdateBgmFade();
+    }
+
+    // 덕킹 레벨을 목표치로 서서히 민다. 시간 소스는 unscaled — 보스 연출은 timeScale=0으로 얼려놓고 돈다.
+    private void TickDuck()
+    {
+        float target = Time.unscaledTime < duckUntil ? 1f : 0f;
+        if (duckLevel == target) return;   // 변화 없으면 매 프레임 volume을 다시 쓰지 않는다
+
+        float span = Mathf.Max(0.01f, target > duckLevel ? duckFadeIn : duckRelease);
+        duckLevel = Mathf.MoveTowards(duckLevel, target, Time.unscaledDeltaTime / span);
+        ApplyBgmVolume();
+    }
+
+    // 믹서의 BgmVolume(설정창 소유)이 아니라 소스별 배율만 곱한다 — 유저 설정과 서로 간섭하지 않는다.
+    private void ApplyBgmVolume()
+    {
+        if (bgmSource == null) return;
+        bgmSource.volume = bgmBaseVolume * Mathf.Lerp(1f, importantBgmDuck, duckLevel);
     }
 
     // BGM 재생 (같은 곡이면 무시, 다르면 교체).
@@ -229,7 +336,8 @@ public class EnemySoundManager : MonoBehaviour
         {
             Instance.fadeState = BgmFadeState.None; // 진행 중이던 페이드가 있으면 취소하고 즉시 전환
             src.clip = e.clip;
-            src.volume = e.volume;
+            Instance.bgmBaseVolume = e.volume;
+            Instance.ApplyBgmVolume();              // 덕킹 중이면 눌린 채로 곡만 갈아끼운다
             src.loop = e.loop;
             src.Play();
             return;
@@ -246,7 +354,9 @@ public class EnemySoundManager : MonoBehaviour
 
         if (bgmSource.isPlaying)
         {
-            fadeStartVolume = bgmSource.volume;
+            // 덕킹이 곱해진 실제 volume이 아니라 "원래 볼륨"에서 출발해야 한다 —
+            // 눌린 값을 시작점으로 잡으면 덕킹이 풀릴 때 페이드가 통째로 어긋난다.
+            fadeStartVolume = bgmBaseVolume;
             fadeState = BgmFadeState.FadeOut;
         }
         else
@@ -254,7 +364,8 @@ public class EnemySoundManager : MonoBehaviour
             // 최초 재생: 페이드 아웃할 대상이 없으니 바로 새 곡을 볼륨 0으로 깔고 페이드 인만 한다.
             bgmSource.clip = entry.clip;
             bgmSource.loop = entry.loop;
-            bgmSource.volume = 0f;
+            bgmBaseVolume = 0f;
+            ApplyBgmVolume();
             bgmSource.Play();
             fadeState = BgmFadeState.FadeIn;
         }
@@ -269,7 +380,8 @@ public class EnemySoundManager : MonoBehaviour
 
         if (fadeState == BgmFadeState.FadeOut)
         {
-            bgmSource.volume = Mathf.Lerp(fadeStartVolume, 0f, t);
+            bgmBaseVolume = Mathf.Lerp(fadeStartVolume, 0f, t);
+            ApplyBgmVolume();
             if (t >= 1f)
             {
                 bgmSource.clip = pendingBgmEntry.clip;
@@ -281,12 +393,13 @@ public class EnemySoundManager : MonoBehaviour
         }
         else // FadeIn
         {
-            bgmSource.volume = Mathf.Lerp(0f, pendingBgmEntry.volume, t);
+            bgmBaseVolume = Mathf.Lerp(0f, pendingBgmEntry.volume, t);
             if (t >= 1f)
             {
-                bgmSource.volume = pendingBgmEntry.volume;
+                bgmBaseVolume = pendingBgmEntry.volume;
                 fadeState = BgmFadeState.None;
             }
+            ApplyBgmVolume();
         }
     }
 
