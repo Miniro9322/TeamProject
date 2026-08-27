@@ -191,12 +191,18 @@ public class TilePaintSync
     // 배치·재배치 중이 아니고 사거리도 안 뜬 평소 상태에서만 커서 아래 타일을 내어줍니다.
     private Tile ResolveHoverTile(HoverMode mode)
     {
-        if (IsRangeHoverMode(mode) && !rangeStore.HasRange)
+        if (!IsRangeHoverMode(mode) || rangeStore.HasRange)
         {
-            return pointerPick.UnderPointer();
+            return null;
         }
 
-        return null;
+        Tile tile = pointerPick.UnderPointer();
+        if (tile == null || tile.IsSpecial)
+        {
+            return null;
+        }
+
+        return tile;
     }
 
     private void AddAreaPreviewEntries(PlaceData data, GameObject unit)
