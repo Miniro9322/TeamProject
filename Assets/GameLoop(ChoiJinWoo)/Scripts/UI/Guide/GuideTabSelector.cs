@@ -1,6 +1,7 @@
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using VContainer;
 
 public class GuideTabSelector : MonoBehaviour
 {
@@ -23,6 +24,15 @@ public class GuideTabSelector : MonoBehaviour
 
     private const string HeldParameter = "Held";
 
+    private GimmickTileData gimmickTileData;
+
+    // 기믹 기록장을 컨테이너에서 받아 둔다(이 패널은 프리팹이라 씬 오브젝트를 직접 참조할 수 없다).
+    [Inject]
+    private void Construct(GimmickTileData gimmickTileData)
+    {
+        this.gimmickTileData = gimmickTileData;
+    }
+
     // 시작할 때 게임 플레이 탭이 선택된 모습으로 맞춰둔다 (스파크 없이)
     private void Awake()
     {
@@ -41,7 +51,14 @@ public class GuideTabSelector : MonoBehaviour
 
     private void OnEnable()
     {
+        ApplyGimmickTabVisible();
         ApplySelection(gamePlayImage);
+    }
+
+    // 기믹 안내를 한 번이라도 본 뒤부터 기믹 탭 버튼을 내보인다.
+    private void ApplyGimmickTabVisible()
+    {
+        gimmickImage.gameObject.SetActive(gimmickTileData.HasAnyShown());
     }
 
     // 게임 플레이 탭을 선택 상태로 표시한다
@@ -81,6 +98,8 @@ public class GuideTabSelector : MonoBehaviour
     // 탭 하나의 배경색과 글씨색을 선택 여부에 맞게 반영한다
     private void SetTabState(Image image, TextMeshProUGUI text, Image selectedImage)
     {
+        if (!image.gameObject.activeSelf) return;
+
         SetTabHeld(image, image == selectedImage);
 
         if (image == selectedImage)
