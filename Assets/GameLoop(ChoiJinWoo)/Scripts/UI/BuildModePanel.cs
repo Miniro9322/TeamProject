@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
@@ -24,6 +25,7 @@ public class BuildModePanel : MonoBehaviour
     private ClickOutsideCloser inventoryCloser;
     private ClickOutsideCloser classUpgradeCloser;
     private bool _reopenInventoryOnOff;
+    private GameObject lastSelectedGameObject; // 재배치/회수 모드 중 다른 버튼 클릭 감지용
 
     private void OnEnable()
     {
@@ -104,6 +106,26 @@ public class BuildModePanel : MonoBehaviour
         if (heroInventory.activeSelf && view.IsOff && inventoryCloser.ClickedOutside())
         {
             heroInventory.SetActive(false);
+        }
+
+        // 재배치/제거 모드 중 다른 버튼을 누르면 그 모드를 빠져나온다. 맵 타일 클릭은 uGUI Selectable이
+        // 아니라 currentSelectedGameObject를 바꾸지 않으므로 여기 걸리지 않고, Replace/Remove 버튼
+        // 자체는 ReplaceHeldLink/RemoveHeldLink로 식별해 제외한다(그 두 버튼은 OnReplaceButton/
+        // OnRemoveButton이 이미 토글로 직접 처리함).
+        GameObject selected = EventSystem.current != null ? EventSystem.current.currentSelectedGameObject : null;
+        if (selected != lastSelectedGameObject)
+        {
+            lastSelectedGameObject = selected;
+            if (selected != null && (view.IsReplacing || view.IsRemoving))
+            {
+                Button clickedButton = selected.GetComponent<Button>();
+                if (clickedButton != null
+                    && clickedButton.GetComponent<ReplaceHeldLink>() == null
+                    && clickedButton.GetComponent<RemoveHeldLink>() == null)
+                {
+                    view.ClearMode();
+                }
+            }
         }
 
         if (keyboard == null) return;
@@ -244,6 +266,7 @@ public class BuildModePanel : MonoBehaviour
         if (heroInventory.activeSelf) return;
 
         heroInventory.SetActive(true);
+        PanelPopIn.Play((RectTransform)heroInventory.transform);
         inventoryCloser.MarkOpened();
         if (classUpgradePanel.activeSelf) classUpgradePanel.SetActive(false);
         if (heroPanel.activeSelf) heroPanel.SetActive(false);
@@ -263,6 +286,7 @@ public class BuildModePanel : MonoBehaviour
         else
         {
             classUpgradePanel.SetActive(true);
+            PanelPopIn.Play((RectTransform)classUpgradePanel.transform);
             classUpgradeCloser.MarkOpened();
             if (heroInventory.activeSelf) heroInventory.SetActive(false);
             if (heroPanel.activeSelf) heroPanel.SetActive(false);

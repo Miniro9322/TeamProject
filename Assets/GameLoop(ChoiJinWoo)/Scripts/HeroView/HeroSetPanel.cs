@@ -65,7 +65,14 @@ public class HeroSetPanel : MonoBehaviour
 
     private void OpenAmountPanel(HeroCreateIcon icon, OccupantKind kind)
     {
-        if (amountPanel == null || !view.IsOff || !CanAfford(icon)) return;
+        if (amountPanel == null || !view.IsOff) return;
+
+        string reason = GetUnaffordReason(icon);
+        if (reason != null)
+        {
+            CenterFeedbackUi.Instance.Show(reason);
+            return;
+        }
 
         openIcon = icon;
         var cost = GetCost(icon);
@@ -123,21 +130,23 @@ public class HeroSetPanel : MonoBehaviour
         buildModePanel.OpenInventory();
     }
 
-    // 인구수가 하나라도 남아있으면 생성은 허용한다 — 뽑힌 영웅의 실제 티어 비용이 남은 인구수를 넘으면
-    // BulkCreate에서 그만큼 음수로 내려간다(인구수가 0 이하일 때만 버튼을 막는다).
-    private bool CanAfford(HeroCreateIcon icon)
+    // 인구 -> 자원 순서로 첫 번째로 부족한 항목의 StringTable 키를 반환한다. 인구수가 하나라도
+    // 남아있으면 인구는 통과시킨다 — 뽑힌 영웅의 실제 티어 비용이 남은 인구수를 넘으면 BulkCreate에서
+    // 그만큼 음수로 내려간다(인구수가 0 이하일 때만 막는다). 둘 다 충족하면 null.
+    private string GetUnaffordReason(HeroCreateIcon icon)
     {
-        return game.CitizenManager.CheckCanUseCitizen()
-            && view.resourcesManager.CheckResources(GetCost(icon));
+        if (!game.CitizenManager.CheckCanUseCitizen()) return "UI_Hero_NotEnoughPopulation";
+        if (!view.resourcesManager.CheckResources(GetCost(icon))) return "UI_Base_NotEnoughResources";
+        return null;
     }
 
     // 자원/시민 변화, 모드 진입/종료 시 여기로 온다. Off 모드가 아니면(배치·재배치·제거 등) 무조건 비활성화.
-    // 버튼마다 비용이 달라 구매 가능 여부도 따로 계산해야 한다(근접은 되는데 원거리는 안 되는 경우가 있음).
+    // 인구/자원 부족은 더 이상 버튼을 막지 않는다 — 클릭 시 OpenAmountPanel이 사유를 띄운다.
     private void RefreshInteractable()
     {
         bool off = view.IsOff;
-        meleeIcon.SetInteractable(off && CanAfford(meleeIcon));
-        rangedIcon.SetInteractable(off && CanAfford(rangedIcon));
+        meleeIcon.SetInteractable(off);
+        rangedIcon.SetInteractable(off);
 
         if (amountPanel == null || openIcon == null || !amountPanel.gameObject.activeSelf) return;
         if (!off)

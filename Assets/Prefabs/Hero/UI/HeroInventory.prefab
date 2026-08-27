@@ -571,6 +571,7 @@ GameObject:
   - component: {fileID: 3213245764126521333}
   - component: {fileID: 624999243668039652}
   - component: {fileID: 4490545854164197897}
+  - component: {fileID: 7373943739286243824}
   m_Layer: 5
   m_Name: CombineButton
   m_TagString: Untagged
@@ -595,7 +596,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -40.727, y: -58.3271}
+  m_AnchoredPosition: {x: -40.727, y: -63.7}
   m_SizeDelta: {x: 48.054, y: 48.0542}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &3213245764126521333
@@ -680,3 +681,17 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &7373943739286243824
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7578163249312130076}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a884c86289546db44934b5714235468e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TooltipTrigger
+  message: Hero_Inventory_All_Combine
+  isJust: 0
