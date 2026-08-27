@@ -19,6 +19,7 @@ public class HeroSetPanel : MonoBehaviour
     private BuildModePanel buildModePanel;
     private bool wasBlocked;
     private HeroCreateIcon openIcon; // amountPanel이 떠있는 동안 그 대상 아이콘 - RefreshInteractable에서 최대치 갱신용
+    public HeroCreateIcon OpenIcon => openIcon; // HeroCreateIconHeldLink에서  누가 열었는지 확인할 수 있게 노출
 
     [Inject]
     private void Construct(UpgradeState upgradeState, BuildModePanel buildModePanel)

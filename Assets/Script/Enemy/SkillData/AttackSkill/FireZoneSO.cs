@@ -136,7 +136,7 @@ public class FireZoneSO : AttackSkillDataSO
         {
             int cellRange = range > 0f ? Mathf.RoundToInt(range) : 1;
             float t = 0f;
-
+            EnemySoundManager.Play("DebuffIgnite");
             while (!owner.IsDead)
             {
                 // 오라가 지금 켜져 있어야 하는가. 화염족은 불에 닿아 강해진 동안만(창은 1초마다 갱신되고

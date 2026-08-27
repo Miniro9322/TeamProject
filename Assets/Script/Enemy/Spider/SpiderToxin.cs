@@ -33,6 +33,11 @@ public class SpiderToxin : EnemyBase
         base.EnemySoundAttack();
         EnemySoundManager.Play("SpiderAttack");
     }
+    public override void DieSound()
+    {
+        base.DieSound();
+        EnemySoundManager.Play("MiniSpiderDie");
+    }
     // 평타가 적중한 영웅에게 독을 건다. 독 상태는 DotRegistry가 들고 굴리므로
     // 이 거미가 죽거나 풀에 반납돼도 남은 독은 계속 들어간다.
     public override void AnimEvent_AttackHit()

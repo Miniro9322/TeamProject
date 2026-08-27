@@ -11,6 +11,7 @@ public class BuildOptionView : MonoBehaviour
     [SerializeField] private Button button;
 
     private int index;
+    public int Index => index;
 
     public void SetIndex(int value)
     {

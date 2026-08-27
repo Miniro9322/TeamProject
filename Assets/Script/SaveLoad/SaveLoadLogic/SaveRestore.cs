@@ -20,6 +20,7 @@ public class SaveRestore
     private readonly MapGame mapGame;
     private readonly MapAssemble mapAssemble;
     private readonly FacilityManager facilityManager;
+    private readonly GimmickTileData gimmickTileData;
     private readonly TutorialState tutorialState;
 
     public SaveRestore(
@@ -38,6 +39,7 @@ public class SaveRestore
         MapGame mapGame,
         MapAssemble mapAssemble,
         FacilityManager facilityManager,
+        GimmickTileData gimmickTileData,
         TutorialState tutorialState)
     {
         this.gameManager = gameManager;
@@ -55,6 +57,7 @@ public class SaveRestore
         this.mapGame = mapGame;
         this.mapAssemble = mapAssemble;
         this.facilityManager = facilityManager;
+        this.gimmickTileData = gimmickTileData;
         this.tutorialState = tutorialState;
     }
 
@@ -102,6 +105,7 @@ public class SaveRestore
                 module.SetState(save.moduleState);
             }
             spawnerManager.RestoreOffset(save.moduleId, save.stageOffset, save.unlockDay);
+            gimmickTileData.RestoreShown(save.moduleId, save.gimmickSeen);
         }
     }
 

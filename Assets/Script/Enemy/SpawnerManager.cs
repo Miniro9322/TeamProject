@@ -578,6 +578,9 @@ public class SpawnerManager : MonoBehaviour
     }
      [SerializeField] private GameObject guardPanel;
     [SerializeField] private Animator directingUi;
+    // 좌/우 화살표 이동은 Animator가 아니라 WarningArrowSlide가 코드로 굴린다(Arrows에 붙인다) —
+    // Directing 루트 클립은 Warning Builder가 구울 때마다 ClearCurves로 지워서 커브를 못 남긴다.
+    [SerializeField] private WarningArrowSlide directingArrowSlide;
     [SerializeField] private string directingStateName = "Directing";
     [SerializeField] private float directingTimeout = 5f;
     public bool isDirecting = false;
@@ -599,7 +602,14 @@ public class SpawnerManager : MonoBehaviour
                 directingUi.updateMode = AnimatorUpdateMode.UnscaledTime;
                 directingUi.Rebind();   // 재사용되는 오브젝트라 지난 연출 끝난 지점이 아니라 처음부터 다시 재생
                 directingUi.Update(0f);
+
+                // 화살표는 메인 연출과 같은 프레임에 출발시킨다. 끄는 쪽은 Directing 루트 CanvasGroup
+                // 알파 커브가 자식 전체에 걸리므로 저절로 WARNING과 같이 사라진다.
+                // 인스펙터에 안 꽂혀 있으면 조용히 건너뛴다(화살표 없는 연출도 그대로 돌아야 한다).
+                if (directingArrowSlide != null) directingArrowSlide.Play();
+
                 directingUi.SetTrigger(directingStateName);
+
                 EnemySoundManager.Play("Warning!");
                 await WaitForDirectingAnim(directingUi, directingStateName, directingTimeout, token);
             }
@@ -611,6 +621,9 @@ public class SpawnerManager : MonoBehaviour
         finally
         {
             if (directingUi != null) directingUi.updateMode = savedUpdateMode;
+            // 취소로 중간에 끊기면 화살표가 계속 미끄러진다(unscaled라 timeScale 복구와 무관하게 돈다).
+            // 위치는 안 건드린다 — 되돌리면 아직 안 사라진 화살표가 순간이동한다. 다음 연출은 Play()가 맞춘다.
+            if (directingArrowSlide != null) directingArrowSlide.Stop();
             Time.timeScale = savedTimeScale;
             guardPanel?.SetActive(false);
             isDirecting = false;

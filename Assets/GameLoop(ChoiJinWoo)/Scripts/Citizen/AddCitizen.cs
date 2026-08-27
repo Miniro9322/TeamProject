@@ -1,6 +1,7 @@
 using System;
 using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
 using VContainer;
@@ -99,6 +100,7 @@ public class AddCitizen : MonoBehaviour
         if(amount + citizenManager.CurrentCitizen < citizenManager.MaxCitizen)
             amount++;
         UpdatePanel();
+        ClearButtonFocus();
     }
 
     public void DecreaseAmount()
@@ -106,6 +108,7 @@ public class AddCitizen : MonoBehaviour
         if(amount > 0)
             amount--;
         UpdatePanel();
+        ClearButtonFocus();
     }
 
     public void IncreaseTen()
@@ -113,6 +116,7 @@ public class AddCitizen : MonoBehaviour
         if (amount + citizenManager.CurrentCitizen < citizenManager.MaxCitizen)
             amount = Mathf.Clamp(amount + 10, 0, citizenManager.MaxCitizen - citizenManager.CurrentCitizen);
         UpdatePanel();
+        ClearButtonFocus();
     }
 
     public void DecreaseTen()
@@ -120,6 +124,13 @@ public class AddCitizen : MonoBehaviour
         if (amount > 0)
             amount = Mathf.Clamp(amount - 10, 0, citizenManager.MaxCitizen - citizenManager.CurrentCitizen);
         UpdatePanel();
+        ClearButtonFocus();
+    }
+
+    // Selected 상태가 Pressed와 같은 클립이라, 포커스를 안 풀면 눌린 모양이 계속 남는다
+    private void ClearButtonFocus()
+    {
+        EventSystem.current.SetSelectedGameObject(null);
     }
 
     public void CreateCitizen()

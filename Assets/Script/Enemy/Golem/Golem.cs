@@ -14,4 +14,14 @@ public class Golem : EnemyBase
         attack =Mathf.FloorToInt(Stats[StatType.ATK]);
         def = Mathf.FloorToInt(Stats[StatType.DEF]);
     }
+    public override void EnemySoundAttack()
+    {
+        base.EnemySoundAttack();
+        EnemySoundManager.Play("GolemAttack");
+    }
+    public override void DieSound()
+    {
+        base.DieSound();
+        EnemySoundManager.Play("GolemDie");
+    }
 }
