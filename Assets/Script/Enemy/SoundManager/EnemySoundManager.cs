@@ -41,7 +41,11 @@ public class EnemySoundManager : MonoBehaviour
 
     // 덕킹 상태. 믹서의 노출 파라미터(SfxVolume/BgmVolume)는 SettingUI 소유라 절대 건드리지 않는다 —
     // 대신 AudioSource.volume(소스별 배율)만 곱한다. 이건 믹서 볼륨과 독립이라 유저 설정을 덮어쓰지 않는다.
-    private float bgmBaseVolume = 1f;   // PlayBgm이 넣어준 원래 볼륨. 덕킹 해제 시 여기로 돌아온다.
+    //
+    // bgmSource.volume에 쓰는 곳은 ApplyBgmVolume 하나뿐이다 — 크로스페이드와 덕킹이 둘 다 BGM 볼륨을
+    // 건드리므로, 각자 직접 쓰면 서로 덮어써서 페이드 중에 덕킹이 풀리거나 그 반대가 된다.
+    // 페이드는 "원래 얼마여야 하는가"(bgmBaseVolume)만 정하고, 덕킹은 거기에 배율만 곱한다.
+    private float bgmBaseVolume = 1f;   // 덕킹을 빼고 봤을 때의 BGM 볼륨. 페이드가 이 값을 움직인다.
     private float duckUntil;            // Time.unscaledTime 기준. 이 시각까지 눌러 둔다.
     private float duckLevel;            // 0=원래 볼륨 / 1=완전히 눌림
 
@@ -272,7 +276,28 @@ public class EnemySoundManager : MonoBehaviour
             }
         }
 
+        // 덕킹을 먼저 굴려 duckLevel을 이번 프레임 값으로 만든 뒤 페이드가 최종 볼륨을 쓴다.
+        // 둘 다 timedVoices 가드 바깥이어야 한다 — 타임드 보이스가 하나도 없어도 돌아야 하므로.
+        TickDuck();
         UpdateBgmFade();
+    }
+
+    // 덕킹 레벨을 목표치로 서서히 민다. 시간 소스는 unscaled — 보스 연출은 timeScale=0으로 얼려놓고 돈다.
+    private void TickDuck()
+    {
+        float target = Time.unscaledTime < duckUntil ? 1f : 0f;
+        if (duckLevel == target) return;   // 변화 없으면 매 프레임 volume을 다시 쓰지 않는다
+
+        float span = Mathf.Max(0.01f, target > duckLevel ? duckFadeIn : duckRelease);
+        duckLevel = Mathf.MoveTowards(duckLevel, target, Time.unscaledDeltaTime / span);
+        ApplyBgmVolume();
+    }
+
+    // 믹서의 BgmVolume(설정창 소유)이 아니라 소스별 배율만 곱한다 — 유저 설정과 서로 간섭하지 않는다.
+    private void ApplyBgmVolume()
+    {
+        if (bgmSource == null) return;
+        bgmSource.volume = bgmBaseVolume * Mathf.Lerp(1f, importantBgmDuck, duckLevel);
     }
 
     // BGM 재생 (같은 곡이면 무시, 다르면 교체).
@@ -292,7 +317,8 @@ public class EnemySoundManager : MonoBehaviour
         {
             Instance.fadeState = BgmFadeState.None; // 진행 중이던 페이드가 있으면 취소하고 즉시 전환
             src.clip = e.clip;
-            src.volume = e.volume;
+            Instance.bgmBaseVolume = e.volume;
+            Instance.ApplyBgmVolume();              // 덕킹 중이면 눌린 채로 곡만 갈아끼운다
             src.loop = e.loop;
             src.Play();
             return;
@@ -309,7 +335,9 @@ public class EnemySoundManager : MonoBehaviour
 
         if (bgmSource.isPlaying)
         {
-            fadeStartVolume = bgmSource.volume;
+            // 덕킹이 곱해진 실제 volume이 아니라 "원래 볼륨"에서 출발해야 한다 —
+            // 눌린 값을 시작점으로 잡으면 덕킹이 풀릴 때 페이드가 통째로 어긋난다.
+            fadeStartVolume = bgmBaseVolume;
             fadeState = BgmFadeState.FadeOut;
         }
         else
@@ -317,7 +345,8 @@ public class EnemySoundManager : MonoBehaviour
             // 최초 재생: 페이드 아웃할 대상이 없으니 바로 새 곡을 볼륨 0으로 깔고 페이드 인만 한다.
             bgmSource.clip = entry.clip;
             bgmSource.loop = entry.loop;
-            bgmSource.volume = 0f;
+            bgmBaseVolume = 0f;
+            ApplyBgmVolume();
             bgmSource.Play();
             fadeState = BgmFadeState.FadeIn;
         }
@@ -332,7 +361,8 @@ public class EnemySoundManager : MonoBehaviour
 
         if (fadeState == BgmFadeState.FadeOut)
         {
-            bgmSource.volume = Mathf.Lerp(fadeStartVolume, 0f, t);
+            bgmBaseVolume = Mathf.Lerp(fadeStartVolume, 0f, t);
+            ApplyBgmVolume();
             if (t >= 1f)
             {
                 bgmSource.clip = pendingBgmEntry.clip;
@@ -344,12 +374,13 @@ public class EnemySoundManager : MonoBehaviour
         }
         else // FadeIn
         {
-            bgmSource.volume = Mathf.Lerp(0f, pendingBgmEntry.volume, t);
+            bgmBaseVolume = Mathf.Lerp(0f, pendingBgmEntry.volume, t);
             if (t >= 1f)
             {
-                bgmSource.volume = pendingBgmEntry.volume;
+                bgmBaseVolume = pendingBgmEntry.volume;
                 fadeState = BgmFadeState.None;
             }
+            ApplyBgmVolume();
         }
     }
 
