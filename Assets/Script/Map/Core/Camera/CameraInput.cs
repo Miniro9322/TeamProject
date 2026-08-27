@@ -4,7 +4,7 @@ using UnityEngine.InputSystem;
 
 
 // 마우스·키보드로 카메라를 조작한다.
-// Alt+우드래그 = 회전, 우드래그·WASD = 평면 이동, QE = 높이, 휠 = 줌.
+// 우드래그·WASD = 평면 이동, QE = 높이, 휠 = 줌.
 public class CameraInput : MonoBehaviour
 {
     private CameraRig rig;   // 같은 오브젝트에 붙는 고정 관계라 Awake에서 잡는다(배선 불필요)
@@ -14,8 +14,6 @@ public class CameraInput : MonoBehaviour
     public event Action UserMoved; // 사용자가 카메라를 건드린 프레임에 알린다. 자동 이동(ExpandFocus)이 이걸 듣고 손을 뗀다.
 
     [Header("Sensitivity")]
-    [Tooltip("마우스 델타 1픽셀당 회전 각(도).")]
-    [Range(0.02f, 1f)] public float rotateSensitivity = 0.2f;
     [Tooltip("휠 한 칸당 거리 변화 비율.")]
     [Range(0.02f, 0.4f)] public float zoomStep = 0.1f;
     public float dragSpeed = 1.5f;
@@ -27,21 +25,10 @@ public class CameraInput : MonoBehaviour
         rig = GetComponent<CameraRig>();
     }
 
-    // 같은 우클릭 드래그를 Alt 여부로 회전/팬으로 가른다.
-    private static bool AltHeld
-    {
-        get
-        {
-            Keyboard keyboard = Keyboard.current;
-            return keyboard != null && (keyboard.leftAltKey.isPressed || keyboard.rightAltKey.isPressed);
-        }
-    }
-
-    // 매 프레임 입력(회전·이동·줌)을 읽어 카메라 값에 반영한다.
+    // 매 프레임 입력(이동·줌)을 읽어 카메라 값에 반영한다.
     private void Update()
     {
-        bool moved = Rotate();
-        moved |= Pan();
+        bool moved = Pan();
         moved |= Zoom();
 
         // 입력이 있었던 프레임에만 필드를 되받아쓴다.
@@ -52,26 +39,6 @@ public class CameraInput : MonoBehaviour
             UserMoved?.Invoke();   // 사용자가 조작하면 자동 이동을 놓아준다
         }
         rig.ApplyNow();
-    }
-
-    // Alt + 우클릭 드래그 = 궤도 회전. 좌클릭은 MapGame이 배치에 쓰므로 카메라가 잡지 않는다.
-    private bool Rotate()
-    {
-        Mouse mouse = Mouse.current;
-        if (mouse == null || !mouse.rightButton.isPressed || !AltHeld)
-        {
-            return false;
-        }
-
-        Vector2 delta = mouse.delta.ReadValue();
-        if (delta == Vector2.zero)
-        {
-            return false;
-        }
-
-        rig.yaw += delta.x * rotateSensitivity;
-        rig.pitch -= delta.y * rotateSensitivity;
-        return true;
     }
 
     // 우클릭 드래그 = 화면 기준 팬. WASD = 수평 팬, QE = 높이.
@@ -86,7 +53,7 @@ public class CameraInput : MonoBehaviour
         Vector3 right = Vector3.ProjectOnPlane(view.right, Vector3.up).normalized;
 
         Mouse mouse = Mouse.current;
-        if (mouse != null && mouse.rightButton.isPressed && !AltHeld)
+        if (mouse != null && mouse.rightButton.isPressed)
         {
             Vector2 delta = mouse.delta.ReadValue();
             if (delta != Vector2.zero)
