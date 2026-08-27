@@ -41,6 +41,8 @@ public class CenterFeedbackUi : MonoBehaviour
     {
         if (string.IsNullOrEmpty(messageKey)) return;
 
+        if (TooltipUi.Instance != null) TooltipUi.Instance.Hide(); // 클릭 지점 문구와 겹쳐 보이지 않도록 떠 있던 호버 툴팁을 닫는다.
+
         RectTransform instance = Rent();
         active.Enqueue(instance);
 

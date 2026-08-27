@@ -496,7 +496,6 @@ Hero_Inventory_Placed,배치됨,Placed,配置完了
 Hero_Inventory_Unplaced,미배치,Unplaced,未配置
 Hero_Inventory_Tier,티어,Tier,ティア
 Hero_Inventory_TierFormat,{0}티어,Tier {0},ティア{0}
-Hero_Melee_Upgrade,근거리 영웅 업그레이드,Melee Hero Upgrade,近接ヒーローのアップグレード
 Gimmick_Fire_Name,불 지대,Fire Zone,炎地帯
 Gimmick_Fire_Desc,이 위에 올라선 유닛은 지속 피해를 입는다.,Units standing here take damage over time.,この上に乗ったユニットは継続ダメージを受ける。
 Gimmick_Campfire_Name,모닥불,Campfire,焚き火
@@ -514,6 +513,7 @@ Guide_FireInfo,밤이 되면 이 칸에 불이 붙는다.\n칸에 서 있는 아
 Guide_CampfireInfo,얼음 지역은 밤이 되면 아군 전원의\n공격 속도와 방어력이 절반으로 떨어진다.\n모닥불에서 2칸 안(마름모 모양)에 선 아군은\n이 추위를 받지 않는다.\n모닥불 칸에는 아무것도 배치할 수 없다.,In the ice region every ally loses half their attack speed and defense at nightfall.\nAllies within 2 tiles of a campfire (a diamond shape) are immune to that cold.\nNothing can be placed on a campfire tile.,氷の地域では夜になると味方全員の攻撃速度と防御力が半分に下がる。\n焚き火から2マス以内（ひし形）に立つ味方はこの寒さを受けない。\n焚き火のマスには何も配置できない。
 Guide_WindwallInfo,사막 지역은 밤이 되면 바람 맞은 아군이\n0.5초마다 최대 체력의 1%씩 깎인다.\n모래폭풍이라 방어력으로 막지 못한다.\n바람 방향은 낮마다 바뀌며 화살표로 알린다.\n언덕 위 바람막이는 바람 불어가는 쪽\n2칸을 막아준다. 옆 칸의 언덕이나\n바로 뒤의 아군도 바람을 막는다.,"In the desert region allies caught in the wind take 1% of their max HP as sandstorm damage every 0.5 seconds, and defense does not reduce it.\nThe wind direction changes each day and is shown with an arrow.\nA windwall on high ground shields 2 tiles downwind. An adjacent hill or an ally standing right behind also blocks the wind.",砂漠の地域では夜になると風にさらされた味方が0.5秒ごとに最大体力の1%の砂嵐ダメージを受ける。防御力では防げない。\n風向きは昼ごとに変わり、矢印で知らせてくれる。\n丘の上の風よけは風下側2マスを守る。隣のマスの丘や真後ろに立つ味方も風を防ぐ。
 Guide_WaterInfo,아군 영웅을 이 칸에 배치할 수 없다.\n걸어오는 적은 이 칸을 지나갈 수 없다.\n수영 특성을 가진 적만 잠수해 헤엄쳐\n이 물길로 들어온다.,Allied heroes cannot be placed on this tile.\nWalking enemies cannot cross it.\nOnly enemies with the swim trait dive in and swim up this waterway.,味方のヒーローはこのマスに配置できない。\n歩いてくる敵はこのマスを通れない。\n水泳属性を持つ敵だけが潜って泳ぎ、この水路から入ってくる。
+Hero_Melee_Upgrade,근거리 영웅 업그레이드,Melee Hero Upgrade,近接ヒーローのアップグレード
 Hero_Ranged_Upgrade,원거리 영웅 업그레이드,Ranged Hero Upgrade,遠距離ヒーローのアップグレード
 UI_Base_UpgradeCost,업그레이드 비용,Upgrade Cost,アップグレードコスト
 Ui_GameOverSurviveDay,생존 일수 : {0}일차,Days Survived : {0},生存日数：{0}日目
@@ -522,3 +522,7 @@ UI_System_Setting,시스템 설정,System Settings,システム設定
 UI_Base_CheckDemolish,정말 철거하시겠습니까?,Are you sure you want to demolish this?,本当に撤去しますか?
 UI_Base_Demolish,철거,Demolish,撤去
 UI_Base_NotEnoughResources,자원이 부족합니다,Not enough resources,資源が足りません
+UI_Hero_NotEnoughPopulation,인구가 부족합니다,Not enough population,人口が足りません
+Hero_Inventory_All_Combine,일괄합성,Combine All,一括合成
+Hero_Melee_Create,근거리 영웅 생성,近接ヒーロー生成,
+Hero_Ranged_Create,원거리 영웅 생성,遠距離ヒーローの生成,
