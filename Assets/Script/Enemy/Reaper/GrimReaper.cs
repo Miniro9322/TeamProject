@@ -112,4 +112,9 @@ public class GrimReaper : EnemyBase
             EnemySoundManager.Play(key);
         }
     }
+    public override void DieSound()
+    {
+        base.DieSound();
+        EnemySoundManager.Play("GhostDie");
+    }
 }

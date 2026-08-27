@@ -54,9 +54,7 @@ public class PhantomBlitz : AttackSkillDataSO
 
     [Tooltip("분신 소환 높이 보정. 발이 뜨거나 파묻히면 여기서 맞춘다.")]
     public float phantomHeightOffset;
-
-    [Tooltip("타격 순간 재생할 사운드 키(EnemySoundDataBase에 등록된 이름). 비우면 소리 없음.")]
-    public string hitSoundKey = "";
+    private string hitSoundKey = "DeathNormalAttack2";
 
     [Tooltip("분신을 뿌리는 동안 시전자를 제자리에 세운다. " +
              "멈춰 있는 시간은 대략 (마릿수-1) x tickInterval + 분신 한 마리 수명이다 — 마릿수가 크면 그만큼 오래 굳는다.")]
