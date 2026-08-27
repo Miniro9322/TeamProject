@@ -240,6 +240,11 @@ public class HeroInventory : MonoBehaviour
         }
         else
         {
+            // 튜토리얼이 합성만 유도하는 중일 땐(HeroCombineMention) 단일 클릭으로 배치 모드에
+            // 들어가면 안 된다 - TutorialInputGate.BlockHeroPlacementFromInventory 참고. 더블클릭
+            // 합성(OnIconDoubleClicked)은 이 분기를 안 타니 그대로 동작한다.
+            if (TutorialInputGate.BlockHeroPlacementFromInventory) return;
+
             HideContentForPlacement();
             view.SetHero(entry);
         }

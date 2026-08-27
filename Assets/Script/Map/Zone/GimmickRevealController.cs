@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
+using VContainer;
 
 // 지역 안개가 걷힌 뒤 그 지역 기믹을 팝업과 외곽선으로 최초 1회만 안내한다.
 public class GimmickRevealController : MonoBehaviour
@@ -9,15 +10,22 @@ public class GimmickRevealController : MonoBehaviour
     private static readonly List<Tile> EmptyTiles = new();
 
     [SerializeField] private MapRegistry registry;
-    [SerializeField] private GimmickTileData tileData;
     [SerializeField] private GimmickPopup gimmickPopup;
     [SerializeField] private Material edgeMaterial;
     [SerializeField] private float edgeWidth = 0.06f;
     [SerializeField] private float edgeLift = 0.025f;
     [SerializeField] private float highlightSeconds = 3f;
 
+    private GimmickTileData tileData;
     private CampfireEdgeView edgeView;
     private int edgeVersion;
+
+    // 기믹 기록장을 컨테이너에서 받아 둔다(씬 오브젝트가 아니라 컨테이너가 소유한다).
+    [Inject]
+    private void Construct(GimmickTileData tileData)
+    {
+        this.tileData = tileData;
+    }
 
     // 외곽선 그리기 도구를 준비한다.
     private void Awake()

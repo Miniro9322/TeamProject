@@ -5,7 +5,7 @@ using UnityEngine.InputSystem;
 using UnityEngine.UI;
 using VContainer;
 
-public class RegionOverviewPanel : MonoBehaviour, IClosablePanel, IExclusiveUiPanel
+public class RegionOverviewPanel : MonoBehaviour, IClosablePanel, IExclusiveUiPanel, IPersistentAcrossExclusivePanels
 {
     [SerializeField] private MapRegistry registry;
     [SerializeField] private RegionDetailPanel detailPanel;
@@ -17,6 +17,10 @@ public class RegionOverviewPanel : MonoBehaviour, IClosablePanel, IExclusiveUiPa
     [SerializeField] private Key openBaseKey = Key.B; // 거점 화면을 여는 단축키
 
     private ClickOutsideCloser outsideCloser;
+    // ESC가 눌린 시점에 메뉴/가이드 같은 다른 배타 패널이 이미 떠 있었는지의 스냅샷 - UiManager의
+    // hadEscapeCloseTargetLastFrame과 같은 이유(Update 실행 순서 무관하게 만들기 위함)로 한 프레임 전
+    // 값을 쓴다. 이게 없으면 ESC 한 번에 메뉴/가이드와 거점 화면이 같은 프레임에 동시에 닫혀버린다.
+    private bool hadOtherExclusivePanelLastFrame;
 
     // RegionDetailPanel이 자기 바깥-클릭 판정에서 지역 노드 버튼만 제외하는 데 쓴다
     // (오버뷰 전체가 아니라 노드들만 - 오버뷰는 화면 전체를 덮고 있어서 전체를 제외하면 바깥 클릭이 아예 안 잡힌다).
@@ -175,6 +179,8 @@ public class RegionOverviewPanel : MonoBehaviour, IClosablePanel, IExclusiveUiPa
     public void OpenPanel()
     {
         if (isNight) return; // 밤에는 거점 화면을 열 수 없다.
+        // 튜토리얼이 영웅 배치 대기 중일 땐 이 패널이 맵을 덮어 배치를 끝낼 수 없게 된다 - TutorialInputGate.cs 참고.
+        if (TutorialInputGate.BlockPanelOpen) return;
         if (gameObject.activeSelf)
             gameObject.SetActive(false);
         else
@@ -192,7 +198,14 @@ public class RegionOverviewPanel : MonoBehaviour, IClosablePanel, IExclusiveUiPa
 
     private void Update()
     {
+        // 메뉴/가이드 등이 위에 떠 있는 동안은 ESC/바깥클릭에 반응하지 않고 그쪽부터 닫히게 양보한다.
+        if (hadOtherExclusivePanelLastFrame) return;
         if (panelStack.IsTop(this) && outsideCloser.ShouldClose()) Close();
+    }
+
+    private void LateUpdate()
+    {
+        hadOtherExclusivePanelLastFrame = ExclusiveUiCoordinator.HasOtherOpen(this);
     }
 
     private void CheckOpenHotkey()

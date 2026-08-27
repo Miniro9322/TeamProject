@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Text;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -14,6 +13,9 @@ public class FacilityBuildChoicePanel : MonoBehaviour, IClosablePanel
     [SerializeField] private GameObject infoPanel;
     [SerializeField] private Image infoIcon;
     [SerializeField] private TextMeshProUGUI infoText;
+    [SerializeField] private GameObject productionRow; // "생산 자원" 캡션 + productionIcon을 묶은 행 - House는 생산 자원이 없어 통째로 숨긴다
+    [SerializeField] private Image productionIcon; // 생산 자원 아이콘
+    [SerializeField] private List<CostAmountView> constructCostRows; // 최대 개수만큼 미리 배치, 남는 칸은 자동으로 숨김 (BuildingPanel.upgradeCostRows와 동일 패턴)
     [SerializeField] private RegionDetailPanel parentPanel; // 이 패널을 여는 쪽 - 그 안의 슬롯 버튼 클릭은 "바깥 클릭"이 아니다
     [SerializeField] private RectTransform buildButtonRect; // "건설" 버튼 - 튜토리얼 스포트라이트용 참조
 
@@ -23,6 +25,7 @@ public class FacilityBuildChoicePanel : MonoBehaviour, IClosablePanel
     private ResourcesManager resourcesManager;
     private UpgradeState upgradeState;
     private ProductionEconomyConfig economyConfig;
+    private ResourceIconSet resourceIconSet;
     private UiPanelStack panelStack;
     private RegionFacilitySlots region;
     private int slotIndex;
@@ -31,12 +34,13 @@ public class FacilityBuildChoicePanel : MonoBehaviour, IClosablePanel
     private ClickOutsideCloser infoOutsideCloser;
 
     [Inject]
-    private void Construct(BaseConstructor constructor, ResourcesManager resourcesManager, UpgradeState upgradeState, ProductionEconomyConfig economyConfig, UiPanelStack panelStack)
+    private void Construct(BaseConstructor constructor, ResourcesManager resourcesManager, UpgradeState upgradeState, ProductionEconomyConfig economyConfig, ResourceIconSet resourceIconSet, UiPanelStack panelStack)
     {
         this.constructor = constructor;
         this.resourcesManager = resourcesManager;
         this.upgradeState = upgradeState;
         this.economyConfig = economyConfig;
+        this.resourceIconSet = resourceIconSet;
         this.panelStack = panelStack;
     }
 
@@ -139,29 +143,41 @@ public class FacilityBuildChoicePanel : MonoBehaviour, IClosablePanel
     {
         if (currentOption == null) return;
 
-        var sb = new StringBuilder();
-        var table = DataTableManager.StringTable;
+        (ProductionType Type, int Amount)[] cost;
+        ProductionType? productionType = null;
 
         if (currentOption.kind == OccupantKind.Resource && currentOption.facilityValue != null)
         {
             var value = currentOption.facilityValue;
-            var cost = ProductionFacility.PreviewConstructCost(value, economyConfig, upgradeState);
-            sb.Append($"{value.FacilityDisplayName}\n{value.FacilityDisplayInfo}\n{string.Format(table.Get("Ui_ProductionResource"), value.Type)}\n{table.Get("Ui_ConstructionCost")}\n");
-            foreach (var c in cost)
-            {
-                sb.Append($"{c.Type}: {-c.Amount} ");
-            }
+            cost = ProductionFacility.PreviewConstructCost(value, economyConfig, upgradeState);
+            productionType = value.Type;
+            infoText.text = $"{value.FacilityDisplayName}\n{value.FacilityDisplayInfo}";
         }
         else if (currentOption.houseConfig != null)
         {
             var config = currentOption.houseConfig;
-            sb.Append($"{config.HouseDisplayName}\n{config.HouseDisplayInfo}\n{table.Get("Ui_ConstructionCost")}\n");
-            foreach (var c in House.PreviewConstructCost(config, economyConfig, upgradeState))
+            cost = House.PreviewConstructCost(config, economyConfig, upgradeState);
+            infoText.text = $"{config.HouseDisplayName}\n{config.HouseDisplayInfo}";
+        }
+        else
+        {
+            return;
+        }
+
+        if (productionRow != null) productionRow.SetActive(productionType.HasValue);
+        if (productionType.HasValue && productionIcon != null) productionIcon.sprite = resourceIconSet.GetIcon(productionType.Value);
+
+        for (int i = 0; i < constructCostRows.Count; i++)
+        {
+            if (i < cost.Length)
             {
-                sb.Append($"{c.Type}: {-c.Amount} ");
+                constructCostRows[i].Show(resourceIconSet.GetIcon(cost[i].Type), $"{-cost[i].Amount}");
+            }
+            else
+            {
+                constructCostRows[i].Hide();
             }
         }
-        infoText.text = sb.ToString().Trim();
     }
 
     public void OnBuild()

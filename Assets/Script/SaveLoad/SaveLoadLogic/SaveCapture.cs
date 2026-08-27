@@ -16,6 +16,7 @@ public class SaveCapture
     private readonly HeroClassUpgradeState classState;
     private readonly MapGame mapGame;
     private readonly GimmickTileData gimmickTileData;
+    private readonly TutorialState tutorialState;
 
     public SaveCapture(
         GameManager gameManager,
@@ -28,7 +29,8 @@ public class SaveCapture
         HeroTierUpgradeState tierState,
         HeroClassUpgradeState classState,
         MapGame mapGame,
-        GimmickTileData gimmickTileData)
+        GimmickTileData gimmickTileData,
+        TutorialState tutorialState)
     {
         this.gameManager = gameManager;
         this.resourcesManager = resourcesManager;
@@ -41,6 +43,7 @@ public class SaveCapture
         this.classState = classState;
         this.mapGame = mapGame;
         this.gimmickTileData = gimmickTileData;
+        this.tutorialState = tutorialState;
     }
 
     // 저장 단계에 맞는 전체 세이브 데이터를 한 번에 만든다
@@ -77,6 +80,7 @@ public class SaveCapture
         data.classList = CaptureClasses();
         data.portalList = CapturePortals(phase);
         data.archiveList = CaptureArchive();
+        data.tutorialSeen = tutorialState.Seen;
         return data;
     }
 

@@ -63,6 +63,8 @@ public class GameLifeTimeScope : LifetimeScope
         });
         builder.Register<UiPanelStack>(Lifetime.Singleton).AsSelf();
         builder.Register<TutorialState>(Lifetime.Singleton).AsSelf();
+        // 씬 오브젝트가 아니라 컨테이너가 소유한다 - 연출용 오브젝트가 없는 씬에서도 세이브 쪽이 안전하게 받는다.
+        builder.Register<GimmickTileData>(Lifetime.Singleton).AsSelf();
 
         // 세이브·로드 담당들. File/은 서로 의존하고, Logic/은 씬의 각 매니저를 읽고 쓴다.
         builder.Register<SaveCheck>(Lifetime.Singleton).AsSelf();
@@ -101,7 +103,6 @@ public class GameLifeTimeScope : LifetimeScope
         builder.RegisterComponentInHierarchy<MapGame>();
         builder.RegisterComponentInHierarchy<MapRegistry>();
         builder.RegisterComponentInHierarchy<MapAssemble>();
-        builder.RegisterComponentInHierarchy<GimmickTileData>();
         builder.RegisterComponentInHierarchy<HeroRegistry>();
         builder.RegisterComponentInHierarchy<AddCitizen>();
         builder.RegisterComponentInHierarchy<SpawnerManager>().AsSelf();
@@ -117,6 +118,7 @@ public class GameLifeTimeScope : LifetimeScope
         builder.RegisterComponentInHierarchy<TutorialOverlayUI>();
         builder.RegisterComponentInHierarchy<TutorialManager>();
         builder.RegisterComponentInHierarchy<PlacePalette>(); // 튜토리얼이 배치 대기 상태(Mode)를 읽어 맵 클릭 순간 딤을 풀어주는 데 씀
+        builder.RegisterComponentInHierarchy<MapView>(); // 튜토리얼이 RelocateHero 단계에서 재배치 완료(Replaced)를 구독하는 데 씀
 
         // PoolManager는 RegisterComponentOnNewGameObject라 아무도 Resolve하지 않으면 실제로 생성되지 않는다(lazy).
         // 여기서 강제로 한 번 Resolve해 _resolver가 붙은 상태로 즉시 만들어지게 한다.

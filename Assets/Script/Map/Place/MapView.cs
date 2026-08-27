@@ -23,9 +23,17 @@ public class MapView : MonoBehaviour
         get { return _replace; }
         set
         {
-            if (_replace != null) _replace.OnHoldChanged -= HandleHoldChanged;
+            if (_replace != null)
+            {
+                _replace.OnHoldChanged -= HandleHoldChanged;
+                _replace.Replaced -= HandleReplaced;
+            }
             _replace = value;
-            if (_replace != null) _replace.OnHoldChanged += HandleHoldChanged;
+            if (_replace != null)
+            {
+                _replace.OnHoldChanged += HandleHoldChanged;
+                _replace.Replaced += HandleReplaced;
+            }
         }
     }
 
@@ -60,6 +68,12 @@ public class MapView : MonoBehaviour
     {
         OnStateChanged?.Invoke();
     }
+
+    // 재배치가 실제로 replace 인스턴스가 새로 만들어지는 시점(MapAssemble.Start) 이후에나
+    // 붙는다. TutorialManager처럼 그보다 먼저 구독하는 쪽이 있을 수 있으니, MapView 자신을 통해
+    // 재중계해서 구독 시점과 무관하게 항상 받을 수 있게 한다.
+    public event Action<GameObject, OccupantKind> Replaced;
+    private void HandleReplaced(GameObject unit, OccupantKind kind) => Replaced?.Invoke(unit, kind);
 
     // ---- 상태 기록(PlaceAction이 결과를 알릴 때 부른다) ----
 

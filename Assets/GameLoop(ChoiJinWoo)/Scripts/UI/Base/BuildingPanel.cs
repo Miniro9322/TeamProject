@@ -118,7 +118,7 @@ public class BuildingPanel : MonoBehaviour, IClosablePanel
             bool isMaxLevel = occupant.UpgradeCount == occupant.MaxUpgrade;
             string currentLevel = string.Format(table.Get("Ui_LevelFormat"), isMaxLevel ? table.Get("Ui_MaxLevel") : occupant.UpgradeCount.ToString());
             string nextLevel = isMaxLevel ? string.Empty : $"→ {string.Format(table.Get("Ui_LevelFormat"), occupant.UpgradeCount + 1)}";
-            NextLevelInfoText.text = $"{currentLevel}{nextLevel}\n{occupant.NextUpgradeInfo}";
+            NextLevelInfoText.text = $"{currentLevel}{nextLevel}\n{table.Get(occupant.NextUpgradeInfo)}";
         }
     }
 

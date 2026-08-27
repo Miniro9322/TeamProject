@@ -3,6 +3,7 @@ using Cysharp.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using VContainer;
 
 public class GuideUI : MonoBehaviour, IExclusiveUiPanel
 {
@@ -13,13 +14,20 @@ public class GuideUI : MonoBehaviour, IExclusiveUiPanel
     [SerializeField] private List<SpecificGuide> baseGuides;
     [SerializeField] private List<SpecificGuide> enemyGuides;
     [SerializeField] private List<SpecificGuide> gimmickGuides;
-    [SerializeField] private GimmickTileData gimmickTileData;
     [SerializeField] private Image guideImage;
     [SerializeField] private TextMeshProUGUI guideText;
     [SerializeField] private Animator guideCopyAnimator;
     [SerializeField] private Animator guidePictureAnimator;
 
+    private GimmickTileData gimmickTileData;
     private List<SpecificGuide> activatedButtons = new();
+
+    // 기믹 기록장을 컨테이너에서 받아 둔다(이 패널은 프리팹이라 씬 오브젝트를 직접 참조할 수 없다).
+    [Inject]
+    private void Construct(GimmickTileData gimmickTileData)
+    {
+        this.gimmickTileData = gimmickTileData;
+    }
 
     [SerializeField] private Button openButton;
 

@@ -90,21 +90,22 @@ public class TitleUI : MonoBehaviour
             slotSelectPanel.OpenForLoad();
     }
 
-    // 튜토리얼 선택지의 "튜토리얼 하기" 버튼 - 명시적으로 다시 보겠다는 요청이니, 예전에 이미
-    // 끝까지 봐서 TutorialSeen이 true로 남아있더라도 여기서 강제로 초기화해 반드시 뜨게 한다.
+    // 튜토리얼 선택지의 "튜토리얼 하기" 버튼 - 명시적으로 보겠다는 요청이다. TutorialState는 이제
+    // 세이브 슬롯별로 저장되는데, 새로 고른 슬롯엔 아직 파일이 없거나(또는 그 슬롯을 쓰던 이전
+    // 세이브의 오래된 파일만 있어) 여기선 파일을 직접 건드리는 대신 이번 진입에 한해 씬 전환 동안만
+    // 값을 들고 가는 TutorialEntryChoice에 기록해둔다 - MainScene의 TutorialState가 이를 최우선으로 읽는다.
     public void OnStartWithTutorial()
     {
-        new TutorialState().Reset();
+        TutorialEntryChoice.Set(skip: false);
         if(tutorialChoicePanel == null) return;
         tutorialChoicePanel.SetActive(false);
         EnterMainScene();
     }
 
-    // 튜토리얼 선택지의 "건너뛰기" 버튼 - TutorialState는 PlayerPrefs만 다루는 plain class라
-    // DI 없이 바로 만들어 써도 된다.
+    // 튜토리얼 선택지의 "건너뛰기" 버튼 - 위와 같은 이유로 TutorialEntryChoice에 기록해둔다.
     public void OnSkipTutorial()
     {
-        new TutorialState().MarkSeen();
+        TutorialEntryChoice.Set(skip: true);
         if(tutorialChoicePanel == null) return;
         tutorialChoicePanel.SetActive(false);
         EnterMainScene();
@@ -112,7 +113,8 @@ public class TitleUI : MonoBehaviour
 
     // 슬롯 선택 확인 직후 - 새 게임일 때만 씬 전환 전에 튜토리얼 선택 화면을 끼워 넣는다.
     // GameManager.Construct()가 TutorialState.Seen을 동기적으로 읽기 전에(씬 전환 전에) 확정돼야
-    // 해서 여기서 정한다. 불러오기는 이미 진행 중인 세이브라 물어볼 필요 없이 곧장 넘어간다.
+    // 해서 여기서 정한다. 불러오기는 이미 진행 중인 세이브라 물어볼 필요 없이 곧장 넘어간다
+    // (TutorialState가 그 세이브의 파일에서 직접 읽는다).
     private void OnSlotConfirmed(SlotSelectMode mode)
     {
         slotSelectPanel.gameObject.SetActive(false);

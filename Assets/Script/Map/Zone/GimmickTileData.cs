@@ -1,8 +1,7 @@
 using System.Collections.Generic;
-using UnityEngine;
 
 // 해금 연출이 함께 쓰는 기믹 칸 목록과 "이미 보여준 지역"을 보관한다.
-public class GimmickTileData : MonoBehaviour
+public class GimmickTileData
 {
     private readonly Dictionary<int, List<Tile>> tilesByModule = new();
     private readonly HashSet<int> shownModules = new();

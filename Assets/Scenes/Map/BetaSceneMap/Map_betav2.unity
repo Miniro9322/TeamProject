@@ -2462,70 +2462,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 89848636}
   m_CullTransparentMesh: 1
---- !u!1 &92164343
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 92164346}
-  - component: {fileID: 92164345}
-  - component: {fileID: 92164344}
-  m_Layer: 0
-  m_Name: GimmickReveal
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &92164344
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 92164343}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a755cbd4796838c4ea3813bfddd4ddfc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::GimmickRevealController
-  registry: {fileID: 1862994567}
-  tileData: {fileID: 92164345}
-  gimmickPopup: {fileID: 343767466}
-  edgeMaterial: {fileID: 2100000, guid: 821738ad8701e994b80fb52c3d911988, type: 2}
-  edgeWidth: 0.06
-  edgeLift: 0.025
-  highlightSeconds: 15
---- !u!114 &92164345
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 92164343}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 06686050cf19fdc4eb0fcdeebb2de2c0, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::GimmickTileData
---- !u!4 &92164346
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 92164343}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &100636380
 GameObject:
   m_ObjectHideFlags: 0
@@ -6929,7 +6865,7 @@ MonoBehaviour:
   m_OverrideVoxelSize: 0
   m_VoxelSize: 0.033333335
   m_MinRegionArea: 2
-  m_NavMeshData: {fileID: 23800000, guid: c12b32c38e3c00b428b269fbf9c94fc5, type: 2}
+  m_NavMeshData: {fileID: 0}
   m_BuildHeightMesh: 0
 --- !u!64 &237864168
 MeshCollider:
@@ -9729,7 +9665,9 @@ MonoBehaviour:
   parentReference:
     TypeName: 
   autoRun: 1
-  autoInjectGameObjects: []
+  autoInjectGameObjects:
+  - {fileID: 512501367}
+  - {fileID: 723734827}
   resourcesManagerPrefab: {fileID: 4549263094409699224, guid: ca784472de86f0c4484370d0bfbddc37, type: 3}
   citizenManagerPrefab: {fileID: 3371740108421390513, guid: 1177c9fde41933841adab3e780c4b135, type: 3}
   citizenWanderManagerPrefab: {fileID: 3371740108421390900, guid: facc46176170449188503581751339c0, type: 3}
@@ -13736,6 +13674,56 @@ Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 174ef68548ea1174a97d647c0b4ef52b, type: 3}
   m_PrefabInstance: {fileID: 507537285}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &512501367
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 512501369}
+  - component: {fileID: 512501368}
+  m_Layer: 0
+  m_Name: GimmickReveal
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &512501368
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 512501367}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a755cbd4796838c4ea3813bfddd4ddfc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GimmickRevealController
+  registry: {fileID: 1862994567}
+  gimmickPopup: {fileID: 343767466}
+  edgeMaterial: {fileID: 2100000, guid: 821738ad8701e994b80fb52c3d911988, type: 2}
+  edgeWidth: 0.06
+  edgeLift: 0.025
+  highlightSeconds: 15
+--- !u!4 &512501369
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 512501367}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &513263114
 GameObject:
   m_ObjectHideFlags: 0
@@ -19793,7 +19781,6 @@ MonoBehaviour:
   - {fileID: 1687848091}
   - {fileID: 1713790009}
   - {fileID: 1286088600}
-  gimmickTileData: {fileID: 92164345}
   guideImage: {fileID: 336716324}
   guideText: {fileID: 1885585721}
   guideCopyAnimator: {fileID: 1885585716}
@@ -45696,6 +45683,7 @@ MonoBehaviour:
     completesOnAcknowledge: 1
     pauseTimeWhileActive: 1
   placeHeroMapClickMessageKey: Tutorial_PlaceHero_Step5
+  relocateHeroMapClickMessageKey: 
   completionMessageKey: Tutorial_Complete
 --- !u!4 &1605368764
 Transform:
@@ -61259,6 +61247,9 @@ MonoBehaviour:
   infoPanel: {fileID: 903642893}
   infoIcon: {fileID: 176929274}
   infoText: {fileID: 1979907676}
+  productionRow: {fileID: 0}
+  productionIcon: {fileID: 0}
+  constructCostRows: []
   parentPanel: {fileID: 331712667}
   buildButtonRect: {fileID: 1414374380}
 --- !u!114 &2086405551
@@ -63756,4 +63747,4 @@ SceneRoots:
   - {fileID: 1594750081}
   - {fileID: 2089704959}
   - {fileID: 650277593}
-  - {fileID: 92164346}
+  - {fileID: 512501369}

@@ -2,8 +2,10 @@ using System.Collections.Generic;
 using UnityEngine;
 
 // 같은 영웅 3개를 합성해 다음 티어 영웅 1개를 만드는 담당. 결과는 항상 원본과 같은 종류(근접/원거리)다.
-// 더블클릭한 대상(pinnedEntry)이 필드에 배치돼 있었다면 결과 영웅을 그 자리에 그대로 배치하고,
-// 아니라면 기존처럼 HeroRoster에 Available 엔트리로만 추가한다(배치는 플레이어가 직접).
+// 합쳐지는 3개 중 필드에 배치된 게 있었다면 결과 영웅을 그 자리에 그대로 배치하고(더블클릭한
+// 대상 자신이 배치돼 있었다면 그걸 최우선으로, 아니면 자동으로 같이 골린 나머지 중 배치된 걸
+// 대신 씀 - Combine 참고), 셋 다 미배치였다면 기존처럼 HeroRoster에 Available 엔트리로만
+// 추가한다(배치는 플레이어가 직접).
 // 합성 후보/다음 티어 프리팹 정보는 HeroRegistry에서 받아오고, 여긴 합성 실행(제거/파괴/로스터 갱신/배치)만 한다.
 public class HeroCombineManager : MonoBehaviour
 {
@@ -88,6 +90,22 @@ public class HeroCombineManager : MonoBehaviour
         PlacementArea pinnedArea = null;
         Vector3 pinnedPosition = default;
 
+        // 결과 영웅을 되돌려놓을 자리는 더블클릭한 대상(pinnedEntry)이 배치돼 있었다면 그걸 최우선으로
+        // 쓴다 - 기존 의도(플레이어가 직접 고른 배치 영웅을 더블클릭했다면 그 자리 유지)를 그대로
+        // 지킨다. pinnedEntry가 없거나 미배치였다면, 자동으로 같이 골린 나머지 후보 중 배치된 게
+        // 있는지 대신 찾는다 - 안 그러면 자동 선택된 후보 하나가 실제로는 필드에 배치돼 있었을 때
+        // 그 영웅만 제거되고 결과물은 인벤토리로 들어가버려(전투 중이던 영웅이 조용히 사라짐) 버그가 된다.
+        HeroRosterEntry anchorEntry = pinnedEntry != null && pinnedEntry.PlacedUnit != null ? pinnedEntry : null;
+        if (anchorEntry == null)
+        {
+            foreach (HeroRosterEntry candidate in entries)
+            {
+                if (candidate.PlacedUnit == null) continue;
+                anchorEntry = candidate;
+                break;
+            }
+        }
+
         foreach (HeroRosterEntry entry in entries)
         {
             refund += entry.CitizenCost;
@@ -100,7 +118,7 @@ public class HeroCombineManager : MonoBehaviour
 
                 if (game.Units.TryGetArea(unit, out PlacementArea area))
                 {
-                    if (entry == pinnedEntry)
+                    if (entry == anchorEntry)
                     {
                         pinnedArea = area;
                         pinnedPosition = unit.transform.position;
@@ -136,7 +154,8 @@ public class HeroCombineManager : MonoBehaviour
 
         HeroRosterEntry newEntry = game.HeroRoster.Add(newSlot, nextTierData, mergedHeroCitizenCost);
 
-        // 더블클릭한 대상이 필드에 배치돼 있었다면, 결과 영웅을 그 자리에 그대로 배치한다.
+        // anchorEntry(더블클릭 대상 우선, 없으면 배치된 다른 후보)가 필드에 배치돼 있었다면,
+        // 결과 영웅을 그 자리에 그대로 배치한다.
         if (pinnedArea != null && AreaPlace.CanPlace(pinnedArea, newSlot.kind))
         {
             PlaceData placeData = new PlaceData(pinnedArea, pinnedPosition, true);
