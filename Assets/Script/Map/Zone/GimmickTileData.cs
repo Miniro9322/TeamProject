@@ -24,6 +24,12 @@ public class GimmickTileData
         return shownModules.Contains(moduleId);
     }
 
+    // 기믹 안내를 한 번이라도 보여준 지역이 있는지 알려준다.
+    public bool HasAnyShown()
+    {
+        return shownModules.Count > 0;
+    }
+
     // 그 지역의 기믹 안내를 보여줬다고 새긴다.
     public void MarkShown(int moduleId)
     {
