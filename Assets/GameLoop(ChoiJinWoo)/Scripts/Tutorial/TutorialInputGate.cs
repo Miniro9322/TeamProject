@@ -41,4 +41,11 @@ public static class TutorialInputGate
     // HeroCombineMention 등)이 전제하는 "배치된 영웅"이 사라져 진행이 꼬인다. BlockSave와 같은 생명주기
     // (TutorialManager.OnEnable~OnDisable 전체 구간) 동안 true - HeroInventory가 회수 버튼 자체를 숨긴다.
     public static bool BlockHeroRetrieve { get; set; }
+
+    // PlayerSkillMention 단계는 스킬 버튼을 스포트라이트로 짚어 언급만 하는 스텝이라, 그 구멍으로
+    // 실제로 눌려서 스킬이 나가면 안 된다. 이전에는 패널 CanvasGroup.blocksRaycasts를 꺼서 막았는데,
+    // 그러면 EventSystem 레이캐스트 자체가 안 잡혀 OnPointerEnter/Exit도 같이 막혀버려 툴팁마저
+    // 안 뜨는 부작용이 있었다(hoverDelay/unscaledTime과는 무관한 원인). 레이캐스트는 그대로 두고
+    // 클릭 핸들러(PlayerSkillPanel)에서 이 플래그만 확인해 스킬 발동만 막는다.
+    public static bool BlockPlayerSkillCast { get; set; }
 }

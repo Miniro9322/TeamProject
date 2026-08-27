@@ -27,7 +27,6 @@ public class TutorialManager : MonoBehaviour
     private MapGame mapGame;
     private MapView mapView;
     private UiManager uiManager;
-    private PlayerSkillPanel playerSkillPanel;
     private EnviromentManager enviromentManager;
     private SaveManager saveManager;
     private TutorialState state;
@@ -55,15 +54,16 @@ public class TutorialManager : MonoBehaviour
     private CanvasGroup uiManagerHudGroup;
     private bool hudBlocked;
 
-    // GameSpeedMention/PlayerSkillMention도 HeroUpgradeMention과 같은 순수 언급 스텝이다 - 스포트라이트
-    // 구멍으로 실제 배속/스킬 버튼이 눌리면 배속이 바뀌거나 스킬이 나가버린다. 각 패널 자체에
-    // CanvasGroup을 붙여 그 스텝인 동안만 막는다. TutorialManager가 uiManager.GameSpeedUi.OnButtonClick을
-    // 코드로 직접 호출해 배속을 걸 때(pauseTimeWhileActive)는 CanvasGroup과 무관한 일반 메서드 호출이라
-    // 영향받지 않는다 - blocksRaycasts는 EventSystem 레이캐스트에만 관여한다.
+    // GameSpeedMention도 HeroUpgradeMention과 같은 순수 언급 스텝이다 - 스포트라이트 구멍으로 실제
+    // 배속 버튼이 눌리면 배속이 바뀌어버린다. 패널 자체에 CanvasGroup을 붙여 그 스텝인 동안만 막는다.
+    // TutorialManager가 uiManager.GameSpeedUi.OnButtonClick을 코드로 직접 호출해 배속을 걸 때
+    // (pauseTimeWhileActive)는 CanvasGroup과 무관한 일반 메서드 호출이라 영향받지 않는다 -
+    // blocksRaycasts는 EventSystem 레이캐스트에만 관여한다.
+    // PlayerSkillMention은 같은 방식(CanvasGroup.blocksRaycasts)을 쓰지 않는다 - blocksRaycasts를
+    // 끄면 레이캐스트 자체가 안 잡혀 OnPointerEnter/Exit도 막히면서 스킬 툴팁이 안 뜨는 부작용이
+    // 있었다. TutorialInputGate.BlockPlayerSkillCast로 클릭만 개별적으로 막는다(PlayerSkillPanel 참고).
     private CanvasGroup gameSpeedGroup;
-    private CanvasGroup playerSkillGroup;
     private bool gameSpeedBlocked;
-    private bool playerSkillBlocked;
 
     [Tooltip("0일차 리셋이 끝난 뒤(진짜 1일차 시작) 한 번 보여줄 완료 메시지 키.")]
     [SerializeField] private string completionMessageKey;
@@ -74,7 +74,7 @@ public class TutorialManager : MonoBehaviour
         BaseConstructor baseConstructor, HeroRoster heroRoster, PlacePalette placePalette,
         BuildingPanel buildingPanel, GameManager gameManager, ResourcesManager resourcesManager,
         RegionOverviewPanel regionOverviewPanel, MapGame mapGame, MapView mapView, UiManager uiManager,
-        PlayerSkillPanel playerSkillPanel, EnviromentManager enviromentManager,
+        EnviromentManager enviromentManager,
         SaveManager saveManager, TutorialState state)
     {
         this.citizenManager = citizenManager;
@@ -88,7 +88,6 @@ public class TutorialManager : MonoBehaviour
         this.mapGame = mapGame;
         this.mapView = mapView;
         this.uiManager = uiManager;
-        this.playerSkillPanel = playerSkillPanel;
         this.enviromentManager = enviromentManager;
         this.saveManager = saveManager;
         this.state = state;
@@ -160,7 +159,6 @@ public class TutorialManager : MonoBehaviour
         // 이 둘은 조상 Canvas가 아니라 패널 자기 자신만 막는다 - GameSpeedUi가 속한 Canvas를 통째로
         // 막아버리면(uiManagerHudGroup) 그 안의 가이드/메뉴 등 무관한 버튼까지 같이 막히기 때문.
         gameSpeedGroup = GetOrAddCanvasGroup(uiManager.GameSpeedUiRect);
-        playerSkillGroup = GetOrAddCanvasGroup(playerSkillPanel != null ? playerSkillPanel.transform : null);
     }
 
     private static CanvasGroup ResolveHudGroup(Transform anchor)
@@ -244,7 +242,7 @@ public class TutorialManager : MonoBehaviour
         TutorialActivityWatcher.Changed -= OnWaypointActivityChanged;
         SetHudBlocked(false);
         SetBlocked(gameSpeedGroup, ref gameSpeedBlocked, false);
-        SetBlocked(playerSkillGroup, ref playerSkillBlocked, false);
+        TutorialInputGate.BlockPlayerSkillCast = false;
         citizenManager.CitizenChanged -= OnCitizenChanged;
         baseConstructor.Built -= OnBuilt;
         heroRoster.Changed -= OnHeroRosterChanged;
@@ -255,23 +253,15 @@ public class TutorialManager : MonoBehaviour
         mapView.Replaced -= OnHeroReplaced;
     }
 
-    // 현재 단계의 waypoints 중 저작한 순서로 가장 깊이 들어간 활성 상태를 스포트라이트하고,
-    // 그 waypoint에 딸린 문구(없으면 단계 기본 문구)를 보여준다. 패널들이 SetActive로 토글되므로
-    // 단계가 바뀌지 않아도 매 프레임 다시 계산해야 한다.
     private void Update()
     {
         if (sequenceFinished) return; // 스텝은 끝났고 0일차 리셋은 EnviromentManager.OnDay가 알아서 처리 - 더 그릴 것 없음
 
-        // 로스터에서 영웅을 고르면(배치 대기 중) 다음 클릭은 UI가 아니라 3D 맵 타일이라 짚어줄
-        // 사각형이 없다 - 이 순간만큼은 딤을 전부 끄고 맵을 자유롭게 클릭할 수 있게 한다.
         bool awaitingPlaceClick = IsActive(TutorialStepId.PlaceHero) && placePalette.Mode == PlaceMode.Place;
-        // 재배치 버튼을 누른 뒤(영웅을 집거나 새 자리에 내려놓는 동안)도 똑같이 3D 맵 타일을 자유롭게
-        // 클릭할 수 있어야 한다.
+
         bool awaitingRelocateClick = IsActive(TutorialStepId.RelocateHero) && placePalette.Mode == PlaceMode.Replace;
         bool awaitingMapClick = awaitingPlaceClick || awaitingRelocateClick;
-        // 딤을 끄는 동안엔 스포트라이트 밖의 다른 버튼(지역 슬롯, 거점 화면, 가이드 등)도 함께
-        // 풀려버리니, 그런 패널이 마우스로 열리는 것만 따로 막아둔다 - HUD CanvasGroup 차단(아래)의
-        // 이중 방어선이다.
+
         TutorialInputGate.BlockPanelOpen = awaitingMapClick;
         SetHudBlocked(awaitingMapClick);
         if (awaitingMapClick)
@@ -280,8 +270,6 @@ public class TutorialManager : MonoBehaviour
             return;
         }
 
-        // HeroUpgradeMention은 스포트라이트로 강화 버튼을 짚어 언급만 할 뿐 실제로 눌러서 완료되는
-        // 스텝이 아니다 - 그 구멍으로 진짜 버튼이 눌려 메뉴가 열리는 걸 막는다.
         TutorialInputGate.BlockHeroUpgradeOpen = IsActive(TutorialStepId.HeroUpgradeMention);
         // HeroCombineMention은 합성(더블클릭/일괄합성)은 그대로 두되, 로스터 아이콘 단일 클릭으로
         // 배치 모드에 들어가는 것만 막는다.
@@ -290,7 +278,7 @@ public class TutorialManager : MonoBehaviour
         // GameSpeedMention/PlayerSkillMention도 스포트라이트로 짚어 언급만 하는 스텝이라, 그 구멍으로
         // 실제 버튼이 눌리는 걸 막는다.
         SetBlocked(gameSpeedGroup, ref gameSpeedBlocked, IsActive(TutorialStepId.GameSpeedMention));
-        SetBlocked(playerSkillGroup, ref playerSkillBlocked, IsActive(TutorialStepId.PlayerSkillMention));
+        TutorialInputGate.BlockPlayerSkillCast = IsActive(TutorialStepId.PlayerSkillMention);
 
         var step = steps[currentIndex];
         // "어떤 waypoint가 활성인가"는 TutorialActivityWatcher가 변화를 알려줄 때만 다시 계산한다 -
@@ -423,7 +411,7 @@ public class TutorialManager : MonoBehaviour
         TutorialInputGate.BlockHeroPlacementFromInventory = false;
         SetHudBlocked(false);
         SetBlocked(gameSpeedGroup, ref gameSpeedBlocked, false);
-        SetBlocked(playerSkillGroup, ref playerSkillBlocked, false);
+        TutorialInputGate.BlockPlayerSkillCast = false;
         sequenceFinished = true;
         TryFullyDisable();
     }
@@ -513,28 +501,15 @@ public class TutorialManager : MonoBehaviour
         }
     }
 
-    // RelocateHero 단계에서 재배치(집기->내려놓기)가 실제로 성공했을 때만 완료한다 - UnitReplace.Replaced는
-    // 취소(ReturnHeld)에서는 안 울리므로 여기선 성공만 들어온다. kind 체크는 방어적인 것 - 이 스텝에서
-    // 재배치 모드로 집을 수 있는 건 방금 배치한 영웅뿐이라 항상 참이어야 정상이다.
     private void OnHeroReplaced(GameObject unit, OccupantKind kind)
     {
         if (!IsActive(TutorialStepId.RelocateHero)) return;
         if (kind != OccupantKind.MeleeHero && kind != OccupantKind.RangedHero) return;
 
-        // Replace 모드는 Place와 달리 한 번 내려놨다고 저절로 꺼지지 않는다(연달아 다른 유닛을
-        // 더 옮길 수 있게 하려고 일부러 그렇게 만든 상시 모드) - 튜토리얼 입장에선 한 번의 재배치만
-        // 확인하면 끝이므로, 여기서 직접 꺼줘야 다음 스텝으로 넘어간 뒤에도 Replace 모드가 남아
-        // 엉뚱한 클릭에 다른 유닛을 집어버리는 일이 없다.
         placePalette.ClearMode();
         CompleteStep();
     }
 
-    // NightMention 단계가 활성일 때 낮/밤 버튼을 실제로 눌러야(ChangeToNight 발생) 완료된다 -
-    // 다른 강제 단계들(OnBuilt, OnCitizenChanged 등)과 같은 패턴. 완료 즉시 다음 단계
-    // (PlayerSkillMention)로 넘어가지만, 그 스텝의 waypoint(PlayerSkillPanel)는 아직 안 켜져 있을 수
-    // 있다 - PlayerSkillPanel은 이제 ChangeToNight이 아니라 밤 전환이 실제로 다 끝나는
-    // EnviromentManager.OnNight에 맞춰 켜진다(PlayerSkillPanel.cs). GameSpeedMention과 마찬가지로
-    // Update()가 매 프레임 다시 스포트라이트를 계산하므로, 패널이 늦게 켜지면 그 순간 자동으로 잡힌다.
     private void OnChangeToNight()
     {
         if (!IsActive(TutorialStepId.NightMention)) return;
@@ -557,25 +532,17 @@ public class TutorialManager : MonoBehaviour
         resourcesManager.Reset();
         citizenManager.Reset();
         gameManager.ResetHpToFull();
-        // 0일차 밤의 완벽방어 여부는 이 리셋으로 이미 의미가 없어졌다 - 지워두지 않으면 바로 아래
-        // SaveNow()가 이 값을 perfectDefensePending으로 그대로 저장해버려서, 나중에 이 세이브를
-        // 불러올 때 LoadManager가 특수자원 보상을 또 한 번 적용해(GetSpecial) 방금 0으로 되돌린
-        // 특수자원이 다시 늘어나 보인다.
+
         gameManager.perfactDefence = false;
 
         state.MarkSeen();
 
-        // ChangeToDay 시점엔 TutorialInputGate.BlockSave 때문에 SaveManager의 자동 저장이 건너뛰어졌다
-        // (그때는 아직 0일차의 지워질 상태였으므로). 리셋이 끝나 진짜 깨끗한 1일차가 된 지금, 이 상태를
-        // 놓치지 않도록 명시적으로 한 번 저장한다.
         TutorialInputGate.BlockSave = false;
         saveManager.SaveNow();
 
         ShowCompletionMessage();
     }
 
-    // 0일차 리셋과 낮 전환까지 전부 끝난 뒤, 확인을 눌러야 넘어가는 완료 메시지를 한 번 보여준다.
-    // 이걸 확인해야(OnAcknowledgeClicked) 비로소 컴포넌트를 완전히 끈다.
     private void ShowCompletionMessage()
     {
         showingCompletionMessage = true;
@@ -587,8 +554,6 @@ public class TutorialManager : MonoBehaviour
         overlay.SetMessage(completionMessageKey);
     }
 
-    // HeroCombineManager.Combine()의 제거 절차(영역 해제 -> 풀 반환 -> FreeCitizenForHero)를 그대로
-    // 따른다 - UnitRemover는 영웅이 소모한 인력을 제대로 안 돌려준다.
     private void ResetHeroes()
     {
         foreach (var entry in new List<HeroRosterEntry>(heroRoster.Entries))
