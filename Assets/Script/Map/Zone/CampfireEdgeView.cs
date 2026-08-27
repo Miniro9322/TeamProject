@@ -3,13 +3,14 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
 
-// 모닥불 범위의 바깥 경계에만 펄스 외곽선을 그린다.
+// 모닥불·가림막처럼 클릭으로 켜진 범위의 바깥 경계에만 펄스 외곽선을 그린다.
 public class CampfireEdgeView : IDisposable
 {
     private readonly Transform root;
     private readonly Material edgeMat;
     private readonly float edgeWidth;
     private readonly float edgeLift;
+    private readonly string outputName;
     private readonly List<Vector3> vertices = new();
     private readonly List<int> indices = new();
     private readonly HashSet<Tile> inRange = new();
@@ -20,15 +21,16 @@ public class CampfireEdgeView : IDisposable
     private bool hasRange;
 
     // 외곽선 출력에 필요한 표시 설정을 보관합니다.
-    public CampfireEdgeView(Transform root, Material edgeMat, float edgeWidth, float edgeLift)
+    public CampfireEdgeView(Transform root, Material edgeMat, float edgeWidth, float edgeLift, string outputName)
     {
         this.root = root;
         this.edgeMat = edgeMat;
         this.edgeWidth = edgeWidth;
         this.edgeLift = edgeLift;
+        this.outputName = outputName;
     }
 
-    // 클릭한 모닥불의 범위 목록에 맞춰 외곽선을 표시합니다.  
+    // 클릭한 칸의 범위 목록에 맞춰 외곽선을 표시합니다.
     public void Show(IReadOnlyList<Tile> range, int version)
     {
         if (IsSame(version))
@@ -199,9 +201,9 @@ public class CampfireEdgeView : IDisposable
             return;
         }
 
-        edgeObject = new GameObject("CampfireEdge");
+        edgeObject = new GameObject(outputName);
         edgeObject.transform.SetParent(root, false);
-        edgeMesh = new Mesh { name = "CampfireEdgeMesh" };
+        edgeMesh = new Mesh { name = outputName + "Mesh" };
         edgeMesh.MarkDynamic();
 
         edgeObject.AddComponent<MeshFilter>().sharedMesh = edgeMesh;

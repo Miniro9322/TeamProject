@@ -33,7 +33,7 @@ public class RangeInput : MonoBehaviour
         Tile tile = pointerPick.UnderPointer();
         if (rangeCalc.TryGetRange(tile, out List<Tile> range))
         {
-            rangeStore.KeepRange(range, tile.IsCampfire);
+            rangeStore.KeepRange(range, RangeCalc.ResolveEdgeKind(tile));
             return;
         }
 

@@ -12,7 +12,7 @@ public class TilePaintSync
     private readonly TilePainter painter;
     private readonly PointerPick pointerPick;
 
-    private static readonly List<Tile> NoCampfireEdge = new();
+    private static readonly List<Tile> NoEdgeTiles = new();
 
     private readonly List<PaintEntry> plan = new();
     private TileDisplayData lastDisplay;
@@ -24,10 +24,16 @@ public class TilePaintSync
     public Tile HoverTile { get; private set; }
 
     // 지금 눌러서 켜진 모닥불의 범위. 모닥불이 아니면 빈 목록.
-    public IReadOnlyList<Tile> CampfireEdgeTiles { get; private set; } = NoCampfireEdge;
+    public IReadOnlyList<Tile> CampfireEdgeTiles { get; private set; } = NoEdgeTiles;
 
     // CampfireEdgeTiles가 바뀔 때마다 올라간다 — CampfireEdgeView가 다시 그릴지 판단하는 값.
     public int CampfireEdgeVersion { get; private set; }
+
+    // 지금 눌러서 켜진 가림막의 범위. 가림막이 아니면 빈 목록.
+    public IReadOnlyList<Tile> WindwallEdgeTiles { get; private set; } = NoEdgeTiles;
+
+    // WindwallEdgeTiles가 바뀔 때마다 올라간다 — 가림막 외곽선 출력기가 다시 그릴지 판단하는 값.
+    public int WindwallEdgeVersion { get; private set; }
 
     public TilePaintSync(
         PlaceHoverFinder hoverFinder,
@@ -138,8 +144,10 @@ public class TilePaintSync
     private void RebuildPlan(HoverMode mode, PlaceData data, GameObject unit, HeroActiveSkill skill, Tile skillOrigin, PlayerSkillSlot armedSkill, Tile playerSkillOrigin)
     {
         plan.Clear();
-        CampfireEdgeTiles = NoCampfireEdge;
+        CampfireEdgeTiles = NoEdgeTiles;
         CampfireEdgeVersion = 0;
+        WindwallEdgeTiles = NoEdgeTiles;
+        WindwallEdgeVersion = 0;
         AddHoverEntries(mode, data, unit);
         AddSkillEntries(skill, skillOrigin);
         AddPlayerSkillEntries(armedSkill, playerSkillOrigin);
@@ -256,14 +264,33 @@ public class TilePaintSync
 
     private void AddUnitRangeEntries()
     {
-        if (rangeStore.IsCampfireRange)
+        if (rangeStore.EdgeKind == RangeEdgeKind.Campfire)
         {
-            CampfireEdgeTiles = rangeStore.Tiles;
-            CampfireEdgeVersion = rangeStore.Version;
+            KeepCampfireEdge();
+            return;
+        }
+
+        if (rangeStore.EdgeKind == RangeEdgeKind.Windwall)
+        {
+            KeepWindwallEdge();
             return;
         }
 
         AddRangeFillEntries();
+    }
+
+    // 클릭한 모닥불 범위를 모닥불 외곽선 출력기가 읽을 값으로 넘긴다.
+    private void KeepCampfireEdge()
+    {
+        CampfireEdgeTiles = rangeStore.Tiles;
+        CampfireEdgeVersion = rangeStore.Version;
+    }
+
+    // 클릭한 가림막 범위를 가림막 외곽선 출력기가 읽을 값으로 넘긴다.
+    private void KeepWindwallEdge()
+    {
+        WindwallEdgeTiles = rangeStore.Tiles;
+        WindwallEdgeVersion = rangeStore.Version;
     }
 
     private void AddRangeFillEntries()
