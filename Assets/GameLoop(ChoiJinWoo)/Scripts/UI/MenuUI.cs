@@ -26,6 +26,12 @@ public class MenuUI : MonoBehaviour, IExclusiveUiPanel
         outsideCloser.MarkOpened();
         settingPanel.gameObject.SetActive(true);
         QuitAlert.SetActive(false);
+
+        // 행/컬럼 크기를 매번 재계산하던 중첩 ContentSizeFitter는 크기를 고정값으로 박고 제거했다
+        // (ContentSizeFitterFreezer.cs 참고) - 이제 SetActive 직후 남은 LayoutGroup들이 고정된
+        // 크기 안에서 자식 위치만 정렬하면 되므로, 한 패스만 강제로 즉시 확정해도 충분하다.
+        Canvas.ForceUpdateCanvases();
+        LayoutRebuilder.ForceRebuildLayoutImmediate((RectTransform)settingPanel.transform);
     }
 
     private void OnDisable()
@@ -67,6 +73,7 @@ public class MenuUI : MonoBehaviour, IExclusiveUiPanel
 
     public void OnTitle()
     {
+        Time.timeScale = 1f;
         SceneManager.LoadScene("Title");
     }
 }

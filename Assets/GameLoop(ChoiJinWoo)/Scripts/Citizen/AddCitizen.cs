@@ -55,7 +55,8 @@ public class AddCitizen : MonoBehaviour
     private void Update()
     {
         if (keyboard == null || mouse == null) return;
-        if ((!TutorialInputGate.BlockEscapeClose && keyboard[closeKey].wasPressedThisFrame) || mouse.rightButton.wasPressedThisFrame)
+        if (!TutorialInputGate.BlockEscapeClose &&
+            (keyboard[closeKey].wasPressedThisFrame || mouse.rightButton.wasPressedThisFrame))
         {
             gameObject.SetActive(false);
             return;

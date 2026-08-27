@@ -64,6 +64,11 @@ public class Hero : MonoBehaviour, IDamageAble, IUnit, IStunAble, IDebuffCarrier
     protected GameObject target;
     public GameObject Target => target;
 
+    // 다중 타겟 볼리 도중 "지금 실제로 쏘는 대상"을 몸이 바라보게 하기 위한 오버라이드.
+    // null이면 평소처럼 Context.target(락온 타겟)을 본다 — FireVolley류가 발사 직전 갱신하고,
+    // 볼리가 끝나면 다시 null로 되돌린다.
+    public Transform AimOverrideTarget { get; set; }
+
     [SerializeField] private StatDataSO statData;
     public StatDataSO StatData => statData;
     public float PreviewAttackPower => HeroStatManager.GetStat(heroData, StatType.ATK);
@@ -223,7 +228,12 @@ public class Hero : MonoBehaviour, IDamageAble, IUnit, IStunAble, IDebuffCarrier
         while (go == null)
             go = pool.Get();
         go.transform.SetParent(followOwner ? transform : null, worldPositionStays: false);
-        go.transform.position = pos + Vector3.up * GroundZoneLift;
+        // 공중 적에게 명중해 pos가 공중 높이일 수 있다(발사체가 비행 유닛을 맞힌 경우 등) — 장판은
+        // 항상 바닥 타일 높이에 스폰해야 하므로 X/Z(착탄 위치)는 유지하고 Y만 타일 바닥 높이로 스냅한다.
+        Vector3 groundPos = pos;
+        if (Board.TryGetCell(Board.WorldToCell(pos), out Tile tile))
+            groundPos.y = tile.WorldTop.y;
+        go.transform.position = groundPos + Vector3.up * GroundZoneLift;
         if (go.TryGetComponent(out GroundZoneEffect zone))
             zone.Init(Board, this, followOwner, released => pool.Release(released));
     }

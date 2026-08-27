@@ -96,7 +96,10 @@ public class GameSpeedUI : MonoBehaviour
 
     private void Update()
     {
-        if (!SpawnerManager.Instance.isDirecting)
+        // gameSpeedGroup(CanvasGroup)의 blocksRaycasts는 EventSystem 레이캐스트(버튼 클릭)에만
+        // 관여하고 여기서 직접 폴링하는 키보드 입력은 막지 못한다 - 다른 단축키 처리부(UiManager,
+        // BuildModePanel, DayNightButton 등)와 동일하게 BlockHotkeys를 직접 체크해야 한다.
+        if (!SpawnerManager.Instance.isDirecting && !TutorialInputGate.BlockHotkeys)
         {
             if (keyboard[timeIncreaseKey].wasPressedThisFrame)
             {
