@@ -72,12 +72,16 @@ public class HeroCreateAmountController : MonoBehaviour
     private void Update()
     {
         if (keyboard == null || mouse == null) return;
-        if (keyboard[closeKey].wasPressedThisFrame || mouse.rightButton.wasPressedThisFrame)
+        // PlaceHero 튜토리얼 스텝(슬라이더로 영웅 생성)에서 뜨는 패널이라, ESC/우클릭으로 그냥
+        // 닫아버리면 영웅이 안 만들어져 튜토리얼이 멈춘다 - AddCitizen.cs와 동일하게 막는다.
+        if (!TutorialInputGate.BlockEscapeClose &&
+            (keyboard[closeKey].wasPressedThisFrame || mouse.rightButton.wasPressedThisFrame))
         {
             Close();
             return;
         }
 
+        if (TutorialInputGate.BlockEscapeClose) return; // 바깥 클릭으로 닫는 것도 같은 이유로 막는다
         if (Time.frameCount == openedFrame) return; // 열린 바로 그 프레임의 클릭은 무시
         if (!mouse.leftButton.wasPressedThisFrame) return;
 

@@ -84,6 +84,10 @@ public class PlayerSkillPanel : MonoBehaviour
         }
 
         if (keyboard == null) return;
+        // playerSkillGroup(CanvasGroup)의 blocksRaycasts는 버튼 클릭만 막고 여기서 직접 폴링하는
+        // 키보드 입력은 못 막는다(GameSpeedUI와 동일한 이유) - PlayerSkillMention 스텝 등 튜토리얼
+        // 진행 중엔 BlockHotkeys로 직접 막아야 한다.
+        if (TutorialInputGate.BlockHotkeys) return;
 
         if (keyboard[skill1Key].wasPressedThisFrame)
         {

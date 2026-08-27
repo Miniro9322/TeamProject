@@ -6,6 +6,7 @@ public enum TutorialStepId
     AssignWorker,
     BuildingUpgradeMention,
     PlaceHero,
+    RelocateHero,
     HeroUpgradeMention,
     HeroCombineMention,
     NightMention,

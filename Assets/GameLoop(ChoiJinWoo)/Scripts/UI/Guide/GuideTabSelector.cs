@@ -28,6 +28,11 @@ public class GuideTabSelector : MonoBehaviour
         SetTabState(enemyImage, enemyText, gamePlayImage);
     }
 
+    private void OnEnable()
+    {
+        ApplySelection(gamePlayImage);
+    }
+
     // 게임 플레이 탭을 선택 상태로 표시한다
     public void SelectGamePlayTab()
     {

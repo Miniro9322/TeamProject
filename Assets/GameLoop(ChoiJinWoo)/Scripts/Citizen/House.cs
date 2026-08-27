@@ -28,7 +28,7 @@ public class House : IUpgradableOccupant
     public (ProductionType Type, int Amount)[] Resources => config.Resources;
     public int UpgradeCount => upgradeCount;
     public (ProductionType Type, int Amount)[] UpgradeCostCopy => upgradeCostCopy;
-    private string nextUpgradeInfo = "최대 시민 수 증가";
+    private string nextUpgradeInfo = "Ui_UpgradeInfo_MaxCitizen";
     public string NextUpgradeInfo => nextUpgradeInfo;
 
     public int MaxUpgrade => maxUpgrade;

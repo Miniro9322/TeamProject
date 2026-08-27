@@ -157,6 +157,10 @@ public class RegionDetailPanel : MonoBehaviour, IClosablePanel
 
     private void OnSlotClicked(int index)
     {
+        // 튜토리얼이 영웅 배치 대기 중(맵 클릭용으로 화면을 전부 풀어둔 상태)일 땐 이 슬롯 클릭으로
+        // BuildingPanel/FacilityBuildChoicePanel이 열리면 그게 맵을 덮어 배치를 끝낼 수 없게 되어
+        // 튜토리얼이 멈춘다 - TutorialInputGate.cs 참고.
+        if (TutorialInputGate.BlockPanelOpen) return;
         if (region == null || index >= region.Slots.Count) return;
 
         var slot = region.Slots[index];

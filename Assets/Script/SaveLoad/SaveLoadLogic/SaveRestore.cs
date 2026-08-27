@@ -20,6 +20,7 @@ public class SaveRestore
     private readonly MapGame mapGame;
     private readonly MapAssemble mapAssemble;
     private readonly FacilityManager facilityManager;
+    private readonly TutorialState tutorialState;
 
     public SaveRestore(
         GameManager gameManager,
@@ -36,7 +37,8 @@ public class SaveRestore
         HeroClassUpgradeState classState,
         MapGame mapGame,
         MapAssemble mapAssemble,
-        FacilityManager facilityManager)
+        FacilityManager facilityManager,
+        TutorialState tutorialState)
     {
         this.gameManager = gameManager;
         this.resourcesManager = resourcesManager;
@@ -53,6 +55,7 @@ public class SaveRestore
         this.mapGame = mapGame;
         this.mapAssemble = mapAssemble;
         this.facilityManager = facilityManager;
+        this.tutorialState = tutorialState;
     }
 
     // 문서 §14.3 로드 순서대로 저장 데이터 전체를 게임에 적용한다
@@ -62,6 +65,7 @@ public class SaveRestore
         Dictionary<string, HeroRosterEntry> restoredEntries = new Dictionary<string, HeroRosterEntry>();
 
         EnemyArchiveData.RestoreAll(data.archiveList);
+        tutorialState.RestoreSeen(data.tutorialSeen);
         RestoreProgress(data);
         RestoreRegions(data);
         RestoreResources(data);

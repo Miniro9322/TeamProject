@@ -39,4 +39,6 @@ public class SaveData
     public PortalSave[] portalList = Array.Empty<PortalSave>();   // NightReady일 때만 채워지는 활성 포탈
     public string[] archiveList = Array.Empty<string>();      // 발견한 적 도감 ID 목록
     public int[] savedDayList = Array.Empty<int>();           // 지금까지 저장된 일차 번호 목록
+
+    public bool tutorialSeen;   // 이 세이브 슬롯에서 튜토리얼을 이미 봤는지
 }

@@ -22,6 +22,25 @@ public class BuildModePanel : MonoBehaviour
     private ClickOutsideCloser heroPanelCloser;
     private ClickOutsideCloser inventoryCloser;
     private ClickOutsideCloser classUpgradeCloser;
+    private bool _reopenInventoryOnOff;
+
+    private void OnEnable()
+    {
+        view.OnOffMode += HandleMapOff;
+    }
+
+    private void OnDisable()
+    {
+        view.OnOffMode -= HandleMapOff;
+    }
+
+    // 재배치/제거 모드가 끝나 Off로 돌아오면(버튼/단축키/ESC 등 어떤 경로든) 그때만 인벤토리를 다시 연다.
+    private void HandleMapOff()
+    {
+        if (!_reopenInventoryOnOff) return;
+        _reopenInventoryOnOff = false;
+        OpenInventory();
+    }
 
     private void Awake()
     {
@@ -143,6 +162,11 @@ public class BuildModePanel : MonoBehaviour
         {
             heroInventory.SetActive(false);
         }
+        // 이 GameObject가 바로 아래에서 꺼지면 Update()의 ESC 우선순위 체인도 같이 멈춘다 - 영웅
+        // 도감은 자기 ESC 처리를 그 체인에만 맡겨두므로(HeroArchiveButton.cs 참고), 열려있는 채로
+        // 밤을 맞으면 낮이 될 때까지 ESC/바깥클릭/P키 그 무엇으로도 못 닫는 상태가 된다. 다른
+        // 패널들처럼 여기서 미리 닫아준다.
+        heroArchiveButton?.Close();
         gameObject.SetActive(false);
     }
 
@@ -169,17 +193,35 @@ public class BuildModePanel : MonoBehaviour
     public void OnRemoveButton()
     {
         if (view.IsRemoving)
+        {
             view.ClearMode();
+        }
         else
+        {
+            CloseInventoryForMode();
             view.SetRemove();
+        }
     }
 
     public void OnReplaceButton()
     {
         if (view.IsReplacing)
+        {
             view.ClearMode();
+        }
         else
+        {
+            CloseInventoryForMode();
             view.SetReplace();
+        }
+    }
+
+    // 재배치/제거 모드로 들어가는 동안 인벤토리가 열려 있었다면 닫아두고, 모드가 끝나면 다시 연다.
+    private void CloseInventoryForMode()
+    {
+        if (!heroInventory.activeSelf) return;
+        heroInventory.SetActive(false);
+        _reopenInventoryOnOff = true;
     }
 
     public void OnInventoryButton()
@@ -206,6 +248,11 @@ public class BuildModePanel : MonoBehaviour
 
     public void OnClassUpgradeButton()
     {
+        // 튜토리얼이 이 버튼을 스포트라이트로 짚어 "언급"만 하는 중일 땐 실제로 눌려서 패널이
+        // 열리면 안 된다 - TutorialInputGate.BlockHeroUpgradeOpen 참고. 이 버튼은 인스펙터에서
+        // 곧바로 이 메서드에 연결돼 HeroTierUpgradeMenu.Toggle()을 거치지 않으므로 여기서도 따로 막는다.
+        if (TutorialInputGate.BlockHeroUpgradeOpen) return;
+
         if (classUpgradePanel.activeSelf)
         {
             classUpgradePanel.SetActive(false);

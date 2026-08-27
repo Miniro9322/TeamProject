@@ -24,13 +24,21 @@ public class HeroArchiveButton : MonoBehaviour, IExclusiveUiPanel
         keyboard = Keyboard.current;
     }
 
-    // ESC는 BuildModePanel의 취소 우선순위 체인이 IsOpen을 보고 Close()를 호출해주므로 여기서 또
-    // 감지하지 않는다(중복 처리 방지) - 바깥 클릭만 직접 담당한다.
     private void Update()
     {
         if (isOpen && outsideCloser.ClickedOutside()) Close();
 
         if (keyboard == null) return;
+
+        // 원래는 BuildModePanel의 ESC 우선순위 체인이 IsOpen을 보고 Close()를 대신 호출해줘서 여기서
+        // 따로 감지하지 않았다. 그런데 BuildModePanel은 밤이 되면 자기 GameObject를 통째로
+        // SetActive(false)해(DisablePanels) Update() 자체가 멈추므로, 밤에 이 도감을 열면 ESC로
+        // 닫을 방법이 없어졌다 - 바깥 클릭/P키처럼 여기서 직접 처리한다. 낮에 BuildModePanel의
+        // 체인과 같은 프레임에 겹쳐 불려도 Close()는 이미 닫혀있으면 그냥 반환하니 안전하다.
+        if (isOpen && keyboard.escapeKey.wasPressedThisFrame && !TutorialInputGate.BlockEscapeClose)
+        {
+            Close();
+        }
 
         if (keyboard[openKey].wasPressedThisFrame && !TutorialInputGate.BlockHotkeys)
         {

@@ -187,7 +187,7 @@ Guide_BaseBuildButton,건설,Build,建設
 Guide_BaseMainButton,중앙 거점,Central Base,中央拠点
 Guide_BaseUnlockButton,해금,Unlock,解放
 Guide_ResourceInfo,게임 전반에 걸쳐 필요한 요소이다.\n거점의 생산 건물을 건설 후 시민을 배치하면 자원을 생산할 수 있다.,An element needed throughout the entire game.\nBuild a production building at a base and assign citizens to it to produce resources.,ゲーム全体を通して必要な要素だ。\n拠点に生産建物を建設した後、市民を配置すると資源を生産できる。
-Guide_SpecialResourceButton,특수 자원,Special Resource,特殊資源
+Guide_SpecialResourceButton,펠리움,Fellium,フェリウム
 Guide_SpecialResourceInfo,하루를 피해 없이 방어에 성공할 경우 얻을 수 있다.\n중앙 거점에서 기본 자원이랑 교환 할 수 있다.,Obtained when you successfully defend a day without taking damage.\nCan be exchanged for basic resources at the central base.,1日を被害なく防衛に成功すると獲得できる。\n中央拠点で基本資源と交換できる。
 Guide_HeroCreateAndPlaceInfo,좌측 아이콘을 클릭하여 영웅을 생성할 수 있다.\n영웅 생성 시 자원 및 시민을 소모한다.\n영웅 생성 시 하단의 공간에 아이콘이 생성되고 아이콘을 클릭 시 배치 할 수 있다.\n좌측의 아이콘을 통해 영웅을 재배치 및 제거를 할 수 있다.\n확률로 상위 티어의 영웅이 나올 수 있다.,"Click the icon on the left to create a hero.\nCreating a hero consumes resources and citizens.\nWhen a hero is created, an icon appears in the space below, and clicking it lets you place the hero.\nYou can reposition or remove heroes using the icon on the left.\nThere is a chance a higher-tier hero may appear.",左側のアイコンをクリックして英雄を生成できる。\n英雄生成時に資源と市民を消費する。\n英雄生成時、下部の空間にアイコンが生成され、アイコンをクリックすると配置できる。\n左側のアイコンから英雄の再配置と削除ができる。\n確率で上位ティアの英雄が出現することがある。
 Guide_HeroTypeInfo,영웅은 근접과 원거리로 나뉘어진다.\n근접 영웅은 평지에만 원거리 영웅은 언덕에만 배치 가능하다.\n근접 영웅은 공중 적을 공격 할 수 없다.,"Heroes are divided into melee and ranged types.\nMelee heroes can only be placed on flat ground, while ranged heroes can only be placed on hills.\nMelee heroes cannot attack airborne enemies.",英雄は近接と遠距離に分けられる。\n近接英雄は平地にのみ、遠距離英雄は丘にのみ配置できる。\n近接英雄は空中の敵を攻撃できない。
@@ -195,6 +195,10 @@ Guide_HeroMergeInfo,같은 영웅이 3명 있으면 합성이 가능하다.\n근
 Guide_HeroTierButton,티어,Tier,ティア
 Guide_HeroTierInfo,영웅은 1티어에서 4티어까지 있으며 티어가 높을 수록 영웅의 능력치가 강해진다.,"Heroes range from Tier 1 to Tier 4, and the higher the tier, the stronger the hero's stats.",英雄はティア1からティア4まであり、ティアが高いほど能力値が強くなる。
 Guide_BaseMainInfo,중앙 거점에서 자원의 하루 생산량을 확인할 수 있으며 특수 자원을 기본 자원으로 교환 할 수 있다.\n시민 추가 또한 중앙 거점에서 할 수 있다.,"At the central base, you can check the daily resource production and exchange special resources for basic resources.\nYou can also add citizens at the central base.",中央拠点では資源の1日の生産量を確認でき、特殊資源を基本資源と交換できる。\n市民の追加も中央拠点で行える。
+Guide_HeroUpgradeButton,업그레이드,Upgrade,アップグレード
+Guide_HeroUpgrade,자원을 소모하여 영웅들의 스탯을 업그레이드 할 수 있다.\n업그레이드는 근접 영웅과 원거리 영웅이 나뉘어져 있다.,Consume resources to upgrade heroes' stats.\nUpgrades are separated into melee heroes and ranged heroes.,資源を消費して英雄たちのステータスをアップグレードできる。\nアップグレードは近接英雄と遠距離英雄に分かれている。
+Guide_HeroBook,도감,Archive,図鑑
+Guide_HeroBookInfo,도감을 열면 영웅들의 정보에 대해 자세히 알 수 있다.,Opening the archive lets you see detailed information about your heroes.,図鑑を開くと英雄たちの情報について詳しく知ることができる。
 Guide_BaseBuildInfo,중앙 거점을 제외한 각 거점에는 건물을 건설할 수 있는 칸이 있으며 클릭하여 건설할 건물의 종류를 선택할 수 있다.,Every base except the central one has slots where you can build buildings; click a slot to choose which building to construct.,中央拠点を除く各拠点には建物を建設できる枠があり、クリックして建設する建物の種類を選択できる。
 Guide_BaseUnlockInfo,게임의 전투 지역이 확장될 때 마다 거점의 지역도 활성화 된다.,"Each time the game's battle area expands, the corresponding region of the base is also activated.",ゲームの戦闘地域が拡張されるたびに、拠点の地域も活性化される。
 Guide_BaseBuildingButton,건물,Building,建物
@@ -209,6 +213,8 @@ Guide_CitizenInfo,"자원 생산 및 영웅 생성에 필수불가결인 요소�
 Guide_DayNIghtInfo,시간대가 낮과 밤으로 나뉘어져 낮에는 영웅 생성과 배치 및 건물 건설 및 시민 배치를 할 수 있고 밤에는 전투가 시작된다.\n밤에는 스킬 사용을 제외한 모든 행동이 불가능하다.\n우 하단의 아이콘을 클릭하여 밤으로 넘어갈 수 있다.,"Time is divided into day and night. During the day, you can create and place heroes, construct buildings, and assign citizens; at night, combat begins.\nAt night, all actions are disabled except using skills.\nClick the icon in the bottom right to switch to night.",時間帯は昼と夜に分かれており、昼には英雄の生成と配置、建物の建設、市民の配置ができ、夜には戦闘が始まる。\n夜にはスキルの使用を除く全ての行動ができない。\n右下のアイコンをクリックすると夜に移行できる。
 Guide_MonsterBookButton,도감,Archive,図鑑
 Guide_MonsterBookInfo,도감에서는 마주한 적 있는 적에 대한 정보가 적혀있다.,The archive contains information about enemies you have already encountered.,図鑑には遭遇したことのある敵の情報が記載されている。
+Guide_PlayerSkillButton,스킬,Skill,スキル
+Guide_PlayerSkill,전투 중 스킬을 사용하여 영웅들의 전투에 도움을 줄 수 있다.\n스킬에는 영웅을 강력하게 해주는 버프와 적들의 이동속도를 낮추는 스킬과 영웅들의 체력을 회복시켜주는 스킬이 있다.,"You can use skills during combat to help your heroes fight.\nSkills include buffs that strengthen heroes, skills that slow enemies' movement speed, and skills that restore heroes' health.",戦闘中にスキルを使用して英雄たちの戦闘を助けることができる。\nスキルには英雄を強化するバフ、敵の移動速度を低下させるスキル、英雄の体力を回復させるスキルがある。
 ToolTip_Replace,재배치 (단축키: R),Reposition (Shortcut: R),再配置（ショートカット：R）
 ToolTip_Remove,제거 (단축키: E),Remove (Shortcut: E),削除（ショートカット：E）
 ToolTip_Hp,거점 체력(0이 되면 게임 오버),Base HP (Game Over at 0),拠点体力（0になるとゲームオーバー）
@@ -222,7 +228,7 @@ ToolTip_Stone,석재,Stone,石材
 ToolTip_Iron,철,Iron,鉄
 ToolTip_Gold,금,Gold,金
 ToolTip_Food,식량,Food,食料
-ToolTip_Special,특수 자원(이름 미정),Special Resource (name TBD),特殊資源（名称未定）
+ToolTip_Special,펠리움,Fellium,フェリウム
 ToolTip_BaseOpen,거점 화면 (단축키: B),Base Screen (Shortcut: B),拠点画面（ショートカット：B）
 ToolTip_NightButton,밤으로 변경 (단축키: N),Switch to Night (Shortcut: N),夜に変更（ショートカット：N）
 ToolTip_MonsterBook,몬스터 도감 (단축키: O),Monster Archive (Shortcut: O),モンスター図鑑（ショートカット：O）
@@ -302,29 +308,31 @@ Hero_Seeker_Attack_Desc,최대 7마리의 적들을 지속 공격합니다.,Cont
 Hero_Smasher_Stun_Desc,피격된 대상을 기절시킵니다.,Stuns the target it hits.,被弾した対象を気絶させます。
 Hero_Smasher_NHit_Attack_Desc,7번 공격할 때마다 뛰어올라 지면을 강하게 내려찍습니다. 주위의 모든 적을 기절시킵니다.,"Every 7th attack, leaps up and slams the ground with force. Stuns all nearby enemies.",7回攻撃するごとに跳び上がり地面を強く叩きつけます。周囲の全ての敵を気絶させます。
 Hero_Usurper_Attack_Desc,전방의 모든 적에게 피해를 주는 검기를 발사합니다.,Fires a blade wave that damages all enemies ahead.,前方の全ての敵にダメージを与える剣気を放ちます。
-Tutorial_Resource,게임 전반에 사용될 자원들 입니다.\n오른쪽에 떨어져 있는 자원은 적의 공세를 피해 없이 막아내는데 성공하거나 강력한 적을 쓰러트리면 얻을 수 있는 희귀 자원 입니다.,"These are the resources used throughout the game.\nThe resource shown separately on the right is a rare resource obtained by successfully defending against an enemy assault without taking damage, or by defeating a powerful enemy.",ゲーム全体で使用される資源です。\n右側に離れて表示されている資源は、敵の攻勢を被害なく防ぎきるか、強力な敵を倒すことで入手できるレア資源です。
-Tutorial_AssignWorker_Step1,다음으로 생산 건물을 건설하고 시민을 배치해 봅시다.\n먼저 아이콘을 눌러 거점 화면을 열어봅시다.,"Next, let's build a production building and assign a citizen.\nFirst, press the icon to open the base screen.",次に生産建物を建設して市民を配置してみましょう。\nまずアイコンを押して拠点画面を開いてみましょう。
+Tutorial_Resource,게임 전반에 사용될 자원들 입니다. 오른쪽에 떨어져 있는 자원은 적의 공세를 피해 없이 막아내는데 성공하거나 강력한 적을 쓰러트리면 얻을 수 있는 희귀 자원 입니다.,"These are the resources used throughout the game. The resource shown separately on the right is a rare resource obtained by successfully defending against an enemy assault without taking damage, or by defeating a powerful enemy.",ゲーム全体で使用される資源です。右側に離れて表示されている資源は、敵の攻勢を被害なく防ぎきるか、強力な敵を倒すことで入手できるレア資源です。
+Tutorial_AssignWorker_Step1,다음으로 생산 건물을 건설하고 시민을 배치해 봅시다. 먼저 아이콘을 눌러 거점 화면을 열어봅시다.,"Next, let's build a production building and assign a citizen. First, press the icon to open the base screen.",次に生産建物を建設して市民を配置してみましょう。まずアイコンを押して拠点画面を開いてみましょう。
 Tutorial_AssignWorker_Step2,열려있는 지역을 클릭해 봅시다.,Click on an unlocked region.,開放されている地域をクリックしてみましょう。
 Tutorial_AssignWorker_Step3,건물을 지을 수 있는 칸을 클릭해 봅시다.,Click on a slot where you can build a building.,建物を建てられる枠をクリックしてみましょう。
 Tutorial_AssignWorker_Step4,지을 수 있는 건물들이 보입니다. 그 중 농장을 선택하여 봅시다.,You can see the buildings available to build. Let's select the farm among them.,建設できる建物が表示されます。その中から農場を選んでみましょう。
 Tutorial_AssignWorker_Step5,건물에 대한 정보가 보입니다. 버튼을 눌러 건설해 봅시다.,You can see information about the building. Press the button to build it.,建物についての情報が表示されます。ボタンを押して建設してみましょう。
 Tutorial_AssignWorker_Step6,칸에 건물이 생성된 것이 보입니다. 건물이 있는 칸을 다시 클릭 해 봅시다.,You can see the building has been constructed in the slot. Click on the slot with the building again.,枠に建物が建てられたのが見えます。建物のある枠をもう一度クリックしてみましょう。
-Tutorial_AssignWorker_Step7,건물의 세부정보가 보입니다. 시민이 배치되지 않으면 자원을 생산하지 않습니다.\n시민을 한 번 배치해 봅시다.,You can see the building's details. It will not produce resources unless a citizen is assigned.\nLet's assign a citizen.,建物の詳細情報が表示されます。市民が配置されないと資源を生産しません。\n市民を一度配置してみましょう。
-Tutorial_BuildingUpgrade,건물을 업그레이드 하면 생산하는 자원량이 늘어납니다.\n버튼을 눌러서 업그레이드 할 수 있습니다.\n건물 업그레이드에는 자원이 소모됩니다.,Upgrading a building increases the amount of resources it produces.\nYou can upgrade it by pressing the button.\nUpgrading a building consumes resources.,建物をアップグレードすると生産する資源量が増えます。\nボタンを押してアップグレードできます。\n建物のアップグレードには資源が消費されます。
+Tutorial_AssignWorker_Step7,건물의 세부정보가 보입니다. 시민이 배치되지 않으면 자원을 생산하지 않습니다. 시민을 한 번 배치해 봅시다.,You can see the building's details. It will not produce resources unless a citizen is assigned. Let's assign a citizen.,建物の詳細情報が表示されます。市民が配置されないと資源を生産しません。市民を一度配置してみましょう。
+Tutorial_BuildingUpgrade,건물을 업그레이드 하면 생산하는 자원량이 늘어납니다. 버튼을 눌러서 업그레이드 할 수 있습니다. 건물 업그레이드에는 자원이 소모됩니다.,Upgrading a building increases the amount of resources it produces. You can upgrade it by pressing the button. Upgrading a building consumes resources.,建物をアップグレードすると生産する資源量が増えます。ボタンを押してアップグレードできます。建物のアップグレードには資源が消費されます。
 Tutorial_BuildHouse_Step1,다음으로 주택을 지어 봅시다. 빈 칸을 클릭해 봅시다.,"Next, let's build a house. Click on an empty slot.",次に住宅を建ててみましょう。空いている枠をクリックしてみましょう。
 Tutorial_BuildHouse_Step2,주택을 선택해 봅시다.,Let's select the house.,住宅を選んでみましょう。
-Tutorial_BuildHouse_Step3,주택은 건설하면 최대 주민 수를 늘려주지만 제거할 수 없습니다.\n건설 할 때는 신중히 건설하시기 바랍니다.\n버튼을 눌러 건설 해 봅시다.,"Building a house increases the maximum number of residents, but it cannot be removed.\nPlease build carefully.\nPress the button to build it.",住宅を建設すると最大住民数が増えますが、撤去することはできません。\n建設する際は慎重に建設してください。\nボタンを押して建設してみましょう。
+Tutorial_BuildHouse_Step3,주택은 건설하면 최대 주민 수를 늘려주지만 제거할 수 없습니다. 건설 할 때는 신중히 건설하시기 바랍니다. 버튼을 눌러 건설 해 봅시다.,"Building a house increases the maximum number of residents, but it cannot be removed. Please build carefully. Press the button to build it.",住宅を建設すると最大住民数が増えますが、撤去することはできません。建設する際は慎重に建設してください。ボタンを押して建設してみましょう。
 Tutorial_AddCitizen_Step1,최대 시민 수가 늘어났으니 주민을 한 번 추가해 봅시다. 먼저 닫기 버튼을 눌러 지역을 나가봅시다.,"Now that the maximum number of citizens has increased, let's add a resident. First, press the close button to leave the region.",最大市民数が増えたので、住民を一度追加してみましょう。まず閉じるボタンを押して地域から出てみましょう。
 Tutorial_AddCitizen_Step2,가운데 본거점을 클릭 해 봅시다.,Click on the central main base.,中央の本拠点をクリックしてみましょう。
 Tutorial_AddCitizen_Step3,본거점에서는 하루마다 생산되는 자원의 양과 희귀 자원을 기본 자원으로 교환 할 수 있습니다. 버튼을 눌러봅시다.,"At the main base, you can check the amount of resources produced each day and exchange rare resources for basic resources. Let's press the button.",本拠点では1日ごとに生産される資源の量を確認でき、レア資源を基本資源と交換できます。ボタンを押してみましょう。
-Tutorial_AddCitizen_Step4,버튼을 누르거나 가운데 숫자가 적혀있는 칸에 수치를 직접 입력하여 추가할 주민의 수를 조절 할 수 있습니다.\n시민을 추가 할 때 자원이 소모됩니다.\n추가하고 싶은 만큼의 시민 수를 조절한 후 아래의 버튼을 눌러 추가해봅시다.,"You can press the button or directly enter a number in the field showing the number in the middle to adjust how many residents to add.\nAdding citizens consumes resources.\nAdjust the number of citizens to the amount you want, then press the button below to add them.",ボタンを押すか、中央の数字が書かれた欄に数値を直接入力して追加する住民の数を調整できます。\n市民を追加する際は資源が消費されます。\n追加したい市民数を調整した後、下のボタンを押して追加してみましょう。
+Tutorial_AddCitizen_Step4,버튼을 누르거나 가운데 숫자가 적혀있는 칸에 수치를 직접 입력하여 추가할 주민의 수를 조절 할 수 있습니다. 시민을 추가 할 때 자원이 소모됩니다. 추가하고 싶은 만큼의 시민 수를 조절한 후 아래의 버튼을 눌러 추가해봅시다.,"You can press the button or directly enter a number in the field showing the number in the middle to adjust how many residents to add. Adding citizens consumes resources. Adjust the number of citizens to the amount you want, then press the button below to add them.",ボタンを押すか、中央の数字が書かれた欄に数値を直接入力して追加する住民の数を調整できます。市民を追加する際は資源が消費されます。追加したい市民数を調整した後、下のボタンを押して追加してみましょう。
 Tutorial_PlaceHero_Step1,시민을 추가했으니 시민을 영웅으로 바꿔봅시다. 먼저 버튼을 눌러 거점에서 나가 봅시다.,"Now that you've added citizens, let's turn a citizen into a hero. First, press the button to leave the base.",市民を追加したので、市民を英雄に変えてみましょう。まずボタンを押して拠点から出てみましょう。
 Tutorial_PlaceHero_Step2,버튼을 눌러 봅시다.,Let's press the button.,ボタンを押してみましょう。
 Tutorial_PlaceHero_Step3,영웅은 근접 영웅과 원거리 영웅으로 나뉘어집니다. 원하는 타입의 영웅을 선택해 봅시다.,Heroes are divided into melee heroes and ranged heroes. Select the type of hero you want and create it.,英雄は近接英雄と遠距離英雄に分かれます。お好みのタイプの英雄を選んで生成してみましょう。
 Tutorial_PlaceHero_Step4,슬라이더를 조절하여 원하는 만큼 영웅을 생성할 수 있습니다. 원하는 만큼 영웅을 생성해 봅시다.,You can adjust the slider to create as many heroes as you want. Let's create as many heroes as you'd like.,スライダーを調整して好きなだけ英雄を生成できます。好きなだけ英雄を生成してみましょう。
-Tutorial_PlaceHero_Step5,생성된 영웅은 영웅 인벤토리에서 아이콘으로 생성됩니다. 아이콘을 클릭하여 영웅을 배치해 봅시다.\n근접 영웅은 평지에만 원거리 영웅은 언덕에만 배치가 가능합니다.,"The created hero appears as an icon in the hero inventory. Click the icon to place the hero.\nMelee heroes can only be placed on flat ground, and ranged heroes can only be placed on hills.",生成された英雄は英雄インベントリにアイコンとして表示されます。アイコンをクリックして英雄を配置してみましょう。\n近接英雄は平地にのみ、遠距離英雄は丘にのみ配置可能です。
-Tutorial_HeroUpgrade,해당 버튼을 누르면 영웅을 업그레이드 할 수 있는 창이 나타납니다.\n업그레이드에는 자원이 소모됩니다.,Pressing this button opens a window where you can upgrade the hero.\nUpgrading consumes resources.,このボタンを押すと英雄をアップグレードできるウィンドウが表示されます。\nアップグレードには資源が消費されます。
-Tutorial_HeroMerge,같은 종류의 영웅이 3명 있으면 아이콘을 더블 클릭해서 상위 티어로 조합할 수 있습니다.\n근접 영웅은 상위 티어의 근접 영웅이 원거리 영웅은 상위 티어의 원거리 영웅이 나옵니다.,"If you have 3 heroes of the same type, you can double-click the icon to combine them into a higher tier.\nMelee heroes produce a higher-tier melee hero, and ranged heroes produce a higher-tier ranged hero.",同じ種類の英雄が3人いれば、アイコンをダブルクリックして上位ティアに合成できます。\n近接英雄は上位ティアの近接英雄が、遠距離英雄は上位ティアの遠距離英雄になります。
+Tutorial_PlaceHero_Step5,생성된 영웅은 영웅 인벤토리에서 아이콘으로 생성됩니다. 아이콘을 클릭하여 영웅을 배치해 봅시다. 근접 영웅은 평지에만 원거리 영웅은 언덕에만 배치가 가능합니다.,"The created hero appears as an icon in the hero inventory. Click the icon to place the hero. Melee heroes can only be placed on flat ground, and ranged heroes can only be placed on hills.",生成された英雄は英雄インベントリにアイコンとして表示されます。アイコンをクリックして英雄を配置してみましょう。近接英雄は平地にのみ、遠距離英雄は丘にのみ配置可能です。
+Tutorial_RelocateHero_Step1,영웅을 엉뚱한 곳에 배치했다면 재배치 버튼으로 위치를 옮길 수 있습니다. 재배치 버튼을 눌러봅시다.,"If you placed a hero in the wrong spot, you can move it with the Reposition button. Let's press the Reposition button.",英雄を間違った場所に配置してしまったら、再配置ボタンで位置を移動できます。再配置ボタンを押してみましょう。
+Tutorial_RelocateHero_Step2,옮기고 싶은 영웅을 클릭해 집고 새로운 칸을 클릭해 내려놓아 봅시다.,"Click the hero you want to move to pick it up, then click a new tile to place it down.",移動させたい英雄をクリックして持ち上げ、新しい枠をクリックして下ろしてみましょう。
+Tutorial_HeroUpgrade,해당 버튼을 누르면 영웅을 업그레이드 할 수 있는 창이 나타납니다. 업그레이드에는 자원이 소모됩니다.,Pressing this button opens a window where you can upgrade the hero. Upgrading consumes resources.,このボタンを押すと英雄をアップグレードできるウィンドウが表示されます。アップグレードには資源が消費されます。
+Tutorial_HeroMerge,같은 종류의 영웅이 3명 있으면 아이콘을 더블 클릭해서 상위 티어로 조합할 수 있습니다. 근접 영웅은 상위 티어의 근접 영웅이 원거리 영웅은 상위 티어의 원거리 영웅이 나옵니다.,"If you have 3 heroes of the same type, you can double-click the icon to combine them into a higher tier. Melee heroes produce a higher-tier melee hero, and ranged heroes produce a higher-tier ranged hero.",同じ種類の英雄が3人いれば、アイコンをダブルクリックして上位ティアに合成できます。近接英雄は上位ティアの近接英雄が、遠距離英雄は上位ティアの遠距離英雄になります。
 Tutorial_NightButton,준비가 다 됐으니 적의 공격을 막아봅시다. 아이콘을 눌러 시간대를 밤으로 변경해 봅시다.,"Now that preparations are complete, let's defend against the enemy attack. Press the icon to change the time to night.",準備が整ったので、敵の攻撃を防いでみましょう。アイコンを押して時間帯を夜に変更してみましょう。
 Tutorial_NextButton,다음으로,Next,次へ
 Tooltip_Hero_Inventory,영웅 목록 (단축키: I),Hero List (Shortcut: I),英雄リスト（ショートカット：I）
@@ -442,8 +450,8 @@ Tutorial_PlayerSkill,전투 동안 스킬을 활용하여 영웅들이 적을 �
 Tutorial_CheckSkip,튜토리얼을\n보시겠습니까?,Would you like to\nview the tutorial?,チュートリアルを\nご覧になりますか？
 Tutorial_SeeTutorial,네,Yes,はい
 Tutorial_SkipTutorial,아니요,No,いいえ
-Tutorial_GameSpeed,"이 버튼으로 게임의 진행 속도를 조절할 수 있습니다.\n정지, 배속을 상황에 맞게 활용해 보세요.",This button lets you adjust the game's speed.\nUse pause and fast-forward as needed for the situation.,このボタンでゲームの進行速度を調整できます。\n状況に合わせて一時停止や倍速を活用してみましょう。
-Tutorial_Complete,"축하합니다! 튜토리얼을 모두 마쳤습니다.\n지금까지 배운 내용을 활용해 마을을 지키고 키워나가 보세요.",Congratulations! You have completed the tutorial.\nUse what you've learned so far to defend and grow your village.,おめでとうございます！チュートリアルを全て終えました。\nこれまで学んだ内容を活かして村を守り、育てていきましょう。
+Tutorial_GameSpeed,"이 버튼으로 게임의 진행 속도를 조절할 수 있습니다. 정지, 배속을 상황에 맞게 활용해 보세요.",This button lets you adjust the game's speed. Use pause and fast-forward as needed for the situation.,このボタンでゲームの進行速度を調整できます。状況に合わせて一時停止や倍速を活用してみましょう。
+Tutorial_Complete,"축하합니다! 튜토리얼을 모두 마쳤습니다. 지금까지 배운 내용을 활용해 마을을 지키고 키워나가 보세요.",Congratulations! You have completed the tutorial. Use what you've learned so far to defend and grow your village.,おめでとうございます！チュートリアルを全て終えました。これまで学んだ内容を活かして村を守り、育てていきましょう。
 Hero_Buy,구매,BUY,購入
 Player_ActiveSkill_AttackBuff,영역 내 모든 영웅들의 공격력과 공격속도가 증가합니다. (사용 마나: {0}) (단축키: 1),Increases the attack power and attack speed of all heroes in the area. (Mana Cost: {0}) (Shortcut: 1),範囲内の全ての英雄の攻撃力と攻撃速度が上昇します。（消費マナ：{0}）（ショートカット：1）
 Player_ActiveSkill_EnemySlow,영역 내 모든 적들의 이동속도가 감소합니다. (사용 마나: {0}) (단축키: 2),Decreases the movement speed of all enemies in the area. (Mana Cost: {0}) (Shortcut: 2),範囲内の全ての敵の移動速度が低下します。（消費マナ：{0}）（ショートカット：2）
@@ -455,8 +463,12 @@ Ui_EmptySlot,+,+,+
 Ui_PerDay,/일,/day,/日
 Ui_LevelFormat,Lv. {0},Lv. {0},Lv. {0}
 Ui_MaxLevel,최대,Max,最大
-Ui_ProductionResource,생산 자원: {0},Production Resource: {0},生産資源: {0}
+Ui_ProductionResource,생산 자원,Production Resource,生産資源
 Ui_ConstructionCost,건설 소모 자원,Construction Cost,建設消費資源
+Ui_UpgradeInfo_ProductAmount,자원 생산량 증가,Increased Resource Production,資源生産量増加
+Ui_UpgradeInfo_Worker,시민 배치 수 증가,Increased Worker Capacity,配置可能な市民数増加
+Ui_UpgradeInfo_MaxUpgrade,최대 업그레이드,Max Upgrade,最大アップグレード
+Ui_UpgradeInfo_MaxCitizen,최대 시민 수 증가,Increased Max Citizens,最大市民数増加
 Facility_Wood_Name,제재소,Sawmill,製材所
 Facility_Wood_Info,목재를 생산하는 건물,A building that produces wood,木材を生産する建物
 Facility_Stone_Name,채석장,Quarry,採石場
@@ -488,3 +500,7 @@ Hero_Inventory_Tier,티어,Tier,ティア
 Hero_Inventory_TierFormat,{0}티어,Tier {0},ティア{0}
 Hero_Melee_Upgrade,근거리 영웅 업그레이드,Melee Hero Upgrade,近接ヒーローのアップグレード
 Hero_Ranged_Upgrade,원거리 영웅 업그레이드,Ranged Hero Upgrade,遠距離ヒーローのアップグレード
+UI_Base_UpgradeCost,업그레이드 비용,Upgrade Cost,アップグレードコスト
+Ui_GameOverSurviveDay,생존 일수 : {0}일차,Days Survived : {0},生存日数：{0}日目
+UI_Setting,세팅,Settings,設定
+UI_System_Setting,시스템 설정,System Settings,システム設定
