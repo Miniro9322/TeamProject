@@ -25,6 +25,7 @@ public class MenuUI : MonoBehaviour, IExclusiveUiPanel
         ExclusiveUiCoordinator.NotifyOpened(this);
         outsideCloser.MarkOpened();
         settingPanel.gameObject.SetActive(true);
+        PanelPopIn.Play((RectTransform)settingPanel.transform);
         QuitAlert.SetActive(false);
 
         // 행/컬럼 크기를 매번 재계산하던 중첩 ContentSizeFitter는 크기를 고정값으로 박고 제거했다

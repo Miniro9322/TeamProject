@@ -266,6 +266,7 @@ public class BuildModePanel : MonoBehaviour
         if (heroInventory.activeSelf) return;
 
         heroInventory.SetActive(true);
+        PanelPopIn.Play((RectTransform)heroInventory.transform);
         inventoryCloser.MarkOpened();
         if (classUpgradePanel.activeSelf) classUpgradePanel.SetActive(false);
         if (heroPanel.activeSelf) heroPanel.SetActive(false);
@@ -285,6 +286,7 @@ public class BuildModePanel : MonoBehaviour
         else
         {
             classUpgradePanel.SetActive(true);
+            PanelPopIn.Play((RectTransform)classUpgradePanel.transform);
             classUpgradeCloser.MarkOpened();
             if (heroInventory.activeSelf) heroInventory.SetActive(false);
             if (heroPanel.activeSelf) heroPanel.SetActive(false);
