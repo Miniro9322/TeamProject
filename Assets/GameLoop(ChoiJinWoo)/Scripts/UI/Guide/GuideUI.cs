@@ -3,6 +3,7 @@ using Cysharp.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using VContainer;
 
 public class GuideUI : MonoBehaviour, IExclusiveUiPanel
 {
@@ -12,14 +13,21 @@ public class GuideUI : MonoBehaviour, IExclusiveUiPanel
     [SerializeField] private List<SpecificGuide> heroGuides;
     [SerializeField] private List<SpecificGuide> baseGuides;
     [SerializeField] private List<SpecificGuide> enemyGuides;
+    [SerializeField] private List<SpecificGuide> gimmickGuides;
     [SerializeField] private Image guideImage;
     [SerializeField] private TextMeshProUGUI guideText;
     [SerializeField] private Animator guideCopyAnimator;
     [SerializeField] private Animator guidePictureAnimator;
-    [SerializeField] private GameObject shadeObject;
-    [SerializeField] private Animator shadeAnimator;
 
+    private GimmickTileData gimmickTileData;
     private List<SpecificGuide> activatedButtons = new();
+
+    // 기믹 기록장을 컨테이너에서 받아 둔다(이 패널은 프리팹이라 씬 오브젝트를 직접 참조할 수 없다).
+    [Inject]
+    private void Construct(GimmickTileData gimmickTileData)
+    {
+        this.gimmickTileData = gimmickTileData;
+    }
 
     [SerializeField] private Button openButton;
 
@@ -33,14 +41,12 @@ public class GuideUI : MonoBehaviour, IExclusiveUiPanel
     private void OnEnable()
     {
         ExclusiveUiCoordinator.NotifyOpened(this);
-        ShowShade();
         OnGamePlayGuide(true);
     }
 
     private void OnDisable()
     {
         ExclusiveUiCoordinator.NotifyClosed(this);
-        HideShade();
         DisableButtons();
     }
 
@@ -55,21 +61,6 @@ public class GuideUI : MonoBehaviour, IExclusiveUiPanel
     }
 
     public void RequestClose() => OnCloseButton();
-
-    // 배경 셰이드를 켜고 페이드인 연출을 재생한다
-    private void ShowShade()
-    {
-        if (shadeObject == null) return;
-        shadeObject.SetActive(true);
-        if (shadeAnimator != null) shadeAnimator.Play("FadeIn", -1, 0f);
-    }
-
-    // 배경 셰이드를 즉시 끈다
-    private void HideShade()
-    {
-        if (shadeObject == null) return;
-        shadeObject.SetActive(false);
-    }
 
     public void OnGamePlayGuide(bool isInitialOpen = false)
     {
@@ -124,6 +115,42 @@ public class GuideUI : MonoBehaviour, IExclusiveUiPanel
             activatedButtons.Add(guide);
         }
 
+        ShowSpecificGuide(activatedButtons[0]);
+    }
+
+    public void OnGimmickGuide()
+    {
+        DisableButtons();
+
+        foreach (var guide in gimmickGuides)
+        {
+            AddWhenRevealed(guide);
+        }
+
+        ShowFirstOrEmpty();
+    }
+
+    // 그 지역을 이미 봤을 때만 항목을 켠다.
+    private void AddWhenRevealed(SpecificGuide guide)
+    {
+        if (!gimmickTileData.WasShown(guide.GetComponent<GimmickGuideTag>().ModuleId))
+        {
+            return;
+        }
+        guide.gameObject.SetActive(true);
+        guide.GuideButton.onClick.AddListener(() => ShowSpecificGuide(guide));
+        activatedButtons.Add(guide);
+    }
+
+    // 보여줄 항목이 없으면 본문을 비우고, 있으면 첫 항목을 연다.
+    private void ShowFirstOrEmpty()
+    {
+        if (activatedButtons.Count == 0)
+        {
+            guideImage.gameObject.SetActive(false);
+            guideText.text = string.Empty;
+            return;
+        }
         ShowSpecificGuide(activatedButtons[0]);
     }
 

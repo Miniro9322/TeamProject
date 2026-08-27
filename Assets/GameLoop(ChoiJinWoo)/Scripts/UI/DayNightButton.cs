@@ -11,10 +11,14 @@ public class DayNightButton : MonoBehaviour
     [SerializeField] private Button button;
     [SerializeField] private RectTransform icon;
     [SerializeField] private TextMeshProUGUI dayText;
+    [SerializeField] private Animator slideAnim;
     [SerializeField] private Key nightKey = Key.N;
+    private static readonly int UpHash = Animator.StringToHash("DayUp");
+    private static readonly int DownHash = Animator.StringToHash("DayDown");
     private GameManager gameManager;
     private EnviromentManager enviromentManager;
     private Keyboard keyboard;
+    private bool canToggle = true;
 
     // Quaternion.Slerp은 180도 회전에서 어느 쪽으로 돌지가 애매해서(부동소수점에 따라 달라짐),
     // 방향을 확실히 통제하려고 각도를 직접 실수로 누적한다(래핑 없이 계속 더함).
@@ -27,29 +31,55 @@ public class DayNightButton : MonoBehaviour
         this.enviromentManager = enviromentManager;
     }
 
+    // 버튼 입력과 낮 전환 이벤트를 연결한다.
     private void Start()
     {
         keyboard = Keyboard.current;
         button.onClick.AddListener(OnButton);
         icon.transform.rotation = Quaternion.identity;
         gameManager.ChangeToDay += OnDayStart;
+        enviromentManager.OnDay += FinishDay;
         dayText.text = $"Day {gameManager.DayCount}";
     }
 
+    // 밤 전환 요청이 가능한지 확인하고 전환 실행부를 호출한다.
     private void OnButton()
     {
+        if (!CanToggle())
+        {
+            return;
+        }
+
+        StartNight();
+    }
+
+    // 낮에서만 밤 전환 요청을 허용한다.
+    private bool CanToggle()
+    {
+        return canToggle;
+    }
+
+    // 버튼을 내리고 밤 전환을 시작한다.
+    private void StartNight()
+    {
+        canToggle = false;
+        slideAnim.Play(DownHash, 0, 0f);
         gameManager.OnNight();
-        button.gameObject.SetActive(false);
         RotateIconBy(180f, null).Forget();
     }
 
+    // 낮 전환 시간 동안 아이콘을 회전시킨다.
     private void OnDayStart()
     {
-        RotateIconBy(180f, () =>
-        {
-            button.gameObject.SetActive(true);
-            button.interactable = true;
-        }).Forget();
+        RotateIconBy(180f, null).Forget();
+    }
+
+    // 낮 전환이 끝난 뒤 버튼을 올리고 입력을 다시 허용한다.
+    private void FinishDay()
+    {
+        slideAnim.Play(UpHash, 0, 0f);
+        button.interactable = true;
+        canToggle = true;
     }
 
     private void Update()
@@ -92,10 +122,12 @@ public class DayNightButton : MonoBehaviour
         onComplete?.Invoke();
     }
 
+    // 버튼 입력과 낮 전환 이벤트 연결을 해제한다.
     private void OnDestroy()
     {
         button.onClick.RemoveAllListeners();
         gameManager.ChangeToDay -= OnDayStart;
+        enviromentManager.OnDay -= FinishDay;
     }
 
     // 세이브 로드처럼 화면 연출 없이 조용히 일차가 바뀌었을 때 "Day N" 글자만 다시 찍는다 (로드 복원 전용)

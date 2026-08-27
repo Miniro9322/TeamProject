@@ -20,6 +20,8 @@ public class ModuleLogic : MonoBehaviour
     public bool IsPreparing => _currentState == ModuleState.Preparing;
 
     public event Action<ModuleState> OnStateChanged;
+    //게임 중 새로 해금될 때만 알린다. 세이브 복원(SetState)에서는 울리지 않는다.
+    public event Action<ModuleLogic> OnUnlocked;
 
     public void SetModuleId(int ModuleId)
     {
@@ -33,12 +35,14 @@ public class ModuleLogic : MonoBehaviour
         _currentState = newState;
         OnStateChanged?.Invoke(newState);
     }
-    //구역 상태를 Locked -> Preparing으로 전환. 이미 해금 상태면 무시.
+    //구역을 새로 해금한다. 해금 전용 알림을 먼저 보낸 뒤 상태 변경 알림을 보낸다.
     public void Unlock()
     {
         if (IsUnlocked) return;
 
-        SetState(ModuleState.Preparing);
+        _currentState = ModuleState.Preparing;
+        OnUnlocked?.Invoke(this);
+        OnStateChanged?.Invoke(_currentState);
     }
  
 }
