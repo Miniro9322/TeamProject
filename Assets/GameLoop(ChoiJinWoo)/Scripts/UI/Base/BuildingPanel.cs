@@ -116,7 +116,8 @@ public class BuildingPanel : MonoBehaviour, IClosablePanel
         {
             if (i < costs.Length)
             {
-                upgradeCostRows[i].Show(resourceIconSet.GetIcon(costs[i].Type), $"{-costs[i].Amount}");
+                bool canBuild = resourcesManager.GetAmount(costs[i].Type) >= -costs[i].Amount;
+                upgradeCostRows[i].Show(resourceIconSet.GetIcon(costs[i].Type), $"{-costs[i].Amount}", canBuild);
             }
             else
             {

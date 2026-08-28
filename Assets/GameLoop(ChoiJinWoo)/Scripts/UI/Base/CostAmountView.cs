@@ -9,11 +9,14 @@ public class CostAmountView : MonoBehaviour
     [SerializeField] private Image icon;
     [SerializeField] private TextMeshProUGUI amountText;
 
-    public void Show(Sprite sprite, string amount)
+    public void Show(Sprite sprite, string amount, bool canBuild)
     {
         gameObject.SetActive(true);
         if (icon != null) icon.sprite = sprite;
-        if (amountText != null) amountText.text = amount;
+        if (amountText == null) return;
+        amountText.text = amount;
+        amountText.color = canBuild ? Color.white : Color.red;
+        
     }
 
     public void Hide()

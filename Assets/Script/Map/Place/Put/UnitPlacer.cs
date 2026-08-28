@@ -19,6 +19,7 @@ public class UnitPlacer
         }
 
         AreaPlace.Place(data, unit, slot.kind);
+        if (unit.TryGetComponent(out Hero hero)) hero.SetCurrentTile();
         unitList.Add(unit, data.Area);
         placedUnit = unit;
         return true;

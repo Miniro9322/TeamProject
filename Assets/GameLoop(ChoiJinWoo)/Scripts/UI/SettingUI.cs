@@ -97,8 +97,8 @@ public class SettingUI : MonoBehaviour
         for (int i = 0; i < resolutions.Length; i++)
         {
             screenoptions.Add($"{resolutions[i].width} x {resolutions[i].height}");
-            if (resolutions[i].width == Screen.currentResolution.width &&
-                resolutions[i].height == Screen.currentResolution.height)
+            if (resolutions[i].width == Screen.width &&
+                resolutions[i].height == Screen.height)
             {
                 currentIndex = i;
             }
@@ -118,6 +118,7 @@ public class SettingUI : MonoBehaviour
             slider.onValueChanged.RemoveAllListeners();
         }
         screenMode.onValueChanged.RemoveAllListeners();
+        screenWide.onValueChanged.RemoveAllListeners();
     }
 
     private void OnResolutionChanged(int index)
