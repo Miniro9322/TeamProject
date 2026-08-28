@@ -15,6 +15,7 @@ GameObject:
   - component: {fileID: 7679189282352796712}
   - component: {fileID: -367370901808726729}
   - component: {fileID: 3968729684931864981}
+  - component: {fileID: 5671444470960760329}
   m_Layer: 5
   m_Name: PanelButton
   m_TagString: Untagged
@@ -168,3 +169,17 @@ MonoBehaviour:
   heldTint: {r: 0.5754717, g: 0.5754717, b: 0.5754717, a: 1}
   normalTint: {r: 1, g: 1, b: 1, a: 1}
   watchedPanel: {fileID: 0}
+--- !u!114 &5671444470960760329
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 55145135607491274}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a884c86289546db44934b5714235468e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TooltipTrigger
+  message: 
+  isJust: 0
