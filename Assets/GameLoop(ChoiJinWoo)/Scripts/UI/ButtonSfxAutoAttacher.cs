@@ -10,9 +10,9 @@ public class ButtonSfxAutoAttacher : MonoBehaviour
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     private static void Bootstrap()
     {
-        //var runner = new GameObject(nameof(ButtonSfxAutoAttacher));
-        //DontDestroyOnLoad(runner);
-        //runner.AddComponent<ButtonSfxAutoAttacher>();
+        var runner = new GameObject(nameof(ButtonSfxAutoAttacher));
+        DontDestroyOnLoad(runner);
+        runner.AddComponent<ButtonSfxAutoAttacher>();
     }
 
     private Selectable[] buffer = new Selectable[16];
