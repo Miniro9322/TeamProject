@@ -1,22 +1,23 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 
 // 버튼을 "눌린 모양(+색)"으로 유지하는 컴포넌트들의 공통 골격.
 // 무엇을 근거로 지금 눌린 상태로 볼지는 파생 클래스가 CheckHeld()로만 결정한다.
 public abstract class HeldLinkBase : MonoBehaviour
 {
-    [SerializeField] private Image buttonImage;
-    [SerializeField] private Color heldTint = new Color(0.55f, 0.7f, 1f);
+    [SerializeField] private Color heldTint = Color.white;
     [SerializeField] private Color normalTint = Color.white;
 
     private const string HeldParameter = "Held";
+    private Image buttonImage;
     private Animator buttonAnimator;
     private bool lastHeld;
 
-    // 이 버튼의 눌린 모양을 담당하는 애니메이터를 찾아 둔다
+    // 이 버튼의 눌린 모양과 색을 담당하는 컴포넌트를 찾아 둔다
     protected virtual void Awake()
     {
         buttonAnimator = GetComponent<Animator>();
+        buttonImage = GetComponent<Image>();
     }
 
     // 시작 시점의 눌림 상태를 버튼에 한 번 반영해 둔다
