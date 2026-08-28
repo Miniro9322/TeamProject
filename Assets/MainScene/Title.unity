@@ -1084,7 +1084,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 35775371}
         m_TargetAssemblyTypeName: TitleUI, Assembly-CSharp
-        m_MethodName: OnNewGame
+        m_MethodName: OnSetting
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -2385,7 +2385,7 @@ PrefabInstance:
       objectReference: {fileID: 35775371}
     - target: {fileID: 7298471949254037476, guid: a0fb04835c0f0594088797c92ebd76b9, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
-      value: OnNewGame
+      value: OnLoad
       objectReference: {fileID: 0}
     - target: {fileID: 7298471949254037476, guid: a0fb04835c0f0594088797c92ebd76b9, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgumentAssemblyTypeName
@@ -2944,7 +2944,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 35775371}
         m_TargetAssemblyTypeName: TitleUI, Assembly-CSharp
-        m_MethodName: OnNewGame
+        m_MethodName: OnUpgrade
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -5054,7 +5054,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 35775371}
         m_TargetAssemblyTypeName: TitleUI, Assembly-CSharp
-        m_MethodName: OnNewGame
+        m_MethodName: OnQuitAlert
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -5109,7 +5109,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1225337014}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ccc802eb137019f438af0bca2928597b, type: 3}
   m_Name: 
