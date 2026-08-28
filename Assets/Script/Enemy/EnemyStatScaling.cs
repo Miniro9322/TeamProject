@@ -29,7 +29,7 @@ public static class EnemyStatScaling
         int fiveDayStep = dayCount / 5;
         return new Stats(
             (data.Health + (dayCount * data.UpHealthScale)) * RegionHpScale(cls,dayCount),
-            data.Attack + (data.UpAttackScale * fiveDayStep),
+            (data.Attack + (data.UpAttackScale * fiveDayStep)) * RegionAttackScale(cls,dayCount),
             (data.Defense + (data.UpDefenseScale * fiveDayStep)) * RegionDefenseScale(cls,dayCount));
     }
 
@@ -52,6 +52,8 @@ public static class EnemyStatScaling
     private static readonly float[] RegionBossHpScaleTable = { 1f, 1f, 1.5f, 2.5f, 4.2f, 7.2f, 10f };
     private static readonly float[] RegionDefenseScaleTable = { 1f, 1f, 1.07f, 1.15f, 1.25f, 1.38f, 1.5f };
     private static readonly float[] RegionBossDefenseScaleTable = { 1f, 1f, 1.2f, 1.35f, 1.5f, 1.72f, 2f };
+    private static readonly float[] RegionAttackScaleTable =  { 1f,1f,1f,1f,1f,1f,1f};
+    private static readonly float[] RegionBossAttackScaleTable =  { 0.7f,0.7f,0.9f,1f,1.3f,1.5f,1.7f};
 
     // 전 지역 해금이 끝나면 위 표가 마지막 칸에서 멈춘다 — 그 뒤로는 판이 더 길어져도 보스가 그 자리에 선다.
     // 그래서 해금이 다 끝난 뒤부터 BossStatStepRounds 라운드마다 배율을 한 단계씩 더해 계속 오르게 한다.
@@ -65,11 +67,15 @@ public static class EnemyStatScaling
     private const int BossStatDeepenDay = 100;
     private static readonly float[] BossHpStepScale = { 2.5f, 6f};
     private static readonly float[] BossDefStepScale = { 0.5f, 1.5f};
+    private static readonly float[] BossAttackStepScale = {0.2f,0.6f};
     public static float RegionHpScale(EnemyClass cls,int dayCount)
         => RegionScale(RegionHpScaleTable, RegionBossHpScaleTable, cls) + BossFullUnlockHpBonus(cls,dayCount);
 
     public static float RegionDefenseScale(EnemyClass cls,int dayCount)
         => RegionScale(RegionDefenseScaleTable, RegionBossDefenseScaleTable, cls) + BossFullUnlockDefBonus(cls,dayCount);
+
+    public static float RegionAttackScale(EnemyClass cls,int dayCount)
+        => RegionScale(RegionAttackScaleTable,RegionBossAttackScaleTable,cls) + BossFullUnlockAtkBonus(cls,dayCount);
 
     // 표 길이는 자기 표 기준으로 클램프한다(표마다 칸 수가 달라져도 안전하게).
     private static float RegionScale(float[] normalTable, float[] bossTable, EnemyClass cls)
@@ -85,7 +91,8 @@ public static class EnemyStatScaling
 
     private static float BossFullUnlockDefBonus(EnemyClass cls, int dayCount)
         => BossFullUnlockBonus(cls, dayCount, BossDefStepScale);
-
+    private static float BossFullUnlockAtkBonus(EnemyClass cls, int dayCount)
+        => BossFullUnlockBonus(cls,dayCount,BossAttackStepScale);
     // 해금 뒤 쌓인 단계를 BossStatDeepenDay 경계로 갈라, 구간마다 제 계수로 따로 더한다.
     // dayCount는 두 호출부 모두 전역 일차를 넘긴다(EnemyBase는 GameManager.DayCount,
     // StageInfoView는 SetDay로 받은 CurrentDay) — RoundsSinceFullUnlock이 세는 시계와 같다.
