@@ -128,7 +128,6 @@ public class FacilityBuildChoicePanel : MonoBehaviour, IClosablePanel
         for (int i = 0; i < optionViews.Count && i < options.Count; i++)
         {
             optionViews[i].SetOption(options[i].icon, options[i].DisplayName);
-            optionViews[i].SetInteractable(constructor.CanBuild(options[i]));
         }
     }
 
@@ -178,7 +177,8 @@ public class FacilityBuildChoicePanel : MonoBehaviour, IClosablePanel
         {
             if (i < cost.Length)
             {
-                constructCostRows[i].Show(resourceIconSet.GetIcon(cost[i].Type), $"{-cost[i].Amount}");
+                bool canBuild = resourcesManager.GetAmount(cost[i].Type) >= -cost[i].Amount;
+                constructCostRows[i].Show(resourceIconSet.GetIcon(cost[i].Type), $"{-cost[i].Amount}", canBuild);
             }
             else
             {
@@ -190,6 +190,13 @@ public class FacilityBuildChoicePanel : MonoBehaviour, IClosablePanel
     public void OnBuild()
     {
         if (currentOption == null || region == null) return;
+
+        if (!constructor.CanBuild(currentOption))
+        {
+            CenterFeedbackUi.Instance.Show("UI_Base_NotEnoughResources");
+            EventSystem.current.SetSelectedGameObject(null);
+            return;
+        }
 
         if (constructor.TryBuild(currentOption, region, slotIndex, out _))
         {
