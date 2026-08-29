@@ -37,6 +37,8 @@ public class FacilityBuildChoicePanel : MonoBehaviour, IClosablePanel
     public bool IsInfoOpen => infoPanel.activeSelf;
     private ClickOutsideCloser outsideCloser;
     private ClickOutsideCloser infoOutsideCloser;
+    private PanelReveal panelReveal;
+    private PanelReveal infoPanelReveal;
 
     [Inject]
     private void Construct(BaseConstructor constructor, ResourcesManager resourcesManager, UpgradeState upgradeState, ProductionEconomyConfig economyConfig, ResourceIconSet resourceIconSet, UiPanelStack panelStack)
@@ -51,6 +53,9 @@ public class FacilityBuildChoicePanel : MonoBehaviour, IClosablePanel
 
     private void Awake()
     {
+        panelReveal = GetComponent<PanelReveal>();
+        infoPanelReveal = infoPanel.GetComponent<PanelReveal>();
+
         // 인스펙터에서 버튼마다 고정 인덱스를 손으로 넣으면 실수하기 쉬워 코드로 연결한다.
         for (int i = 0; i < optionViews.Count; i++)
         {
@@ -95,7 +100,8 @@ public class FacilityBuildChoicePanel : MonoBehaviour, IClosablePanel
 
         if (infoPanel.activeSelf && infoOutsideCloser.ShouldClose())
         {
-            infoPanel.SetActive(false);
+            if (infoPanelReveal != null) infoPanelReveal.Hide();
+            else infoPanel.SetActive(false);
             return;
         }
 
@@ -111,7 +117,12 @@ public class FacilityBuildChoicePanel : MonoBehaviour, IClosablePanel
         infoPanel.SetActive(false);
 
         bool wasActive = gameObject.activeSelf;
-        gameObject.SetActive(true);
+        // wasActive든 아니든 항상 Show()를 부른다 - 그래야 Close()가 막 시작해둔 닫힘 애니메이션이
+        // 있어도(같은 프레임에 다른 슬롯을 눌러 Close 후 곧바로 Open이 불리는 경우) 확실히 취소되고
+        // 열린 채로 유지된다. 이미 완전히 열려있는 상태에서 다시 불러도 Progress01이 1을 읽어 즉시
+        // 끝나므로 애니메이션이 보이지 않는다.
+        if (panelReveal != null) panelReveal.Show();
+        else gameObject.SetActive(true);
         outsideCloser.MarkOpened();
 
         // 이미 열려있던 채로 다른 슬롯을 골랐을 때는 OnEnable이 다시 안 불리니 직접 갱신한다.
@@ -120,7 +131,8 @@ public class FacilityBuildChoicePanel : MonoBehaviour, IClosablePanel
 
     public void Close()
     {
-        gameObject.SetActive(false);
+        if (panelReveal != null) panelReveal.Hide();
+        else gameObject.SetActive(false);
     }
 
     private void RefreshButtons()
@@ -139,7 +151,8 @@ public class FacilityBuildChoicePanel : MonoBehaviour, IClosablePanel
         selectedIndex = index;
         infoIcon.sprite = currentOption.icon;
         RefreshInfoText();
-        infoPanel.SetActive(true);
+        if (infoPanelReveal != null) infoPanelReveal.Show();
+        else infoPanel.SetActive(true);
         infoOutsideCloser.MarkOpened();
     }
 

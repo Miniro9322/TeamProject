@@ -200,7 +200,11 @@ public class TutorialOverlayUI : MonoBehaviour
         dimRight.gameObject.SetActive(true);
         SetHighlightActive(true);
 
-        Rect targetLocal = ComputeLocalRect(target);
+        // 타겟 RectTransform이 화면 경계 밖으로 삐져나와 있으면(가로/세로로 크게 늘린 버튼 등),
+        // 뚫어줄 구멍 사각형을 화면 경계로 클램프하지 않고 그대로 쓸 경우 dimLeft/dimRight(또는
+        // dimTop/dimBottom)의 xMax(또는 yMax) < xMin(또는 yMin)이 되어 SetRect가 폭/높이를 0으로
+        // 잘라버린다 - 그러면 그 방향의 딤이 완전히 사라져 화면 가장자리 클릭이 그대로 통과한다.
+        Rect targetLocal = ClampRectToBounds(ComputeLocalRect(target), dimmerRoot.rect);
         LayoutDimmers(targetLocal);
         LayoutHighlightBorder(targetLocal);
         PositionMessageBox(targetLocal);
@@ -266,6 +270,18 @@ public class TutorialOverlayUI : MonoBehaviour
         RectTransformUtility.ScreenPointToLocalPointInRectangle(dimmerRoot, screenMax, overlayCam, out var localMax);
 
         return Rect.MinMaxRect(localMin.x, localMin.y, localMax.x, localMax.y);
+    }
+
+    // 타겟 사각형을 화면 경계 안으로 잘라낸다 - 타겟이 화면 밖으로 나가 있어도 각 변을 독립적으로
+    // 클램프하므로 xMin<=xMax, yMin<=yMax가 항상 보장된다(뚫어줄 구멍이 경계를 넘어도 딤 폭이 0이나
+    // 음수가 되지 않는다). 화면 밖 영역은 어차피 클릭할 수 없으니 그 부분까지 뚫어줄 필요도 없다.
+    private static Rect ClampRectToBounds(Rect r, Rect bounds)
+    {
+        float xMin = Mathf.Clamp(r.xMin, bounds.xMin, bounds.xMax);
+        float xMax = Mathf.Clamp(r.xMax, bounds.xMin, bounds.xMax);
+        float yMin = Mathf.Clamp(r.yMin, bounds.yMin, bounds.yMax);
+        float yMax = Mathf.Clamp(r.yMax, bounds.yMin, bounds.yMax);
+        return Rect.MinMaxRect(xMin, yMin, xMax, yMax);
     }
 
     // 타겟 사각형 둘레를 4장으로 감싼다 - 겹침도 빈틈도 없고, 타겟 자리에는 아무것도 그리지 않는다.

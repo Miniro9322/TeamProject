@@ -65,6 +65,13 @@ public class TutorialManager : MonoBehaviour
     private CanvasGroup gameSpeedGroup;
     private bool gameSpeedBlocked;
 
+    // HeroUpgradeMention도 순수 언급 스텝인데, 클래스 강화 버튼들이 UIButtonHeld로 바뀌면서 자기
+    // 자신의 onClick으로 직접 토글하게 됐다 - TutorialInputGate.BlockHeroUpgradeOpen을 그 버튼의
+    // onClick 안에서 확인하는 경로 자체가 더 이상 없을 수 있어(버튼마다 구조가 다를 수 있음), 어떤
+    // 버튼 구조든 상관없이 클릭 자체가 안 먹히도록 GameSpeedMention과 같은 방식(CanvasGroup)으로 막는다.
+    private CanvasGroup heroUpgradeGroup;
+    private bool heroUpgradeBlocked;
+
     [Tooltip("0일차 리셋이 끝난 뒤(진짜 1일차 시작) 한 번 보여줄 완료 메시지 키.")]
     [SerializeField] private string completionMessageKey;
     private bool showingCompletionMessage;
@@ -159,6 +166,20 @@ public class TutorialManager : MonoBehaviour
         // 이 둘은 조상 Canvas가 아니라 패널 자기 자신만 막는다 - GameSpeedUi가 속한 Canvas를 통째로
         // 막아버리면(uiManagerHudGroup) 그 안의 가이드/메뉴 등 무관한 버튼까지 같이 막히기 때문.
         gameSpeedGroup = GetOrAddCanvasGroup(uiManager.GameSpeedUiRect);
+        heroUpgradeGroup = GetOrAddCanvasGroup(FindStepTarget(TutorialStepId.HeroUpgradeMention));
+    }
+
+    // 특정 스텝의 첫 waypoint가 짚어주는 target을 찾는다 - HeroUpgradeMention처럼 씬에 고정으로
+    // 배치된 버튼을 CanvasGroup으로 막을 때, 그 버튼을 가리키는 별도 필드 없이 이미 저작해둔
+    // waypoint.target을 그대로 재사용한다.
+    private RectTransform FindStepTarget(TutorialStepId id)
+    {
+        foreach (var step in steps)
+        {
+            if (step.id == id && step.waypoints != null && step.waypoints.Length > 0)
+                return step.waypoints[0].target;
+        }
+        return null;
     }
 
     private static CanvasGroup ResolveHudGroup(Transform anchor)
@@ -242,6 +263,7 @@ public class TutorialManager : MonoBehaviour
         TutorialActivityWatcher.Changed -= OnWaypointActivityChanged;
         SetHudBlocked(false);
         SetBlocked(gameSpeedGroup, ref gameSpeedBlocked, false);
+        SetBlocked(heroUpgradeGroup, ref heroUpgradeBlocked, false);
         TutorialInputGate.BlockPlayerSkillCast = false;
         citizenManager.CitizenChanged -= OnCitizenChanged;
         baseConstructor.Built -= OnBuilt;
@@ -271,6 +293,7 @@ public class TutorialManager : MonoBehaviour
         }
 
         TutorialInputGate.BlockHeroUpgradeOpen = IsActive(TutorialStepId.HeroUpgradeMention);
+        SetBlocked(heroUpgradeGroup, ref heroUpgradeBlocked, IsActive(TutorialStepId.HeroUpgradeMention));
         // HeroCombineMention은 합성(더블클릭/일괄합성)은 그대로 두되, 로스터 아이콘 단일 클릭으로
         // 배치 모드에 들어가는 것만 막는다.
         TutorialInputGate.BlockHeroPlacementFromInventory = IsActive(TutorialStepId.HeroCombineMention);
@@ -411,6 +434,7 @@ public class TutorialManager : MonoBehaviour
         TutorialInputGate.BlockHeroPlacementFromInventory = false;
         SetHudBlocked(false);
         SetBlocked(gameSpeedGroup, ref gameSpeedBlocked, false);
+        SetBlocked(heroUpgradeGroup, ref heroUpgradeBlocked, false);
         TutorialInputGate.BlockPlayerSkillCast = false;
         sequenceFinished = true;
         TryFullyDisable();
