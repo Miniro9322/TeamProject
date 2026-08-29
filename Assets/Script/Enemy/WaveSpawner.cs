@@ -20,7 +20,7 @@ public class WaveSpawner : MonoBehaviour
     [Tooltip("구버전 표시용 폴백. 팝업 프리팹에 StageInfoView가 붙어 있으면 쓰이지 않는다.")]
     public TMP_Text text;
     [Tooltip("스테이지 정보 팝업(아이콘 행 + 툴팁). SpawnerManager가 클릭 때마다 넣어준다.")]
-    public StageInfoView infoView;
+    public StageEnemyInfoView infoView;
     [Tooltip("보스 라운드에서 일반 몹은 즉시, 보스는 이 시간(초) 뒤에 등장.")]
     [SerializeField] private float bossSpawnDelay = 10f;
     
