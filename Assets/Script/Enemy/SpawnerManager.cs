@@ -33,7 +33,7 @@ public class SpawnerManager : MonoBehaviour
 
     [Tooltip("스테이지 정보 패널(고정 UI). 포탈을 클릭하면 켜지고 그 지역 웨이브로 내용이 채워진다. " +
              "포탈마다 월드 팝업을 스폰하던 방식을 대체한다 — 패널은 하나뿐이고 SetActive로만 껐다 켠다.")]
-    [SerializeField] private StageInfoView stageInfoPanel;
+    [SerializeField] private StageEnemyInfoView stageInfoPanel;
     // 지금 패널에 내용을 채워 넣은 지역. 닫을 때 그 스포너의 참조만 끊으면 되므로 들고 있는다.
     private int _shownRegion = -1;
     // 해금된 모든 지역의 적이 전멸했을 때 1회 발생.

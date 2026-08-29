@@ -1,15 +1,13 @@
 using UnityEngine;
 
-// 지역 노드 버튼을 그 지역의 DetailPanel이 열려있는 동안 눌린 모양으로 유지한다.
-public class RegionNodeHeldLink : HeldLinkBase
+// 지역 노드 버튼 하나를 자기 지역이 RegionDetailPanel에 열려있는 동안만 눌린 모양(+선택색)으로 유지한다.
+// 여러 노드가 같은 RegionDetailPanel을 공유하므로, UIButtonHeld처럼 패널의 activeSelf만 보면
+// 아무 지역이나 열려있을 때 모든 노드가 같이 선택된 것처럼 보인다 - 그래서 moduleId를 직접 비교한다.
+public class RegionNodeHeldLink : UIHeldBase
 {
     [SerializeField] private RegionDetailPanel detailPanel;
-    [SerializeField] private RegionNodeView nodeView;
+    [SerializeField] private RegionNodeView node;
 
-    // 지금 열린 지역이 이 노드가 대표하는 지역과 같은지로 눌림 여부를 판단한다
     protected override bool CheckHeld()
-    {
-        var region = detailPanel.CurrentRegion;
-        return region != null && region.ModuleId == nodeView.ModuleId;
-    }
+        => detailPanel.CurrentRegion != null && detailPanel.CurrentRegion.ModuleId == node.ModuleId;
 }

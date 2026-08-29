@@ -88,7 +88,7 @@ public class MapAssemble : MonoBehaviour
             dayNightRule = dayNightRule,
             buffManager = mapGame.BuffManager,
             mana = mapGame.PlayerManaManager,
-            heroSkillCast = skillCast,
+            //heroSkillCast = skillCast,
         };
         if (playerSkillPanel != null) playerSkillPanel.Bind(playerSkillCast);
         view.skillCast = skillCast;

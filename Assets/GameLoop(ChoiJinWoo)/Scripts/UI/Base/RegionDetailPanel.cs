@@ -19,6 +19,7 @@ public class RegionDetailPanel : MonoBehaviour, IClosablePanel
     private IUpgradableOccupant openOccupant;
     private UiPanelStack panelStack;
     private ClickOutsideCloser outsideCloser;
+    private PanelReveal panelReveal;
 
     // 지금 열려서 보여주고 있는 지역 - 같은 지역 노드를 다시 눌렀는지 오버뷰가 판단하는 데 쓴다.
     public RegionFacilitySlots CurrentRegion => gameObject.activeSelf ? region : null;
@@ -27,10 +28,21 @@ public class RegionDetailPanel : MonoBehaviour, IClosablePanel
     private void Construct(UiPanelStack panelStack)
     {
         this.panelStack = panelStack;
+        
+        Transform[] nodeTransforms = null;
+        if (overviewPanel != null)
+        {
+            var nodes = overviewPanel.Nodes;
+            nodeTransforms = new Transform[nodes.Count];
+            for (int i = 0; i < nodes.Count; i++) nodeTransforms[i] = nodes[i].transform;
+        }
+        outsideCloser = new ClickOutsideCloser((RectTransform)transform, nodeTransforms);
     }
 
     private void Awake()
     {
+        panelReveal = GetComponent<PanelReveal>();
+
         for (int i = 0; i < slotViews.Count; i++)
         {
             slotViews[i].SetIndex(i);
@@ -40,15 +52,7 @@ public class RegionDetailPanel : MonoBehaviour, IClosablePanel
         if (closeButton != null) closeButton.onClick.AddListener(Close);
         buildChoicePanel.gameObject.SetActive(false);
         buildingPanel.gameObject.SetActive(false);
-
-        Transform[] nodeTransforms = null;
-        if (overviewPanel != null)
-        {
-            var nodes = overviewPanel.Nodes;
-            nodeTransforms = new Transform[nodes.Count];
-            for (int i = 0; i < nodes.Count; i++) nodeTransforms[i] = nodes[i].transform;
-        }
-        outsideCloser = new ClickOutsideCloser((RectTransform)transform, nodeTransforms);
+        gameObject.SetActive(false);
     }
 
     private void OnEnable()
@@ -77,14 +81,16 @@ public class RegionDetailPanel : MonoBehaviour, IClosablePanel
         region = target;
         region.OnSlotsChanged += Refresh;
 
-        gameObject.SetActive(true);
+        if (panelReveal != null) panelReveal.Show();
+        else gameObject.SetActive(true);
         outsideCloser.MarkOpened();
         Refresh();
     }
 
     public void Close()
     {
-        gameObject.SetActive(false);
+        if (panelReveal != null) panelReveal.Hide();
+        else gameObject.SetActive(false);
         buildChoicePanel.gameObject.SetActive(false);
         buildingPanel.gameObject.SetActive(false);
     }
@@ -166,6 +172,13 @@ public class RegionDetailPanel : MonoBehaviour, IClosablePanel
         var slot = region.Slots[index];
         if (slot.IsEmpty)
         {
+            // 이미 이 칸의 선택 팝업이 열려있는 채로 같은 칸을 또 누르면 닫는다(토글).
+            if (buildChoicePanel.gameObject.activeSelf && buildChoicePanel.SlotIndex == index)
+            {
+                buildChoicePanel.Close();
+                return;
+            }
+
             buildingPanel.gameObject.SetActive(false); // 지어진 칸용 패널이 열려있었다면 정리
             UnsubscribeOpenOccupant();
 
@@ -181,7 +194,6 @@ public class RegionDetailPanel : MonoBehaviour, IClosablePanel
         openOccupant = occupant;
         openOccupant.Changed += Refresh;
 
-        buildingPanel.gameObject.SetActive(true);
-        buildingPanel.InitOccupant(slot.Occupant, region, index);
+        buildingPanel.Open(slot.Occupant, region, index);
     }
 }

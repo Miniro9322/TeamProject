@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -6,6 +7,8 @@ using UnityEngine.UI;
 public class ButtonSfx : MonoBehaviour, IPointerEnterHandler
 {
     private Button button;
+    [SerializeField] private string buttonHoverSFX = "UI_Hover";
+    [SerializeField] private string buttonClickSFX = "UI_Click";
 
     private void Awake()
     {
@@ -15,8 +18,8 @@ public class ButtonSfx : MonoBehaviour, IPointerEnterHandler
 
     public void OnPointerEnter(PointerEventData eventData)
     {
-        if (button.interactable) EnemySoundManager.Play("UI_Hover");
+        if (button.interactable) EnemySoundManager.Play(buttonHoverSFX);
     }
 
-    private void PlayClick() => EnemySoundManager.Play("UI_Click");
+    private void PlayClick() => EnemySoundManager.Play(buttonClickSFX);
 }

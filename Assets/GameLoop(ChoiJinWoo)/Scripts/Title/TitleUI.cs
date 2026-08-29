@@ -8,6 +8,8 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.Audio;
 using UnityEngine.SceneManagement;
+using UnityEngine.EventSystems;
+using UnityEngine.InputSystem;
 
 public class TitleUI : MonoBehaviour
 {
@@ -16,10 +18,43 @@ public class TitleUI : MonoBehaviour
     [SerializeField] private GameObject QuitAlert;
     [SerializeField] private GameObject LoadingPanel;
     [SerializeField] private GameObject tutorialChoicePanel; // "튜토리얼 하기" / "건너뛰기" 선택지
+    [SerializeField] private Button firstButton; // "튜토리얼 하기" / "건너뛰기" 선택지
     [SerializeField] private AudioMixer mixer;
     [SerializeField] private Button loadButton;
     [SerializeField] private ConfirmPopup confirmPopup;
     private readonly SlotPreviewReader previewReader = new SlotPreviewReader();
+
+    private InputAction escapeAction;
+
+    private void OnEnable()
+    {
+        escapeAction = new InputAction("Escape", binding: "<Keyboard>/escape");
+        escapeAction.performed += OnEscapePerformed;
+        escapeAction.Enable();
+    }
+
+    private void OnDisable()
+    {
+        escapeAction.performed -= OnEscapePerformed;
+        escapeAction.Disable();
+        escapeAction.Dispose();
+    }
+
+    // 열려 있는 패널이 없을 때만 종료 확인창을 띄운다 - 패널이 열려 있으면 각 패널이 알아서 Esc를 처리한다.
+    private void OnEscapePerformed(InputAction.CallbackContext context)
+    {
+        if (IsAnyPanelOpen()) return;
+
+        OnQuitAlert();
+    }
+
+    private bool IsAnyPanelOpen()
+    {
+        return settingPanel.activeSelf
+            || upgradePanel.activeSelf
+            || tutorialChoicePanel.activeSelf;
+    }
+
     private void Awake()
     {
         ApplyResolution().Forget();
@@ -34,6 +69,7 @@ public class TitleUI : MonoBehaviour
     private void Start()
     {
         EnemySoundManager.PlayBgm("TitleBGM");
+        EventSystem.current.SetSelectedGameObject(firstButton.gameObject);
     }
 
     private async UniTaskVoid ApplyResolution()
@@ -174,7 +210,10 @@ public class TitleUI : MonoBehaviour
 
     public void OnQuitAlert()
     {
-        QuitAlert.SetActive(true);
+        if(QuitAlert.activeSelf)
+            QuitAlert.SetActive(false);
+        else
+            QuitAlert.SetActive(true);
     }
 
     public void OnCancel()

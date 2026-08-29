@@ -89,6 +89,7 @@ public class CenterHubPanel : MonoBehaviour, IClosablePanel
 
         RefreshButton();
         LocalizeTextManager.OnLanguageChanged += Refresh;
+        Refresh();
     }
 
     private void OnDisable()
@@ -130,11 +131,9 @@ public class CenterHubPanel : MonoBehaviour, IClosablePanel
     {
         if (gameObject.activeSelf)
         {
-            Close();
             return;
         }
 
-        gameObject.SetActive(true);
         outsideCloser.MarkOpened();
         if (detailPanel != null) detailPanel.Close();
         Refresh();

@@ -7,5 +7,8 @@ public class ExclusivePanelPresence : MonoBehaviour, IExclusiveUiPanel
 {
     private void OnEnable() => ExclusiveUiCoordinator.NotifyOpened(this);
     private void OnDisable() => ExclusiveUiCoordinator.NotifyClosed(this);
-    public void RequestClose() => gameObject.SetActive(false);
+    public void RequestClose()
+    {
+        gameObject.SetActive(false);
+    }
 }
