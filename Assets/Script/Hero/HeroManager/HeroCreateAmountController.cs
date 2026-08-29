@@ -2,12 +2,11 @@ using System;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
-using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
-// 근접/원거리 생성 아이콘을 클릭하면 뜨는 수량 선택 모달. 슬라이더<->입력창 동기화와 수량에
-// 비례한 자원 표시만 담당하고, 실제 비용 차감/영웅 생성/인구 처리는 HeroSetPanel이 넘겨준
-// onBuy 콜백에서 처리한다(AddCitizen.cs의 열기/닫기/입력 파싱 컨벤션을 그대로 따른다).
+// 근접/원거리 생성 아이콘을 클릭하면 그 대상으로 갱신되는, 항상 떠있는 수량 선택 섹션.
+// 슬라이더<->입력창 동기화와 수량에 비례한 자원 표시, 부족 사유(reasonText) 표시만 담당하고,
+// 실제 비용 차감/영웅 생성/인구 처리는 HeroSetPanel이 넘겨준 onBuy 콜백에서 처리한다.
 public class HeroCreateAmountController : MonoBehaviour
 {
     [SerializeField] private Slider amountSlider;
@@ -15,52 +14,39 @@ public class HeroCreateAmountController : MonoBehaviour
     [SerializeField] private Button buyButton;
     [SerializeField] private GameObject resourceContainer;
     [SerializeField] private HeroUpgradeResourcesUI resourceRowPrefab;
-    [SerializeField] private Key closeKey = Key.Escape;
+    [SerializeField] private TextMeshProUGUI reasonText; // 생성 불가 사유 - 없으면 비활성화
 
     private readonly List<HeroUpgradeResourcesUI> rows = new();
     private (ProductionType Type, int Amount)[] unitCost;
+    private bool[] sufficient; // unitCost와 같은 인덱스 - 해당 자원 하나라도 감당 가능한지
     private List<ResourceIcon> resourceIcons;
     private Action<int> onBuy;
     private int maxAmount;
     private int amount;
     private bool syncing;
-    private int openedFrame;
-    private RectTransform rectTransform;
-    private Keyboard keyboard;
-    private Mouse mouse;
 
     private void Awake()
     {
-        rectTransform = (RectTransform)transform;
         amountSlider.wholeNumbers = true;
         amountSlider.onValueChanged.AddListener(OnSliderChanged);
         amountInput.onValueChanged.AddListener(OnInputChanged);
         buyButton.onClick.AddListener(OnBuyClicked);
     }
 
-    public void Open(List<ResourceIcon> resourceIcons, (ProductionType Type, int Amount)[] unitCost,
-        int maxAmount, bool canUseCitizen, Action<int> onBuy)
+    public void SetTarget(List<ResourceIcon> resourceIcons, (ProductionType Type, int Amount)[] unitCost,
+        int maxAmount, bool[] sufficient, bool canUseCitizen, string reasonKey, Action<int> onBuy)
     {
         this.resourceIcons = resourceIcons;
         this.unitCost = unitCost;
+        this.sufficient = sufficient;
         this.onBuy = onBuy;
         amount = 1;
 
-        gameObject.SetActive(true);
         RefreshMax(maxAmount, canUseCitizen);
-
-        keyboard = Keyboard.current;
-        mouse = Mouse.current;
-        openedFrame = Time.frameCount;
+        SetReason(reasonKey);
     }
 
-    public void Close()
-    {
-        gameObject.SetActive(false);
-    }
-
-    // 패널이 열려있는 동안 자원/인구가 바뀌면 HeroSetPanel이 이걸로 최대치와 구매 가능 여부를 갱신한다.
-    public void RefreshMax(int maxAmount, bool canUseCitizen)
+    private void RefreshMax(int maxAmount, bool canUseCitizen)
     {
         this.maxAmount = Mathf.Max(0, maxAmount);
         amountSlider.minValue = this.maxAmount > 0 ? 1 : 0;
@@ -69,27 +55,16 @@ public class HeroCreateAmountController : MonoBehaviour
         SetAmount(amount);
     }
 
-    private void Update()
+    // reasonKey가 없으면(=생성 가능) 숨기고, 있으면 StringTable에서 찾아 표시한다.
+    private void SetReason(string reasonKey)
     {
-        if (keyboard == null || mouse == null) return;
-        // PlaceHero 튜토리얼 스텝(슬라이더로 영웅 생성)에서 뜨는 패널이라, ESC/우클릭으로 그냥
-        // 닫아버리면 영웅이 안 만들어져 튜토리얼이 멈춘다 - AddCitizen.cs와 동일하게 막는다.
-        if (!TutorialInputGate.BlockEscapeClose &&
-            (keyboard[closeKey].wasPressedThisFrame || mouse.rightButton.wasPressedThisFrame))
+        if (string.IsNullOrEmpty(reasonKey))
         {
-            Close();
+            reasonText.gameObject.SetActive(false);
             return;
         }
-
-        if (TutorialInputGate.BlockEscapeClose) return; // 바깥 클릭으로 닫는 것도 같은 이유로 막는다
-        if (Time.frameCount == openedFrame) return; // 열린 바로 그 프레임의 클릭은 무시
-        if (!mouse.leftButton.wasPressedThisFrame) return;
-
-        var point = mouse.position.ReadValue();
-        if (!RectTransformUtility.RectangleContainsScreenPoint(rectTransform, point, null))
-        {
-            Close();
-        }
+        reasonText.gameObject.SetActive(true);
+        reasonText.text = DataTableManager.StringTable.Get(reasonKey);
     }
 
     private void OnSliderChanged(float value)
@@ -120,13 +95,16 @@ public class HeroCreateAmountController : MonoBehaviour
     {
         if (unitCost == null) return;
 
-        var scaled = unitCost.Multiply(amount);
+        // 자원이 부족해 maxAmount가 0이 돼도(amount도 0으로 클램프됨) 자원 행엔 "0"이 아니라
+        // 1개 만들 때의 실제 금액을 보여준다 - 실제 구매 가능 수량(amount)엔 영향 없음.
+        var scaled = unitCost.Multiply(Mathf.Max(amount, 1));
         for (int i = 0; i < scaled.Length; i++)
         {
             HeroUpgradeResourcesUI row = i < rows.Count ? rows[i] : CreateRow();
             row.gameObject.SetActive(true);
             row.SetIcon(FindIcon(resourceIcons, scaled[i].Type));
-            row.SetAmount(-scaled[i].Amount);
+            bool rowSufficient = sufficient == null || i >= sufficient.Length || sufficient[i];
+            row.SetAmount(-scaled[i].Amount, rowSufficient);
         }
         for (int i = scaled.Length; i < rows.Count; i++)
             rows[i].gameObject.SetActive(false);
@@ -150,6 +128,5 @@ public class HeroCreateAmountController : MonoBehaviour
     {
         int bought = amount;
         onBuy?.Invoke(bought);
-        Close();
     }
 }
