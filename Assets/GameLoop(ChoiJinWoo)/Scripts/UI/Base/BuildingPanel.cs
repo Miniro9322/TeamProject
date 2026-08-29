@@ -31,6 +31,7 @@ public class BuildingPanel : MonoBehaviour, IClosablePanel
     private ResourceIconSet resourceIconSet;
     private ResourcesManager resourcesManager;
     private ClickOutsideCloser outsideCloser;
+    private PanelReveal panelReveal;
 
     [Inject]
     private void Construct(UiPanelStack panelStack, BaseConstructor constructor, ResourceIconSet resourceIconSet, ResourcesManager resourcesManager)
@@ -43,6 +44,7 @@ public class BuildingPanel : MonoBehaviour, IClosablePanel
 
     private void Awake()
     {
+        panelReveal = GetComponent<PanelReveal>();
         outsideCloser = new ClickOutsideCloser((RectTransform)transform, parentPanel != null ? parentPanel.transform : null);
     }
 
@@ -54,9 +56,17 @@ public class BuildingPanel : MonoBehaviour, IClosablePanel
         demolishCheckPanel.gameObject.SetActive(false);
     }
 
+    public void Open(object occupant, RegionFacilitySlots region, int slotIndex)
+    {
+        if (panelReveal != null) panelReveal.Show();
+        else gameObject.SetActive(true);
+        InitOccupant(occupant, region, slotIndex);
+    }
+
     public void Close()
     {
-        gameObject.SetActive(false);
+        if (panelReveal != null) panelReveal.Hide();
+        else gameObject.SetActive(false);
     }
 
     private void Update()

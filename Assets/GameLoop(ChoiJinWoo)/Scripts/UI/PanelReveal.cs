@@ -90,6 +90,12 @@ public class PanelReveal : MonoBehaviour
         gameObject.SetActive(false);
     }
 
+    private void OnDestroy()
+    {
+        cts?.Cancel();
+        cts?.Dispose();
+    }
+
     // 현재 스케일이 0~1 열림 진행도의 어디쯤인지(연타/중간취소 시 이어서 애니메이션)
     private static float Progress01(Vector3 scale) => Mathf.Clamp01(scale.x);
 }

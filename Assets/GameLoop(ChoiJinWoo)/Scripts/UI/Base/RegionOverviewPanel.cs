@@ -96,6 +96,7 @@ public class RegionOverviewPanel : MonoBehaviour, IClosablePanel, IExclusiveUiPa
     private void OnEnable()
     {
         ExclusiveUiCoordinator.NotifyOpened(this);
+        if (redDot != null && redDot.activeSelf) redDot.SetActive(false); // 열었으니 확인한 걸로 치고 끈다
         panelStack.Push(this);
         BindModules();
         Refresh();
@@ -181,7 +182,6 @@ public class RegionOverviewPanel : MonoBehaviour, IClosablePanel, IExclusiveUiPa
         if (gameObject.activeSelf) return;
 
         outsideCloser.MarkOpened();
-        if (redDot != null) redDot.SetActive(false); // 열었으니 확인한 걸로 치고 끈다
     }
 
     public void Close()

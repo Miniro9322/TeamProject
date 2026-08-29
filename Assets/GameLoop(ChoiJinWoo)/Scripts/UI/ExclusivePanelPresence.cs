@@ -9,7 +9,6 @@ public class ExclusivePanelPresence : MonoBehaviour, IExclusiveUiPanel
     private void OnDisable() => ExclusiveUiCoordinator.NotifyClosed(this);
     public void RequestClose()
     {
-        Debug.Log($"[ExclusivePanelPresence] {gameObject.name} force-closed by ExclusiveUiCoordinator", this);
         gameObject.SetActive(false);
     }
 }

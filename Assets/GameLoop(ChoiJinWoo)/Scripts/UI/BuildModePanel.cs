@@ -37,6 +37,34 @@ public class BuildModePanel : MonoBehaviour
         view.OnOffMode -= HandleMapOff;
     }
 
+    private void Start()
+    {
+        game.Rule.ChangeToNight += DisablePanels;
+        game.EnviromentManager.OnDay += EnablePanel;
+    }
+
+    private void OnDestroy()
+    {
+        game.Rule.ChangeToNight -= DisablePanels;
+        game.EnviromentManager.OnDay -= EnablePanel;
+    }
+
+    // 열린 하위 패널을 닫고 빌드 패널의 퇴장 연출을 시작한다.
+    private void DisablePanels()
+    {
+        if (heroPanel.activeSelf) heroPanel.SetActive(false);
+        if (classUpgradePanel.activeSelf) classUpgradePanel.SetActive(false);
+        if (heroInventory.activeSelf) heroInventory.SetActive(false);
+        heroArchiveButton?.Close();
+        panelSlide.Close();
+    }
+
+    // 낮 전환이 끝난 빌드 패널의 등장 연출을 시작한다.
+    private void EnablePanel()
+    {
+        panelSlide.Open();
+    }
+
     // 재배치/제거 모드가 끝나 Off로 돌아오면(버튼/단축키/ESC 등 어떤 경로든) 그때만 인벤토리를 다시 연다.
     private void HandleMapOff()
     {
@@ -88,7 +116,6 @@ public class BuildModePanel : MonoBehaviour
         }
         if (classUpgradePanel.activeSelf && classUpgradeCloser.ClickedOutside())
         {
-            Debug.Log("[BuildModePanel] classUpgradePanel closed by ClickedOutside", this);
             classUpgradePanel.SetActive(false);
         }
         if (heroInventory.activeSelf && view.IsOff && inventoryCloser.ClickedOutside())
