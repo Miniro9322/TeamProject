@@ -30,12 +30,12 @@ public class StageInfoFollow : MonoBehaviour
     private Transform target;      // 따라갈 포탈
     private Vector3 worldOffset;
     private Camera cam;
-    private StageInfoView view;
+    private StageEnemyInfoView view;
     private Vector3 baseScale = Vector3.one;   // 프리팹에 설정된 원래 크기
 
     void Awake()
     {
-        view = GetComponent<StageInfoView>();
+        view = GetComponent<StageEnemyInfoView>();
 
         // 풀에서 재사용되는 오브젝트다. OnEnable이나 Follow()에서 읽으면 지난번에 줌으로 곱해둔
         // 값을 원본으로 착각해 클릭할 때마다 배율이 누적된다 → 인스턴스당 한 번인 Awake에서만 챈다.
@@ -94,9 +94,9 @@ public class StageInfoFollow : MonoBehaviour
         panel.position = new Vector3(screen.x, screen.y, 0f);
 
         if (view == null) return;
-        // 툴팁 offset은 픽셀 단위라 패널이 커진 만큼 같이 벌려야 행 위에 겹치지 않는다.
-        view.SetZoomScale(zoom);
-        // 툴팁은 이 패널의 자식이라 같이 끌려간다 → 옮긴 직후 화면 밖 보정을 다시 시킨다.
-        view.RefreshTooltipPosition();
+        //// 툴팁 offset은 픽셀 단위라 패널이 커진 만큼 같이 벌려야 행 위에 겹치지 않는다.
+        //view.SetZoomScale(zoom);
+        //// 툴팁은 이 패널의 자식이라 같이 끌려간다 → 옮긴 직후 화면 밖 보정을 다시 시킨다.
+        //view.RefreshTooltipPosition();
     }
 }

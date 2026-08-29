@@ -9,7 +9,7 @@ using UnityEngine.UI;
 // 그 줄에 마우스를 올리거나 클릭하면 이름 + 간단한 설명 툴팁을 띄운다.
 //
 // 프리팹(TextPrefabs.prefab) 루트에 붙인다. WaveSpawner가 Begin()/AddRow()로 채운다.
-public class StageInfoView : MonoBehaviour
+public class StageInfoView : MonoBehaviour, IStageTooltipHost
 {
     [Tooltip("행들이 담길 부모 (Vertical Layout Group 권장)")]
     [SerializeField] private Transform rowContainer;
