@@ -8,7 +8,7 @@ public class BuildModePanel : MonoBehaviour
     [SerializeField] private GameObject heroPanel;
     //[SerializeField] private GameObject upgradePanel;
     [SerializeField] private GameObject classUpgradePanel;
-    [SerializeField] private GameObject cheatPanel;
+    //[SerializeField] private GameObject cheatPanel;
     [SerializeField] private HeroArchiveButton heroArchiveButton;
     [SerializeField] private GameObject heroInventory;
     [SerializeField] private HeroCreateAmountController heroCreateAmountPanel;
@@ -68,18 +68,6 @@ public class BuildModePanel : MonoBehaviour
         classUpgradeCloser = new ClickOutsideCloser((RectTransform)classUpgradePanel.transform, transform, (RectTransform)classUpgradePanel.transform);
     }
 
-    private void Start()
-    {
-        game.Rule.ChangeToNight += DisablePanels;
-        game.EnviromentManager.OnDay += EnablePanel;
-    }
-
-    private void OnDestroy()
-    {
-        game.Rule.ChangeToNight -= DisablePanels;
-        game.EnviromentManager.OnDay -= EnablePanel;
-    }
-
     // ESC로 메뉴를 열지 말지 판단할 때 쓴다(UiManager) - 여기서 취소/닫을 게 있으면 ESC는
     // 메뉴를 여는 대신 그것부터 처리해야 하므로, Update()의 ESC 분기와 조건을 그대로 맞춘다.
     public bool HasEscapeCancelable =>
@@ -89,7 +77,6 @@ public class BuildModePanel : MonoBehaviour
         || heroPanel.activeSelf
         || heroInventory.activeSelf
         || classUpgradePanel.activeSelf
-        || (cheatPanel != null && cheatPanel.activeSelf)
         || (heroArchiveButton != null && heroArchiveButton.IsOpen)
         || (heroCreateAmountPanel != null && heroCreateAmountPanel.gameObject.activeInHierarchy);
 
@@ -101,6 +88,7 @@ public class BuildModePanel : MonoBehaviour
         }
         if (classUpgradePanel.activeSelf && classUpgradeCloser.ClickedOutside())
         {
+            Debug.Log("[BuildModePanel] classUpgradePanel closed by ClickedOutside", this);
             classUpgradePanel.SetActive(false);
         }
         if (heroInventory.activeSelf && view.IsOff && inventoryCloser.ClickedOutside())
@@ -108,10 +96,6 @@ public class BuildModePanel : MonoBehaviour
             heroInventory.SetActive(false);
         }
 
-        // 재배치/제거 모드 중 다른 버튼을 누르면 그 모드를 빠져나온다. 맵 타일 클릭은 uGUI Selectable이
-        // 아니라 currentSelectedGameObject를 바꾸지 않으므로 여기 걸리지 않고, Replace/Remove 버튼
-        // 자체는 ReplaceHeldLink/RemoveHeldLink로 식별해 제외한다(그 두 버튼은 OnReplaceButton/
-        // OnRemoveButton이 이미 토글로 직접 처리함).
         GameObject selected = EventSystem.current != null ? EventSystem.current.currentSelectedGameObject : null;
         if (selected != lastSelectedGameObject)
         {
@@ -160,44 +144,14 @@ public class BuildModePanel : MonoBehaviour
             view.ClearMode();
         }
         else if (heroPanel.activeSelf || heroInventory.activeSelf || classUpgradePanel.activeSelf
-            || (cheatPanel != null && cheatPanel.activeSelf)
             || (heroArchiveButton != null && heroArchiveButton.IsOpen))
         {
+            if (classUpgradePanel.activeSelf) Debug.Log("[BuildModePanel] classUpgradePanel closed by ESC", this);
             heroPanel.SetActive(false);
             heroInventory.SetActive(false);
             classUpgradePanel.SetActive(false);
-            if (cheatPanel != null) cheatPanel.SetActive(false);
             heroArchiveButton?.Close();
         }
-    }
-
-    // 열린 하위 패널을 닫고 빌드 패널의 퇴장 연출을 시작한다.
-    private void DisablePanels()
-    {
-        if (heroPanel.activeSelf)
-        {
-            heroPanel.SetActive(false);
-        }
-        if (classUpgradePanel.activeSelf)
-        {
-            classUpgradePanel.SetActive(false);
-        }
-        if (heroInventory.activeSelf)
-        {
-            heroInventory.SetActive(false);
-        }
-        // 이 GameObject가 바로 아래에서 꺼지면 Update()의 ESC 우선순위 체인도 같이 멈춘다 - 영웅
-        // 도감은 자기 ESC 처리를 그 체인에만 맡겨두므로(HeroArchiveButton.cs 참고), 열려있는 채로
-        // 밤을 맞으면 낮이 될 때까지 ESC/바깥클릭/P키 그 무엇으로도 못 닫는 상태가 된다. 다른
-        // 패널들처럼 여기서 미리 닫아준다.
-        heroArchiveButton?.Close();
-        panelSlide.Close();
-    }
-
-    // 낮 전환이 끝난 빌드 패널의 등장 연출을 시작한다.
-    private void EnablePanel()
-    {
-        panelSlide.Open();
     }
 
     public void OnHeroButton()
@@ -211,7 +165,11 @@ public class BuildModePanel : MonoBehaviour
             heroPanel.SetActive(true);
             heroPanelCloser.MarkOpened();
             if (heroInventory.activeSelf) heroInventory.SetActive(false);
-            if (classUpgradePanel.activeSelf) classUpgradePanel.SetActive(false);
+            if (classUpgradePanel.activeSelf)
+            {
+                Debug.Log("[BuildModePanel] classUpgradePanel closed by OnHeroButton", this);
+                classUpgradePanel.SetActive(false);
+            }
         }
     }
 
@@ -268,25 +226,22 @@ public class BuildModePanel : MonoBehaviour
         heroInventory.SetActive(true);
         PanelPopIn.Play((RectTransform)heroInventory.transform);
         inventoryCloser.MarkOpened();
-        if (classUpgradePanel.activeSelf) classUpgradePanel.SetActive(false);
+        if (classUpgradePanel.activeSelf)
+        {
+            classUpgradePanel.SetActive(false);
+        }
         if (heroPanel.activeSelf) heroPanel.SetActive(false);
     }
 
     public void OnClassUpgradeButton()
     {
-        // 튜토리얼이 이 버튼을 스포트라이트로 짚어 "언급"만 하는 중일 땐 실제로 눌려서 패널이
-        // 열리면 안 된다 - TutorialInputGate.BlockHeroUpgradeOpen 참고. 이 버튼은 인스펙터에서
-        // 곧바로 이 메서드에 연결돼 HeroTierUpgradeMenu.Toggle()을 거치지 않으므로 여기서도 따로 막는다.
         if (TutorialInputGate.BlockHeroUpgradeOpen) return;
 
         if (classUpgradePanel.activeSelf)
-        {
             classUpgradePanel.SetActive(false);
-        }
         else
         {
             classUpgradePanel.SetActive(true);
-            PanelPopIn.Play((RectTransform)classUpgradePanel.transform);
             classUpgradeCloser.MarkOpened();
             if (heroInventory.activeSelf) heroInventory.SetActive(false);
             if (heroPanel.activeSelf) heroPanel.SetActive(false);
@@ -296,5 +251,16 @@ public class BuildModePanel : MonoBehaviour
     public void OnOffButton()
     {
         view.ClearMode();
+    }
+
+    private static string GetPath(Transform t)
+    {
+        string path = t.name;
+        while (t.parent != null)
+        {
+            t = t.parent;
+            path = t.name + "/" + path;
+        }
+        return path;
     }
 }

@@ -46,13 +46,9 @@ public class RegionOverviewPanel : MonoBehaviour, IClosablePanel, IExclusiveUiPa
         // 이 오브젝트는 씬에서 처음부터 비활성 상태라 Update()가 전혀 돌지 않는다(레드닷 구독과 동일한 이유).
         // InputSystem.onAfterUpdate는 GameObject 활성 여부와 무관하게 매 업데이트마다 호출되므로 여기서 구독한다.
         InputSystem.onAfterUpdate += CheckOpenHotkey;
+        outsideCloser = new ClickOutsideCloser((RectTransform)transform, openButton != null ? openButton.transform : null);
 
         SubscribeModulesDeferred().Forget();
-    }
-
-    private void Awake()
-    {
-        outsideCloser = new ClickOutsideCloser((RectTransform)transform, openButton != null ? openButton.transform : null);
     }
 
     private async UniTaskVoid SubscribeModulesDeferred()
@@ -178,13 +174,12 @@ public class RegionOverviewPanel : MonoBehaviour, IClosablePanel, IExclusiveUiPa
 
     public void OpenPanel()
     {
-        if (isNight) return; // 밤에는 거점 화면을 열 수 없다.
-        // 튜토리얼이 영웅 배치 대기 중일 땐 이 패널이 맵을 덮어 배치를 끝낼 수 없게 된다 - TutorialInputGate.cs 참고.
+        if (isNight) return;
+
         if (TutorialInputGate.BlockPanelOpen) return;
-        if (gameObject.activeSelf)
-            gameObject.SetActive(false);
-        else
-            gameObject.SetActive(true);
+
+        if (gameObject.activeSelf) return;
+
         outsideCloser.MarkOpened();
         if (redDot != null) redDot.SetActive(false); // 열었으니 확인한 걸로 치고 끈다
     }
@@ -212,6 +207,11 @@ public class RegionOverviewPanel : MonoBehaviour, IClosablePanel, IExclusiveUiPa
     {
         var keyboard = Keyboard.current;
         if (keyboard != null && keyboard[openBaseKey].wasPressedThisFrame && !TutorialInputGate.BlockHotkeys)
-            OpenPanel();
+        {
+            if (gameObject.activeSelf)
+                gameObject.SetActive(false);
+            else
+                gameObject.SetActive(true);
+        }
     }
 }
