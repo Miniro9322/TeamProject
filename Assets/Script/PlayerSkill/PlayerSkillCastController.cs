@@ -8,7 +8,7 @@ public class PlayerSkillCastController
     public DayNightBuildRule dayNightRule;
     public BuffManager buffManager;
     public PlayerManaManager mana;
-    public HeroSkillCastController heroSkillCast; // 영웅 스킬 시전과 상호 배타 처리용
+    //public HeroSkillCastController heroSkillCast; // 영웅 스킬 시전과 상호 배타 처리용
 
     // Hero.GroundZoneLift(0.02f)와 동일한 값 — 알파블렌드 장판 VFX가 바닥과 z-fighting하는 것을 막는다.
     private const float GroundZoneLift = 0.02f;
@@ -19,7 +19,7 @@ public class PlayerSkillCastController
     public void ArmSkill(PlayerSkillSlot slot)
     {
         armed = slot;
-        heroSkillCast?.ClearSelection(); // 영웅 스킬 시전 중이었다면 취소한다(같은 클릭이 두 컨트롤러에 겹치지 않도록)
+        //heroSkillCast?.ClearSelection(); // 영웅 스킬 시전 중이었다면 취소한다(같은 클릭이 두 컨트롤러에 겹치지 않도록)
     }
 
     public void ClearArmed() => armed = null;
