@@ -2,10 +2,11 @@ using System.Collections.Generic;
 using UnityEngine;
 using VContainer;
 
-// 영웅 "생성" 전용 패널. 근접/원거리 버튼 2개뿐 — 누르면 수량 선택 모달(amountPanel)이 뜨고,
-// 거기서 정한 수량만큼 자원 비용을 내고 HeroCreateManager가 티어 확률대로 뽑은 영웅들을 로스터에
-// 추가한다. 인구수는 뽑힌 영웅의 실제 티어만큼씩 소모되며, 도중에 바닥나면 그 지점에서 생성을
-// 멈추고 못 만든 만큼 자원을 환불한다(자원 비용과 달리 인구수는 생성을 사전에 막지 않는다).
+// 영웅 "생성" 전용 패널. 근접/원거리 버튼과 수량 조절 UI(amountPanel)가 한 패널에 같이 떠 있고,
+// 아이콘을 누르면 그 대상으로 amountPanel의 표시만 갱신된다(팝업을 열고 닫는 게 아니다). 거기서
+// 정한 수량만큼 자원 비용을 내고 HeroCreateManager가 티어 확률대로 뽑은 영웅들을 로스터에 추가한다.
+// 인구수는 뽑힌 영웅의 실제 티어만큼씩 소모되며, 도중에 바닥나면 그 지점에서 생성을 멈추고 못 만든
+// 만큼 자원을 환불한다(자원 비용과 달리 인구수는 생성을 사전에 막지 않는다).
 public class HeroSetPanel : MonoBehaviour
 {
     [SerializeField] private MapView view;
@@ -17,8 +18,7 @@ public class HeroSetPanel : MonoBehaviour
     [SerializeField] private List<BaseUpgradeData> costUpgrades; // 타이틀 업그레이드 트리의 HeroCostUpgrade1~5
     private UpgradeState upgradeState;
     private BuildModePanel buildModePanel;
-    private bool wasBlocked;
-    private HeroCreateIcon openIcon; // amountPanel이 떠있는 동안 그 대상 아이콘 - RefreshInteractable에서 최대치 갱신용
+    private HeroCreateIcon openIcon; // 현재 선택된 아이콘 - 하이라이트 토글과 HeroCreateIconHeldLink 노출용
     public HeroCreateIcon OpenIcon => openIcon; // HeroCreateIconHeldLink에서  누가 열었는지 확인할 수 있게 노출
 
     [Inject]
@@ -28,31 +28,18 @@ public class HeroSetPanel : MonoBehaviour
         this.buildModePanel = buildModePanel;
     }
 
-    //모드 전환을 알리는 이벤트가 없어서 BuildModePanel의 Esc 감지처럼 매 프레임 폴링한다.
-    private void Update()
-    {
-        bool isBlocked = !view.IsOff;
-        if (isBlocked == wasBlocked) return;
-        wasBlocked = isBlocked;
-        RefreshInteractable();
-    }
-
     private void OnEnable()
     {
-        wasBlocked = view.IsOff;
-        game.CitizenManager.CitizenChanged += RefreshInteractable;
-        game.ResourcesManager.ProductUpdate += RefreshInteractable;
         view.OnOffMode += RefreshInteractable;
 
-        meleeIcon.Set(false, () => OpenAmountPanel(meleeIcon, OccupantKind.MeleeHero));
-        rangedIcon.Set(false, () => OpenAmountPanel(rangedIcon, OccupantKind.RangedHero));
+        meleeIcon.Set(false, () => SetResourcesPanel(meleeIcon, OccupantKind.MeleeHero));
+        rangedIcon.Set(false, () => SetResourcesPanel(rangedIcon, OccupantKind.RangedHero));
         RefreshInteractable();
+        SetResourcesPanel(meleeIcon, OccupantKind.MeleeHero); // 패널이 열릴 때마다(=OnEnable마다) 근접 기본 선택 + 수량 초기화
     }
 
     private void OnDisable()
     {
-        game.CitizenManager.CitizenChanged -= RefreshInteractable;
-        game.ResourcesManager.ProductUpdate -= RefreshInteractable;
         view.OnOffMode -= RefreshInteractable;
     }
 
@@ -63,20 +50,17 @@ public class HeroSetPanel : MonoBehaviour
         return icon.ResourceCost.ToNegatedCostArray().ApplyDiscount(discount);
     }
 
-    private void OpenAmountPanel(HeroCreateIcon icon, OccupantKind kind)
+    private void SetResourcesPanel(HeroCreateIcon icon, OccupantKind kind)
     {
         if (amountPanel == null || !view.IsOff) return;
-
-        string reason = GetUnaffordReason(icon);
-        if (reason != null)
-        {
-            CenterFeedbackUi.Instance.Show(reason);
-            return;
-        }
-
         openIcon = icon;
+        openIcon.SetSelected(true);
+        var otherIcon = openIcon != meleeIcon ? meleeIcon : rangedIcon;
+        otherIcon.SetSelected(false);
+
         var cost = GetCost(icon);
-        amountPanel.Open(icon.ResourceIcons, cost, GetMaxAffordable(cost), game.CitizenManager.CheckCanUseCitizen(),
+        amountPanel.SetTarget(icon.ResourceIcons, cost, GetMaxAffordable(cost), GetSufficiency(cost),
+            game.CitizenManager.CheckCanUseCitizen(), GetUnaffordReason(icon),
             amount => BulkCreate(icon, kind, amount));
     }
 
@@ -93,6 +77,18 @@ public class HeroSetPanel : MonoBehaviour
         }
         max = Mathf.Min(max, game.CitizenManager.CanUseCitizen); // 인구비용 1 기준
         return Mathf.Max(max, 0);
+    }
+
+    // 자원별로 유닛 비용 1개라도 감당 가능한지 - amountPanel이 부족한 자원 행을 빨간색으로 표시하는 데 쓴다.
+    private bool[] GetSufficiency((ProductionType Type, int Amount)[] unitCost)
+    {
+        bool[] sufficient = new bool[unitCost.Length];
+        for (int i = 0; i < unitCost.Length; i++)
+        {
+            var c = unitCost[i];
+            sufficient[i] = c.Amount >= 0 || view.resourcesManager.GetAmount(c.Type) >= -c.Amount;
+        }
+        return sufficient;
     }
 
     private void BulkCreate(HeroCreateIcon icon, OccupantKind kind, int amount)
@@ -140,22 +136,13 @@ public class HeroSetPanel : MonoBehaviour
         return null;
     }
 
-    // 자원/시민 변화, 모드 진입/종료 시 여기로 온다. Off 모드가 아니면(배치·재배치·제거 등) 무조건 비활성화.
-    // 인구/자원 부족은 더 이상 버튼을 막지 않는다 — 클릭 시 OpenAmountPanel이 사유를 띄운다.
+    // view가 Off 모드로 들어올 때(OnOffMode)만 불린다 - Off가 아니면(배치·재배치·제거 등) 생성 버튼을
+    // 무조건 비활성화한다. 선택 상태/수량 표시는 건드리지 않는다(그건 SetResourcesPanel의 역할).
+    // 인구/자원 부족은 더 이상 버튼을 막지 않는다 — amountPanel의 reasonText가 사유를 띄운다.
     private void RefreshInteractable()
     {
         bool off = view.IsOff;
         meleeIcon.SetInteractable(off);
         rangedIcon.SetInteractable(off);
-
-        if (amountPanel == null || openIcon == null || !amountPanel.gameObject.activeSelf) return;
-        if (!off)
-        {
-            amountPanel.Close();
-            openIcon = null;
-            return;
-        }
-        var cost = GetCost(openIcon);
-        amountPanel.RefreshMax(GetMaxAffordable(cost), game.CitizenManager.CheckCanUseCitizen());
     }
 }
