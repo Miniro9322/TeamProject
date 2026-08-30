@@ -90,6 +90,7 @@ public class SaveRestore
         gameManager.RestoreUnlockedHero(data.heroUnlock);
         gameManager.RestoreGameSeed(data.gameSeed);
         gameManager.RestoreHeroDrawCounts(data.heroDrawMeleeCount, data.heroDrawRangedCount);
+        gameManager.RestoreHeroesCreatedToday(data.heroesCreatedToday);
         gameManager.RestoreHeroCombineCounts(data.heroCombineMeleeCounts, data.heroCombineRangedCounts);
         gameManager.ChangeRequest(data.dayCount > 0 && data.dayCount % 10 == 0);
     }
