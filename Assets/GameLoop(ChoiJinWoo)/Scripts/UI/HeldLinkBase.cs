@@ -48,14 +48,18 @@ public abstract class HeldLinkBase : MonoBehaviour
     // 눌린 모양과 색을 함께 반영한다
     private void ApplyHeld(bool held)
     {
-        buttonAnimator.SetBool(HeldParameter, held);
+        if (buttonAnimator != null) buttonAnimator.SetBool(HeldParameter, held);
         ClearOtherTriggers();
         buttonImage.color = SelectTint(held);
     }
 
-    // 대기 중인 다른 트리거가 있으면 Held 전환을 가로채므로, 전환할 때마다 비워 둔다
+    // 대기 중인 다른 트리거가 있으면 Held 전환을 가로채므로, 전환할 때마다 비워 둔다.
+    // ButtonPressScale 기반의 새 버튼처럼 Animator 없이 스케일만으로 피드백을 주는 경우엔
+    // 애초에 트리거로 가로챌 게 없으니 조용히 건너뛴다(Animator 필수였던 예전 제약을 없앤다).
     private void ClearOtherTriggers()
     {
+        if (buttonAnimator == null) return;
+
         buttonAnimator.ResetTrigger("Normal");
         buttonAnimator.ResetTrigger("Highlighted");
         buttonAnimator.ResetTrigger("Pressed");
