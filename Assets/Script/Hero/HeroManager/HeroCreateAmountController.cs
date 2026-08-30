@@ -17,8 +17,8 @@ public class HeroCreateAmountController : MonoBehaviour
     [SerializeField] private TextMeshProUGUI reasonText; // 생성 불가 사유 - 없으면 비활성화
 
     private readonly List<HeroUpgradeResourcesUI> rows = new();
-    private (ProductionType Type, int Amount)[] unitCost;
-    private bool[] sufficient; // unitCost와 같은 인덱스 - 해당 자원 하나라도 감당 가능한지
+    private Func<int, (ProductionType Type, int Amount)[]> getCost; // 수량을 넣으면 그만큼(점증 가격 포함) 총 비용을 계산해 준다
+    private bool[] sufficient; // getCost(1)과 같은 인덱스 - 해당 자원 하나라도 감당 가능한지
     private List<ResourceIcon> resourceIcons;
     private Action<int> onBuy;
     private int maxAmount;
@@ -33,11 +33,11 @@ public class HeroCreateAmountController : MonoBehaviour
         buyButton.onClick.AddListener(OnBuyClicked);
     }
 
-    public void SetTarget(List<ResourceIcon> resourceIcons, (ProductionType Type, int Amount)[] unitCost,
+    public void SetTarget(List<ResourceIcon> resourceIcons, Func<int, (ProductionType Type, int Amount)[]> getCost,
         int maxAmount, bool[] sufficient, bool canUseCitizen, string reasonKey, Action<int> onBuy)
     {
         this.resourceIcons = resourceIcons;
-        this.unitCost = unitCost;
+        this.getCost = getCost;
         this.sufficient = sufficient;
         this.onBuy = onBuy;
         amount = 1;
@@ -93,11 +93,11 @@ public class HeroCreateAmountController : MonoBehaviour
 
     private void RefreshCostDisplay()
     {
-        if (unitCost == null) return;
+        if (getCost == null) return;
 
         // 자원이 부족해 maxAmount가 0이 돼도(amount도 0으로 클램프됨) 자원 행엔 "0"이 아니라
         // 1개 만들 때의 실제 금액을 보여준다 - 실제 구매 가능 수량(amount)엔 영향 없음.
-        var scaled = unitCost.Multiply(Mathf.Max(amount, 1));
+        var scaled = getCost(Mathf.Max(amount, 1));
         for (int i = 0; i < scaled.Length; i++)
         {
             HeroUpgradeResourcesUI row = i < rows.Count ? rows[i] : CreateRow();
