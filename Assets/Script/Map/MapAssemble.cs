@@ -37,6 +37,7 @@ public class MapAssemble : MonoBehaviour
     private PlayerSkillCastController playerSkillCast;
     private DesertZoneEffect desertZoneEffect;
     private List<IceZoneEffect> iceZoneEffects;
+    private List<IceSnowfall> iceSnowfalls;
     private CampfireLightController campfireLights;
     private MapBoard desertBoard;
 
@@ -298,6 +299,8 @@ public class MapAssemble : MonoBehaviour
         CampfireCalc calc = new();
         campfireLights = new CampfireLightController();
         iceZoneEffects = new List<IceZoneEffect>();
+        iceSnowfalls = new List<IceSnowfall>();
+        GameObject snowPrefab = Resources.Load<GameObject>("ZoneEffectPrefab/IceSnowfallVFX");
         for (int index = 0; index < boards.Count; index++)
         {
             MapBoard board = boards[index];
@@ -308,6 +311,8 @@ public class MapAssemble : MonoBehaviour
                 iceZone.SetCampfire(data);
                 campfireLights.Collect(board, iceZone.CampfireRange);
                 iceZoneEffects.Add(new IceZoneEffect(board, mapGame.Units, iceZone));
+                SnowMeltZone meltZone = new SnowMeltZone(board, iceZone.CampfireRange);
+                iceSnowfalls.Add(new IceSnowfall(board, snowPrefab, meltZone.Zones));
             }
         }
     }

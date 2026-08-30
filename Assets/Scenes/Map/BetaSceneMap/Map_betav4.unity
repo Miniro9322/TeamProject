@@ -7576,6 +7576,7 @@ GameObject:
   m_Component:
   - component: {fileID: 512501369}
   - component: {fileID: 512501368}
+  - component: {fileID: 512501370}
   m_Layer: 0
   m_Name: GimmickReveal
   m_TagString: Untagged
@@ -7616,6 +7617,20 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &512501370
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 512501367}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2ab552151c380004f860560771e4ac43, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ExpandTester
+  registry: {fileID: 1862994567}
+  mapGame: {fileID: 314587623}
 --- !u!1001 &544477811
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -16155,8 +16170,8 @@ MonoBehaviour:
   - {fileID: 1554692144}
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4279048742
-  m_fontColor: {r: 0.15, g: 0.1, b: 0.05, a: 1}
+    rgba: 4294967295
+  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -16173,8 +16188,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 22
-  m_fontSizeBase: 22
+  m_fontSize: 24
+  m_fontSizeBase: 24
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -24054,8 +24069,8 @@ MonoBehaviour:
   - {fileID: 1066780749}
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4279048742
-  m_fontColor: {r: 0.15, g: 0.1, b: 0.05, a: 1}
+    rgba: 4294967295
+  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -24072,8 +24087,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 32
-  m_fontSizeBase: 32
+  m_fontSize: 36
+  m_fontSizeBase: 36
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 0
@@ -29157,7 +29172,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 2d9197e8ace0c4f4bb9640268b39f997, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 1d2c2d58590cb475cb3c80f12800e526, type: 3}
   m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
