@@ -53,12 +53,14 @@ public class GameManager : MonoBehaviour
     private int heroDrawRangedCount;
     private int[] heroCombineMeleeCounts = new int[3];   // 인덱스 0=1→2티어, 1=2→3티어, 2=3→4티어
     private int[] heroCombineRangedCounts = new int[3];
+    private int heroesCreatedToday; // 오늘 생성한 영웅 수 (근접+원거리 합산) - 영웅 생성 가격 점증에 사용, OnDay에서 초기화
 
     public string GameSeed => gameSeed;
     public int HeroDrawMeleeCount => heroDrawMeleeCount;
     public int HeroDrawRangedCount => heroDrawRangedCount;
     public int[] HeroCombineMeleeCounts => heroCombineMeleeCounts;
     public int[] HeroCombineRangedCounts => heroCombineRangedCounts;
+    public int HeroesCreatedToday => heroesCreatedToday;
 
     [Inject]
     private void Construct(UiManager uiManager, SpawnerManager waveSpawner, UpgradeState upgradeState, TutorialState tutorialState)
@@ -113,6 +115,7 @@ public class GameManager : MonoBehaviour
             return;
 
         fsm.ChangeState(day);
+        heroesCreatedToday = 0; // 하루가 바뀌면 영웅 생성 가격 점증을 초기화 (SaveManager의 DayStart 저장보다 먼저)
         ChangeToDay?.Invoke();
     }
 
@@ -232,6 +235,17 @@ public class GameManager : MonoBehaviour
     {
         heroDrawMeleeCount = meleeCount;
         heroDrawRangedCount = rangedCount;
+    }
+
+    // 영웅 생성에 성공할 때마다 HeroSetPanel이 호출한다 - 가격 점증에 쓰는 오늘의 생성 횟수를 늘린다.
+    public void AddHeroesCreatedToday(int count)
+    {
+        heroesCreatedToday += count;
+    }
+
+    public void RestoreHeroesCreatedToday(int count)
+    {
+        heroesCreatedToday = count;
     }
 
     // 영웅을 뽑을 때마다 호출한다 - 종류에 맞는 순번을 하나 늘리고 (시드, 순번)을 반환한다.

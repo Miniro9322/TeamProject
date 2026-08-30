@@ -16,6 +16,7 @@ public class SaveData
     public string gameSeed;             // 시드 고정 랜덤(영웅 뽑기/합성 등)에 쓰는 슬롯 공용 시드 (슬롯 생성 시 한 번 정해진 뒤 불변)
     public int heroDrawMeleeCount;      // 지금까지 근접 영웅을 뽑은 횟수 (뽑기 결과의 재현 순번)
     public int heroDrawRangedCount;     // 지금까지 원거리 영웅을 뽑은 횟수
+    public int heroesCreatedToday;      // 오늘 생성한 영웅 수 (영웅 생성 가격 점증용, 다음 날이 되면 0으로 초기화)
     public int[] heroCombineMeleeCounts = new int[3];   // 근접 합성 순번 (인덱스 0=1→2티어, 1=2→3티어, 2=3→4티어)
     public int[] heroCombineRangedCounts = new int[3];  // 원거리 합성 순번
 

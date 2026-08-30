@@ -32,6 +32,7 @@ public class HeroCreateManager : MonoBehaviour
     };
 
     private int extraUnlockedRegions;
+    public int ExtraUnlockedRegions => extraUnlockedRegions; // HeroSetPanel의 지역 기반 가격 점증에 사용
 
     // MapRegistry.Awake가 먼저 끝나야 AllModules를 읽을 수 있어서 Start에서 구독한다(HeroRegistry가
     // game.HeroRoster.Changed를 Start에서 구독하는 것과 같은 이유).

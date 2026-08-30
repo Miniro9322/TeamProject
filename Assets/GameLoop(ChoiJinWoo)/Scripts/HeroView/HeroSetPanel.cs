@@ -16,6 +16,12 @@ public class HeroSetPanel : MonoBehaviour
     [SerializeField] private HeroCreateIcon rangedIcon;
     [SerializeField] private HeroCreateAmountController amountPanel;
     [SerializeField] private List<BaseUpgradeData> costUpgrades; // 타이틀 업그레이드 트리의 HeroCostUpgrade1~5
+    [SerializeField] private bool useEscalatingHeroPrice = true; // 켜면 오늘 생성한 개수만큼 가격이 점증한다
+    [SerializeField, Tooltip("영웅 생성 1회당 가격이 원가 대비 증가하는 비율 (0.25 = 25%p씩 선형 증가, 복리 아님)")]
+    private float heroPriceIncreaseRate = 0.25f;
+    [SerializeField] private bool useRegionHeroPrice = true; // 켜면 새로 해금된 지역 수만큼 가격이 추가로 오른다
+    [SerializeField, Tooltip("지역이 하나 늘어날 때마다 가격이 원가 대비 증가하는 비율 (0.25 = 25%p씩 선형 증가, 하루 점증과 별개로 계속 누적되고 하루가 지나도 초기화되지 않음)")]
+    private float regionPriceIncreaseRate = 0.25f;
     private UpgradeState upgradeState;
     private BuildModePanel buildModePanel;
     private HeroCreateIcon openIcon; // 현재 선택된 아이콘 - 하이라이트 토글과 HeroCreateIconHeldLink 노출용
@@ -50,6 +56,53 @@ public class HeroSetPanel : MonoBehaviour
         return icon.ResourceCost.ToNegatedCostArray().ApplyDiscount(discount);
     }
 
+    // occurrenceIndex번째(0부터, 오늘 이미 만든 개수 기준) 생성의 단가.
+    // 하루 점증(occurrenceIndex 기준)과 지역 점증(해금된 지역 수 기준)을 원가 대비 가산해서 배율 하나로 합친다.
+    // 둘 다 꺼져 있으면 원가 그대로.
+    private (ProductionType Type, int Amount)[] GetEscalatedUnitCost((ProductionType Type, int Amount)[] baseCost, int occurrenceIndex)
+    {
+        float multiplier = 1f;
+        if (useEscalatingHeroPrice) multiplier += heroPriceIncreaseRate * occurrenceIndex;
+        if (useRegionHeroPrice) multiplier += regionPriceIncreaseRate * createManager.ExtraUnlockedRegions;
+        if (multiplier == 1f) return baseCost;
+        return baseCost.Scale(multiplier);
+    }
+
+    // 지금 당장 1개를 살 때의 단가 (오늘 이미 만든 개수만큼 점증 반영).
+    private (ProductionType Type, int Amount)[] GetNextUnitCost(HeroCreateIcon icon)
+    {
+        return GetEscalatedUnitCost(GetCost(icon), game.Rule.HeroesCreatedToday);
+    }
+
+    // amount개를 지금 순서대로 살 때, 슬롯(구매 순번)별 단가를 각각 계산해 배열로 반환한다.
+    private (ProductionType Type, int Amount)[][] BuildSlotCosts(HeroCreateIcon icon, int amount)
+    {
+        var baseCost = GetCost(icon);
+        int start = useEscalatingHeroPrice ? game.Rule.HeroesCreatedToday : 0;
+        var result = new (ProductionType Type, int Amount)[amount][];
+        for (int i = 0; i < amount; i++)
+        {
+            result[i] = GetEscalatedUnitCost(baseCost, start + i);
+        }
+        return result;
+    }
+
+    private static (ProductionType Type, int Amount)[] SumSlotCosts((ProductionType Type, int Amount)[][] slotCosts)
+    {
+        var total = slotCosts[0];
+        for (int i = 1; i < slotCosts.Length; i++)
+        {
+            total = total.Add(slotCosts[i]);
+        }
+        return total;
+    }
+
+    // amount개를 지금 순서대로 살 때의 총 비용 - 점증 중이면 단가가 슬롯마다 달라서 단순 곱이 아니다.
+    private (ProductionType Type, int Amount)[] GetBatchCost(HeroCreateIcon icon, int amount)
+    {
+        return SumSlotCosts(BuildSlotCosts(icon, Mathf.Max(amount, 1)));
+    }
+
     private void SetResourcesPanel(HeroCreateIcon icon, OccupantKind kind)
     {
         if (amountPanel == null || !view.IsOff) return;
@@ -58,25 +111,46 @@ public class HeroSetPanel : MonoBehaviour
         var otherIcon = openIcon != meleeIcon ? meleeIcon : rangedIcon;
         otherIcon.SetSelected(false);
 
-        var cost = GetCost(icon);
-        amountPanel.SetTarget(icon.ResourceIcons, cost, GetMaxAffordable(cost), GetSufficiency(cost),
+        var nextUnitCost = GetNextUnitCost(icon);
+        amountPanel.SetTarget(icon.ResourceIcons, amt => GetBatchCost(icon, amt), GetMaxAffordable(icon), GetSufficiency(nextUnitCost),
             game.CitizenManager.CheckCanUseCitizen(), GetUnaffordReason(icon),
             amount => BulkCreate(icon, kind, amount));
     }
 
-    // 한 번에 살 수 있는 최대 수량 - 자원 기준과, 인구비용을 1로 가정한 인구수 기준 중 더 작은 값.
+    // 한 번에 살 수 있는 최대 수량 - 자원 기준(점증 가격 반영)과, 인구비용을 1로 가정한 인구수 기준 중 더 작은 값.
+    // 가격이 절대 내려가지 않는 한 자원 감당 가능 여부는 순번에 대해 단조롭기 때문에, 인구 상한을 루프
+    // 경계로 써서 그 안에서만 시뮬레이션하면 별도 안전장치 없이 정확한 값을 구할 수 있다.
     // 실제로 뽑힐 영웅의 티어(=인구비용)가 1보다 크면 이 추정보다 인구수가 더 빨리 소진될 수 있는데,
     // 그런 경우는 실제 생성(BulkCreate) 중에 부족해지면 그 자리에서 멈추고 환불하는 걸로 처리한다.
-    private int GetMaxAffordable((ProductionType Type, int Amount)[] unitCost)
+    private int GetMaxAffordable(HeroCreateIcon icon)
     {
-        int max = int.MaxValue;
-        foreach (var c in unitCost)
+        var baseCost = GetCost(icon);
+        int start = useEscalatingHeroPrice ? game.Rule.HeroesCreatedToday : 0;
+        int popCap = Mathf.Max(0, game.CitizenManager.CanUseCitizen); // 인구비용 1 기준
+
+        int[] remaining = new int[baseCost.Length];
+        for (int i = 0; i < baseCost.Length; i++)
         {
-            if (c.Amount >= 0) continue;
-            max = Mathf.Min(max, view.resourcesManager.GetAmount(c.Type) / -c.Amount);
+            remaining[i] = baseCost[i].Amount < 0 ? view.resourcesManager.GetAmount(baseCost[i].Type) : int.MaxValue;
         }
-        max = Mathf.Min(max, game.CitizenManager.CanUseCitizen); // 인구비용 1 기준
-        return Mathf.Max(max, 0);
+
+        int n = 0;
+        for (; n < popCap; n++)
+        {
+            var slot = GetEscalatedUnitCost(baseCost, start + n);
+            bool affordable = true;
+            for (int i = 0; i < slot.Length; i++)
+            {
+                if (slot[i].Amount < 0 && remaining[i] < -slot[i].Amount) { affordable = false; break; }
+            }
+            if (!affordable) break;
+
+            for (int i = 0; i < slot.Length; i++)
+            {
+                if (slot[i].Amount < 0) remaining[i] += slot[i].Amount;
+            }
+        }
+        return n;
     }
 
     // 자원별로 유닛 비용 1개라도 감당 가능한지 - amountPanel이 부족한 자원 행을 빨간색으로 표시하는 데 쓴다.
@@ -95,8 +169,9 @@ public class HeroSetPanel : MonoBehaviour
     {
         if (!view.IsOff || amount <= 0) return;
 
-        var unitCost = GetCost(icon);
-        var totalCost = unitCost.Multiply(amount);
+        // 오늘 이미 만든 개수를 기준으로 슬롯(구매 순번)별 단가를 미리 계산한다 - 점증 중이면 슬롯마다 값이 다르다.
+        var slotCosts = BuildSlotCosts(icon, amount);
+        var totalCost = SumSlotCosts(slotCosts);
         if (!view.resourcesManager.CheckResources(totalCost)) return; // 패널이 떠있는 동안 자원이 바뀌었을 수 있으니 최종 확인.
 
         view.resourcesManager.ProductChanged(totalCost); // 전체 수량분을 먼저 차감하고, 못 만든 만큼은 아래서 환불한다.
@@ -104,8 +179,17 @@ public class HeroSetPanel : MonoBehaviour
         int created = 0;
         for (int i = 0; i < amount; i++)
         {
-            if (!game.CitizenManager.CheckCanUseCitizen()) break; // 인구수 소진 - 여기서 생성 중단.
-            if (!createManager.TryRollHero(kind, out HeroData picked)) continue;
+            if (!game.CitizenManager.CheckCanUseCitizen())
+            {
+                // 인구수 소진 - 여기서부터 남은 슬롯은 아예 시도하지 않으니 각자의 단가 그대로 환불한다.
+                for (int j = i; j < amount; j++) view.resourcesManager.ProductChanged(slotCosts[j].Multiply(-1));
+                break;
+            }
+            if (!createManager.TryRollHero(kind, out HeroData picked))
+            {
+                view.resourcesManager.ProductChanged(slotCosts[i].Multiply(-1)); // 이 슬롯만 실패 - 이 슬롯 단가만 환불.
+                continue;
+            }
 
             // 뽑힌 영웅의 실제 티어만큼 인구수를 소모한다 — 남은 인구수를 초과해도 생성은 진행되고 음수로 남는다.
             game.CitizenManager.UseCitizenForHero(picked.PopulationCost);
@@ -120,9 +204,9 @@ public class HeroSetPanel : MonoBehaviour
             created++;
         }
 
-        int notCreated = amount - created;
-        if (notCreated > 0) view.resourcesManager.ProductChanged(unitCost.Multiply(-notCreated));
+        if (created > 0) game.Rule.AddHeroesCreatedToday(created); // 다음 구매의 점증 기준이 되도록 실제 생성 개수만큼만 반영.
 
+        SetResourcesPanel(icon, kind); // 다음 단가/최대 수량을 즉시 반영 (OpenInventory보다 먼저 - 패널 전환 시 재세팅되므로 순서가 중요).
         buildModePanel.OpenInventory();
     }
 
@@ -132,7 +216,7 @@ public class HeroSetPanel : MonoBehaviour
     private string GetUnaffordReason(HeroCreateIcon icon)
     {
         if (!game.CitizenManager.CheckCanUseCitizen()) return "UI_Hero_NotEnoughPopulation";
-        if (!view.resourcesManager.CheckResources(GetCost(icon))) return "UI_Base_NotEnoughResources";
+        if (!view.resourcesManager.CheckResources(GetNextUnitCost(icon))) return "UI_Base_NotEnoughResources";
         return null;
     }
 
