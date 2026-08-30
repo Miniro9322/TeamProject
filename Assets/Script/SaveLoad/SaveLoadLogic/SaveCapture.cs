@@ -61,6 +61,7 @@ public class SaveCapture
         data.gameSeed = gameManager.GameSeed;
         data.heroDrawMeleeCount = gameManager.HeroDrawMeleeCount;
         data.heroDrawRangedCount = gameManager.HeroDrawRangedCount;
+        data.heroesCreatedToday = gameManager.HeroesCreatedToday;
         data.heroCombineMeleeCounts = gameManager.HeroCombineMeleeCounts;
         data.heroCombineRangedCounts = gameManager.HeroCombineRangedCounts;
         data.woodAmount = resourcesManager.Wood;

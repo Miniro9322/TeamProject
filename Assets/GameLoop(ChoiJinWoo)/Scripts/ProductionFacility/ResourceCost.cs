@@ -43,4 +43,24 @@ public static class ResourceCostExtensions
         }
         return result;
     }
+
+    public static (ProductionType Type, int Amount)[] Scale(this (ProductionType Type, int Amount)[] cost, float factor)
+    {
+        var result = new (ProductionType, int)[cost.Length];
+        for (int i = 0; i < cost.Length; i++)
+        {
+            result[i] = (cost[i].Type, Mathf.RoundToInt(cost[i].Amount * factor));
+        }
+        return result;
+    }
+
+    public static (ProductionType Type, int Amount)[] Add(this (ProductionType Type, int Amount)[] a, (ProductionType Type, int Amount)[] b)
+    {
+        var result = new (ProductionType, int)[a.Length];
+        for (int i = 0; i < a.Length; i++)
+        {
+            result[i] = (a[i].Type, a[i].Amount + b[i].Amount);
+        }
+        return result;
+    }
 }

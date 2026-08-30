@@ -170,6 +170,7 @@ public class RegionOverviewPanel : MonoBehaviour, IClosablePanel, IExclusiveUiPa
             return;
         }
 
+        if (hubPanel != null) hubPanel.Close();
         detailPanel.Open(region);
     }
 
