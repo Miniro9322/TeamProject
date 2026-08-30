@@ -7,6 +7,7 @@ public class ConfirmPopup : MonoBehaviour
 {
     [SerializeField] private Button confirmButton;
     [SerializeField] private Button cancelButton;
+    [SerializeField] private PanelReveal panelReveal;
 
     private Action onConfirmed;
 
@@ -22,7 +23,7 @@ public class ConfirmPopup : MonoBehaviour
     {
         this.onConfirmed = onConfirmed;
         transform.SetAsLastSibling();
-        gameObject.SetActive(true);
+        panelReveal.Show();
     }
 
     // 확인 버튼: 콜백을 1회 실행하고 닫는다.
@@ -49,6 +50,6 @@ public class ConfirmPopup : MonoBehaviour
     private void HidePopup()
     {
         onConfirmed = null;
-        gameObject.SetActive(false);
+        panelReveal.Hide();
     }
 }

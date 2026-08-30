@@ -36,8 +36,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -120, y: -65}
-  m_SizeDelta: {x: 200, y: 60}
+  m_AnchoredPosition: {x: -122, y: -65}
+  m_SizeDelta: {x: 250, y: 80}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &4545541979850271239
 CanvasRenderer:
@@ -169,8 +169,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 120, y: -65}
-  m_SizeDelta: {x: 200, y: 60}
+  m_AnchoredPosition: {x: 137, y: -65}
+  m_SizeDelta: {x: 250, y: 80}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &8144310094059114877
 CanvasRenderer:
@@ -278,6 +278,7 @@ GameObject:
   - component: {fileID: 3308964061088854977}
   - component: {fileID: 4406746975826335504}
   - component: {fileID: 4491709998065114177}
+  - component: {fileID: 8811300455201776300}
   m_Layer: 0
   m_Name: Slot_Confirm_PopUp
   m_TagString: Untagged
@@ -306,7 +307,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: -0.00012207031, y: 0}
-  m_SizeDelta: {x: 700, y: 250}
+  m_SizeDelta: {x: 800, y: 300}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &3308964061088854977
 CanvasRenderer:
@@ -360,6 +361,20 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ConfirmPopup
   confirmButton: {fileID: 2838945248549272208}
   cancelButton: {fileID: 5897919520481895345}
+  panelReveal: {fileID: 8811300455201776300}
+--- !u!114 &8811300455201776300
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2222364515377433102}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dd28c4146faf6c7439ceb445b2e98df0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PanelReveal
+  scaleSpeed: 5
 --- !u!1 &5239821819639161138
 GameObject:
   m_ObjectHideFlags: 0
@@ -394,7 +409,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 34, y: -33}
+  m_AnchoredPosition: {x: 34, y: -55}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0, y: 1}
 --- !u!222 &3851170488475159498
@@ -501,7 +516,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\uBD88\uB7EC\uC624\uAE30"
+  m_text: "\uC9C4\uD589"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -528,8 +543,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 20
-  m_fontSizeBase: 20
+  m_fontSize: 40
+  m_fontSizeBase: 40
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -831,8 +846,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 20
-  m_fontSizeBase: 20
+  m_fontSize: 40
+  m_fontSizeBase: 40
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -888,4 +903,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 49beb084dd5019e45a90f32e065ce6f6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LocalizeText
-  key: ToolTip_Cancel
+  key: UI_CancelButton

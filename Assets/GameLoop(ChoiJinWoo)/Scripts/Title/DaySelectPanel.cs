@@ -57,7 +57,7 @@ public class DaySelectPanel : MonoBehaviour
     // 일차를 고르지 않고 패널과 열려있는 확인 팝업을 모두 닫는다.
     private void OnClose()
     {
-        confirmPopup.gameObject.SetActive(false);
+        confirmPopup.Cancel();
         gameObject.SetActive(false);
     }
 

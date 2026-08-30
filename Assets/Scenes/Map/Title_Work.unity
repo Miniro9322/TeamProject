@@ -633,6 +633,7 @@ MonoBehaviour:
   QuitAlert: {fileID: 3175904}
   LoadingPanel: {fileID: 646821211}
   tutorialChoicePanel: {fileID: 1305267257}
+  firstButton: {fileID: 1779462363}
   mixer: {fileID: 24100000, guid: 2c9e2cd8a3ed13245a3dea3437270331, type: 2}
   loadButton: {fileID: 444061928}
   confirmPopup: {fileID: 1358294681}
@@ -940,8 +941,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ccc802eb137019f438af0bca2928597b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ButtonHeldLink
-  heldTint: {r: 1, g: 1, b: 1, a: 1}
-  normalTint: {r: 1, g: 1, b: 1, a: 1}
+  buttonImage: {fileID: 71823111}
+  heldTint: {r: 0.55, g: 0.7, b: 1, a: 0}
+  normalTint: {r: 1, g: 1, b: 1, a: 0}
   watchedPanel: {fileID: 1627787456}
 --- !u!95 &71823114
 Animator:
@@ -2777,8 +2779,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ccc802eb137019f438af0bca2928597b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ButtonHeldLink
-  heldTint: {r: 1, g: 1, b: 1, a: 1}
-  normalTint: {r: 1, g: 1, b: 1, a: 1}
+  buttonImage: {fileID: 558210702}
+  heldTint: {r: 0.55, g: 0.7, b: 1, a: 0}
+  normalTint: {r: 1, g: 1, b: 1, a: 0}
   watchedPanel: {fileID: 519058}
 --- !u!95 &558210705
 Animator:
@@ -4886,8 +4889,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ccc802eb137019f438af0bca2928597b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ButtonHeldLink
-  heldTint: {r: 1, g: 1, b: 1, a: 1}
-  normalTint: {r: 1, g: 1, b: 1, a: 1}
+  buttonImage: {fileID: 1225337017}
+  heldTint: {r: 0.55, g: 0.7, b: 1, a: 0}
+  normalTint: {r: 1, g: 1, b: 1, a: 0}
   watchedPanel: {fileID: 3175904}
 --- !u!95 &1225337020
 Animator:
@@ -9288,38 +9292,8 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 8313944539876887379, guid: b9d9c332b4774af48a77d69973713a34, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 123603483170678671}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: b9d9c332b4774af48a77d69973713a34, type: 3}
---- !u!1 &123603483170678670 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 8313944539876887379, guid: b9d9c332b4774af48a77d69973713a34, type: 3}
-  m_PrefabInstance: {fileID: 123603483170678669}
-  m_PrefabAsset: {fileID: 0}
---- !u!95 &123603483170678671
-Animator:
-  serializedVersion: 7
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 123603483170678670}
-  m_Enabled: 1
-  m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: 0da139b7b31baf641b0d98c74743c25e, type: 2}
-  m_CullingMode: 0
-  m_UpdateMode: 0
-  m_ApplyRootMotion: 0
-  m_LinearVelocityBlending: 0
-  m_StabilizeFeet: 0
-  m_AnimatePhysics: 0
-  m_WarningMessage: 
-  m_HasTransformHierarchy: 1
-  m_AllowConstantClipSamplingOptimization: 1
-  m_KeepAnimatorStateOnDisable: 0
-  m_WriteDefaultValuesOnDisable: 0
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
