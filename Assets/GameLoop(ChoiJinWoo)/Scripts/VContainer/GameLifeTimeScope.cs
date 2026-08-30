@@ -75,6 +75,7 @@ public class GameLifeTimeScope : LifetimeScope
         builder.Register<SaveTimeData>(Lifetime.Singleton).As<ITickable>().AsSelf();
         builder.Register<SaveManager>(Lifetime.Singleton).As<IStartable>().AsSelf();
         builder.Register<LoadManager>(Lifetime.Singleton).As<IStartable>().AsSelf();
+        builder.Register<SaveExitHook>(Lifetime.Singleton).As<IStartable>().AsSelf();
         builder.Register<SaveKey>(Lifetime.Singleton).AsSelf();
         builder.Register<SaveCipher>(Lifetime.Singleton).AsSelf();
 

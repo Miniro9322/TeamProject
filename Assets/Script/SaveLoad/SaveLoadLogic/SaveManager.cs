@@ -13,7 +13,7 @@ public class SaveManager : IStartable
     private readonly SaveCapture saveCapture;
     private readonly GameManager gameManager;
     private readonly SaveTimeData saveTimeData;
-    // 로드 복원 중에는 파일에 쓰지 않는다 - 복원이 일으킨 낮·밤 전환과 변경 신호가 방금 읽은 저장본을 덮어쓰기 때문이다.
+    // 로드 복원 중인지 담는다
     private bool loadRestoring;
 
     public SaveManager(
@@ -101,7 +101,7 @@ public class SaveManager : IStartable
         TrySave(SavePhase.DayStart, gameManager.DayCount, saveTimeData.DayList);
     }
 
-    // 로드 복원을 시작하며 파일 저장을 잠근다 (복원이 일으킨 밤 전환·변경 신호가 저장을 부르지 못하게 한다)
+    // 로드 복원을 시작하며 파일 저장을 잠근다
     public void LockSaveForLoad()
     {
         loadRestoring = true;
@@ -113,7 +113,7 @@ public class SaveManager : IStartable
         loadRestoring = false;
     }
 
-    // 종료·타이틀 이동 직전에 낮 활동 상태를 저장한다 - 파일 쓰기가 동기식이라 이 호출이 끝나면 저장도 끝나 있다.
+    // 종료·타이틀 이동 직전에 낮 활동 상태를 저장한다
     public void SaveBeforeExit()
     {
         if (!NeedExitSave())
@@ -125,7 +125,7 @@ public class SaveManager : IStartable
         LogExitFailure(saved);
     }
 
-    // 나가기 직전 저장이 필요한 상태인지 계산한다 - 밤은 기존 NightReady를, 게임오버는 삭제된 슬롯을 지켜야 한다.
+    // 나가기 직전 저장이 필요한 상태인지 계산한다
     private bool NeedExitSave()
     {
         if (gameManager.isGameOver)

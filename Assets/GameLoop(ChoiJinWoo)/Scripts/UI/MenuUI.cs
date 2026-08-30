@@ -61,10 +61,9 @@ public class MenuUI : MonoBehaviour, IExclusiveUiPanel
         gameObject.SetActive(false);
     }
 
+    // 종료 저장은 SaveExitHook이 프로그램 종료 신호에서 한 번만 맡는다 - 여기서 부르면 같은 저장이 두 번 일어난다.
     public void OnQuitButton()
     {
-        saveManager.SaveBeforeExit();
-
 #if UNITY_EDITOR
         EditorApplication.isPlaying = false;
 #endif
