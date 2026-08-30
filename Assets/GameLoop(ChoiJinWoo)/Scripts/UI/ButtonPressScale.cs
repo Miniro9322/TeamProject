@@ -7,7 +7,8 @@ using UnityEngine.EventSystems;
 // 버튼과 나란히 붙여 호버 확대 · 눌림 축소 피드백을 준다. Animator를 쓰지 않고 직접 스케일을 보간하므로
 // Unity Selectable의 Selected 상태가 Animator 트리거를 가로채는 문제 자체가 생기지 않는다.
 public class ButtonPressScale : MonoBehaviour,
-    IPointerEnterHandler, IPointerExitHandler, IPointerDownHandler, IPointerUpHandler
+    IPointerEnterHandler, IPointerExitHandler, IPointerDownHandler, IPointerUpHandler,
+    ISelectHandler, IDeselectHandler
 {
     [SerializeField] private float hoverScale = 1.05f;
     [SerializeField] private float pressScale = 0.95f;
@@ -15,6 +16,7 @@ public class ButtonPressScale : MonoBehaviour,
 
     private RectTransform rect;
     private bool isHovering;
+    private bool isSelected; // 키보드 탐색 등으로 EventSystem이 이 버튼을 선택했을 때(마우스 호버와 같은 강조로 취급)
     private bool isPointerDown;
     private bool isHeld; // 외부(모드/패널 등)가 취소되기 전까지 눌린 모양을 강제하고 싶을 때
     private CancellationTokenSource cts;
@@ -28,6 +30,7 @@ public class ButtonPressScale : MonoBehaviour,
     {
         cts?.Cancel();
         isHovering = false;
+        isSelected = false;
         isPointerDown = false;
         isHeld = false;
         rect.localScale = Vector3.one;
@@ -42,6 +45,19 @@ public class ButtonPressScale : MonoBehaviour,
     public void OnPointerExit(PointerEventData eventData)
     {
         isHovering = false;
+        Animate();
+    }
+
+    // 마우스 호버와 동일한 강조로 취급한다 - 마우스/키보드 조작 결과가 항상 같아 보이게 한다.
+    public void OnSelect(BaseEventData eventData)
+    {
+        isSelected = true;
+        Animate();
+    }
+
+    public void OnDeselect(BaseEventData eventData)
+    {
+        isSelected = false;
         Animate();
     }
 
@@ -71,7 +87,7 @@ public class ButtonPressScale : MonoBehaviour,
     private float TargetScale()
     {
         if (isHeld || isPointerDown) return pressScale;
-        if (isHovering) return hoverScale;
+        if (isHovering || isSelected) return hoverScale;
         return 1f;
     }
 
