@@ -13,17 +13,20 @@ public class GuideItemHighlight : MonoBehaviour
 
     private const string HeldParameter = "Held";
     private Animator buttonAnimator;
+    private ButtonPressScale pressScale;
 
-    // 이 항목 버튼의 눌린 모양을 담당하는 애니메이터를 찾아 둔다
+    // 이 항목 버튼의 눌린 모양을 담당하는 컴포넌트를 찾아 둔다 (애니메이터와 ButtonPressScale 둘 다 선택적이다)
     private void Awake()
     {
         buttonAnimator = GetComponent<Animator>();
+        pressScale = GetComponent<ButtonPressScale>();
     }
 
     // 이 항목을 선택 상태로 표시하거나 해제한다 (클릭 이펙트는 전역 ClickEffect가 담당)
     public void SetSelected(bool selected)
     {
-        buttonAnimator.SetBool(HeldParameter, selected);
+        if (buttonAnimator != null) buttonAnimator.SetBool(HeldParameter, selected);
+        pressScale?.SetHeld(selected);
 
         if (selected)
         {

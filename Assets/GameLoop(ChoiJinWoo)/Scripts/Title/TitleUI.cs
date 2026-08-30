@@ -117,8 +117,7 @@ public class TitleUI : MonoBehaviour
     // 새 게임 덮어쓰기 확인창을 연다.
     private void ShowOverwrite()
     {
-        StringTable table = DataTableManager.StringTable;
-        confirmPopup.ShowPopup(table.Get("Ui_OverwriteWarning"), table.Get("Ui_Confirm"), BeginNew);
+        confirmPopup.ShowPopup(BeginNew);
     }
 
     // 단일 슬롯을 새 게임으로 지정하고 튜토리얼 선택창을 연다.

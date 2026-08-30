@@ -11,12 +11,14 @@ public abstract class HeldLinkBase : MonoBehaviour
     private const string HeldParameter = "Held";
     private Image buttonImage;
     private Animator buttonAnimator;
+    private ButtonPressScale pressScale;
     private bool lastHeld;
 
-    // 이 버튼의 눌린 모양과 색을 담당하는 컴포넌트를 찾아 둔다
+    // 이 버튼의 눌린 모양과 색을 담당하는 컴포넌트를 찾아 둔다 (애니메이터와 ButtonPressScale 둘 다 선택적이다)
     protected virtual void Awake()
     {
         buttonAnimator = GetComponent<Animator>();
+        pressScale = GetComponent<ButtonPressScale>();
         buttonImage = GetComponent<Image>();
     }
 
@@ -40,7 +42,7 @@ public abstract class HeldLinkBase : MonoBehaviour
             return;
         }
 
-        if (held) ClearOtherTriggers();
+        if (held && buttonAnimator != null) ClearOtherTriggers();
     }
 
     // 지금 눌린 상태로 봐야 하는지는 파생 클래스가 판단한다
@@ -49,8 +51,13 @@ public abstract class HeldLinkBase : MonoBehaviour
     // 눌린 모양과 색을 함께 반영한다
     private void ApplyHeld(bool held)
     {
-        buttonAnimator.SetBool(HeldParameter, held);
-        ClearOtherTriggers();
+        if (buttonAnimator != null)
+        {
+            buttonAnimator.SetBool(HeldParameter, held);
+            ClearOtherTriggers();
+        }
+
+        pressScale?.SetHeld(held);
         buttonImage.color = SelectTint(held);
     }
 
