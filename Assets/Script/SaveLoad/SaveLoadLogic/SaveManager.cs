@@ -99,6 +99,50 @@ public class SaveManager : IStartable
         TrySave(SavePhase.DayStart, gameManager.DayCount, saveTimeData.DayList);
     }
 
+    // 종료·타이틀 이동 직전에 낮 활동 상태를 저장한다 - 파일 쓰기가 동기식이라 이 호출이 끝나면 저장도 끝나 있다.
+    public void SaveBeforeExit()
+    {
+        if (!NeedExitSave())
+        {
+            return;
+        }
+
+        bool saved = TrySave(SavePhase.DayActive, gameManager.DayCount, saveTimeData.DayList);
+        LogExitFailure(saved);
+    }
+
+    // 나가기 직전 저장이 필요한 상태인지 계산한다 - 밤은 기존 NightReady를, 게임오버는 삭제된 슬롯을 지켜야 한다.
+    private bool NeedExitSave()
+    {
+        if (gameManager.isGameOver)
+        {
+            return false;
+        }
+
+        if (TutorialInputGate.BlockSave)
+        {
+            return false;
+        }
+
+        if (!ToolEnabled)
+        {
+            return false;
+        }
+
+        return gameManager.CanBuild;
+    }
+
+    // 나가기 직전 저장 실패를 로그로 알린다
+    private void LogExitFailure(bool saved)
+    {
+        if (saved)
+        {
+            return;
+        }
+
+        Debug.LogError("[SaveLoad] 종료·타이틀 이동 직전 저장에 실패했습니다.");
+    }
+
     private bool TrySave(SavePhase phase, int dayCount, int[] savedDayList)
     {
         if (!ToolEnabled)

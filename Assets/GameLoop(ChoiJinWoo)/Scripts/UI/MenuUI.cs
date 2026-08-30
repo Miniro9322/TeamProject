@@ -4,6 +4,7 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using VContainer;
 
 public class MenuUI : MonoBehaviour, IExclusiveUiPanel
 {
@@ -12,6 +13,14 @@ public class MenuUI : MonoBehaviour, IExclusiveUiPanel
     [SerializeField] private Button openButton;
 
     private ClickOutsideCloser outsideCloser;
+    private SaveManager saveManager;
+
+    // 나가기 직전 저장을 맡길 저장 관리자를 받아 둔다.
+    [Inject]
+    private void Construct(SaveManager saveManager)
+    {
+        this.saveManager = saveManager;
+    }
 
     private void Awake()
     {
@@ -54,6 +63,8 @@ public class MenuUI : MonoBehaviour, IExclusiveUiPanel
 
     public void OnQuitButton()
     {
+        saveManager.SaveBeforeExit();
+
 #if UNITY_EDITOR
         EditorApplication.isPlaying = false;
 #endif
@@ -74,6 +85,7 @@ public class MenuUI : MonoBehaviour, IExclusiveUiPanel
 
     public void OnTitle()
     {
+        saveManager.SaveBeforeExit();
         Time.timeScale = 1f;
         SceneManager.LoadScene("Title");
     }

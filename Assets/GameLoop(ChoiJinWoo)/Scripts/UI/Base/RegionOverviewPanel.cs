@@ -31,6 +31,11 @@ public class RegionOverviewPanel : MonoBehaviour, IClosablePanel, IExclusiveUiPa
     private GameManager gameManager;
     private EnviromentManager enviromentManager;
     private bool isNight;
+    // 레드닷 GameObject의 켜짐 상태가 아니라 "플레이어가 확인했는가"를 담는 저장 원본 - 세이브가 이 값을 읽고 되돌린다.
+    private bool regionUnlockNoticeSeen = true;
+
+    // 지역 해금 알림을 이미 확인했는지 알려준다 (SaveCapture 전용)
+    public bool RegionUnlockNoticeSeen => regionUnlockNoticeSeen;
 
     [Inject]
     private void Construct(UiPanelStack panelStack, GameManager gameManager, EnviromentManager enviromentManager)
@@ -76,8 +81,16 @@ public class RegionOverviewPanel : MonoBehaviour, IClosablePanel, IExclusiveUiPa
     {
         if (state == ModuleState.Preparing && redDot != null)
         {
+            regionUnlockNoticeSeen = false;
             redDot.SetActive(true);
         }
+    }
+
+    // 저장된 확인 여부를 넣고 레드닷 화면을 그 값에 맞춘다 (복원 마지막 단계 전용 - 복원 중 켜진 레드닷을 마지막에 덮어쓴다)
+    public void RestoreNoticeSeen(bool seen)
+    {
+        regionUnlockNoticeSeen = seen;
+        if (redDot != null) redDot.SetActive(!seen);
     }
 
     private void OnNight()
@@ -96,6 +109,7 @@ public class RegionOverviewPanel : MonoBehaviour, IClosablePanel, IExclusiveUiPa
     private void OnEnable()
     {
         ExclusiveUiCoordinator.NotifyOpened(this);
+        regionUnlockNoticeSeen = true;
         if (redDot != null && redDot.activeSelf) redDot.SetActive(false); // 열었으니 확인한 걸로 치고 끈다
         panelStack.Push(this);
         BindModules();

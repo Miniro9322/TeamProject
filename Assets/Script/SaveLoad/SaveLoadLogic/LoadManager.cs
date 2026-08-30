@@ -8,18 +8,21 @@ public class LoadManager : IStartable
     private readonly SaveRestore saveRestore;
     private readonly DayNightButton dayNightButton;
     private readonly SaveTimeData saveTimeData;
+    private readonly GameManager gameManager;
 
-    // 로드에 필요한 저장 슬롯·복원기·버튼·시간 데이터를 받아 둔다.
+    // 로드에 필요한 저장 슬롯·복원기·버튼·시간 데이터·게임 진행을 받아 둔다.
     public LoadManager(
         SaveSlot saveSlot,
         SaveRestore saveRestore,
         DayNightButton dayNightButton,
-        SaveTimeData saveTimeData)
+        SaveTimeData saveTimeData,
+        GameManager gameManager)
     {
         this.saveSlot = saveSlot;
         this.saveRestore = saveRestore;
         this.dayNightButton = dayNightButton;
         this.saveTimeData = saveTimeData;
+        this.gameManager = gameManager;
     }
 
     // 모든 Start()가 끝난 다음 프레임에 한 번만 로드한다.
@@ -57,14 +60,22 @@ public class LoadManager : IStartable
         return saveSlot.TryReadDay(SelectedSaveSlot.SlotId, SelectedSaveSlot.SelectedDay, out saveFile);
     }
 
-    // 검증된 데이터를 적용하고, DayStart면 생산·완벽방어 보상을 정확히 1회 더 실행한다.
+    // 검증된 데이터를 적용하고 저장 단계에 맞는 후처리를 정확히 1회 실행한다.
     private void ApplyLoaded(SaveData data)
     {
         saveRestore.RestoreSaveData(data);
         saveTimeData.SetPlayTime(data.playTime);
         saveTimeData.SetDayList(data.savedDayList);
         dayNightButton.RefreshDayText();
+        saveRestore.RestoreRegionNotice(data.regionUnlockNoticeSeen);
 
+        ApplyDayStartPhase(data);
+        ApplyNightReadyPhase(data);
+    }
+
+    // DayStart 저장본에만 생산과 대기 중인 완벽방어 보상을 정확히 1회 적용한다.
+    private void ApplyDayStartPhase(SaveData data)
+    {
         if (data.savePhase != SavePhase.DayStart) return;
 
         saveRestore.ApplyProduction();
@@ -72,5 +83,14 @@ public class LoadManager : IStartable
         {
             saveRestore.ApplyPerfectDefenseReward();
         }
+    }
+
+    // NightReady 저장본에만 밤 입력을 잠그고 밤 전환을 시작한다 (환경 전환이 끝나면 웨이브가 한 번 생성된다).
+    private void ApplyNightReadyPhase(SaveData data)
+    {
+        if (data.savePhase != SavePhase.NightReady) return;
+
+        dayNightButton.RestoreNightLock();
+        gameManager.OnNight();
     }
 }

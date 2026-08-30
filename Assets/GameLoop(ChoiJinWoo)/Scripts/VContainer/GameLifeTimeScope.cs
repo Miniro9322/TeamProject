@@ -99,6 +99,7 @@ public class GameLifeTimeScope : LifetimeScope
 
         builder.RegisterComponentInHierarchy<TopBar>();
         builder.RegisterComponentInHierarchy<DayNightButton>();
+        builder.RegisterComponentInHierarchy<MenuUI>(); // 종료·타이틀 버튼이 나가기 직전 저장을 부르려면 SaveManager 주입이 필요하다
         builder.RegisterComponentInHierarchy<PlayerSkillPanel>();
         builder.RegisterComponentInHierarchy<MapGame>();
         builder.RegisterComponentInHierarchy<MapRegistry>();
