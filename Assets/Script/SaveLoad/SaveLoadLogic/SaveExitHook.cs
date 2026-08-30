@@ -28,6 +28,6 @@ public class SaveExitHook : IStartable, IDisposable
     // 종료 직전 낮 활동 상태를 저장한다
     private void SaveOnQuitting()
     {
-        saveManager.SaveBeforeExit();
+        saveManager.SaveDayActive();
     }
 }

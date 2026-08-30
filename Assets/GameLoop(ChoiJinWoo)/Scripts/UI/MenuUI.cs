@@ -15,7 +15,7 @@ public class MenuUI : MonoBehaviour, IExclusiveUiPanel
     private ClickOutsideCloser outsideCloser;
     private SaveManager saveManager;
 
-    // 나가기 직전 저장을 맡길 저장 관리자를 받아 둔다.
+    // 나가기 직전 저장을 맡길 저장 관리자를 받아 둔다
     [Inject]
     private void Construct(SaveManager saveManager)
     {
@@ -61,7 +61,6 @@ public class MenuUI : MonoBehaviour, IExclusiveUiPanel
         gameObject.SetActive(false);
     }
 
-    // 종료 저장은 SaveExitHook이 프로그램 종료 신호에서 한 번만 맡는다 - 여기서 부르면 같은 저장이 두 번 일어난다.
     public void OnQuitButton()
     {
 #if UNITY_EDITOR
@@ -84,7 +83,7 @@ public class MenuUI : MonoBehaviour, IExclusiveUiPanel
 
     public void OnTitle()
     {
-        saveManager.SaveBeforeExit();
+        saveManager.SaveDayActive();
         Time.timeScale = 1f;
         SceneManager.LoadScene("Title");
     }

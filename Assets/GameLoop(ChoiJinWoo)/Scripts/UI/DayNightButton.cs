@@ -130,7 +130,7 @@ public class DayNightButton : MonoBehaviour
         enviromentManager.OnDay -= FinishDay;
     }
 
-    // 밤 저장본을 로드했을 때 버튼을 내린 밤 모습으로 맞추고 버튼·N키 입력을 잠근다 (로드 복원 전용)
+    // 버튼을 내린 밤 모습으로 맞추고 버튼·N키 입력을 잠근다
     public void RestoreNightLock()
     {
         canToggle = false;

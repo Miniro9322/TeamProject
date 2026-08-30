@@ -113,20 +113,20 @@ public class SaveManager : IStartable
         loadRestoring = false;
     }
 
-    // 종료·타이틀 이동 직전에 낮 활동 상태를 저장한다
-    public void SaveBeforeExit()
+    // 낮 활동 상태를 저장한다
+    public void SaveDayActive()
     {
-        if (!NeedExitSave())
+        if (!NeedDayActiveSave())
         {
             return;
         }
 
         bool saved = TrySave(SavePhase.DayActive, gameManager.DayCount, saveTimeData.DayList);
-        LogExitFailure(saved);
+        LogDayActiveFailure(saved);
     }
 
-    // 나가기 직전 저장이 필요한 상태인지 계산한다
-    private bool NeedExitSave()
+    // 낮 활동 저장이 필요한 상태인지 계산한다
+    private bool NeedDayActiveSave()
     {
         if (gameManager.isGameOver)
         {
@@ -146,15 +146,15 @@ public class SaveManager : IStartable
         return gameManager.CanBuild;
     }
 
-    // 나가기 직전 저장 실패를 로그로 알린다
-    private void LogExitFailure(bool saved)
+    // 낮 활동 저장 실패를 로그로 알린다
+    private void LogDayActiveFailure(bool saved)
     {
         if (saved)
         {
             return;
         }
 
-        Debug.LogError("[SaveLoad] 종료·타이틀 이동 직전 저장에 실패했습니다.");
+        Debug.LogError("[SaveLoad] 낮 활동 상태 저장에 실패했습니다.");
     }
 
     private bool TrySave(SavePhase phase, int dayCount, int[] savedDayList)

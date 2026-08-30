@@ -1,7 +1,7 @@
 using UnityEditor;
 using UnityEngine;
 
-// 테스트용으로 자원·시민을 즉시 지급하는 에디터 전용 창 (Editor 폴더라 빌드에는 포함되지 않는다).
+// 테스트용으로 자원·시민을 즉시 지급하는 에디터 전용 창
 public class ResourceCheatWindow : EditorWindow
 {
     private const int DefaultResourceAmount = 1000;
@@ -138,7 +138,7 @@ public class ResourceCheatWindow : EditorWindow
         });
     }
 
-    // 특수자원만 원하는 만큼 더한다 (ProductionType에 특수자원이 없어 6종 지정 창구를 쓴다)
+    // 특수자원만 원하는 만큼 더한다
     private void GrantSpecialResource(ResourcesManager resourcesManager, int amount)
     {
         resourcesManager.RestoreResources(
@@ -150,7 +150,7 @@ public class ResourceCheatWindow : EditorWindow
             resourcesManager.Special + amount);
     }
 
-    // 시민을 원하는 만큼 더한다 (최대치를 넘길 수 있다 - 테스트 전용)
+    // 시민을 원하는 만큼 더한다
     private void GrantCitizen(CitizenManager citizenManager, int amount)
     {
         citizenManager.IncreaseCitizen(amount);

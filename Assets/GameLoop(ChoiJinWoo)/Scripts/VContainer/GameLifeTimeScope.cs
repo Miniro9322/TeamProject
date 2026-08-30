@@ -76,6 +76,7 @@ public class GameLifeTimeScope : LifetimeScope
         builder.Register<SaveManager>(Lifetime.Singleton).As<IStartable>().AsSelf();
         builder.Register<LoadManager>(Lifetime.Singleton).As<IStartable>().AsSelf();
         builder.Register<SaveExitHook>(Lifetime.Singleton).As<IStartable>().AsSelf();
+        builder.Register<SaveChangeTracker>(Lifetime.Singleton).As<IStartable>().As<ITickable>().AsSelf();
         builder.Register<SaveKey>(Lifetime.Singleton).AsSelf();
         builder.Register<SaveCipher>(Lifetime.Singleton).AsSelf();
 
@@ -100,7 +101,7 @@ public class GameLifeTimeScope : LifetimeScope
 
         builder.RegisterComponentInHierarchy<TopBar>();
         builder.RegisterComponentInHierarchy<DayNightButton>();
-        builder.RegisterComponentInHierarchy<MenuUI>(); // 종료·타이틀 버튼이 나가기 직전 저장을 부르려면 SaveManager 주입이 필요하다
+        builder.RegisterComponentInHierarchy<MenuUI>();
         builder.RegisterComponentInHierarchy<PlayerSkillPanel>();
         builder.RegisterComponentInHierarchy<MapGame>();
         builder.RegisterComponentInHierarchy<MapRegistry>();
