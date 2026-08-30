@@ -33,16 +33,6 @@ public class GuideTabSelector : MonoBehaviour
         this.gimmickTileData = gimmickTileData;
     }
 
-    // 시작할 때 게임 플레이 탭이 선택된 모습으로 맞춰둔다 (스파크 없이)
-    private void Awake()
-    {
-        SetTabState(gamePlayImage, gamePlayText, gamePlayImage);
-        SetTabState(heroImage, heroText, gamePlayImage);
-        SetTabState(baseImage, baseText, gamePlayImage);
-        SetTabState(enemyImage, enemyText, gamePlayImage);
-        SetTabState(gimmickImage, gimmickText, gamePlayImage);
-    }
-
     // 기믹 탭을 선택 상태로 표시한다
     public void SelectGimmickTab()
     {
