@@ -26,7 +26,7 @@ public class ButtonSfxAutoAttacher : MonoBehaviour
 
         for (int i = 0; i < copied; i++)
         {
-            if (buffer[i] is Button button && processed.Add(button))
+            if (buffer[i] is Button button && processed.Add(button) && !button.TryGetComponent(out ButtonSfx _))
             {
                 button.gameObject.AddComponent<ButtonSfx>();
             }

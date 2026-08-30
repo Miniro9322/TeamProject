@@ -14,4 +14,11 @@ public class HeroUpgradeResourcesUI : MonoBehaviour
     {
         this.amount.text = amount.ToString();
     }
+
+    // 영웅 생성 패널에서 이 자원 하나만으로는 유닛 하나도 못 만들 때 빨간색으로 강조하는 용도.
+    public void SetAmount(int amount, bool sufficient)
+    {
+        this.amount.text = amount.ToString();
+        this.amount.color = sufficient ? Color.white : Color.red;
+    }
 }
