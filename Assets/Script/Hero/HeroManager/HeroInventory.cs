@@ -65,6 +65,13 @@ public class HeroInventory : MonoBehaviour
     private void OnDisable()
     {
         LocalizeTextManager.OnLanguageChanged -= RelocalizeTabs;
+
+        // 인벤토리가 닫히는 순간(재배치/제거 모드로 인한 일시적 닫힘 포함) "새로 생성됨" 표시를 끈다.
+        // BuildModePanel.Awake가 시작부터 SetActive(false)를 호출해, 이 OnDisable이 이 컴포넌트의
+        // Awake보다 먼저 불릴 수 있다 — iconPool이 아직 없을 수 있으니 Refresh 전에 가드한다.
+        if (iconPool == null) return;
+        game.HeroRoster.MarkAllSeen();
+        Refresh();
     }
 
     private void OnDestroy()
