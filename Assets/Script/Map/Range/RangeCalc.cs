@@ -74,7 +74,7 @@ public class RangeCalc
             return false;
         }
 
-        return desertZone.WindwallData.TryGetRange(windwallTile.Coord, out range);
+        return desertZone.WindwallData.TryGetRange(desertZone.WindDirection, windwallTile.Coord, out range);
     }
 
     // 아직 타일에 놓이지 않은 유닛(배치 프리뷰)도 중심 타일을 따로 받아 계산한다.
