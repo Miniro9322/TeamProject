@@ -67,7 +67,6 @@ public class MapAssemble : MonoBehaviour
             desertZone.ArrowSlidePeriod);
         DesertLineEffect lineEffect = new DesertLineEffect(
             desertBoard,
-            Resources.Load<GameObject>("ZoneEffectPrefab/DesertStrongVFX"),
             Resources.Load<GameObject>("ZoneEffectPrefab/DesertWeakVFX"));
         desertZoneEffect = new DesertZoneEffect(
             desertZone,
