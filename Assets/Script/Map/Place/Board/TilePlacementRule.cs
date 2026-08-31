@@ -9,15 +9,27 @@ public static class TilePlacementRule
             return false;
         }
 
-        if (tile.Terrain == TerrainType.Core)
-        {
-            return false;   // 본진 영역
-        }
-
         // 한 타일에는 하나의 주요 점유만(설계 §4). 적 경로(EnemyLane)는 점유가 아니라 통과 허용.
         if (!tile.IsEmpty)
         {
             return false;
+        }
+
+        return CanPlaceIgnoringOccupant(tile, placing);
+    }
+
+    /// <summary>점유 여부만 빼고 나머지 조건(지형·기믹·통행)을 검사한다.
+    /// 재배치 스왑처럼 "지금 다른 유닛이 있어도 그 유닛을 치우면 놓을 수 있는가"를 물을 때 쓴다.</summary>
+    public static bool CanPlaceIgnoringOccupant(TileState tile, OccupantKind placing)
+    {
+        if (tile == null)
+        {
+            return false;
+        }
+
+        if (tile.Terrain == TerrainType.Core)
+        {
+            return false;   // 본진 영역
         }
 
         if (tile.Terrain == TerrainType.Special)
