@@ -72,7 +72,7 @@ public class UnitReplace
     // 집은 유닛을 자리에 내려놓는다. 못 놓으면 false.
     public bool TryDrop(PlaceData data)
     {
-        if (!data.CanPlace)
+        if (!data.CanPlace && !TrySwap(ref data))
         {
             return false;
         }
@@ -92,6 +92,66 @@ public class UnitReplace
         ClearHeld();
         Replaced?.Invoke(droppedUnit, droppedKind);
         return true;
+    }
+
+    // 점유 자체는 무시하고, held는 목표 칸에 · 기존 점유자는 held의 원래 칸에 각각 들어갈 수 있어
+    // 서로 자리를 맞바꿀 수 있는 조합인지만 살핀다(상태는 바꾸지 않는다). 미리보기 색상 판정과
+    // 실제 스왑(TrySwap) 양쪽에서 같은 기준을 쓰기 위해 따로 뺐다.
+    private bool CanSwapWith(PlaceData data, out GameObject otherUnit, out OccupantKind otherKind)
+    {
+        otherUnit = null;
+        otherKind = OccupantKind.None;
+
+        if (!IsHolding || data.Area == null)
+        {
+            return false;
+        }
+
+        Tile targetTile = data.Area.Board.Cells[data.Area.Origin];
+        otherUnit = targetTile.OccupantObject;
+        if (otherUnit == null)
+        {
+            return false;
+        }
+
+        otherKind = targetTile.State.Occupant;
+
+        return TilePlacementRule.CanPlaceIgnoringOccupant(targetTile.State, held.Kind)
+            && TilePlacementRule.CanPlaceIgnoringOccupant(held.FromTile.State, otherKind);
+    }
+
+    // 미리보기(칠하기)용: 지금 든 유닛을 이 자리에 놓을 수 있는지 — 바로 놓거나, 자리를 바꿔서라도.
+    public bool CanPlaceOrSwap(PlaceData data)
+    {
+        return data.CanPlace || CanSwapWith(data, out _, out _);
+    }
+
+    // 목표 칸이 다른 유닛에 막혀 있을 때, 서로 자리를 맞바꿀 수 있으면 바꾸고 data를 갱신한다.
+    // 점유가 아닌 다른 사유(본진·지형·기믹 등)로 막힌 경우이거나, 서로의 지형 조건이 안 맞으면 false.
+    private bool TrySwap(ref PlaceData data)
+    {
+        if (!CanSwapWith(data, out GameObject otherUnit, out OccupantKind otherKind))
+        {
+            return false;
+        }
+
+        AreaPlace.Remove(data.Area);
+        _unitList.Remove(otherUnit);
+
+        PlaceData otherData = new PlaceData(held.FromArea, held.FromPosition, true);
+        AreaPlace.Place(otherData, otherUnit, otherKind);
+        _unitList.Add(otherUnit, held.FromArea);
+        if (otherUnit.TryGetComponent(out Hero otherHero))
+        {
+            otherHero.SetBoard(held.FromArea.Board);
+            otherHero.SetCurrentTile();
+        }
+
+        // 목표 칸이 이제 비었으니 held가 놓일 자리를 실제 높이 기준으로 다시 계산한다.
+        float yOffset = data.Position.y - data.Area.Center.y;
+        Vector3 resolvedPosition = AreaPlace.Position(data.Area, held.Kind, yOffset, out bool canPlaceNow);
+        data = new PlaceData(data.Area, resolvedPosition, canPlaceNow);
+        return canPlaceNow;
     }
 
     // 집은 유닛을 파괴하고 집은 상태를 해제한다.

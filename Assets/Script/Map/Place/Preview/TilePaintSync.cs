@@ -57,7 +57,7 @@ public class TilePaintSync
     {
         result = plan;
 
-        HoverMode mode = hoverFinder.FindHover(out PlaceData placeData, out GameObject unit, out OccupantKind kind);
+        HoverMode mode = hoverFinder.FindHover(out PlaceData placeData, out GameObject unit, out OccupantKind kind, out bool canPlaceOrSwap);
         EdgeData = new PlaceEdgeData(mode, kind);
         HoverTile = ResolveHoverTile(mode);
         skillFinder.TryFindTarget(out Hero caster, out HeroActiveSkill skill, out Tile skillOrigin);
@@ -65,7 +65,7 @@ public class TilePaintSync
         int rangeVersion = ResolveRangeVersion(mode);
 
         TileDisplayData display = BuildDisplayKey(
-            mode, placeData.Area, unit, kind, placeData.CanPlace, rangeVersion,
+            mode, placeData.Area, unit, kind, canPlaceOrSwap, rangeVersion,
             caster, skill, skillOrigin, armedSkill, playerSkillOrigin);
 
         if (IsSameDisplay(display))
@@ -73,7 +73,7 @@ public class TilePaintSync
             return false;
         }
 
-        RebuildPlan(mode, placeData, unit, skill, skillOrigin, armedSkill, playerSkillOrigin);
+        RebuildPlan(mode, placeData, unit, canPlaceOrSwap, skill, skillOrigin, armedSkill, playerSkillOrigin);
 
         lastDisplay = display;
         hasDisplay = true;
@@ -141,29 +141,29 @@ public class TilePaintSync
 
     // ---- 칠할 목록 조립 ----
 
-    private void RebuildPlan(HoverMode mode, PlaceData data, GameObject unit, HeroActiveSkill skill, Tile skillOrigin, PlayerSkillSlot armedSkill, Tile playerSkillOrigin)
+    private void RebuildPlan(HoverMode mode, PlaceData data, GameObject unit, bool canPlaceOrSwap, HeroActiveSkill skill, Tile skillOrigin, PlayerSkillSlot armedSkill, Tile playerSkillOrigin)
     {
         plan.Clear();
         CampfireEdgeTiles = NoEdgeTiles;
         CampfireEdgeVersion = 0;
         WindwallEdgeTiles = NoEdgeTiles;
         WindwallEdgeVersion = 0;
-        AddHoverEntries(mode, data, unit);
+        AddHoverEntries(mode, data, unit, canPlaceOrSwap);
         AddSkillEntries(skill, skillOrigin);
         AddPlayerSkillEntries(armedSkill, playerSkillOrigin);
     }
 
-    private void AddHoverEntries(HoverMode mode, PlaceData data, GameObject unit)
+    private void AddHoverEntries(HoverMode mode, PlaceData data, GameObject unit, bool canPlaceOrSwap)
     {
         if (IsPlacingHoverMode(mode))
         {
-            AddAreaPreviewEntries(data, unit);
+            AddAreaPreviewEntries(data, unit, canPlaceOrSwap);
             return;
         }
 
         if (IsHeldHoverMode(mode))
         {
-            AddAreaPreviewEntries(data, unit);
+            AddAreaPreviewEntries(data, unit, canPlaceOrSwap);
             return;
         }
 
@@ -205,11 +205,11 @@ public class TilePaintSync
         return tile;
     }
 
-    private void AddAreaPreviewEntries(PlaceData data, GameObject unit)
+    private void AddAreaPreviewEntries(PlaceData data, GameObject unit, bool canPlaceOrSwap)
     {
         if (HasArea(data.Area))
         {
-            AddPreviewEntries(data, unit);
+            AddPreviewEntries(data, unit, canPlaceOrSwap);
         }
     }
 
@@ -218,10 +218,10 @@ public class TilePaintSync
         return area != null;
     }
 
-    private void AddPreviewEntries(PlaceData data, GameObject unit)
+    private void AddPreviewEntries(PlaceData data, GameObject unit, bool canPlaceOrSwap)
     {
-        Color placeColor = ResolvePlaceColor(data);
-        Color rangeColor = ResolveRangeColor(data);
+        Color placeColor = ResolvePlaceColor(canPlaceOrSwap);
+        Color rangeColor = ResolveRangeColor(canPlaceOrSwap);
 
         if (data.Area.Board.TryGetCell(data.Area.Origin, out Tile center))
         {
@@ -234,14 +234,9 @@ public class TilePaintSync
         AddAreaCellEntries(data.Area, placeColor);
     }
 
-    private bool CanPlaceHere(PlaceData data)
+    private Color ResolvePlaceColor(bool canPlaceOrSwap)
     {
-        return data.CanPlace;
-    }
-
-    private Color ResolvePlaceColor(PlaceData data)
-    {
-        if (CanPlaceHere(data))
+        if (canPlaceOrSwap)
         {
             return painter.okColor;
         }
@@ -249,9 +244,9 @@ public class TilePaintSync
         return painter.denyColor;
     }
 
-    private Color ResolveRangeColor(PlaceData data)
+    private Color ResolveRangeColor(bool canPlaceOrSwap)
     {
-        if (CanPlaceHere(data))
+        if (canPlaceOrSwap)
         {
             return painter.okColor;
         }
