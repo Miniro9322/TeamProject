@@ -1,8 +1,6 @@
 using System;
-using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine.UI;
-using TMPro;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -22,11 +20,8 @@ public class TitleUI : MonoBehaviour
     [SerializeField] private GameObject tutorialChoicePanel; // "튜토리얼 하기" / "건너뛰기" 선택지
     [SerializeField] private Button firstButton; // "튜토리얼 하기" / "건너뛰기" 선택지
     [SerializeField] private AudioMixer mixer;
-
     [SerializeField] private Button loadButton;
-    [SerializeField] private SlotSelectPanel slotSelectPanel;
-    //[SerializeField] private DaySelectPanel daySelectPanel;
-
+    [SerializeField] private ConfirmPopup confirmPopup;
     private readonly SlotPreviewReader previewReader = new SlotPreviewReader();
 
     private InputAction escapeAction;
@@ -57,8 +52,7 @@ public class TitleUI : MonoBehaviour
     {
         return settingPanel.activeSelf
             || upgradePanel.activeSelf
-            || tutorialChoicePanel.activeSelf
-            || slotSelectPanel.gameObject.activeSelf;
+            || tutorialChoicePanel.activeSelf;
     }
 
     private void Awake()
@@ -69,12 +63,6 @@ public class TitleUI : MonoBehaviour
         QuitAlert.SetActive(false);
         upgradePanel.SetActive(false);
         tutorialChoicePanel.SetActive(false);
-        slotSelectPanel.gameObject.SetActive(false);
-        //daySelectPanel.gameObject.SetActive(false);
-        slotSelectPanel.SlotConfirmed += OnSlotConfirmed;
-        slotSelectPanel.SaveChanged += RefreshLoad;
-        slotSelectPanel.SetPreviewReader(previewReader);
-        //daySelectPanel.SlotConfirmed += OnSlotConfirmed;
         RefreshLoad();
     }
 
@@ -100,41 +88,53 @@ public class TitleUI : MonoBehaviour
 
     private async UniTaskVoid ApplyVolume()
     {
-        // ApplyResolution과 같은 이유 - Awake 시점엔 오디오 믹서가 아직 초기화 중이라
-        // 여기서 바로 SetFloat을 부르면 값이 씹힌다. 한 프레임 양보한 뒤에 적용한다.
+        // 오디오 믹서가 초기화된 다음 저장된 값을 적용한다.
         await UniTask.Yield();
-
-        // PlayerPrefs엔 선형(0~1) 슬라이더 값이 저장돼 있다 - SettingUI와 동일하게 dB로 변환해서 넣어야 한다.
         mixer.SetFloat("MasterVolume", AudioVolumeUtil.LinearToDb(PlayerPrefs.GetFloat("MasterVolume", 1f)));
         mixer.SetFloat("BgmVolume", AudioVolumeUtil.LinearToDb(PlayerPrefs.GetFloat("BgmVolume", 1f)));
         mixer.SetFloat("SfxVolume", AudioVolumeUtil.LinearToDb(PlayerPrefs.GetFloat("SfxVolume", 1f)));
         mixer.SetFloat("System", AudioVolumeUtil.LinearToDb(PlayerPrefs.GetFloat("System", 1f)));
     }
 
-    // "시작" 버튼과 "새 게임" 버튼 모두 여기로 온다 - 슬롯을 먼저 고르게 한다.
-    public void OnStart() => OnNewGame();
-
+    // 저장 여부에 따라 바로 시작하거나 덮어쓰기 확인창을 연다.
     public void OnNewGame()
     {
-        if (slotSelectPanel == null) return;
+        if (HasSave())
+        {
+            ShowOverwrite();
+            return;
+        }
 
-        if(slotSelectPanel.gameObject.activeSelf && slotSelectPanel.Mode == SlotSelectMode.NewGame)
-            slotSelectPanel.gameObject.SetActive(false);
-        else
-            slotSelectPanel.OpenForNewGame();
+        BeginNew();
     }
 
-    // "불러오기" 버튼: 슬롯 선택 패널을 불러오기 모드로 연다.
+    // 단일 슬롯의 최신 저장 데이터를 선택하고 즉시 진입한다.
     public void OnLoad()
     {
-        if(slotSelectPanel == null) return;
-
-        if (slotSelectPanel.gameObject.activeSelf && slotSelectPanel.Mode == SlotSelectMode.Load)
-            slotSelectPanel.gameObject.SetActive(false);
-        else
-            slotSelectPanel.OpenForLoad();
+        BeginLoad();
     }
 
+    // 새 게임 덮어쓰기 확인창을 연다.
+    private void ShowOverwrite()
+    {
+        confirmPopup.ShowPopup(BeginNew);
+    }
+
+    // 단일 슬롯을 새 게임으로 지정하고 튜토리얼 선택창을 연다.
+    private void BeginNew()
+    {
+        SelectedSaveSlot.SetNewGame(1);
+        tutorialChoicePanel.SetActive(true);
+    }
+
+    // 단일 슬롯을 불러오기로 지정하고 메인 씬 진입을 시작한다.
+    private void BeginLoad()
+    {
+        SelectedSaveSlot.SetLoad(1);
+        EnterMainScene();
+    }
+
+    // 튜토리얼 진행 선택을 기록하고 메인 씬으로 이동한다.
     public void OnStartWithTutorial()
     {
         TutorialEntryChoice.Set(skip: false);
@@ -152,19 +152,6 @@ public class TitleUI : MonoBehaviour
         EnterMainScene();
     }
 
-    private void OnSlotConfirmed(SlotSelectMode mode)
-    {
-        slotSelectPanel.gameObject.SetActive(false);
-
-        if (mode == SlotSelectMode.NewGame)
-        {
-            tutorialChoicePanel.SetActive(true);
-            return;
-        }
-
-        EnterMainScene();
-    }
-
     // 로딩 화면을 띄우고 MainScene으로 넘어간다.
     private void EnterMainScene()
     {
@@ -175,7 +162,13 @@ public class TitleUI : MonoBehaviour
     // 저장 데이터 존재 여부에 맞춰 불러오기 버튼을 갱신한다.
     private void RefreshLoad()
     {
-        loadButton.gameObject.SetActive(previewReader.HasAnySave());
+        loadButton.gameObject.SetActive(HasSave());
+    }
+
+    // 단일 슬롯에 저장 데이터가 있는지 반환한다.
+    private bool HasSave()
+    {
+        return previewReader.HasAnySave();
     }
 
     private async UniTaskVoid LoadSceneAsync(string sceneName)

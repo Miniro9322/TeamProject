@@ -208,6 +208,12 @@ public class SaveRestore
         facilityManager.SumProduct();
     }
 
+    // 지역 해금 레드닷 확인 여부 되돌리기 → RegionOverviewPanel
+    public void RestoreRegionNotice(bool seen)
+    {
+        regionPanel.RestoreNoticeSeen(seen);
+    }
+
     // 완벽방어 보상 1회            → ResourcesManager
     public void ApplyPerfectDefenseReward()
     {

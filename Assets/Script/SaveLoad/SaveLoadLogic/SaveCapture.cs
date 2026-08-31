@@ -82,6 +82,7 @@ public class SaveCapture
         data.portalList = CapturePortals(phase);
         data.archiveList = CaptureArchive();
         data.tutorialSeen = tutorialState.Seen;
+        data.regionUnlockNoticeSeen = regionPanel.RegionUnlockNoticeSeen;
         return data;
     }
 

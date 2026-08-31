@@ -27,6 +27,7 @@ public class UiManager : MonoBehaviour
     public RectTransform GameSpeedUiRect => gameSpeedUiRect;
     [SerializeField] private GameObject menuPanel;
     [SerializeField] private GameObject guidePanel;
+    private PanelReveal guidePanelReveal;
     [SerializeField] private TextMeshProUGUI dayText;
     [SerializeField] private TextMeshProUGUI upgradeResourceText;
     [SerializeField] private Key MenuKey = Key.Escape;
@@ -59,6 +60,7 @@ public class UiManager : MonoBehaviour
     {
         gameSpeedUiComponent = gameSpeedUi.GetComponent<GameSpeedUI>();
         gameSpeedUiRect = gameSpeedUi.GetComponent<RectTransform>();
+        guidePanelReveal = guidePanel.GetComponent<PanelReveal>();
 
         requestSupportUi.gameObject.SetActive(false);
         gamaOverUi.SetActive(false);
@@ -156,9 +158,15 @@ public class UiManager : MonoBehaviour
         // 튜토리얼이 영웅 배치 대기 중일 땐 이 패널이 맵을 덮어 배치를 끝낼 수 없게 된다 - TutorialInputGate.cs 참고.
         if (TutorialInputGate.BlockPanelOpen) return;
 
+        if (guidePanelReveal == null)
+        {
+            guidePanel.SetActive(!guidePanel.activeSelf);
+            return;
+        }
+
         if (guidePanel.activeSelf == false)
-            guidePanel.SetActive(true);
+            guidePanelReveal.Show();
         else
-            guidePanel.SetActive(false);
+            guidePanelReveal.Hide();
     }
 }

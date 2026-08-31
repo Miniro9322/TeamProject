@@ -104,7 +104,7 @@ public class SlotSelectPanel : MonoBehaviour
     // 슬롯을 고르지 않고 패널과 열려있는 팝업을 모두 닫는다.
     private void OnClose()
     {
-        confirmPopup.gameObject.SetActive(false);
+        confirmPopup.Cancel();
         gameObject.SetActive(false);
     }
 
@@ -155,9 +155,7 @@ public class SlotSelectPanel : MonoBehaviour
             return;
         }
 
-        StringTable table = DataTableManager.StringTable;
-        string message = BuildConfirmMessage(slotId, info, table);
-        confirmPopup.ShowPopup(message, table.Get("Ui_Confirm"), () => ConfirmSlot(slotId));
+        confirmPopup.ShowPopup(() => ConfirmSlot(slotId));
     }
 
     // 선택한 슬롯의 일차 목록 패널을 연다.
@@ -169,30 +167,13 @@ public class SlotSelectPanel : MonoBehaviour
     // 이어하기 선택 시 최종 확인 팝업을 연다.
     private void ConfirmContinueLoad(int slotId)
     {
-        StringTable table = DataTableManager.StringTable;
-        string message = string.Format(table.Get("Ui_LoadConfirm"), slotId);
-        confirmPopup.ShowPopup(message, table.Get("Ui_Load"), () => ConfirmSlot(slotId));
-    }
-
-    // 새 게임 모드의 저장 여부에 맞는 확인 문구를 만든다.
-    private string BuildConfirmMessage(int slotId, SlotPreviewInfo info, StringTable table)
-    {
-        if (info.HasSave)
-        {
-            return string.Format(table.Get("Ui_OverwriteWarning"), slotId);
-        }
-
-        return string.Format(table.Get("Ui_NewGameConfirm"), slotId);
+        confirmPopup.ShowPopup(() => ConfirmSlot(slotId));
     }
 
     // 슬롯 삭제 경고 팝업을 연다.
     private void OnDeleteClicked(int slotId)
     {
-        StringTable table = DataTableManager.StringTable;
-        string message = string.Format(table.Get("Ui_DeleteConfirm"), slotId);
-        string buttonLabel = table.Get("Ui_Delete");
-
-        confirmPopup.ShowPopup(message, buttonLabel, () => DeleteSlot(slotId));
+        confirmPopup.ShowPopup(() => DeleteSlot(slotId));
     }
 
     // 선택한 슬롯을 삭제하고 불러오기 목록을 갱신한다.

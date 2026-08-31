@@ -18,6 +18,7 @@ public class GuideUI : MonoBehaviour, IExclusiveUiPanel
     [SerializeField] private TextMeshProUGUI guideText;
     [SerializeField] private Animator guideCopyAnimator;
     [SerializeField] private Animator guidePictureAnimator;
+    [SerializeField] private PanelReveal panelReveal;
 
     private GimmickTileData gimmickTileData;
     private List<SpecificGuide> activatedButtons = new();
@@ -55,9 +56,15 @@ public class GuideUI : MonoBehaviour, IExclusiveUiPanel
         if (outsideCloser.ShouldClose()) OnCloseButton();
     }
 
+    // 축소 연출로 닫는다 (연출 부품이 없는 씬에서는 예전처럼 바로 끈다)
     public void OnCloseButton()
     {
-        gameObject.SetActive(false);
+        if (panelReveal == null)
+        {
+            gameObject.SetActive(false);
+            return;
+        }
+        panelReveal.Hide();
     }
 
     public void RequestClose() => OnCloseButton();
