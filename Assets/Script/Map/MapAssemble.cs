@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -62,14 +62,13 @@ public class MapAssemble : MonoBehaviour
             desertZone.transform,
             desertZone.ArrowSize,
             desertZone.ArrowHeight,
-            desertZone.ArrowColor);
+            desertZone.ArrowColor,
+            desertZone.ArrowSlideCells,
+            desertZone.ArrowSlidePeriod);
         DesertLineEffect lineEffect = new DesertLineEffect(
             desertBoard,
             Resources.Load<GameObject>("ZoneEffectPrefab/DesertStrongVFX"),
             Resources.Load<GameObject>("ZoneEffectPrefab/DesertWeakVFX"));
-        DesertWindFlow windFlow = new DesertWindFlow(
-            desertBoard,
-            Resources.Load<GameObject>("ZoneEffectPrefab/DesertWindFlowVFX"));
         desertZoneEffect = new DesertZoneEffect(
             desertZone,
             desertBoard,
@@ -77,8 +76,7 @@ public class MapAssemble : MonoBehaviour
             windwallData,
             mapGame.Units,
             windPreview,
-            lineEffect,
-            windFlow);
+            lineEffect);
 
         DayNightBuildRule dayNightRule = new DayNightBuildRule();
         dayNightRule.rule = mapGame.Rule;

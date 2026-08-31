@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 // 바람 방향은 하루가 바뀔 때마다 DesertZoneEffect가 재배정한다(고정값 아님).
 public class DesertZone : MonoBehaviour
@@ -14,6 +14,12 @@ public class DesertZone : MonoBehaviour
     [SerializeField, Min(0f)] private float arrowHeight = 0.08f;
     [SerializeField] private Color arrowColor = Color.yellow;
 
+    [Tooltip("낮 화살표가 바람 방향으로 밀려나는 거리(칸).")]
+    [SerializeField, Range(1f, 2f)] private float arrowSlideCells = 1.5f;
+
+    [Tooltip("낮 화살표가 한 번 밀려나갔다 돌아오는 데 걸리는 시간(초).")]
+    [SerializeField, Min(0.2f)] private float arrowSlidePeriod = 1.5f;
+
     private WindwallData windwallData;
 
     public DebuffSO[] Debuffs => debuffs;
@@ -22,6 +28,8 @@ public class DesertZone : MonoBehaviour
     public float ArrowSize => arrowSize;
     public float ArrowHeight => arrowHeight;
     public Color ArrowColor => arrowColor;
+    public float ArrowSlideCells => arrowSlideCells;
+    public float ArrowSlidePeriod => arrowSlidePeriod;
     public WindwallData WindwallData => windwallData;
 
     // 바람 방향을 새 값으로 바꿔 저장한다.
