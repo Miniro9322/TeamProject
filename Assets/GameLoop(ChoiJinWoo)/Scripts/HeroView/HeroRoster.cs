@@ -14,10 +14,11 @@ public class HeroRoster
         get { return _entries; }
     }
 
+    // 새로 생성된 영웅이 목록 맨 앞(최근 생성순 1위)에 오도록 앞쪽에 끼워 넣는다.
     public HeroRosterEntry Add(Placeable slot, HeroData data, int citizenCost = 0)
     {
         HeroRosterEntry entry = new HeroRosterEntry(slot, data, citizenCost);
-        _entries.Add(entry);
+        _entries.Insert(0, entry);
         Changed?.Invoke();
         return entry;
     }
@@ -43,6 +44,15 @@ public class HeroRoster
     public void NotifyStateChanged()
     {
         Changed?.Invoke();
+    }
+
+    // 인벤토리를 닫을 때 호출 — "새로 생성됨" 표시를 전부 끈다.
+    public void MarkAllSeen()
+    {
+        foreach (HeroRosterEntry entry in _entries)
+        {
+            entry.MarkSeen();
+        }
     }
 
     public bool Contains(HeroRosterEntry entry)

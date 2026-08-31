@@ -14,12 +14,30 @@ public class PlaceHoverFinder
         this.hoverPlace = hoverPlace;
     }
 
-    public HoverMode FindHover(out PlaceData placeData, out GameObject unit, out OccupantKind kind)
+    public HoverMode FindHover(out PlaceData placeData, out GameObject unit, out OccupantKind kind, out bool canPlaceOrSwap)
     {
         HoverMode mode = ResolveHoverMode();
         ResolveHover(mode, out placeData, out unit, out kind);
         UpdateHoverPlace(mode, placeData);
+        canPlaceOrSwap = ResolveCanPlaceOrSwap(mode, placeData);
         return mode;
+    }
+
+    // 재배치 중 목표 칸이 점유돼 있어도 자리 맞바꾸기가 가능하면 미리보기를 "배치 가능"으로 본다.
+    // 배치 모드(로스터에서 새로 놓기)는 스왑 대상이 아니므로 원래 판정을 그대로 쓴다.
+    private bool ResolveCanPlaceOrSwap(HoverMode mode, PlaceData placeData)
+    {
+        if (placeData.CanPlace)
+        {
+            return true;
+        }
+
+        if (mode != HoverMode.Held)
+        {
+            return false;
+        }
+
+        return game.CanPlaceOrSwap(placeData);
     }
 
     private HoverMode ResolveHoverMode()

@@ -19,9 +19,9 @@ Ui_Add,증원,Reinforcement,増援
 Ui_StageHeader,{0}지역 {1}일차,Region {0} - Day {1},{0}地域 {1}日目
 Melee,근접,Melee,近接
 Ranged,원거리,Ranged,遠距離
-LanguageKr,한국어,Korean,韓国語
-LanguageEn,영어,English,英語
-LanguageJp,일본어,Japanese,日本語
+LanguageKr,한국어,한국어,한국어
+LanguageEn,English,English,English
+LanguageJp,日本語,日本語,日本語
 SpiderNormal,거미,Spider,蜘蛛
 SpiderNormal_Desc,펠루시아 대륙에서 가장 흔하게 보이는 거미이다,The most common spider seen across the continent of Felucia.,フェルシア大陸で最もよく見かける蜘蛛だ。
 SpiderToxin,독거미,Toxic Spider,毒蜘蛛
@@ -110,8 +110,8 @@ HitsShield_Desc,받는 피해가 1로 고정되며 일정 타수만큼만 피해
 Burrow_Desc,땅속에 숨어 이동을 하며 공격대상에서 제외된다. 저지 했을 시 영웅에게 피해를 주며 기절을 걸고 밖으로 나온다.,Moves hidden underground and is excluded from targeting. When blocked it damages and stuns the hero then surfaces.,地中に隠れて移動し攻撃対象から外れる。阻止された時は英雄にダメージと気絶を与えて地上に出る。
 Flame_Desc,모든 불 데미지에 면역이며 불에 닿으면 고유 특성으로 화염의 오라 를 사용 한다.,Immune to all fire damage. On contact with fire it uses its innate Flame Aura.,全ての火炎ダメージに免疫を持ち、炎に触れると固有特性の炎のオーラを使用する。
 Swim_Desc,물 타일에서 수영으로 지나 갈 수 있으며 물 에서는 이동속도가 증가한다.,Can swim across water tiles and moves faster while in water.,水タイルを泳いで渡ることができ、水中では移動速度が上がる。
-ToolTip_HeroIcon,영웅 소환  ,HeroSpawn,英雄召喚
-ToolTip_Upgrade,업그레이드 (단축키: U),Upgrade,アップグレード
+ToolTip_HeroIcon,영웅 소환 (단축키: C),HeroSpawn (Shortcut: C),英雄召喚 (ショートカット: C)
+ToolTip_Upgrade,업그레이드 (단축키: U),Upgrade (Shortcut: U),アップグレード (ショートカット: U)
 Melee_Hero_Create,근거리 영웅 생성,Create Melee Hero,近接英雄生成
 Ranged_Hero_Create,원거리 영웅 생성,Create Ranged Hero,遠距離英雄生成
 Hero_BraveCitizen_Name,용감한 시민,Brave Citizen,勇敢な市民
@@ -528,3 +528,4 @@ Hero_Melee_Create,근거리 영웅 생성,Create Melee Hero,近接ヒーロー�
 Hero_Ranged_Create,원거리 영웅 생성,Create Ranged Hero,遠距離ヒーローの生成
 Hero_Create,영웅 생성,Create Hero,ヒーロー生成
 Ui_Continue,이어하기,Continue,つづきから
+Hero_Retrieve,회수,Retrieve,回收

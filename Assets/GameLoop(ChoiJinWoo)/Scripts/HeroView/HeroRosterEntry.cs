@@ -16,6 +16,7 @@ public class HeroRosterEntry
     public readonly int CitizenCost;
     public HeroRosterState State { get; private set; } = HeroRosterState.Available;
     public GameObject PlacedUnit { get; private set; }
+    public bool IsNew { get; private set; } = true;
 
     public Sprite Icon => Data.Icon;
     public int Tier => Data.Tier;
@@ -35,6 +36,12 @@ public class HeroRosterEntry
         Slot = slot;
         Data = data;
         CitizenCost = citizenCost;
+        IsNew = false;
+    }
+
+    public void MarkSeen()
+    {
+        IsNew = false;
     }
 
     public void MarkPlaced(GameObject unit)

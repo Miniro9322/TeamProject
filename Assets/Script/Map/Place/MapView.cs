@@ -110,6 +110,9 @@ public class MapView : MonoBehaviour
     public bool IsOff { get { return palette.Mode == PlaceMode.Off; } }
     public Vector2Int HeldSize { get { return replace.HeldSize; } }
 
+    // 재배치 미리보기 색칠용: 지금 든 유닛을 이 자리에 놓을 수 있는지(바로 놓거나, 자리를 바꿔서라도).
+    public bool CanPlaceOrSwap(PlaceData data) { return replace.CanPlaceOrSwap(data); }
+
     public Tile Selected { get { return tileSelect.Selected; } }
 
     public event Action OnOffMode;

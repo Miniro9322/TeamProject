@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Text;
 using UnityEngine;
@@ -15,7 +16,7 @@ public static class AnalyticsRecorder
     {
         public string evt = "hero_damage";
         public string session;
-        public string wallClockUtc;
+        public string wallClockKst;
         public string heroName;
         public int heroUnitId;
         public string enemyType;
@@ -31,7 +32,7 @@ public static class AnalyticsRecorder
     {
         public string evt = "enemy_leaked";
         public string session;
-        public string wallClockUtc;
+        public string wallClockKst;
         public string enemyType;
         public string enemyClass;
         public int region;
@@ -45,7 +46,7 @@ public static class AnalyticsRecorder
     {
         public string evt = "round_start";
         public string session;
-        public string wallClockUtc;
+        public string wallClockKst;
         public int region;
         public int dayCount;
         public int enemyCount;
@@ -56,7 +57,7 @@ public static class AnalyticsRecorder
     {
         public string evt = "round_end";
         public string session;
-        public string wallClockUtc;
+        public string wallClockKst;
         public int region;
         public int dayCount;
         public float durationSeconds;
@@ -68,7 +69,7 @@ public static class AnalyticsRecorder
     {
         public string evt = "hero_placed";
         public string session;
-        public string wallClockUtc;
+        public string wallClockKst;
         public string heroName;
         public int heroUnitId;
         public int region;
@@ -81,7 +82,7 @@ public static class AnalyticsRecorder
     {
         public string evt = "game_over";
         public string session;
-        public string wallClockUtc;
+        public string wallClockKst;
         public int dayCount;
         public int finalHp;
     }
@@ -135,7 +136,7 @@ public static class AnalyticsRecorder
         Enqueue(new RoundStartRecord
         {
             session = SessionId,
-            wallClockUtc = NowIso(),
+            wallClockKst = NowKst(),
             region = region,
             dayCount = dayCount,
             enemyCount = enemyCount,
@@ -149,7 +150,7 @@ public static class AnalyticsRecorder
         Enqueue(new RoundEndRecord
         {
             session = SessionId,
-            wallClockUtc = NowIso(),
+            wallClockKst = NowKst(),
             region = region,
             dayCount = dayCount,
             durationSeconds = durationSeconds,
@@ -164,7 +165,7 @@ public static class AnalyticsRecorder
         Enqueue(new HeroDamageRecord
         {
             session = SessionId,
-            wallClockUtc = NowIso(),
+            wallClockKst = NowKst(),
             heroName = heroName,
             heroUnitId = heroUnitId,
             enemyType = enemyType,
@@ -187,7 +188,7 @@ public static class AnalyticsRecorder
         Enqueue(new EnemyLeakedRecord
         {
             session = SessionId,
-            wallClockUtc = NowIso(),
+            wallClockKst = NowKst(),
             enemyType = enemyType,
             enemyClass = enemyClass,
             region = region,
@@ -203,7 +204,7 @@ public static class AnalyticsRecorder
         Enqueue(new HeroPlacedRecord
         {
             session = SessionId,
-            wallClockUtc = NowIso(),
+            wallClockKst = NowKst(),
             heroName = heroName,
             heroUnitId = heroUnitId,
             region = region,
@@ -218,14 +219,21 @@ public static class AnalyticsRecorder
         Enqueue(new GameOverRecord
         {
             session = SessionId,
-            wallClockUtc = NowIso(),
+            wallClockKst = NowKst(),
             dayCount = dayCount,
             finalHp = finalHp,
         });
         runner.FlushNow(); // 게임오버 직후 씬 전환/종료로 유실되지 않게 즉시 내보낸다
     }
 
-    private static string NowIso() => DateTime.UtcNow.ToString("o");
+    // 시트에 찍히는 시각. 한국 시간(KST) "yyyy-MM-dd HH:mm" 고정 형식이다.
+    // DateTime.Now(기기 시간대)를 쓰지 않는 이유 — 시간대가 잘못 잡힌 PC나 해외 기기에서 찍히면
+    // 다른 세션과 시간이 어긋나 시트에서 정렬·비교가 깨진다. KST는 서머타임이 없어 연중 UTC+9로
+    // 고정이므로 오프셋을 그대로 더하면 기기 설정과 무관하게 항상 같은 값이 나온다.
+    // InvariantCulture를 붙이는 이유 — 문화권에 따라 서기가 아닌 달력(예: 일본 연호)으로 찍힐 수 있다.
+    private static readonly TimeSpan KstOffset = TimeSpan.FromHours(9);
+    private static string NowKst() =>
+        (DateTime.UtcNow + KstOffset).ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture);
 
     private static void Enqueue(object record)
     {

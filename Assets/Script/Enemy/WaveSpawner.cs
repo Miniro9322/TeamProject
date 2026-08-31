@@ -22,7 +22,7 @@ public class WaveSpawner : MonoBehaviour
     [Tooltip("스테이지 정보 팝업(아이콘 행 + 툴팁). SpawnerManager가 클릭 때마다 넣어준다.")]
     public StageEnemyInfoView infoView;
     [Tooltip("보스 라운드에서 일반 몹은 즉시, 보스는 이 시간(초) 뒤에 등장.")]
-    [SerializeField] private float bossSpawnDelay = 10f;
+    private float bossSpawnDelay = 18f;
     
     private WaveTable waveTable;
     public IReadOnlyList<Vector3> waypoints; // 단일 경로 폴백(레인 정보가 없을 때만 사용).
