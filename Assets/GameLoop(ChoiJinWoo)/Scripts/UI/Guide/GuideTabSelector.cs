@@ -33,16 +33,6 @@ public class GuideTabSelector : MonoBehaviour
         this.gimmickTileData = gimmickTileData;
     }
 
-    // 시작할 때 게임 플레이 탭이 선택된 모습으로 맞춰둔다 (스파크 없이)
-    private void Awake()
-    {
-        SetTabState(gamePlayImage, gamePlayText, gamePlayImage);
-        SetTabState(heroImage, heroText, gamePlayImage);
-        SetTabState(baseImage, baseText, gamePlayImage);
-        SetTabState(enemyImage, enemyText, gamePlayImage);
-        SetTabState(gimmickImage, gimmickText, gamePlayImage);
-    }
-
     // 기믹 탭을 선택 상태로 표시한다
     public void SelectGimmickTab()
     {
@@ -58,6 +48,7 @@ public class GuideTabSelector : MonoBehaviour
     // 기믹 안내를 한 번이라도 본 뒤부터 기믹 탭 버튼을 내보인다.
     private void ApplyGimmickTabVisible()
     {
+         if (gimmickTileData == null) return;
         gimmickImage.gameObject.SetActive(gimmickTileData.HasAnyShown());
     }
 
@@ -112,9 +103,11 @@ public class GuideTabSelector : MonoBehaviour
         text.color = normalTextColor;
     }
 
-    // 탭 버튼이 눌린 모양으로 남아 있을지를 애니메이터에 알린다
+    // 탭 버튼이 눌린 모양으로 남아 있을지를 애니메이터 또는 ButtonPressScale에 알린다 (둘 다 선택적이다)
     private void SetTabHeld(Image image, bool held)
     {
-        image.GetComponent<Animator>().SetBool(HeldParameter, held);
+        Animator buttonAnimator = image.GetComponent<Animator>();
+        if (buttonAnimator != null) buttonAnimator.SetBool(HeldParameter, held);
+        image.GetComponent<ButtonPressScale>()?.SetHeld(held);
     }
 }

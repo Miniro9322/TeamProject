@@ -42,4 +42,6 @@ public class SaveData
     public int[] savedDayList = Array.Empty<int>();           // 지금까지 저장된 일차 번호 목록
 
     public bool tutorialSeen;   // 이 세이브 슬롯에서 튜토리얼을 이미 봤는지
+
+    public bool regionUnlockNoticeSeen = true;   // 지역 해금 레드닷을 이미 확인했는지
 }

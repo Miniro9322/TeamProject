@@ -13,6 +13,8 @@ public class SaveManager : IStartable
     private readonly SaveCapture saveCapture;
     private readonly GameManager gameManager;
     private readonly SaveTimeData saveTimeData;
+    // 로드 복원 중인지 담는다
+    private bool loadRestoring;
 
     public SaveManager(
         SaveSlot saveSlot,
@@ -99,8 +101,69 @@ public class SaveManager : IStartable
         TrySave(SavePhase.DayStart, gameManager.DayCount, saveTimeData.DayList);
     }
 
+    // 로드 복원을 시작하며 파일 저장을 잠근다
+    public void LockSaveForLoad()
+    {
+        loadRestoring = true;
+    }
+
+    // 로드 복원이 끝나 파일 저장 잠금을 푼다
+    public void UnlockSaveForLoad()
+    {
+        loadRestoring = false;
+    }
+
+    // 낮 활동 상태를 저장한다
+    public void SaveDayActive()
+    {
+        if (!NeedDayActiveSave())
+        {
+            return;
+        }
+
+        bool saved = TrySave(SavePhase.DayActive, gameManager.DayCount, saveTimeData.DayList);
+        LogDayActiveFailure(saved);
+    }
+
+    // 낮 활동 저장이 필요한 상태인지 계산한다
+    private bool NeedDayActiveSave()
+    {
+        if (gameManager.isGameOver)
+        {
+            return false;
+        }
+
+        if (TutorialInputGate.BlockSave)
+        {
+            return false;
+        }
+
+        if (!ToolEnabled)
+        {
+            return false;
+        }
+
+        return gameManager.CanBuild;
+    }
+
+    // 낮 활동 저장 실패를 로그로 알린다
+    private void LogDayActiveFailure(bool saved)
+    {
+        if (saved)
+        {
+            return;
+        }
+
+        Debug.LogError("[SaveLoad] 낮 활동 상태 저장에 실패했습니다.");
+    }
+
     private bool TrySave(SavePhase phase, int dayCount, int[] savedDayList)
     {
+        if (loadRestoring)
+        {
+            return false;
+        }
+
         if (!ToolEnabled)
         {
             return false;

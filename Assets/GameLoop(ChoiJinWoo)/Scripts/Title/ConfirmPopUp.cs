@@ -1,15 +1,13 @@
 using System;
-using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-// 팝업 오브젝트 1개를 문구,확인 콜백만 갈아끼워 재사용.
+// 팝업 오브젝트 1개를 확인 콜백만 갈아끼워 재사용한다 (문구는 LocalizeText가 담당).
 public class ConfirmPopup : MonoBehaviour
 {
-    [SerializeField] private TMP_Text messageText;
-    [SerializeField] private TMP_Text confirmText;
     [SerializeField] private Button confirmButton;
     [SerializeField] private Button cancelButton;
+    [SerializeField] private PanelReveal panelReveal;
 
     private Action onConfirmed;
 
@@ -20,14 +18,12 @@ public class ConfirmPopup : MonoBehaviour
         cancelButton.onClick.AddListener(OnCancel);
     }
 
-    // 문구와 확인 콜백을 갈아끼워 팝업을 띄운다 (호출한 패널보다 항상 위에 보이게 그리기 순서를 맨 뒤로 보낸다).
-    public void ShowPopup(string message, string buttonLabel, Action onConfirmed)
+    // 확인 콜백만 갈아끼워 팝업을 띄운다 (호출한 패널보다 항상 위에 보이게 그리기 순서를 맨 뒤로 보낸다).
+    public void ShowPopup(Action onConfirmed)
     {
-        messageText.text = message;
-        confirmText.text = buttonLabel;
         this.onConfirmed = onConfirmed;
         transform.SetAsLastSibling();
-        gameObject.SetActive(true);
+        panelReveal.Show();
     }
 
     // 확인 버튼: 콜백을 1회 실행하고 닫는다.
@@ -54,6 +50,6 @@ public class ConfirmPopup : MonoBehaviour
     private void HidePopup()
     {
         onConfirmed = null;
-        gameObject.SetActive(false);
+        panelReveal.Hide();
     }
 }

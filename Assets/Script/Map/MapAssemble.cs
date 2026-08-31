@@ -37,6 +37,7 @@ public class MapAssemble : MonoBehaviour
     private PlayerSkillCastController playerSkillCast;
     private DesertZoneEffect desertZoneEffect;
     private List<IceZoneEffect> iceZoneEffects;
+    private List<IceSnowfall> iceSnowfalls;
     private CampfireLightController campfireLights;
     private MapBoard desertBoard;
 
@@ -66,6 +67,9 @@ public class MapAssemble : MonoBehaviour
             desertBoard,
             Resources.Load<GameObject>("ZoneEffectPrefab/DesertStrongVFX"),
             Resources.Load<GameObject>("ZoneEffectPrefab/DesertWeakVFX"));
+        DesertWindFlow windFlow = new DesertWindFlow(
+            desertBoard,
+            Resources.Load<GameObject>("ZoneEffectPrefab/DesertWindFlowVFX"));
         desertZoneEffect = new DesertZoneEffect(
             desertZone,
             desertBoard,
@@ -73,7 +77,8 @@ public class MapAssemble : MonoBehaviour
             windwallData,
             mapGame.Units,
             windPreview,
-            lineEffect);
+            lineEffect,
+            windFlow);
 
         DayNightBuildRule dayNightRule = new DayNightBuildRule();
         dayNightRule.rule = mapGame.Rule;
@@ -156,6 +161,8 @@ public class MapAssemble : MonoBehaviour
         mapGame.Rule.ChangeToDay += OnDayChanged;
         OnDayChanged(); // 첫 날짜도 시작하자마자 바로 맞춘다 — 이벤트가 처음 울릴 때까지 기다리지 않는다
 
+        desertBoard.Module.OnStateChanged += RefreshDesertDay;
+
         RegisterZoneEffect(desertZoneEffect);
         RegisterZoneEffect(campfireLights);
         for (int index = 0; index < iceZoneEffects.Count; index++)
@@ -184,6 +191,7 @@ public class MapAssemble : MonoBehaviour
     {
         ghost.ClearGhosts();
         mapGame.Rule.ChangeToNight -= view.ClearMode;
+        desertBoard.Module.OnStateChanged -= RefreshDesertDay;
         UnregisterZoneEffect(desertZoneEffect);
         desertZoneEffect.Dispose();
         if (campfireLights != null)
@@ -223,6 +231,23 @@ public class MapAssemble : MonoBehaviour
                 mapGame.Rule.ChangeToNight -= trail.PlayOnce;
             }
         }
+    }
+
+    // 사막이 세이브 복원이나 확장으로 뒤늦게 열리면 놓친 낮 준비를 다시 맞춘다.
+    private void RefreshDesertDay(ModuleState state)
+    {
+        ApplyDesertDay(mapGame.Rule.CanBuild);
+    }
+
+    // 낮일 때만 사막의 낮 준비를 다시 실행한다.
+    private void ApplyDesertDay(bool isDay)
+    {
+        if (!isDay)
+        {
+            return;
+        }
+
+        desertZoneEffect.OnDayChanged();
     }
 
     // 지대 효과를 낮/밤 이벤트에 연결하고 첫 상태를 낮으로 맞춘다.
@@ -274,6 +299,8 @@ public class MapAssemble : MonoBehaviour
         CampfireCalc calc = new();
         campfireLights = new CampfireLightController();
         iceZoneEffects = new List<IceZoneEffect>();
+        iceSnowfalls = new List<IceSnowfall>();
+        GameObject snowPrefab = Resources.Load<GameObject>("ZoneEffectPrefab/IceSnowfallVFX");
         for (int index = 0; index < boards.Count; index++)
         {
             MapBoard board = boards[index];
@@ -284,6 +311,8 @@ public class MapAssemble : MonoBehaviour
                 iceZone.SetCampfire(data);
                 campfireLights.Collect(board, iceZone.CampfireRange);
                 iceZoneEffects.Add(new IceZoneEffect(board, mapGame.Units, iceZone));
+                SnowMeltZone meltZone = new SnowMeltZone(board, iceZone.CampfireRange);
+                iceSnowfalls.Add(new IceSnowfall(board, snowPrefab, meltZone.Zones));
             }
         }
     }

@@ -10,6 +10,7 @@ public class DesertZoneEffect : ZoneDebuffEffect, IDisposable
     private readonly WindwallData windwallData;
     private readonly WindPreview preview;
     private readonly DesertLineEffect lineEffect;
+    private readonly DesertWindFlow windFlow;
 
     // 사막 판정에 필요한 고정 정보와 시각효과 담당을 보관합니다.
     public DesertZoneEffect(
@@ -19,7 +20,8 @@ public class DesertZoneEffect : ZoneDebuffEffect, IDisposable
         WindwallData windwallData,
         PlacedUnitData unitList,
         WindPreview preview,
-        DesertLineEffect lineEffect)
+        DesertLineEffect lineEffect,
+        DesertWindFlow windFlow)
         : base(desertBoard, unitList, desertZone.Debuffs)
     {
         this.desertZone = desertZone;
@@ -27,6 +29,7 @@ public class DesertZoneEffect : ZoneDebuffEffect, IDisposable
         this.windwallData = windwallData;
         this.preview = preview;
         this.lineEffect = lineEffect;
+        this.windFlow = windFlow;
     }
 
     // 생성한 낮 안내 화살표 자원을 정리합니다.
@@ -44,6 +47,7 @@ public class DesertZoneEffect : ZoneDebuffEffect, IDisposable
         Vector2Int wind = WindPicker.Next(desertZone.WindDirection);
         desertZone.SetWindDirection(wind);
         preview.Show(wind);
+        windFlow.ShowFlow(wind);
         ReportWind();
     }
 
@@ -51,6 +55,7 @@ public class DesertZoneEffect : ZoneDebuffEffect, IDisposable
     protected override void RunNight()
     {
         preview.Hide();
+        windFlow.HideFlow();
         BoardHeroes heroes = ReadHeroes();
         ApplyNight(heroes);
     }

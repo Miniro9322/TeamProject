@@ -130,6 +130,13 @@ public class DayNightButton : MonoBehaviour
         enviromentManager.OnDay -= FinishDay;
     }
 
+    // 버튼을 내린 밤 모습으로 맞추고 버튼·N키 입력을 잠근다
+    public void RestoreNightLock()
+    {
+        canToggle = false;
+        slideAnim.Play(DownHash, 0, 0f);
+    }
+
     // 세이브 로드처럼 화면 연출 없이 조용히 일차가 바뀌었을 때 "Day N" 글자만 다시 찍는다 (로드 복원 전용)
     public void RefreshDayText()
     {

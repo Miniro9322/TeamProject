@@ -57,7 +57,7 @@ public class DaySelectPanel : MonoBehaviour
     // 일차를 고르지 않고 패널과 열려있는 확인 팝업을 모두 닫는다.
     private void OnClose()
     {
-        confirmPopup.gameObject.SetActive(false);
+        confirmPopup.Cancel();
         gameObject.SetActive(false);
     }
 
@@ -98,10 +98,7 @@ public class DaySelectPanel : MonoBehaviour
     // 선택한 일차에 대한 경고 문구로 확인 팝업을 연다 (목록엔 과거 일차만 있어 항상 경고 대상).
     private void OnRowClicked(int dayCount)
     {
-        StringTable table = DataTableManager.StringTable;
-        string message = table.Get("Ui_DaySelectWarning");
-
-        confirmPopup.ShowPopup(message, table.Get("Ui_Load"), () => ConfirmDay(dayCount));
+        confirmPopup.ShowPopup(() => ConfirmDay(dayCount));
     }
 
     // 확인된 일차를 로드 대상으로 저장한다.

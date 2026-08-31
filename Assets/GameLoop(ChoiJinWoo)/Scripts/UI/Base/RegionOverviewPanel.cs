@@ -31,6 +31,11 @@ public class RegionOverviewPanel : MonoBehaviour, IClosablePanel, IExclusiveUiPa
     private GameManager gameManager;
     private EnviromentManager enviromentManager;
     private bool isNight;
+    // 지역 해금 알림을 확인했는지 담는 저장 원본
+    private bool regionUnlockNoticeSeen = true;
+
+    // 지역 해금 알림을 이미 확인했는지 알려준다
+    public bool RegionUnlockNoticeSeen => regionUnlockNoticeSeen;
 
     [Inject]
     private void Construct(UiPanelStack panelStack, GameManager gameManager, EnviromentManager enviromentManager)
@@ -76,8 +81,16 @@ public class RegionOverviewPanel : MonoBehaviour, IClosablePanel, IExclusiveUiPa
     {
         if (state == ModuleState.Preparing && redDot != null)
         {
+            regionUnlockNoticeSeen = false;
             redDot.SetActive(true);
         }
+    }
+
+    // 저장된 확인 여부를 넣고 레드닷 화면을 그 값에 맞춘다
+    public void RestoreNoticeSeen(bool seen)
+    {
+        regionUnlockNoticeSeen = seen;
+        if (redDot != null) redDot.SetActive(!seen);
     }
 
     private void OnNight()
@@ -96,6 +109,7 @@ public class RegionOverviewPanel : MonoBehaviour, IClosablePanel, IExclusiveUiPa
     private void OnEnable()
     {
         ExclusiveUiCoordinator.NotifyOpened(this);
+        regionUnlockNoticeSeen = true;
         if (redDot != null && redDot.activeSelf) redDot.SetActive(false); // 열었으니 확인한 걸로 치고 끈다
         panelStack.Push(this);
         BindModules();

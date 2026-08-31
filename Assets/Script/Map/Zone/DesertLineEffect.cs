@@ -20,7 +20,7 @@ public class DesertLineEffect
     public void Show(Vector2Int wind, DesertEffectData data)
     {
         Hide();
-        Quaternion rotation = ReadRotation(wind);
+        Quaternion rotation = WorldDirectionCalc.ReadRotation(board, wind);
         SpawnAll(data.StrongTiles, strongPrefab, rotation);
         SpawnAll(data.WeakTiles, weakPrefab, rotation);
     }
@@ -50,14 +50,5 @@ public class DesertLineEffect
     {
         GameObject effect = Object.Instantiate(prefab, tile.WorldTop, rotation, board.transform);
         spawned.Add(effect);
-    }
-
-    // 바람 벡터를 실제 보드의 월드 진행 방향 회전으로 바꾼다.
-    private Quaternion ReadRotation(Vector2Int wind)
-    {
-        Vector3 origin = board.CellPointToWorld(Vector2.zero);
-        Vector3 target = board.CellPointToWorld(new Vector2(wind.x, wind.y));
-        Vector3 direction = (target - origin).normalized;
-        return Quaternion.LookRotation(direction, Vector3.up);
     }
 }
