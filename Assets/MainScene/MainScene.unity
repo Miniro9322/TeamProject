@@ -23368,33 +23368,6 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 452522, guid: 5733d55f562b0c34a93452f8c74ea73e, type: 3}
   m_PrefabInstance: {fileID: 1788346967}
   m_PrefabAsset: {fileID: 0}
---- !u!1 &1788733721 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 7578163249312130076, guid: bae0098125913084bb76c533b117b143, type: 3}
-  m_PrefabInstance: {fileID: 2021553764}
-  m_PrefabAsset: {fileID: 0}
---- !u!95 &1788733726
-Animator:
-  serializedVersion: 7
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1788733721}
-  m_Enabled: 1
-  m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: 0da139b7b31baf641b0d98c74743c25e, type: 2}
-  m_CullingMode: 0
-  m_UpdateMode: 0
-  m_ApplyRootMotion: 0
-  m_LinearVelocityBlending: 0
-  m_StabilizeFeet: 0
-  m_AnimatePhysics: 0
-  m_WarningMessage: 
-  m_HasTransformHierarchy: 1
-  m_AllowConstantClipSamplingOptimization: 1
-  m_KeepAnimatorStateOnDisable: 0
-  m_WriteDefaultValuesOnDisable: 0
 --- !u!1001 &1790835185
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -25977,7 +25950,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 650, y: 399}
+  m_AnchoredPosition: {x: 599, y: 399}
   m_SizeDelta: {x: 500, y: 170}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!95 &2019734435
@@ -26168,15 +26141,28 @@ PrefabInstance:
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 7578163249312130076, guid: bae0098125913084bb76c533b117b143, type: 3}
+    - targetCorrespondingSourceObject: {fileID: 1672168426200316132, guid: bae0098125913084bb76c533b117b143, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 1788733726}
+      addedObject: {fileID: 2021553768}
   m_SourcePrefab: {fileID: 100100000, guid: bae0098125913084bb76c533b117b143, type: 3}
 --- !u!224 &2021553765 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 3860039051921006517, guid: bae0098125913084bb76c533b117b143, type: 3}
   m_PrefabInstance: {fileID: 2021553764}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &2021553768
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2001846024}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dd28c4146faf6c7439ceb445b2e98df0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PanelReveal
+  scaleSpeed: 5
 --- !u!1001 &2024251151
 PrefabInstance:
   m_ObjectHideFlags: 0

@@ -41,8 +41,16 @@ public class TitleUI : MonoBehaviour
     }
 
     // 열려 있는 패널이 없을 때만 종료 확인창을 띄운다 - 패널이 열려 있으면 각 패널이 알아서 Esc를 처리한다.
+    // ConfirmPopup(세이브 덮어쓰기 확인창)은 자기 스스로 Esc를 구독하지 않고 Cancel()만 열어두는
+    // 방식이라, 여기서 직접 불러줘야 한다.
     private void OnEscapePerformed(InputAction.CallbackContext context)
     {
+        if (confirmPopup != null && confirmPopup.gameObject.activeSelf)
+        {
+            confirmPopup.Cancel();
+            return;
+        }
+
         if (IsAnyPanelOpen()) return;
 
         OnQuitAlert();
@@ -209,15 +217,35 @@ public class TitleUI : MonoBehaviour
 
     public void OnQuitAlert()
     {
-        if(QuitAlert.activeSelf)
-            QuitAlert.SetActive(false);
-        else
-            QuitAlert.SetActive(true);
+        if (QuitAlert.activeSelf)
+        {
+            SetQuitAlertOpen(false);
+            return;
+        }
+
+        // 세이브 덮어쓰기 확인창이 떠 있는 동안은 종료 확인창을 그 위에 겹쳐 띄우지 않는다.
+        if (confirmPopup != null && confirmPopup.gameObject.activeSelf) return;
+
+        SetQuitAlertOpen(true);
     }
 
     public void OnCancel()
     {
-        QuitAlert.SetActive(false);
+        SetQuitAlertOpen(false);
+    }
+
+    // QuitAlert(Alert 프리팹)에는 PanelReveal이 붙어 있다 - 버튼 클릭이든 Esc든 항상 그 스케일
+    // 연출을 거쳐 여닫도록 SetActive 대신 여기를 거친다.
+    private void SetQuitAlertOpen(bool open)
+    {
+        PanelReveal reveal = QuitAlert.GetComponent<PanelReveal>();
+        if (reveal != null)
+        {
+            if (open) reveal.Show();
+            else reveal.Hide();
+            return;
+        }
+        QuitAlert.SetActive(open);
     }
 
     public void OnQuit()

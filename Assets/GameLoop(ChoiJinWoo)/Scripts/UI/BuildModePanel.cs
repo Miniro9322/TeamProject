@@ -96,8 +96,12 @@ public class BuildModePanel : MonoBehaviour
         heroInventory.SetActive(false);
         classUpgradePanel.SetActive(false);
 
-        // classUpgradePanel/heroInventory는 전용 스크립트가 없는 순수 GameObject라, OnEnable/OnDisable로
+        // heroPanel/classUpgradePanel/heroInventory는 전용 스크립트가 없는 순수 GameObject라, OnEnable/OnDisable로
         // ExclusiveUiCoordinator에 알려줄 컴포넌트를 여기서 붙여준다(씬/프리팹을 직접 안 건드리기 위해).
+        // 셋 다 등록해 둬야, 버튼 클릭이 Toggle()이든 OnHeroButton 등이든 어느 쪽을 거치든 상관없이
+        // (OnEnable 기반이라 호출 경로를 안 타므로) 하나가 열리면 나머지가 항상 자동으로 닫힌다.
+        if (heroPanel.GetComponent<ExclusivePanelPresence>() == null)
+            heroPanel.AddComponent<ExclusivePanelPresence>();
         if (classUpgradePanel.GetComponent<ExclusivePanelPresence>() == null)
             classUpgradePanel.AddComponent<ExclusivePanelPresence>();
         if (heroInventory.GetComponent<ExclusivePanelPresence>() == null)
