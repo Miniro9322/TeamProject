@@ -329,12 +329,12 @@ public class EnemyInfo : MonoBehaviour
         CancelReveal();
         bookOpenedEvent = false;
 
-        if (bookAnimator != null)
-        {
-            // 같은 트리거가 큐에 남아 있으면 다음 펼침이 즉시 소비돼 버린다 — 눌러 둔 것을 먼저 지운다.
-            bookAnimator.ResetTrigger(openTrigger);
-            bookAnimator.SetTrigger(openTrigger);
-        }
+        //if (bookAnimator != null)
+        //{
+        //    // 같은 트리거가 큐에 남아 있으면 다음 펼침이 즉시 소비돼 버린다 — 눌러 둔 것을 먼저 지운다.
+        //    bookAnimator.ResetTrigger(openTrigger);
+        //    bookAnimator.SetTrigger(openTrigger);
+        //}
 
         SetRevealAlpha(0f);   // 펼치는 동안은 텍스트·아이콘을 감춰 둔다
         IsBookOpening = true; // 이 사이엔 EnemyArchive가 적 버튼 클릭을 무시한다

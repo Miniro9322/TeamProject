@@ -220,6 +220,11 @@ public class RegionOverviewPanel : MonoBehaviour, IClosablePanel, IExclusiveUiPa
 
     private void CheckOpenHotkey()
     {
+        // InputSystem.onAfterUpdate는 static 이벤트라 씬 오브젝트 생명주기와 무관하게 계속 불린다 -
+        // 이 오브젝트가 파괴된 뒤에도 OnDestroy()가 구독을 끊기 전까지의 짧은 틈에 한 번 더 불릴 수
+        // 있으므로, Unity의 "파괴됨" 판정(== null)을 직접 확인해야 한다.
+        if (this == null) return;
+
         var keyboard = Keyboard.current;
         if (keyboard != null && keyboard[openBaseKey].wasPressedThisFrame && !TutorialInputGate.BlockHotkeys)
         {

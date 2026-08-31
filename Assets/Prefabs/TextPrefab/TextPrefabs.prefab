@@ -530,8 +530,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: 123123
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 0995c4553591d204aa7506d5513005af, type: 2}
+  m_sharedMaterial: {fileID: 5336713856614576837, guid: 0995c4553591d204aa7506d5513005af, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -680,8 +680,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: New Text
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 0995c4553591d204aa7506d5513005af, type: 2}
+  m_sharedMaterial: {fileID: 5336713856614576837, guid: 0995c4553591d204aa7506d5513005af, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -817,8 +817,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: New Text
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 0995c4553591d204aa7506d5513005af, type: 2}
+  m_sharedMaterial: {fileID: 5336713856614576837, guid: 0995c4553591d204aa7506d5513005af, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -1061,14 +1061,17 @@ MonoBehaviour:
   rowContainer: {fileID: 1833949303854501137}
   rowPrefab: {fileID: 5136748806773513425, guid: ce6ff54bdb733e34088056c100031ee5, type: 3}
   scroll: {fileID: 0}
+  closeButton: {fileID: 0}
   fitAllRows: 1
   rowHeight: 48
   minFitScale: 0.8
   rowGrid: {fileID: 0}
   tooltip: {fileID: 5274729705873569775}
+  tooltipIcon: {fileID: 0}
   tooltipNameText: {fileID: 5523331961003929272}
   tooltipDescText: {fileID: 4744644075908701870}
   archiveButton: {fileID: 9098981432602138773}
+  attributeLabelKey: Ui_Attribute
   hoverDelay: 0.2
   hideGrace: 0.3
   tooltipOffset: {x: -180, y: 0, z: 0}

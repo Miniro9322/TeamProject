@@ -20,6 +20,7 @@ public class BuildModePanel : MonoBehaviour
     [SerializeField] private Key replaceKey = Key.R;
     [SerializeField] private Key removeKey = Key.E;
     [SerializeField] private Key inventoryKey = Key.I;
+    [SerializeField] private Key createHeroKey = Key.C;
     private Keyboard keyboard;
     private ClickOutsideCloser heroPanelCloser;
     private ClickOutsideCloser inventoryCloser;
@@ -52,11 +53,27 @@ public class BuildModePanel : MonoBehaviour
     // 열린 하위 패널을 닫고 빌드 패널의 퇴장 연출을 시작한다.
     private void DisablePanels()
     {
-        if (heroPanel.activeSelf) heroPanel.SetActive(false);
-        if (classUpgradePanel.activeSelf) classUpgradePanel.SetActive(false);
+        if (heroPanel.activeSelf) SetPanelOpen(heroPanel, false);
+        if (classUpgradePanel.activeSelf) SetPanelOpen(classUpgradePanel, false);
         if (heroInventory.activeSelf) heroInventory.SetActive(false);
         heroArchiveButton?.Close();
         panelSlide.Close();
+    }
+
+    // heroPanel/classUpgradePanel에 PanelReveal이 붙어 있으면 그 스케일 연출로 열고 닫는다(버튼의
+    // UIButtonHeld.Toggle()과 같은 규칙). 여기서 안 이러면 클릭과 단축키가 서로 다른 방식으로 여닫게
+    // 되고, PanelReveal.Hide()가 스케일을 0으로 남겨둔 채 끝내는데 이후 SetActive(true)만 부르면
+    // 오브젝트는 켜지지만 스케일이 0인 채로 남아 안 보이게 된다.
+    private static void SetPanelOpen(GameObject panel, bool open)
+    {
+        PanelReveal reveal = panel.GetComponent<PanelReveal>();
+        if (reveal != null)
+        {
+            if (open) reveal.Show();
+            else reveal.Hide();
+            return;
+        }
+        panel.SetActive(open);
     }
 
     // 낮 전환이 끝난 빌드 패널의 등장 연출을 시작한다.
@@ -79,8 +96,12 @@ public class BuildModePanel : MonoBehaviour
         heroInventory.SetActive(false);
         classUpgradePanel.SetActive(false);
 
-        // classUpgradePanel/heroInventory는 전용 스크립트가 없는 순수 GameObject라, OnEnable/OnDisable로
+        // heroPanel/classUpgradePanel/heroInventory는 전용 스크립트가 없는 순수 GameObject라, OnEnable/OnDisable로
         // ExclusiveUiCoordinator에 알려줄 컴포넌트를 여기서 붙여준다(씬/프리팹을 직접 안 건드리기 위해).
+        // 셋 다 등록해 둬야, 버튼 클릭이 Toggle()이든 OnHeroButton 등이든 어느 쪽을 거치든 상관없이
+        // (OnEnable 기반이라 호출 경로를 안 타므로) 하나가 열리면 나머지가 항상 자동으로 닫힌다.
+        if (heroPanel.GetComponent<ExclusivePanelPresence>() == null)
+            heroPanel.AddComponent<ExclusivePanelPresence>();
         if (classUpgradePanel.GetComponent<ExclusivePanelPresence>() == null)
             classUpgradePanel.AddComponent<ExclusivePanelPresence>();
         if (heroInventory.GetComponent<ExclusivePanelPresence>() == null)
@@ -112,11 +133,11 @@ public class BuildModePanel : MonoBehaviour
     {
         if (heroPanel.activeSelf && heroPanelCloser.ClickedOutside())
         {
-            heroPanel.SetActive(false);
+            SetPanelOpen(heroPanel, false);
         }
         if (classUpgradePanel.activeSelf && classUpgradeCloser.ClickedOutside())
         {
-            classUpgradePanel.SetActive(false);
+            SetPanelOpen(classUpgradePanel, false);
         }
         if (heroInventory.activeSelf && view.IsOff && inventoryCloser.ClickedOutside())
         {
@@ -132,7 +153,9 @@ public class BuildModePanel : MonoBehaviour
                 Button clickedButton = selected.GetComponent<Button>();
                 if (clickedButton != null
                     && clickedButton.GetComponent<ReplaceHeldLink>() == null
-                    && clickedButton.GetComponent<RemoveHeldLink>() == null)
+                    && clickedButton.GetComponent<RemoveHeldLink>() == null
+                    && clickedButton.GetComponent<UIReplaceHeld>() == null
+                    && clickedButton.GetComponent<UIRemoveHeld>() == null)
                 {
                     view.ClearMode();
                 }
@@ -152,6 +175,9 @@ public class BuildModePanel : MonoBehaviour
 
         if (keyboard[inventoryKey].wasPressedThisFrame && !TutorialInputGate.BlockHotkeys)
             OnInventoryButton();
+
+        if (keyboard[createHeroKey].wasPressedThisFrame && !TutorialInputGate.BlockHotkeys)
+            OnHeroButton();
 
         if (!keyboard[closeKey].wasPressedThisFrame) return;
         if (TutorialInputGate.BlockEscapeClose) return;
@@ -173,29 +199,37 @@ public class BuildModePanel : MonoBehaviour
         else if (heroPanel.activeSelf || heroInventory.activeSelf || classUpgradePanel.activeSelf
             || (heroArchiveButton != null && heroArchiveButton.IsOpen))
         {
-            if (classUpgradePanel.activeSelf) Debug.Log("[BuildModePanel] classUpgradePanel closed by ESC", this);
-            heroPanel.SetActive(false);
+            SetPanelOpen(heroPanel, false);
             heroInventory.SetActive(false);
-            classUpgradePanel.SetActive(false);
+            SetPanelOpen(classUpgradePanel, false);
             heroArchiveButton?.Close();
         }
     }
 
+    // 재배치/제거 모드 중 다른 패널 버튼을 쓰면 그 모드를 끈다 - 클릭은 EventSystem의 선택 변경으로
+    // Update()가 감지해 자동으로 꺼지지만, 단축키는 선택을 바꾸지 않아 그 감지를 타지 않는다.
+    // 두 입력 경로의 결과가 갈리지 않도록 여기서 직접 꺼준다.
+    private void ExitPlaceModeIfActive()
+    {
+        if (view.IsReplacing || view.IsRemoving) view.ClearMode();
+    }
+
     public void OnHeroButton()
     {
+        ExitPlaceModeIfActive();
+
         if (heroPanel.activeSelf)
         {
-            heroPanel.SetActive(false);
+            SetPanelOpen(heroPanel, false);
         }
         else
         {
-            heroPanel.SetActive(true);
+            SetPanelOpen(heroPanel, true);
             heroPanelCloser.MarkOpened();
             if (heroInventory.activeSelf) heroInventory.SetActive(false);
             if (classUpgradePanel.activeSelf)
             {
-                Debug.Log("[BuildModePanel] classUpgradePanel closed by OnHeroButton", this);
-                classUpgradePanel.SetActive(false);
+                SetPanelOpen(classUpgradePanel, false);
             }
         }
     }
@@ -236,6 +270,8 @@ public class BuildModePanel : MonoBehaviour
 
     public void OnInventoryButton()
     {
+        ExitPlaceModeIfActive();
+
         if (heroInventory.activeSelf)
         {
             heroInventory.SetActive(false);
@@ -255,23 +291,25 @@ public class BuildModePanel : MonoBehaviour
         inventoryCloser.MarkOpened();
         if (classUpgradePanel.activeSelf)
         {
-            classUpgradePanel.SetActive(false);
+            SetPanelOpen(classUpgradePanel, false);
         }
-        if (heroPanel.activeSelf) heroPanel.SetActive(false);
+        if (heroPanel.activeSelf) SetPanelOpen(heroPanel, false);
     }
 
     public void OnClassUpgradeButton()
     {
         if (TutorialInputGate.BlockHeroUpgradeOpen) return;
 
+        ExitPlaceModeIfActive();
+
         if (classUpgradePanel.activeSelf)
-            classUpgradePanel.SetActive(false);
+            SetPanelOpen(classUpgradePanel, false);
         else
         {
-            classUpgradePanel.SetActive(true);
+            SetPanelOpen(classUpgradePanel, true);
             classUpgradeCloser.MarkOpened();
             if (heroInventory.activeSelf) heroInventory.SetActive(false);
-            if (heroPanel.activeSelf) heroPanel.SetActive(false);
+            if (heroPanel.activeSelf) SetPanelOpen(heroPanel, false);
         }
     }
 
