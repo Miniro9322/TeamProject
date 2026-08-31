@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 3248275782699153764}
   - component: {fileID: 3049092587255629025}
   - component: {fileID: 3040582246915088138}
+  - component: {fileID: 691694984576827775}
   m_Layer: 5
   m_Name: Button
   m_TagString: Untagged
@@ -67,7 +68,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 1d05a3183ba4ab34b9a81d3f9a77d52e, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 7fc1f566adfca485f90894d0655b431b, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -121,6 +122,20 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &691694984576827775
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 16959159528152502}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 05b88496e2001e647afa6997662fdb90, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ButtonSfx
+  buttonHoverSFX: UI_Hover
+  buttonClickSFX: UI_Click
 --- !u!1 &1128523707090652749
 GameObject:
   m_ObjectHideFlags: 0
@@ -132,6 +147,7 @@ GameObject:
   - component: {fileID: 2395824645782709552}
   - component: {fileID: 1873478888426608331}
   - component: {fileID: 3049487803041475616}
+  - component: {fileID: 8710891587670715208}
   m_Layer: 5
   m_Name: Text (TMP)
   m_TagString: Untagged
@@ -258,6 +274,19 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &8710891587670715208
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1128523707090652749}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 49beb084dd5019e45a90f32e065ce6f6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LocalizeText
+  key: Guide_HeroUpgradeButton
 --- !u!1 &1615459436438929009
 GameObject:
   m_ObjectHideFlags: 0
@@ -430,7 +459,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   m_Sprite: {fileID: 21300000, guid: bd2ba7c0dcc3a0b4c84b62cb7f28bd60, type: 3}
-  m_Type: 0
+  m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
@@ -452,11 +481,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HeroClassUpgradeMenuUI
   panelImageList:
-  - {fileID: 21300000, guid: bd2ba7c0dcc3a0b4c84b62cb7f28bd60, type: 3}
-  - {fileID: 21300000, guid: 4e5040fbbcfc7d340b36634a2c4d8f52, type: 3}
+  - {fileID: 21300000, guid: ccda1e9d0a91445b08abb3958530382a, type: 3}
+  - {fileID: 21300000, guid: ccda1e9d0a91445b08abb3958530382a, type: 3}
   upgradeIconList:
-  - {fileID: -1369298218, guid: 97674d34c3046274f9cee23fa0f2aec1, type: 3}
-  - {fileID: -210264419, guid: 97674d34c3046274f9cee23fa0f2aec1, type: 3}
+  - {fileID: 21300000, guid: 6369955c1a43f406eb4d345fbbf87f8d, type: 3}
+  - {fileID: 21300000, guid: 81779aff023644154a5061cbc4aac773, type: 3}
   banner: {fileID: 5579711182502740960}
   upgradeIcon: {fileID: 5296772520899427175}
   resourcePanel: {fileID: 1615459436438929009}
@@ -586,7 +615,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: -0.8805, y: 184}
-  m_SizeDelta: {x: 311.8333, y: 50}
+  m_SizeDelta: {x: 500, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &1196092609984124646
 CanvasRenderer:

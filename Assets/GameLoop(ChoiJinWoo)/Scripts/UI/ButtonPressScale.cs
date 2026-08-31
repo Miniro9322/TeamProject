@@ -14,17 +14,16 @@ public class ButtonPressScale : MonoBehaviour,
     [SerializeField] private float pressScale = 0.95f;
     [SerializeField] private float animSpeed = 12f;
 
-    private RectTransform rect;
+    private RectTransform cachedRect;
     private bool isHovering;
     private bool isSelected; // 키보드 탐색 등으로 EventSystem이 이 버튼을 선택했을 때(마우스 호버와 같은 강조로 취급)
     private bool isPointerDown;
     private bool isHeld; // 외부(모드/패널 등)가 취소되기 전까지 눌린 모양을 강제하고 싶을 때
     private CancellationTokenSource cts;
 
-    private void Awake()
-    {
-        rect = (RectTransform)transform;
-    }
+    // 부모가 SetActive(true)로 활성화될 때 이 컴포넌트의 Awake보다 부모의 OnEnable이 먼저 불려
+    // rect가 아직 null인 채로 SetHeld 등이 호출될 수 있다 - 필요한 시점에 지연 초기화한다.
+    private RectTransform rect => cachedRect != null ? cachedRect : (cachedRect = (RectTransform)transform);
 
     private void OnDisable()
     {
