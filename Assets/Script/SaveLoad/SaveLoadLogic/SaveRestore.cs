@@ -194,7 +194,7 @@ public class SaveRestore
             if (!mapGame.Placer.TryPlace(placeData, entry.Slot, out GameObject placedUnit)) continue;
 
             entry.MarkPlaced(placedUnit);
-            placedUnit.AddComponent<HeroRosterLink>().Entry = entry;
+            HeroRosterLink.Attach(placedUnit, entry);
         }
 
         heroRoster.NotifyStateChanged();

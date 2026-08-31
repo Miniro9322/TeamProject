@@ -134,7 +134,7 @@ public class PlaceAction
     {
         if (entry == null) return;
         entry.MarkPlaced(placedUnit);
-        placedUnit.AddComponent<HeroRosterLink>().Entry = entry;
+        HeroRosterLink.Attach(placedUnit, entry);
         heroRoster.NotifyStateChanged();
     }
 
