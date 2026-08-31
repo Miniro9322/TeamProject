@@ -162,7 +162,7 @@ public class HeroCombineManager : MonoBehaviour
             if (game.Placer.TryPlace(placeData, newSlot, out GameObject placedUnit))
             {
                 newEntry.MarkPlaced(placedUnit);
-                placedUnit.AddComponent<HeroRosterLink>().Entry = newEntry;
+                HeroRosterLink.Attach(placedUnit, newEntry);
                 game.HeroRoster.NotifyStateChanged();
             }
         }

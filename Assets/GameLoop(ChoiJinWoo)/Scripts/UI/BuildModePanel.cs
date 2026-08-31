@@ -25,18 +25,7 @@ public class BuildModePanel : MonoBehaviour
     private ClickOutsideCloser heroPanelCloser;
     private ClickOutsideCloser inventoryCloser;
     private ClickOutsideCloser classUpgradeCloser;
-    private bool _reopenInventoryOnOff;
     private GameObject lastSelectedGameObject; // 재배치/회수 모드 중 다른 버튼 클릭 감지용
-
-    private void OnEnable()
-    {
-        view.OnOffMode += HandleMapOff;
-    }
-
-    private void OnDisable()
-    {
-        view.OnOffMode -= HandleMapOff;
-    }
 
     private void Start()
     {
@@ -80,14 +69,6 @@ public class BuildModePanel : MonoBehaviour
     private void EnablePanel()
     {
         panelSlide.Open();
-    }
-
-    // 재배치/제거 모드가 끝나 Off로 돌아오면(버튼/단축키/ESC 등 어떤 경로든) 그때만 인벤토리를 다시 연다.
-    private void HandleMapOff()
-    {
-        if (!_reopenInventoryOnOff) return;
-        _reopenInventoryOnOff = false;
-        OpenInventory();
     }
 
     private void Awake()
@@ -260,12 +241,11 @@ public class BuildModePanel : MonoBehaviour
         }
     }
 
-    // 재배치/제거 모드로 들어가는 동안 인벤토리가 열려 있었다면 닫아두고, 모드가 끝나면 다시 연다.
+    // 재배치/제거 모드로 들어가는 동안 인벤토리가 열려 있었다면 닫아둔다.
     private void CloseInventoryForMode()
     {
         if (!heroInventory.activeSelf) return;
         heroInventory.SetActive(false);
-        _reopenInventoryOnOff = true;
     }
 
     public void OnInventoryButton()
