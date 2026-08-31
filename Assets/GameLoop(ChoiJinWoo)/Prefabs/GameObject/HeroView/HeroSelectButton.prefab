@@ -210,9 +210,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4a9b1cbcca1d40c4a84eee8e163bd333, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HeroCreateIcon
-  icon: {fileID: 3341226314558891864}
   button: {fileID: 3610302447719977603}
-  text: {fileID: 713128615477130575}
+  resourceCost: []
+  resourceIcons: []
+  createName: 
+  activeFrame: {fileID: 0}
 --- !u!1 &7126053459874726792
 GameObject:
   m_ObjectHideFlags: 0
@@ -280,8 +282,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: Button
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 0995c4553591d204aa7506d5513005af, type: 2}
+  m_sharedMaterial: {fileID: 5336713856614576837, guid: 0995c4553591d204aa7506d5513005af, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
