@@ -76,7 +76,8 @@ public class MapAssemble : MonoBehaviour
             windwallData,
             mapGame.Units,
             windPreview,
-            lineEffect);
+            lineEffect,
+            mapGame.Rule);
 
         DayNightBuildRule dayNightRule = new DayNightBuildRule();
         dayNightRule.rule = mapGame.Rule;

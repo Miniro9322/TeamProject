@@ -8,6 +8,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 1163000216739424036, guid: 8360a57df3e96ae4891574c3af8e0e4d, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 1163000216739424041, guid: 8360a57df3e96ae4891574c3af8e0e4d, type: 3}
       propertyPath: looping
       value: 1
@@ -144,21 +148,25 @@ PrefabInstance:
       propertyPath: m_Name
       value: DesertStrongVFX
       objectReference: {fileID: 0}
+    - target: {fileID: 3100204534734593427, guid: 8360a57df3e96ae4891574c3af8e0e4d, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 3100204534734593436, guid: 8360a57df3e96ae4891574c3af8e0e4d, type: 3}
       propertyPath: m_RootOrder
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3100204534734593436, guid: 8360a57df3e96ae4891574c3af8e0e4d, type: 3}
       propertyPath: m_LocalScale.x
-      value: 0.41664
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 3100204534734593436, guid: 8360a57df3e96ae4891574c3af8e0e4d, type: 3}
       propertyPath: m_LocalScale.y
-      value: 0.41664
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 3100204534734593436, guid: 8360a57df3e96ae4891574c3af8e0e4d, type: 3}
       propertyPath: m_LocalScale.z
-      value: 0.41664
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 3100204534734593436, guid: 8360a57df3e96ae4891574c3af8e0e4d, type: 3}
       propertyPath: m_LocalPosition.x
@@ -217,12 +225,32 @@ PrefabInstance:
       value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 3100204534734593437, guid: 8360a57df3e96ae4891574c3af8e0e4d, type: 3}
+      propertyPath: ShapeModule.type
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 3100204534734593437, guid: 8360a57df3e96ae4891574c3af8e0e4d, type: 3}
+      propertyPath: ShapeModule.angle
+      value: 60
+      objectReference: {fileID: 0}
+    - target: {fileID: 3100204534734593437, guid: 8360a57df3e96ae4891574c3af8e0e4d, type: 3}
+      propertyPath: ShapeModule.radiusThickness
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3100204534734593437, guid: 8360a57df3e96ae4891574c3af8e0e4d, type: 3}
       propertyPath: UVModule.frameOverTime.scalar
       value: 0.7475
       objectReference: {fileID: 0}
     - target: {fileID: 3100204534734593437, guid: 8360a57df3e96ae4891574c3af8e0e4d, type: 3}
       propertyPath: EmissionModule.rateOverTime.scalar
       value: 30
+      objectReference: {fileID: 0}
+    - target: {fileID: 3100204534734593437, guid: 8360a57df3e96ae4891574c3af8e0e4d, type: 3}
+      propertyPath: InitialModule.startLifetime.scalar
+      value: 0.94
+      objectReference: {fileID: 0}
+    - target: {fileID: 3100204534734593437, guid: 8360a57df3e96ae4891574c3af8e0e4d, type: 3}
+      propertyPath: InitialModule.startLifetime.minScalar
+      value: 0.81
       objectReference: {fileID: 0}
     - target: {fileID: 3100204534734593437, guid: 8360a57df3e96ae4891574c3af8e0e4d, type: 3}
       propertyPath: EmissionModule.rateOverTime.minMaxState
@@ -259,6 +287,14 @@ PrefabInstance:
     - target: {fileID: 3100204534734593437, guid: 8360a57df3e96ae4891574c3af8e0e4d, type: 3}
       propertyPath: EmissionModule.rateOverTime.maxCurve.m_Curve.Array.data[1].tangentMode
       value: 103
+      objectReference: {fileID: 0}
+    - target: {fileID: 5184322965084234228, guid: 8360a57df3e96ae4891574c3af8e0e4d, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5624458183690212741, guid: 8360a57df3e96ae4891574c3af8e0e4d, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5624458183690212744, guid: 8360a57df3e96ae4891574c3af8e0e4d, type: 3}
       propertyPath: looping
@@ -314,10 +350,6 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5624458183690212744, guid: 8360a57df3e96ae4891574c3af8e0e4d, type: 3}
       propertyPath: EmissionModule.rateOverTime.maxCurve.m_Curve.Array.data[0].tangentMode
-      value: 103
-      objectReference: {fileID: 0}
-    - target: {fileID: 5624458183690212744, guid: 8360a57df3e96ae4891574c3af8e0e4d, type: 3}
-      propertyPath: EmissionModule.rateOverTime.maxCurve.m_Curve.Array.data[1].tangentMode
       value: 103
       objectReference: {fileID: 0}
     - target: {fileID: 5624458183690212747, guid: 8360a57df3e96ae4891574c3af8e0e4d, type: 3}
