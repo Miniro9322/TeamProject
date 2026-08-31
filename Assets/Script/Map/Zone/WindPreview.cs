@@ -5,34 +5,46 @@ using UnityEngine;
 // 낮 동안 바람이 들어오는 외곽 면 전체에 안내 화살표를 표시합니다.
 public class WindPreview : IDisposable
 {
-    private const int TextureSize = 32;
-
     private readonly MapBoard board;
     private readonly float arrowSize;
     private readonly float arrowHeight;
     private readonly Color arrowColor;
-    private readonly Dictionary<Vector2Int, List<Tile>> faceByWind = new();
+    private readonly float slideCells;
+    private readonly float slidePeriod;
+    private readonly Dictionary<Vector2Int, List<Tile>> faceByWind;
     private readonly List<GameObject> arrows = new();
+    private readonly List<SpriteRenderer> arrowRenderers = new();
+    private readonly List<SpriteRenderer> slideTargets = new();
+    private readonly List<Vector3> slideSpots = new();
 
     private GameObject arrowRoot;
-    private Texture2D arrowTexture;
     private Sprite arrowSprite;
+    private WindArrowSlide slide;
 
     public int VisibleCount { get; private set; }
     public int ArrowCount => arrows.Count;
 
     // 사막 보드의 네 외곽 면과 재사용할 화살표를 한 번 준비합니다.
-    public WindPreview(MapBoard board, Transform parent, float size, float height, Color color)
+    public WindPreview(
+        MapBoard board,
+        Transform parent,
+        float size,
+        float height,
+        Color color,
+        float slideCells,
+        float slidePeriod)
     {
         this.board = board;
         arrowSize = size;
         arrowHeight = height;
         arrowColor = color;
-        BuildFaces();
+        this.slideCells = slideCells;
+        this.slidePeriod = slidePeriod;
+        faceByWind = WindFaceCalc.BuildFaces(board);
         BuildArrows(parent);
     }
 
-    // 현재 바람이 들어오는 외곽 면 전체에 화살표를 표시합니다.
+    // 현재 바람이 들어오는 외곽 면 전체에 화살표를 표시하고 밀어내기를 시작합니다.
     public void Show(Vector2Int wind)
     {
         if (!faceByWind.TryGetValue(wind, out List<Tile> face))
@@ -41,22 +53,17 @@ public class WindPreview : IDisposable
         }
 
         Hide();
-        Vector3 worldDirection = ReadDirection(wind);
+        Vector3 worldDirection = WorldDirectionCalc.ReadDirection(board, wind);
         Quaternion rotation = Quaternion.LookRotation(Vector3.up, worldDirection);
-        for (int index = 0; index < face.Count; index++)
-        {
-            GameObject arrow = arrows[index];
-            Tile tile = face[index];
-            arrow.transform.SetPositionAndRotation(tile.WorldTop + Vector3.up * arrowHeight, rotation);
-            arrow.SetActive(true);
-        }
-
+        PlaceArrows(face, rotation);
+        slide.PlayArrows(slideTargets, slideSpots, worldDirection);
         VisibleCount = face.Count;
     }
 
-    // 모든 안내 화살표를 숨깁니다.
+    // 모든 안내 화살표를 숨기고 밀어내기를 멈춥니다.
     public void Hide()
     {
+        slide.StopArrows();
         for (int index = 0; index < arrows.Count; index++)
         {
             arrows[index].SetActive(false);
@@ -68,59 +75,28 @@ public class WindPreview : IDisposable
     // 생성한 안내 오브젝트와 공유 이미지를 정리합니다.
     public void Dispose()
     {
+        Texture2D arrowTexture = arrowSprite.texture;
         DestroyObject(arrowRoot);
         DestroyObject(arrowSprite);
         DestroyObject(arrowTexture);
         arrows.Clear();
+        arrowRenderers.Clear();
         faceByWind.Clear();
         VisibleCount = 0;
     }
 
-    // 실제 PlayRect 바깥 한 줄에서 네 Special 면을 좌표 순서로 저장합니다.
-    private void BuildFaces()
+    // 면의 타일마다 화살표를 세우고 밀어내기에 넘길 기준 자리를 모읍니다.
+    private void PlaceArrows(List<Tile> face, Quaternion rotation)
     {
-        RectInt play = board.PlayRect;
-        int west = play.xMin - 1;
-        int east = play.xMax;
-        int south = play.yMin - 1;
-        int north = play.yMax;
-
-        faceByWind[GridCalculator.Right] = ReadColumn(west, south, north);
-        faceByWind[GridCalculator.Left] = ReadColumn(east, south, north);
-        faceByWind[GridCalculator.Up] = ReadRow(south, west, east);
-        faceByWind[GridCalculator.Down] = ReadRow(north, west, east);
-    }
-
-    // 한 열의 Special 타일을 아래에서 위 순서로 저장합니다.
-    private List<Tile> ReadColumn(int column, int minRow, int maxRow)
-    {
-        List<Tile> face = new();
-        for (int row = minRow; row <= maxRow; row++)
+        slideTargets.Clear();
+        slideSpots.Clear();
+        for (int index = 0; index < face.Count; index++)
         {
-            KeepSpecial(face, new Vector2Int(column, row));
-        }
-
-        return face;
-    }
-
-    // 한 행의 Special 타일을 왼쪽에서 오른쪽 순서로 저장합니다.
-    private List<Tile> ReadRow(int row, int minColumn, int maxColumn)
-    {
-        List<Tile> face = new();
-        for (int column = minColumn; column <= maxColumn; column++)
-        {
-            KeepSpecial(face, new Vector2Int(column, row));
-        }
-
-        return face;
-    }
-
-    // 실제로 존재하는 Special 타일만 현재 면에 추가합니다.
-    private void KeepSpecial(List<Tile> face, Vector2Int cell)
-    {
-        if (board.TryGetCell(cell, out Tile tile) && tile.IsSpecial)
-        {
-            face.Add(tile);
+            Vector3 spot = face[index].WorldTop + Vector3.up * arrowHeight;
+            arrows[index].transform.SetPositionAndRotation(spot, rotation);
+            arrows[index].SetActive(true);
+            slideTargets.Add(arrowRenderers[index]);
+            slideSpots.Add(spot);
         }
     }
 
@@ -130,22 +106,31 @@ public class WindPreview : IDisposable
         arrowRoot = new GameObject("WindPreview");
         arrowRoot.hideFlags = HideFlags.DontSave;
         arrowRoot.transform.SetParent(parent, false);
-        arrowSprite = CreateSprite();
+        arrowSprite = WindArrowSprite.CreateSprite();
+        slide = arrowRoot.AddComponent<WindArrowSlide>();
+        slide.SetMotion(slideCells * board.CellSize, slidePeriod, arrowColor);
 
         int arrowCount = ReadMaxCount();
         for (int index = 0; index < arrowCount; index++)
         {
-            GameObject arrow = new GameObject($"WindArrow_{index}");
-            arrow.hideFlags = HideFlags.DontSave;
-            arrow.transform.SetParent(arrowRoot.transform, false);
-            arrow.transform.localScale = Vector3.one * arrowSize;
-            SpriteRenderer renderer = arrow.AddComponent<SpriteRenderer>();
-            renderer.sprite = arrowSprite;
-            renderer.color = arrowColor;
-            renderer.sortingOrder = 20;
-            arrow.SetActive(false);
-            arrows.Add(arrow);
+            BuildArrow(index);
         }
+    }
+
+    // 재사용할 화살표 하나를 만들어 목록에 담습니다.
+    private void BuildArrow(int index)
+    {
+        GameObject arrow = new GameObject($"WindArrow_{index}");
+        arrow.hideFlags = HideFlags.DontSave;
+        arrow.transform.SetParent(arrowRoot.transform, false);
+        arrow.transform.localScale = Vector3.one * arrowSize;
+        SpriteRenderer renderer = arrow.AddComponent<SpriteRenderer>();
+        renderer.sprite = arrowSprite;
+        renderer.color = arrowColor;
+        renderer.sortingOrder = 20;
+        arrow.SetActive(false);
+        arrows.Add(arrow);
+        arrowRenderers.Add(renderer);
     }
 
     // 네 외곽 면 중 가장 긴 타일 수를 조회합니다.
@@ -158,54 +143,6 @@ public class WindPreview : IDisposable
             faceByWind[GridCalculator.Up].Count,
             faceByWind[GridCalculator.Down].Count);
         return Mathf.Max(horizontal, vertical);
-    }
-
-    // 논리 바람 벡터를 실제 보드의 월드 진행 방향으로 변환합니다.
-    private Vector3 ReadDirection(Vector2Int wind)
-    {
-        Vector3 origin = board.CellPointToWorld(Vector2.zero);
-        Vector3 target = board.CellPointToWorld(new Vector2(wind.x, wind.y));
-        return (target - origin).normalized;
-    }
-
-    // 모든 화살표가 공유하는 단순한 위쪽 화살표 이미지를 만듭니다.
-    private Sprite CreateSprite()
-    {
-        arrowTexture = new Texture2D(TextureSize, TextureSize, TextureFormat.RGBA32, false);
-        arrowTexture.hideFlags = HideFlags.DontSave;
-        arrowTexture.filterMode = FilterMode.Point;
-        arrowTexture.wrapMode = TextureWrapMode.Clamp;
-
-        Color[] pixels = new Color[TextureSize * TextureSize];
-        for (int row = 0; row < TextureSize; row++)
-        {
-            for (int column = 0; column < TextureSize; column++)
-            {
-                pixels[row * TextureSize + column] = ReadPixel(column, row);
-            }
-        }
-
-        arrowTexture.SetPixels(pixels);
-        arrowTexture.Apply();
-        Rect rect = new Rect(0f, 0f, TextureSize, TextureSize);
-        Sprite sprite = Sprite.Create(arrowTexture, rect, new Vector2(0.5f, 0.5f), TextureSize);
-        sprite.hideFlags = HideFlags.DontSave;
-        return sprite;
-    }
-
-    // 한 픽셀이 화살표 몸통이나 머리 안에 있는지 계산합니다.
-    private static Color ReadPixel(int column, int row)
-    {
-        bool shaft = column >= 13 && column <= 18 && row >= 3 && row <= 19;
-        int halfWidth = 29 - row;
-        bool headRow = row >= 15 && row <= 29;
-        bool head = headRow && Mathf.Abs(column - 16) <= halfWidth;
-        if (shaft || head)
-        {
-            return Color.white;
-        }
-
-        return Color.clear;
     }
 
     // Play Mode와 Editor 검사 환경에 맞게 생성 오브젝트를 제거합니다.
