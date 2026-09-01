@@ -13,6 +13,11 @@ public static class PanelPopIn
     private const float StartOffsetY = -24f;
 
     private static readonly Dictionary<RectTransform, CancellationTokenSource> playing = new();
+    // 재생 중 취소되면(연타) 그 순간의 스케일/위치가 남는데, EaseOutBack은 목표를 살짝 넘어섰다
+    // (오버슈트) 돌아오는 곡선이라 취소 시점의 값이 원래 쉬는 값보다 커져 있을 수 있다. 그 값을
+    // 다음 호출이 다시 "쉬는 값"으로 읽어버리면 연타할 때마다 조금씩 부풀어 폭주한다 - 그래서 같은
+    // 연속 재생 구간(취소→재시작) 동안은 맨 처음 값만 쓰고 새로 읽지 않는다.
+    private static readonly Dictionary<RectTransform, (Vector3 scale, Vector2 pos)> rest = new();
 
     public static void Play(RectTransform panel)
     {
@@ -21,17 +26,19 @@ public static class PanelPopIn
             prev.Cancel();
             prev.Dispose();
         }
+        else
+        {
+            rest[panel] = (panel.localScale, panel.anchoredPosition);
+        }
 
         var cts = new CancellationTokenSource();
         playing[panel] = cts;
-        PlayAsync(panel, cts.Token).Forget();
+        var (restScale, restPos) = rest[panel];
+        PlayAsync(panel, restScale, restPos, cts.Token).Forget();
     }
 
-    private static async UniTaskVoid PlayAsync(RectTransform panel, CancellationToken token)
+    private static async UniTaskVoid PlayAsync(RectTransform panel, Vector3 restScale, Vector2 restPos, CancellationToken token)
     {
-        Vector3 restScale = panel.localScale;
-        Vector2 restPos = panel.anchoredPosition;
-
         try
         {
             float elapsed = 0f;
@@ -52,6 +59,7 @@ public static class PanelPopIn
         panel.localScale = restScale;
         panel.anchoredPosition = restPos;
         playing.Remove(panel);
+        rest.Remove(panel);
     }
 
     // 가이드 패널과 같은 살짝 튀어오르는(오버슈트) 감속 곡선.

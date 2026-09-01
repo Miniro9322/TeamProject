@@ -22,7 +22,18 @@ public class EnemyInfo : MonoBehaviour
     public TMP_Text e_SkillNameText; 
     public TMP_Text e_SkillDescText;
     public Button leftArrowButton;     
-    public Button rightArrowButton;    
+    public Button rightArrowButton;
+    [SerializeField] private Image border;  // 등급 색 테두리 (뒤)
+
+    [Header("등급별 테두리 색")]
+    [SerializeField] private Color normalColor = new Color(0.7f, 0.7f, 0.7f);
+    [SerializeField] private Color eliteColor = new Color(0.95f, 0.75f, 0.2f);
+    [SerializeField] private Color bossColor = new Color(0.9f, 0.2f, 0.2f);
+
+    [Header("미해금 처리")]
+    [Tooltip("체크 시 미해금 적은 등급 색 대신 회색 테두리(등급 스포일러 방지)")]
+    [SerializeField] private bool grayWhenLocked = true;
+    [SerializeField] private Color lockedColor = new Color(0.3f, 0.3f, 0.3f);
 
     [Header("미해금(아직 못 만난 적) 표시")]
     public string lockedName = "???";
@@ -201,6 +212,11 @@ public class EnemyInfo : MonoBehaviour
             e_Image.sprite = Resources.Load<Sprite>($"EnemyIcons/{data.Name}");
             e_Image.enabled = e_Image.sprite != null;
         }
+
+        bool unlocked = EnemyArchiveData.IsUnlocked(data.Name);
+
+        if (border != null)
+            border.color = (!unlocked && grayWhenLocked) ? lockedColor : ClassColor(data.Class);
         page = 0;
         Show();
     }
@@ -405,5 +421,18 @@ public class EnemyInfo : MonoBehaviour
     private static void SetActive(Button b, bool on)
     {
         if (b != null) b.gameObject.SetActive(on);
+    }
+
+    private Color ClassColor(string cls)
+    {
+        if (Enum.TryParse(cls, true, out EnemyClass c))
+        {
+            switch (c)
+            {
+                case EnemyClass.Boss: return bossColor;
+                case EnemyClass.Elite: return eliteColor;
+            }
+        }
+        return normalColor;   // Normal 또는 파싱 실패
     }
 }

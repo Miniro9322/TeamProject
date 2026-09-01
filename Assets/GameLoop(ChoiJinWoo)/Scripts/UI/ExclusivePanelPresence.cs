@@ -7,8 +7,13 @@ public class ExclusivePanelPresence : MonoBehaviour, IExclusiveUiPanel
 {
     private void OnEnable() => ExclusiveUiCoordinator.NotifyOpened(this);
     private void OnDisable() => ExclusiveUiCoordinator.NotifyClosed(this);
+
+    // 붙은 오브젝트에 PanelReveal도 있으면(예: QuitAlert) 그 축소 연출로, 없으면 예전처럼
+    // SetActive로 닫는다.
     public void RequestClose()
     {
-        gameObject.SetActive(false);
+        PanelReveal reveal = GetComponent<PanelReveal>();
+        if (reveal != null) reveal.Hide();
+        else gameObject.SetActive(false);
     }
 }

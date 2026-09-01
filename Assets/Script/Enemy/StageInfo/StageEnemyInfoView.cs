@@ -128,12 +128,22 @@ public class StageEnemyInfoView : MonoBehaviour
         // LateUpdate 하나로는 부족하다 — ScrollRect와 이 스크립트의 LateUpdate 순서는 보장되지 않아
         // 우리 쪽이 먼저 돌면 그 프레임의 밀림이 한 번 그려진다. 위치가 바뀌는 즉시 잘라 준다.
         if (scroll != null) scroll.onValueChanged.AddListener(OnScrollMoved);
+        // ESC로 닫기 — 다른 패널들과 같은 공용 신호(GlobalUiInputSignals)를 쓴다.
+        GlobalUiInputSignals.EscapePerformed += HandleEscape;
     }
 
     void OnDisable()
     {
         LocalizeTextManager.OnLanguageChanged -= Relocalize;
         if (scroll != null) scroll.onValueChanged.RemoveListener(OnScrollMoved);
+        GlobalUiInputSignals.EscapePerformed -= HandleEscape;
+    }
+
+    // 튜토리얼이 강제 진행 중일 땐 다른 패널들과 마찬가지로 ESC로 못 닫게 막는다.
+    private void HandleEscape()
+    {
+        if (TutorialInputGate.BlockEscapeClose) return;
+        Hide();
     }
 
     private void OnScrollMoved(Vector2 _) => ClampContentPosition();

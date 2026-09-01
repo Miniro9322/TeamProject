@@ -19,6 +19,9 @@ public class DayNightButton : MonoBehaviour
     private EnviromentManager enviromentManager;
     private InputAction nightKeyAction;
     private bool canToggle = true;
+    // 씬 로딩 중 게임을 끄면 Start가 끝나기 전에 OnDestroy가 불릴 수 있어, 이때 아래 필드들이
+    // 아직 null이라 OnDestroy가 터진다. 이 플래그로 Start 완료 여부를 확인하고 조기 종료한다.
+    private bool started;
 
     // Quaternion.Slerp은 180도 회전에서 어느 쪽으로 돌지가 애매해서(부동소수점에 따라 달라짐),
     // 방향을 확실히 통제하려고 각도를 직접 실수로 누적한다(래핑 없이 계속 더함).
@@ -43,6 +46,8 @@ public class DayNightButton : MonoBehaviour
         nightKeyAction = new InputAction("NightToggle", binding: Keyboard.current[nightKey].path);
         nightKeyAction.performed += OnNightKeyPerformed;
         nightKeyAction.Enable();
+
+        started = true;
     }
 
     private void OnNightKeyPerformed(InputAction.CallbackContext context)
@@ -125,6 +130,11 @@ public class DayNightButton : MonoBehaviour
     // 버튼 입력과 낮 전환 이벤트 연결을 해제한다.
     private void OnDestroy()
     {
+        if (!started)
+        {
+            return;
+        }
+
         button.onClick.RemoveAllListeners();
         gameManager.ChangeToDay -= OnDayStart;
         enviromentManager.OnDay -= FinishDay;

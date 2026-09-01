@@ -26,6 +26,7 @@ public class UiManager : MonoBehaviour
     // GameSpeedMention 스텝의 waypoint target을 런타임에 이 값으로 채워 넣는 데 쓴다.
     public RectTransform GameSpeedUiRect => gameSpeedUiRect;
     [SerializeField] private GameObject menuPanel;
+    private PanelReveal menuPanelReveal;
     [SerializeField] private GameObject guidePanel;
     private PanelReveal guidePanelReveal;
     [SerializeField] private TextMeshProUGUI dayText;
@@ -59,6 +60,7 @@ public class UiManager : MonoBehaviour
     {
         gameSpeedUiComponent = gameSpeedUi.GetComponent<GameSpeedUI>();
         gameSpeedUiRect = gameSpeedUi.GetComponent<RectTransform>();
+        menuPanelReveal = menuPanel.GetComponent<PanelReveal>();
         guidePanelReveal = guidePanel.GetComponent<PanelReveal>();
 
         requestSupportUi.gameObject.SetActive(false);
@@ -92,9 +94,9 @@ public class UiManager : MonoBehaviour
         if (TutorialInputGate.BlockEscapeClose) return;
 
         if (menuPanel.activeSelf)
-            menuPanel.SetActive(false);
+            CloseMenuPanel();
         else if (!hadEscapeCloseTargetLastFrame) // ESC로 닫거나 취소할 다른 게 있으면 그것부터 - 메뉴는 안 연다
-            menuPanel.SetActive(true);
+            ShowMenuPanel();
     }
 
     private void OnGuideOpenPerformed(InputAction.CallbackContext context)
@@ -115,7 +117,8 @@ public class UiManager : MonoBehaviour
             || guidePanel.activeInHierarchy
             || (addCitizen != null && addCitizen.gameObject.activeInHierarchy)
             || (buildModePanel != null && buildModePanel.HasEscapeCancelable)
-            || (EnemyArchiveManager.Instance != null && EnemyArchiveManager.Instance.IsOpen);
+            || (EnemyArchiveManager.Instance != null && EnemyArchiveManager.Instance.IsOpen)
+            || SpawnerManager.IsStageInfoOpen;
     }
 
     public void ToggleGameSpeedUi(bool value)
@@ -162,10 +165,25 @@ public class UiManager : MonoBehaviour
         // 튜토리얼이 영웅 배치 대기 중일 땐 이 패널이 맵을 덮어 배치를 끝낼 수 없게 된다 - TutorialInputGate.cs 참고.
         if (TutorialInputGate.BlockPanelOpen) return;
 
-        if(menuPanel.activeSelf == false)
-            menuPanel.SetActive(true);
+        if (menuPanel.activeSelf == false)
+            ShowMenuPanel();
         else
-            menuPanel.SetActive(false);
+            CloseMenuPanel();
+    }
+
+    // PanelReveal.Hide()는 닫으면서 스케일을 0으로 남겨둔다 - 다음에 SetActive(true)로만 열면
+    // 확대 연출 없이 스케일 0인 채로 보이지 않게 뜬다. 그래서 열고 닫는 모든 경로가 SetActive 대신
+    // 이 두 함수(Show/Hide)만 거치게 한다 - PanelReveal.cs 상단 주석과 같은 이유.
+    private void ShowMenuPanel()
+    {
+        if (menuPanelReveal == null) { menuPanel.SetActive(true); return; }
+        menuPanelReveal.Show();
+    }
+
+    private void CloseMenuPanel()
+    {
+        if (menuPanelReveal == null) { menuPanel.SetActive(false); return; }
+        menuPanelReveal.Hide();
     }
 
     public void OpenGuide()

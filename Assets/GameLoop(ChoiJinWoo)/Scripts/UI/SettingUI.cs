@@ -6,7 +6,7 @@ using UnityEngine;
 using UnityEngine.Audio;
 using UnityEngine.UI;
 
-public class SettingUI : MonoBehaviour
+public class SettingUI : MonoBehaviour, IExclusiveUiPanel
 {
     [SerializeField] private TMP_Dropdown screenMode;
     [SerializeField] private AudioMixer gameAudioMixer;
@@ -41,15 +41,24 @@ public class SettingUI : MonoBehaviour
 
     [SerializeField] private RectTransform openButton; // 설정 패널을 여는 버튼 - alsoSelf로 넘겨야 열려있을 때 눌러도 꺼졌다 켜지는 깜빡임이 안 생긴다
     private ClickOutsideCloser outsideCloser;
+    // 타이틀 화면처럼 단독으로 쓰일 때는 이 패널 자신에 PanelReveal이 붙어 있을 수 있다 - MenuUI에
+    // 담겨 있을 때는 부모 쪽 PanelReveal이 대신 책임지므로 이건 null인 채로 둔다.
+    private PanelReveal panelReveal;
 
     private void Awake()
     {
         outsideCloser = new ClickOutsideCloser((RectTransform)transform, openButton);
+        panelReveal = GetComponent<PanelReveal>();
     }
 
     private void OnEnable()
     {
         outsideCloser.MarkOpened();
+        // MenuUI에 담겨 있을 때(Closed 구독자가 있을 때)는 등록하지 않는다 - 이미 부모(MenuUI)가
+        // ExclusiveUiCoordinator에 등록돼 있는데 자식인 자신까지 등록하면, 메뉴가 열리자마자
+        // "다른 패널이 열렸다"는 신호로 자기 자신(=부모)을 즉시 닫아버린다. 타이틀 화면처럼
+        // 단독으로 쓰일 때만(구독자 없음) 참여한다.
+        if (Closed == null) ExclusiveUiCoordinator.NotifyOpened(this);
         GlobalUiInputSignals.ClickPerformed += HandleCloseCheck;
         GlobalUiInputSignals.EscapePerformed += HandleCloseCheck;
 
@@ -115,6 +124,7 @@ public class SettingUI : MonoBehaviour
 
     private void OnDisable()
     {
+        if (Closed == null) ExclusiveUiCoordinator.NotifyClosed(this);
         GlobalUiInputSignals.ClickPerformed -= HandleCloseCheck;
         GlobalUiInputSignals.EscapePerformed -= HandleCloseCheck;
 
@@ -142,14 +152,31 @@ public class SettingUI : MonoBehaviour
     // 열린 채로 남아 텅 빈 화면이 되는 걸 막을 수 있게 닫힘을 알린다(구독하지 않으면 원래처럼 이 패널만 닫힘).
     public event System.Action Closed;
 
+    // ExclusiveUiCoordinator가 다른 배타 패널이 열렸을 때 이 패널을 닫으라고 부르는 창구.
+    public void RequestClose() => OnClose();
+
     public void OnClose()
     {
-        gameObject.SetActive(false);
+        // 구독자(MenuUI)가 있으면 그쪽이 PanelReveal로 축소 연출까지 책임지고 닫는다 - 여기서 먼저
+        // 꺼버리면 상위 패널이 줄어들기도 전에 내용물만 뚝 사라져 버린다. 구독자가 없는 단독
+        // 사용(타이틀 화면 등)일 때만 스스로 닫는데, 이때는 자기 PanelReveal이 있으면 그 축소
+        // 연출로, 없으면 예전처럼 SetActive로 닫는다.
+        if (Closed == null)
+        {
+            if (panelReveal != null) panelReveal.Hide();
+            else gameObject.SetActive(false);
+        }
         Closed?.Invoke();
     }
 
     private void HandleCloseCheck()
     {
+        // MenuUI처럼 이 패널을 내용물로 품고 있는 상위 패널이 있으면(Closed 구독자가 있으면),
+        // 바깥 클릭/ESC 판단은 그쪽에 전담시킨다 - 이 패널의 openButton은 단독 사용 시에만
+        // 인스펙터에 꽂아주는 값이라 프리팹에서 비어 있는 경우가 많다. 그 상태로 여기서 또
+        // 판정하면 메뉴를 여는 아이콘 클릭조차 "바깥 클릭"으로 오판해, 상위 패널의 정상적인
+        // 토글과 따로 또 닫힘을 시도하며 서로 경합한다(연타 시 열림/닫힘이 꼬이는 원인).
+        if (Closed != null) return;
         if (outsideCloser.ShouldClose())
         {
             OnClose();

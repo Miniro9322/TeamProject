@@ -52,6 +52,13 @@ public class SpawnerManager : MonoBehaviour
             return instance;
         }
     }
+
+    // UiManager가 ESC로 메뉴를 열지 판단할 때 쓴다(HasEscapeCloseTarget) - 이 패널이 떠 있는 채로
+    // ESC를 누르면 패널만 닫혀야지 메뉴까지 같이 열리면 안 된다. Instance 프로퍼티를 쓰지 않는 이유는
+    // 그쪽은 null이면 빈 GameObject를 새로 만들어버려서, 스포너가 없는 씬에서 매 프레임 이 체크만으로
+    // 유령 SpawnerManager가 생기는 부작용이 생기기 때문이다.
+    public static bool IsStageInfoOpen =>
+        instance != null && instance.stageInfoPanel != null && instance.stageInfoPanel.gameObject.activeSelf;
     private bool changeCheck;
 
     void Awake()
