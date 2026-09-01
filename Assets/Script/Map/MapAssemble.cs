@@ -155,8 +155,8 @@ public class MapAssemble : MonoBehaviour
         };
         foreach(PathTrail trail in pathTrails)
         {
-            mapGame.Rule.ChangeToDay += trail.PlayLoop;
-            mapGame.Rule.ChangeToNight += trail.PlayOnce;
+            mapGame.EnviromentManager.OnDay += trail.PlayLoop;
+            mapGame.EnviromentManager.OnNight += trail.PlayOnce;
         }
 
         mapGame.Rule.ChangeToDay += OnDayChanged;
@@ -235,8 +235,8 @@ public class MapAssemble : MonoBehaviour
         {
             foreach (PathTrail trail in pathTrails)
             {
-                mapGame.Rule.ChangeToDay -= trail.PlayLoop;
-                mapGame.Rule.ChangeToNight -= trail.PlayOnce;
+                mapGame.EnviromentManager.OnDay -= trail.PlayLoop;
+                mapGame.EnviromentManager.OnNight -= trail.PlayOnce;
             }
         }
     }

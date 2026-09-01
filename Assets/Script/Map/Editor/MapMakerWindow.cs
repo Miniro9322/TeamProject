@@ -18,7 +18,9 @@ using UnityEngine;
 /// </summary>
 public class MapMakerWindow : EditorWindow
 {
-    private const int LeftWidth = 104;
+    private const float MinLeftWidth = 90f;
+    private const float MaxLeftWidth = 260f;
+    private float _leftWidth = 104f;
     private const int RightWidth = 128;
     private const int MinCell = 14;
     private const int MaxCell = 72;
@@ -26,9 +28,8 @@ public class MapMakerWindow : EditorWindow
     /// <summary>격자 위아래로 도구 줄·예고줄·상태줄이 늘 차지하는 높이 — 창에 맞출 때 이만큼 빼고 잰다.</summary>
     private const float ChromeHeight = 150f;
 
-    // 손잡이로 끄는 선반 높이의 위아래 한계.
+    // 손잡이로 끄는 선반 높이의 아래 한계. 위 한계는 창 높이가 그때그때 달라 MaxShelfNow()가 잰다.
     private const float MinShelf = 60f;
-    private const float MaxShelf = 480f;
 
     /// <summary>선반의 탭. 셋 다 저작 중 계속 보고 싶은 것이라 접이식으로 자리를 나눠 쓴다.</summary>
     private enum ShelfTab
@@ -55,6 +56,9 @@ public class MapMakerWindow : EditorWindow
     private bool _shelfOpen = true;
     private float _shelfHeight = 168f;
     private bool _shelfDragging;
+    private bool _leftWidthDragging;
+    private Vector2 _terrainScroll;
+    private Vector2 _placeScroll;
     private Vector2 _shelfScroll;
     private MapTool _tool = MapTool.Select;
     // 지금 창에서 보고 고치는 일차. 0 = 공통.
@@ -224,37 +228,19 @@ public class MapMakerWindow : EditorWindow
             overrides = TileOverride.Collect(cells);
         }
 
-        // 좁아지면 판을 하나씩 격자 아래로 내린다 — 격자는 마지막까지 자르지 않는다.
+        // 지금 칸 크기로 곁판 둘 + 격자가 한 줄에 안 들어가면 칸 크기만 줄인다 — 곁판 자리는 절대 안 바꾼다.
         float gridWidth = view.PixelWidth(_cellPixels);
-        bool roomForLeft = position.width >= LeftWidth + gridWidth + 28;
-        bool roomForBoth = position.width >= LeftWidth + gridWidth + RightWidth + 28;
-
-        using (new EditorGUILayout.HorizontalScope())
+        if (position.width < _leftWidth + gridWidth + RightWidth + 28)
         {
-            if (roomForLeft)
-            {
-                DrawTerrainPanel(module, cells);
-            }
-
-            DrawGridArea(view, cells, lanes, overrides, campfireData, windwallShape);
-
-            if (roomForBoth)
-            {
-                DrawPlacePanel(cells);
-            }
+            _cellPixels = FitCell();
         }
 
         using (new EditorGUILayout.HorizontalScope())
         {
-            if (!roomForLeft)
-            {
-                DrawTerrainPanel(module, cells);
-            }
-
-            if (!roomForBoth)
-            {
-                DrawPlacePanel(cells);
-            }
+            DrawTerrainPanel(module, cells);
+            DrawLeftGrip();
+            DrawGridArea(view, cells, lanes, overrides, campfireData, windwallShape);
+            DrawPlacePanel(cells);
         }
 
         List<string> problems = TileAuthorRule.FindProblems(cells, lanes, tiles.Count, _day);
@@ -262,10 +248,10 @@ public class MapMakerWindow : EditorWindow
 
         int overrideCount = overrides?.Count ?? 0;
         DrawActionPreview(module, cells);
-        DrawStatusBar(cells, view, lanes, problems.Count, overrideCount);
         DrawMarkerLegend(overrideCount);
         DrawBrushNote();
         DrawShelf(module, lanes, routes, problems, waveGroups);
+        DrawStatusBar(cells, view, lanes, problems.Count, overrideCount);
     }
 
     /// <summary>
@@ -412,7 +398,7 @@ public class MapMakerWindow : EditorWindow
     // 격자가 창에 통째로 들어오는 가장 큰 칸 크기. 곁판 두 장과 위아래 줄이 차지하는 자리를 빼고 잰다.
     private int FitCell()
     {
-        float wide = position.width - LeftWidth - RightWidth - TileGridView.Pad - 34f;
+        float wide = position.width - _leftWidth - RightWidth - TileGridView.Pad - 34f;
         float tall = position.height - ChromeHeight - ShelfSpace() - TileGridView.Pad;
 
         int byWidth = Mathf.FloorToInt(wide / _cols);
@@ -430,6 +416,12 @@ public class MapMakerWindow : EditorWindow
         }
 
         return 24f;
+    }
+
+    // 지금 창 높이에서 선반이 가질 수 있는 최대 높이. 창을 키우면 선반도 더 커질 수 있다.
+    private float MaxShelfNow()
+    {
+        return Mathf.Max(MinShelf, position.height - ChromeHeight);
     }
 
     // 지금 어느 스폰의 경로를 고치는 중인가. 대상 없이 찍으면 아무 일도 안 일어나므로 늘 띄운다.
@@ -628,8 +620,12 @@ public class MapMakerWindow : EditorWindow
 
     private void DrawTerrainPanel(Grid module, Dictionary<Vector2Int, Tile> cells)
     {
-        using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox, GUILayout.Width(LeftWidth)))
+        float gridHeight = TileGridView.Pad + _rows * _cellPixels + 6f;
+
+        using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox, GUILayout.Width(_leftWidth)))
+        using (var scroll = new EditorGUILayout.ScrollViewScope(_terrainScroll, GUILayout.Height(gridHeight)))
         {
+            _terrainScroll = scroll.scrollPosition;
             GUILayout.Label("지형", EditorStyles.miniBoldLabel);
             TerrainRow(cells, MapBrush.Ground, "지상", TerrainType.Ground);
             TerrainRow(cells, MapBrush.High, "고지", TerrainType.High);
@@ -661,7 +657,7 @@ public class MapMakerWindow : EditorWindow
             GUILayout.Space(6);
             BrushRow(MapBrush.None, "읽기만", MapMakerPalette.Panel, cells.Count);
 
-            GUILayout.FlexibleSpace();
+            GUILayout.Space(6);
             GUILayout.Label("Alt+클릭 = 끄기", EditorStyles.miniLabel);
         }
     }
@@ -671,12 +667,46 @@ public class MapMakerWindow : EditorWindow
         BrushRow(brush, label, MapMakerPalette.Terrain(terrain), TileTally.CountTerrain(cells, terrain));
     }
 
+    // 왼쪽 패널 너비 손잡이. 좌우로 끌면 패널 너비가 늘거나 줄어 격자와 자리를 나눠 갖는다.
+    private void DrawLeftGrip()
+    {
+        const float band = 9f;
+        Rect handle = GUILayoutUtility.GetRect(band, 0f, GUILayout.ExpandHeight(true));
+        var bar = new Rect(handle.x + (band - 5f) / 2f, handle.y, 5f, handle.height);
+        EditorGUI.DrawRect(bar, new Color(0f, 0f, 0f, 0.35f));
+        EditorGUIUtility.AddCursorRect(handle, MouseCursor.ResizeHorizontal);
+
+        Event input = Event.current;
+
+        if (input.type == EventType.MouseDown && handle.Contains(input.mousePosition))
+        {
+            _leftWidthDragging = true;
+            input.Use();
+        }
+
+        if (input.type == EventType.MouseUp)
+        {
+            _leftWidthDragging = false;
+        }
+
+        if (_leftWidthDragging && input.type == EventType.MouseDrag)
+        {
+            _leftWidth = Mathf.Clamp(_leftWidth + input.delta.x, MinLeftWidth, MaxLeftWidth);
+            input.Use();
+            Relayout();
+        }
+    }
+
     // ---- 오른쪽: 배치 허용(작은 분류)과 집계 ----
 
     private void DrawPlacePanel(Dictionary<Vector2Int, Tile> cells)
     {
+        float gridHeight = TileGridView.Pad + _rows * _cellPixels + 6f;
+
         using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox, GUILayout.Width(RightWidth)))
+        using (var scroll = new EditorGUILayout.ScrollViewScope(_placeScroll, GUILayout.Height(gridHeight)))
         {
+            _placeScroll = scroll.scrollPosition;
             GUILayout.Label("배치", EditorStyles.miniBoldLabel);
             BrushRow(MapBrush.Melee, "근접", MapMakerPalette.Mark, TileTally.CountFlag(cells, MapBrush.Melee));
             BrushRow(MapBrush.Ranged, "원거리", MapMakerPalette.Mark, TileTally.CountFlag(cells, MapBrush.Ranged));
@@ -1207,6 +1237,11 @@ public class MapMakerWindow : EditorWindow
     // 누른 순간 되돌리기 그룹을 열고, 끄는 동안 지나간 칸을 찍고, 뗄 때 한 단계로 접는다.
     private void HandleStroke(Rect area, TileGridView view, Dictionary<Vector2Int, Tile> cells)
     {
+        if (_shelfDragging)
+        {
+            return; // 선반 손잡이를 끄는 중이면 마우스가 격자 안으로 들어와도 칠하지 않는다.
+        }
+
         if (MapToolWord.Writes(_tool) && _brush == MapBrush.None && _tool != MapTool.Erase)
         {
             return; // 칠할 것을 안 골랐다 — 지우기는 팔레트가 필요 없어 예외다
@@ -1731,7 +1766,7 @@ public class MapMakerWindow : EditorWindow
             return;
         }
 
-        using (var view = new EditorGUILayout.ScrollViewScope(_shelfScroll, GUILayout.MaxHeight(_shelfHeight)))
+        using (var view = new EditorGUILayout.ScrollViewScope(_shelfScroll, GUILayout.Height(_shelfHeight)))
         {
             _shelfScroll = view.scrollPosition;
 
@@ -1812,7 +1847,8 @@ public class MapMakerWindow : EditorWindow
 
         if (_shelfDragging && input.type == EventType.MouseDrag)
         {
-            _shelfHeight = Mathf.Clamp(_shelfHeight - input.delta.y, MinShelf, MaxShelf);
+            _shelfHeight = Mathf.Clamp(_shelfHeight - input.delta.y, MinShelf, MaxShelfNow());
+            _cellPixels = FitCell();
             input.Use();
             Relayout();
         }
