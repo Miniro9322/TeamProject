@@ -103,32 +103,8 @@ public class ResourcesManager : MonoBehaviour
 
     public void TradeResource(ProductionType type)
     {
-        Debug.Log("trade 호출됨");
-
-        switch (type)
-        {
-            case ProductionType.Wood:
-                special--;
-                wood += tradeAmount;
-                break;
-            case ProductionType.Food:
-                special--;
-                food += tradeAmount;
-                break;
-            case ProductionType.Gold:
-                special--;
-                gold += tradeAmount;
-                break;
-            case ProductionType.Iron:
-                special--;
-                iron += tradeAmount;
-                break;
-            case ProductionType.Stone:
-                special--;
-                stone += tradeAmount;
-                break;
-            default: throw new ArgumentOutOfRangeException(nameof(type), type, null);
-        }
+        special--;
+        Resource(type) += tradeAmount;
 
         ProductUpdate?.Invoke();
     }

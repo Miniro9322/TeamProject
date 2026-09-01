@@ -7,6 +7,18 @@ public class LoadHeldLink : HeldLinkBase
 {
     [SerializeField] private SlotSelectPanel slotSelectPanel;
 
+    protected override void OnEnable()
+    {
+        base.OnEnable();
+        slotSelectPanel.ModeChanged += Refresh;
+    }
+
+    protected override void OnDisable()
+    {
+        base.OnDisable();
+        slotSelectPanel.ModeChanged -= Refresh;
+    }
+
     // 패널이 켜져 있고, 지금 모드가 불러오기인지 함께 확인한다
     protected override bool CheckHeld()
     {

@@ -389,6 +389,7 @@ GameObject:
   - component: {fileID: 6864367231578725445}
   - component: {fileID: 7515253688465141279}
   - component: {fileID: 6840771782198176271}
+  - component: {fileID: 877342435485292463}
   m_Layer: 5
   m_Name: Button
   m_TagString: Untagged
@@ -510,6 +511,21 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+--- !u!114 &877342435485292463
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1260675590080623109}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 736aaa126de92ce48b1e86e7b6f4ec45, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ButtonPressScale
+  hoverScale: 1.05
+  pressScale: 0.95
+  animSpeed: 12
 --- !u!1 &2654864403601831157
 GameObject:
   m_ObjectHideFlags: 0
@@ -522,6 +538,7 @@ GameObject:
   - component: {fileID: 2077118010412738034}
   - component: {fileID: 996982871801839149}
   - component: {fileID: 6809486682437152970}
+  - component: {fileID: 4631727168711812221}
   m_Layer: 5
   m_Name: Button (1)
   m_TagString: Untagged
@@ -643,6 +660,21 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+--- !u!114 &4631727168711812221
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2654864403601831157}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 736aaa126de92ce48b1e86e7b6f4ec45, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ButtonPressScale
+  hoverScale: 1.05
+  pressScale: 0.95
+  animSpeed: 12
 --- !u!1 &3866832072760659899
 GameObject:
   m_ObjectHideFlags: 0

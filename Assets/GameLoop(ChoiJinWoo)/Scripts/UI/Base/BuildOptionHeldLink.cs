@@ -6,6 +6,18 @@ public class BuildOptionHeldLink : HeldLinkBase
     [SerializeField] private FacilityBuildChoicePanel choicePanel;
     [SerializeField] private BuildOptionView optionView;
 
+    protected override void OnEnable()
+    {
+        base.OnEnable();
+        choicePanel.StateChanged += Refresh;
+    }
+
+    protected override void OnDisable()
+    {
+        base.OnDisable();
+        choicePanel.StateChanged -= Refresh;
+    }
+
     // 선택 정보창이 열려있고, 그 대상이 이 아이콘인지로 눌림 여부를 판단한다
     protected override bool CheckHeld()
     {

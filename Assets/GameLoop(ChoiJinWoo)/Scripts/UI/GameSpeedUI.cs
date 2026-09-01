@@ -13,7 +13,8 @@ public class GameSpeedUI : MonoBehaviour
     [SerializeField] private Image twoImage;
     [SerializeField] private Image threeImage;
     private Speed beforeTimeSpeed = Speed.Normal;
-    private Keyboard keyboard;
+    private InputAction timeIncreaseAction;
+    private InputAction timeStopAction;
 
     private Dictionary<Speed, Image> images;
 
@@ -71,7 +72,6 @@ public class GameSpeedUI : MonoBehaviour
 
     private void Awake()
     {
-        keyboard = Keyboard.current;
         images = new()
         {
             { Speed.Zero, zeroImage },
@@ -84,6 +84,12 @@ public class GameSpeedUI : MonoBehaviour
         // 이미 외부에서 속도를 걸어둔 적이 있으면(예: 튜토리얼이 비활성 상태일 때 미리 Zero를 걸어둠)
         // 그 값을 덮어쓰지 않는다.
         if (!initialized) GameSpeed = Speed.Normal;
+
+        timeIncreaseAction = new InputAction("GameSpeedIncrease", binding: Keyboard.current[timeIncreaseKey].path);
+        timeIncreaseAction.performed += OnTimeIncreasePerformed;
+
+        timeStopAction = new InputAction("GameSpeedStop", binding: Keyboard.current[timeStopKey].path);
+        timeStopAction.performed += OnTimeStopPerformed;
     }
 
     // 밤마다 UiManager.ToggleGameSpeedUi(true)로 이 UI가 다시 켜질 때 호출된다. Normal로 강제
@@ -92,47 +98,62 @@ public class GameSpeedUI : MonoBehaviour
     private void OnEnable()
     {
         GameSpeed = gameSpeed;
+        timeIncreaseAction.Enable();
+        timeStopAction.Enable();
     }
 
-    private void Update()
+    private void OnDisable()
     {
-        // gameSpeedGroup(CanvasGroup)의 blocksRaycasts는 EventSystem 레이캐스트(버튼 클릭)에만
-        // 관여하고 여기서 직접 폴링하는 키보드 입력은 막지 못한다 - 다른 단축키 처리부(UiManager,
-        // BuildModePanel, DayNightButton 등)와 동일하게 BlockHotkeys를 직접 체크해야 한다.
-        if (!SpawnerManager.Instance.isDirecting && !TutorialInputGate.BlockHotkeys)
-        {
-            if (keyboard[timeIncreaseKey].wasPressedThisFrame)
-            {
-                if(Time.timeScale < 0.5f)
-                {
-                    GameSpeed = Speed.Half;
-                }
-                else if (Time.timeScale < 1f)
-                {
-                    GameSpeed = Speed.Normal;
-                }
-                else if (Time.timeScale < 2f)
-                {
-                    GameSpeed = Speed.Double;
-                }
-                else if (Time.timeScale < 3f)
-                {
-                    GameSpeed = Speed.Triple;
-                }
-            }
+        timeIncreaseAction.Disable();
+        timeStopAction.Disable();
+    }
 
-            if (keyboard[timeStopKey].wasPressedThisFrame)
-            {
-                if(Time.timeScale > 0f)
-                {
-                    beforeTimeSpeed = GameSpeed;
-                    GameSpeed = Speed.Zero;
-                }
-                else
-                {
-                    GameSpeed = beforeTimeSpeed;
-                }
-            }
+    private void OnDestroy()
+    {
+        timeIncreaseAction.performed -= OnTimeIncreasePerformed;
+        timeIncreaseAction.Dispose();
+
+        timeStopAction.performed -= OnTimeStopPerformed;
+        timeStopAction.Dispose();
+    }
+
+    // gameSpeedGroup(CanvasGroup)의 blocksRaycasts는 EventSystem 레이캐스트(버튼 클릭)에만
+    // 관여하고 InputAction으로 받는 키보드 입력은 막지 못한다 - 다른 단축키 처리부(UiManager,
+    // BuildModePanel, DayNightButton 등)와 동일하게 BlockHotkeys를 직접 체크해야 한다.
+    private void OnTimeIncreasePerformed(InputAction.CallbackContext context)
+    {
+        if (SpawnerManager.Instance.isDirecting || TutorialInputGate.BlockHotkeys) return;
+
+        if (Time.timeScale < 0.5f)
+        {
+            GameSpeed = Speed.Half;
+        }
+        else if (Time.timeScale < 1f)
+        {
+            GameSpeed = Speed.Normal;
+        }
+        else if (Time.timeScale < 2f)
+        {
+            GameSpeed = Speed.Double;
+        }
+        else if (Time.timeScale < 3f)
+        {
+            GameSpeed = Speed.Triple;
+        }
+    }
+
+    private void OnTimeStopPerformed(InputAction.CallbackContext context)
+    {
+        if (SpawnerManager.Instance.isDirecting || TutorialInputGate.BlockHotkeys) return;
+
+        if (Time.timeScale > 0f)
+        {
+            beforeTimeSpeed = GameSpeed;
+            GameSpeed = Speed.Zero;
+        }
+        else
+        {
+            GameSpeed = beforeTimeSpeed;
         }
     }
 

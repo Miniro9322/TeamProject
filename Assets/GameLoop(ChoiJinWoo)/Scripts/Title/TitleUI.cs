@@ -28,6 +28,10 @@ public class TitleUI : MonoBehaviour
 
     private void OnEnable()
     {
+        // Title 씬에는 VContainer 컨테이너가 없어 이 씬의 진입점인 TitleUI가 직접 켠다 - SlotSelectPanel/
+        // DaySelectPanel/LoadOptionPopup/UpgradeUI 등 Title 씬의 패널들이 이 신호를 구독한다.
+        GlobalUiInputSignals.Enable();
+
         escapeAction = new InputAction("Escape", binding: "<Keyboard>/escape");
         escapeAction.performed += OnEscapePerformed;
         escapeAction.Enable();
@@ -35,6 +39,8 @@ public class TitleUI : MonoBehaviour
 
     private void OnDisable()
     {
+        GlobalUiInputSignals.Disable();
+
         escapeAction.performed -= OnEscapePerformed;
         escapeAction.Disable();
         escapeAction.Dispose();

@@ -17,7 +17,7 @@ public class DayNightButton : MonoBehaviour
     private static readonly int DownHash = Animator.StringToHash("DayDown");
     private GameManager gameManager;
     private EnviromentManager enviromentManager;
-    private Keyboard keyboard;
+    private InputAction nightKeyAction;
     private bool canToggle = true;
 
     // Quaternion.Slerp은 180도 회전에서 어느 쪽으로 돌지가 애매해서(부동소수점에 따라 달라짐),
@@ -34,12 +34,20 @@ public class DayNightButton : MonoBehaviour
     // 버튼 입력과 낮 전환 이벤트를 연결한다.
     private void Start()
     {
-        keyboard = Keyboard.current;
         button.onClick.AddListener(OnButton);
         icon.transform.rotation = Quaternion.identity;
         gameManager.ChangeToDay += OnDayStart;
         enviromentManager.OnDay += FinishDay;
         dayText.text = $"Day {gameManager.DayCount}";
+
+        nightKeyAction = new InputAction("NightToggle", binding: Keyboard.current[nightKey].path);
+        nightKeyAction.performed += OnNightKeyPerformed;
+        nightKeyAction.Enable();
+    }
+
+    private void OnNightKeyPerformed(InputAction.CallbackContext context)
+    {
+        if (!TutorialInputGate.BlockHotkeys) OnButton();
     }
 
     // 밤 전환 요청이 가능한지 확인하고 전환 실행부를 호출한다.
@@ -82,14 +90,6 @@ public class DayNightButton : MonoBehaviour
         canToggle = true;
     }
 
-    private void Update()
-    {
-        if (keyboard == null) return;
-
-        if (keyboard[nightKey].wasPressedThisFrame && !TutorialInputGate.BlockHotkeys)
-            OnButton();
-    }
-
     private async UniTaskVoid RotateIconBy(float deltaZ, Action onComplete)
     {
         if (icon == null)
@@ -128,6 +128,10 @@ public class DayNightButton : MonoBehaviour
         button.onClick.RemoveAllListeners();
         gameManager.ChangeToDay -= OnDayStart;
         enviromentManager.OnDay -= FinishDay;
+
+        nightKeyAction.performed -= OnNightKeyPerformed;
+        nightKeyAction.Disable();
+        nightKeyAction.Dispose();
     }
 
     // 버튼을 내린 밤 모습으로 맞추고 버튼·N키 입력을 잠근다

@@ -3050,6 +3050,7 @@ GameObject:
   - component: {fileID: 6193214059681561412}
   - component: {fileID: 6717092311960893622}
   - component: {fileID: 5048575693900673033}
+  - component: {fileID: 1652003629573333314}
   m_Layer: 0
   m_Name: Button (3)
   m_TagString: Untagged
@@ -3185,6 +3186,21 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ButtonSfx
   buttonHoverSFX: UI_Hover
   buttonClickSFX: UI_Click
+--- !u!114 &1652003629573333314
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2174981922287308125}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 736aaa126de92ce48b1e86e7b6f4ec45, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ButtonPressScale
+  hoverScale: 1.05
+  pressScale: 0.95
+  animSpeed: 12
 --- !u!1 &2279680538535078880
 GameObject:
   m_ObjectHideFlags: 0
@@ -3491,6 +3507,7 @@ GameObject:
   - component: {fileID: 3368339390432738976}
   - component: {fileID: 2345372463277168263}
   - component: {fileID: 3710103900468454607}
+  - component: {fileID: 8669851833198308573}
   m_Layer: 0
   m_Name: Button (2)
   m_TagString: Untagged
@@ -3626,6 +3643,21 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ButtonSfx
   buttonHoverSFX: UI_Hover
   buttonClickSFX: UI_Click
+--- !u!114 &8669851833198308573
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2574325143399539180}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 736aaa126de92ce48b1e86e7b6f4ec45, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ButtonPressScale
+  hoverScale: 1.05
+  pressScale: 0.95
+  animSpeed: 12
 --- !u!1 &2589965505607837536
 GameObject:
   m_ObjectHideFlags: 0
@@ -5750,7 +5782,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 34.8
+  m_fontSize: 35.75
   m_fontSizeBase: 35
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -5958,6 +5990,7 @@ GameObject:
   - component: {fileID: 1245959730609257830}
   - component: {fileID: 5242159340698826956}
   - component: {fileID: 1393057567437386496}
+  - component: {fileID: 5683196589310852082}
   m_Layer: 0
   m_Name: Button (4)
   m_TagString: Untagged
@@ -6093,6 +6126,21 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ButtonSfx
   buttonHoverSFX: UI_Hover
   buttonClickSFX: UI_Click
+--- !u!114 &5683196589310852082
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4112756035378921958}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 736aaa126de92ce48b1e86e7b6f4ec45, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ButtonPressScale
+  hoverScale: 1.05
+  pressScale: 0.95
+  animSpeed: 12
 --- !u!1 &4129258506464069395
 GameObject:
   m_ObjectHideFlags: 0
@@ -7357,7 +7405,6 @@ MonoBehaviour:
   guidePanel: {fileID: 160453949829669109}
   dayText: {fileID: 7064791100379881527}
   upgradeResourceText: {fileID: 8282940506583827184}
-  MenuKey: 60
   guideOpenKey: 21
   UnlockedHero: 0
   UnlockedEnemy: 0
@@ -9468,6 +9515,7 @@ GameObject:
   - component: {fileID: 9198692089833760895}
   - component: {fileID: 1976142740670243530}
   - component: {fileID: 6952341956764663950}
+  - component: {fileID: 7158502824741195675}
   m_Layer: 0
   m_Name: MenuPanel
   m_TagString: Untagged
@@ -9519,6 +9567,19 @@ MonoBehaviour:
   settingPanel: {fileID: 7144098946104970659}
   QuitAlert: {fileID: 5087316412054592366}
   openButton: {fileID: 5346842524932548997}
+--- !u!114 &7158502824741195675
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5812174557841294094}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dd28c4146faf6c7439ceb445b2e98df0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PanelReveal
+  scaleSpeed: 5
 --- !u!1 &5852267381952392514
 GameObject:
   m_ObjectHideFlags: 0
@@ -16736,7 +16797,10 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 7860301527596727159, guid: b9d9c332b4774af48a77d69973713a34, type: 3}
       insertIndex: -1
       addedObject: {fileID: 3549827144311423647}
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 1727203576463771753, guid: b9d9c332b4774af48a77d69973713a34, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 6557431619191387548}
   m_SourcePrefab: {fileID: 100100000, guid: b9d9c332b4774af48a77d69973713a34, type: 3}
 --- !u!224 &932411953143053633 stripped
 RectTransform:
@@ -16754,6 +16818,26 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2ca28aca306549242b520a4a68a372ec, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SettingUI
+--- !u!1 &8511156424890371679 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 1727203576463771753, guid: b9d9c332b4774af48a77d69973713a34, type: 3}
+  m_PrefabInstance: {fileID: 7054309565994075702}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &6557431619191387548
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8511156424890371679}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 736aaa126de92ce48b1e86e7b6f4ec45, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ButtonPressScale
+  hoverScale: 1.05
+  pressScale: 0.95
+  animSpeed: 12
 --- !u!1001 &7240094328454001467
 PrefabInstance:
   m_ObjectHideFlags: 0

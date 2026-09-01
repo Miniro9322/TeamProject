@@ -35,6 +35,11 @@ public class FacilityBuildChoicePanel : MonoBehaviour, IClosablePanel
     private int selectedIndex = -1;
     public int SelectedIndex => selectedIndex;
     public bool IsInfoOpen => infoPanel.activeSelf;
+
+    // FacilitySlotHeldLink/BuildOptionHeldLink가 SlotIndex/SelectedIndex/IsInfoOpen을 매 프레임 폴링하는
+    // 대신 구독할 수 있도록, 이 값들이 바뀌는 지점(OnEnable/OnDisable/Open/OnOption)에서 발화한다.
+    public event System.Action StateChanged;
+
     private ClickOutsideCloser outsideCloser;
     private ClickOutsideCloser infoOutsideCloser;
     private PanelReveal panelReveal;
@@ -81,9 +86,12 @@ public class FacilityBuildChoicePanel : MonoBehaviour, IClosablePanel
         panelStack.Push(this);
         resourcesManager.ProductUpdate += RefreshButtons;
         LocalizeTextManager.OnLanguageChanged += OnLanguageChanged;
+        GlobalUiInputSignals.ClickPerformed += HandleCloseCheck;
+        GlobalUiInputSignals.EscapePerformed += HandleCloseCheck;
         infoPanel.SetActive(false);
         RefreshButtons();
         outsideCloser.MarkOpened();
+        StateChanged?.Invoke();
     }
 
     private void OnDisable()
@@ -91,6 +99,9 @@ public class FacilityBuildChoicePanel : MonoBehaviour, IClosablePanel
         panelStack.Remove(this);
         resourcesManager.ProductUpdate -= RefreshButtons;
         LocalizeTextManager.OnLanguageChanged -= OnLanguageChanged;
+        GlobalUiInputSignals.ClickPerformed -= HandleCloseCheck;
+        GlobalUiInputSignals.EscapePerformed -= HandleCloseCheck;
+        StateChanged?.Invoke();
     }
 
     private void OnLanguageChanged()
@@ -99,7 +110,7 @@ public class FacilityBuildChoicePanel : MonoBehaviour, IClosablePanel
         if (infoPanel.activeSelf) RefreshInfoText();
     }
 
-    private void Update()
+    private void HandleCloseCheck()
     {
         if (!panelStack.IsTop(this)) return;
 
@@ -107,6 +118,7 @@ public class FacilityBuildChoicePanel : MonoBehaviour, IClosablePanel
         {
             if (infoPanelReveal != null) infoPanelReveal.Hide();
             else infoPanel.SetActive(false);
+            StateChanged?.Invoke();
             return;
         }
 
@@ -136,6 +148,7 @@ public class FacilityBuildChoicePanel : MonoBehaviour, IClosablePanel
 
         // 이미 열려있던 채로 다른 슬롯을 골랐을 때는 OnEnable이 다시 안 불리니 직접 갱신한다.
         if (wasActive) RefreshButtons();
+        StateChanged?.Invoke();
     }
 
     public void Close()
@@ -165,6 +178,7 @@ public class FacilityBuildChoicePanel : MonoBehaviour, IClosablePanel
         if (infoPanelReveal != null) infoPanelReveal.Show();
         else infoPanel.SetActive(true);
         infoOutsideCloser.MarkOpened();
+        StateChanged?.Invoke();
     }
 
     // currentOption 기준으로 infoText를 다시 조립한다 - 언어가 바뀌었을 때도 같은 옵션을 다시 그릴 수 있도록
@@ -226,6 +240,7 @@ public class FacilityBuildChoicePanel : MonoBehaviour, IClosablePanel
         {
             infoPanel.SetActive(false);
             Close();
+            StateChanged?.Invoke();
         }
         else
         {

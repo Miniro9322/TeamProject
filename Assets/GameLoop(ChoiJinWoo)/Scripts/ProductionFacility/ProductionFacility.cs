@@ -118,17 +118,7 @@ public class ProductionFacility : IUpgradableOccupant
         ReleaseAllWorkers();
         facilityManager.RemoveFacility(this);
 
-        var construct = constructCostPaid;
-        var refund = new (ProductionType Type, int Amount)[construct.Length + totalUpgradeSpent.Length];
-        for (int i = 0; i < construct.Length; i++)
-        {
-            refund[i] = (construct[i].Type, -construct[i].Amount);
-        }
-        for (int i = 0; i < totalUpgradeSpent.Length; i++)
-        {
-            refund[construct.Length + i] = (totalUpgradeSpent[i].Type, -totalUpgradeSpent[i].Amount);
-        }
-        resourcesManager.ProductChanged(refund);
+        resourcesManager.ProductChanged(constructCostPaid.BuildRefundWith(totalUpgradeSpent));
     }
 
     public void IncreaseWorker()
@@ -193,10 +183,7 @@ public class ProductionFacility : IUpgradableOccupant
         resourcesManager.ProductChanged(upgradeCostCopy);
 
         // 철거 시 환불할 수 있게 지금까지 업그레이드에 쓴 비용을 누적해둔다.
-        for (int i = 0; i < totalUpgradeSpent.Length; i++)
-        {
-            totalUpgradeSpent[i] = (totalUpgradeSpent[i].Type, totalUpgradeSpent[i].Amount + upgradeCostCopy[i].Amount);
-        }
+        upgradeCostCopy.AccumulateInto(totalUpgradeSpent);
 
         var baseCost = basicValue.UpgradeCost.ApplyDiscount(UpgradeCostDiscount);
         for (int i = 0; i < upgradeCostCopy.Length; i++)

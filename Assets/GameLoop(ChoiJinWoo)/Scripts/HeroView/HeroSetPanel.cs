@@ -27,6 +27,9 @@ public class HeroSetPanel : MonoBehaviour
     private HeroCreateIcon openIcon; // 현재 선택된 아이콘 - 하이라이트 토글과 HeroCreateIconHeldLink 노출용
     public HeroCreateIcon OpenIcon => openIcon; // HeroCreateIconHeldLink에서  누가 열었는지 확인할 수 있게 노출
 
+    // HeroCreateIconHeldLink가 OpenIcon을 매 프레임 폴링하는 대신 구독할 수 있도록 발화한다.
+    public event System.Action OpenIconChanged;
+
     [Inject]
     private void Construct(UpgradeState upgradeState, BuildModePanel buildModePanel)
     {
@@ -110,6 +113,7 @@ public class HeroSetPanel : MonoBehaviour
         openIcon.SetSelected(true);
         var otherIcon = openIcon != meleeIcon ? meleeIcon : rangedIcon;
         otherIcon.SetSelected(false);
+        OpenIconChanged?.Invoke();
 
         var nextUnitCost = GetNextUnitCost(icon);
         amountPanel.SetTarget(icon.ResourceIcons, amt => GetBatchCost(icon, amt), GetMaxAffordable(icon), GetSufficiency(nextUnitCost),

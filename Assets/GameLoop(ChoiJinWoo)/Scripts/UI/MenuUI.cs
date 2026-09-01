@@ -14,6 +14,7 @@ public class MenuUI : MonoBehaviour, IExclusiveUiPanel
 
     private ClickOutsideCloser outsideCloser;
     private SaveManager saveManager;
+    private PanelReveal panelReveal;
 
     // 나가기 직전 저장을 맡길 저장 관리자를 받아 둔다
     [Inject]
@@ -25,6 +26,7 @@ public class MenuUI : MonoBehaviour, IExclusiveUiPanel
     private void Awake()
     {
         outsideCloser = new ClickOutsideCloser((RectTransform)transform, openButton != null ? openButton.transform : null);
+        panelReveal = GetComponent<PanelReveal>();
     }
 
     // 단축키/버튼/바깥클릭 중 무엇으로 열고 닫히든 SetActive는 결국 여기를 거치므로,
@@ -36,6 +38,11 @@ public class MenuUI : MonoBehaviour, IExclusiveUiPanel
         settingPanel.gameObject.SetActive(true);
         PanelPopIn.Play((RectTransform)settingPanel.transform);
         QuitAlert.SetActive(false);
+        GlobalUiInputSignals.ClickPerformed += HandleCloseCheck;
+        GlobalUiInputSignals.EscapePerformed += HandleCloseCheck;
+        // settingPanel은 이 메뉴의 내용물이라, 그 안의 X 버튼(SettingUI.OnClose)으로 설정만 닫히고
+        // 메뉴 자체는 빈 채로 열려있는 채 남는 걸 막는다 - 설정이 닫히면 메뉴도 같이 닫는다.
+        settingPanel.Closed += OnCloseButton;
 
         // 행/컬럼 크기를 매번 재계산하던 중첩 ContentSizeFitter는 크기를 고정값으로 박고 제거했다
         // (ContentSizeFitterFreezer.cs 참고) - 이제 SetActive 직후 남은 LayoutGroup들이 고정된
@@ -47,18 +54,24 @@ public class MenuUI : MonoBehaviour, IExclusiveUiPanel
     private void OnDisable()
     {
         ExclusiveUiCoordinator.NotifyClosed(this);
+        GlobalUiInputSignals.ClickPerformed -= HandleCloseCheck;
+        GlobalUiInputSignals.EscapePerformed -= HandleCloseCheck;
+        settingPanel.Closed -= OnCloseButton;
     }
 
     public void RequestClose() => OnCloseButton();
 
-    private void Update()
+    private void HandleCloseCheck()
     {
         if (outsideCloser.ShouldClose()) OnCloseButton();
     }
 
+    // 여는 쪽(아이콘의 UIButtonHeld.Toggle -> PanelReveal.Show)은 이미 서서히 열리는데, 닫는 쪽만
+    // SetActive(false)로 즉시 꺼버리면 닫힐 때만 연출이 안 먹힌다 - 열기와 대칭으로 Hide()를 거친다.
     public void OnCloseButton()
     {
-        gameObject.SetActive(false);
+        if (panelReveal != null) panelReveal.Hide();
+        else gameObject.SetActive(false);
     }
 
     public void OnQuitButton()

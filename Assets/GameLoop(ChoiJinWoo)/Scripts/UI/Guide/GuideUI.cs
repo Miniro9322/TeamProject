@@ -43,15 +43,19 @@ public class GuideUI : MonoBehaviour, IExclusiveUiPanel
     {
         ExclusiveUiCoordinator.NotifyOpened(this);
         OnGamePlayGuide(true);
+        GlobalUiInputSignals.ClickPerformed += HandleCloseCheck;
+        GlobalUiInputSignals.EscapePerformed += HandleCloseCheck;
     }
 
     private void OnDisable()
     {
         ExclusiveUiCoordinator.NotifyClosed(this);
         DisableButtons();
+        GlobalUiInputSignals.ClickPerformed -= HandleCloseCheck;
+        GlobalUiInputSignals.EscapePerformed -= HandleCloseCheck;
     }
 
-    private void Update()
+    private void HandleCloseCheck()
     {
         if (outsideCloser.ShouldClose()) OnCloseButton();
     }

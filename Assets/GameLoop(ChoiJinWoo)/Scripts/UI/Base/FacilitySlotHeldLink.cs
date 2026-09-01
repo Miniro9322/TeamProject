@@ -7,6 +7,20 @@ public class FacilitySlotHeldLink : HeldLinkBase
     [SerializeField] private FacilityBuildChoicePanel choicePanel;
     [SerializeField] private FacilitySlotView slotView;
 
+    protected override void OnEnable()
+    {
+        base.OnEnable();
+        buildingPanel.StateChanged += Refresh;
+        choicePanel.StateChanged += Refresh;
+    }
+
+    protected override void OnDisable()
+    {
+        base.OnDisable();
+        buildingPanel.StateChanged -= Refresh;
+        choicePanel.StateChanged -= Refresh;
+    }
+
     // 지어진 칸 상세창이나 빈 칸 건설 선택창 중 이 슬롯 번호로 열린 게 있는지로 판단한다
     protected override bool CheckHeld()
     {

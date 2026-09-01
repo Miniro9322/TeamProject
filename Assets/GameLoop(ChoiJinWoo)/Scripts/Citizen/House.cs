@@ -79,17 +79,7 @@ public class House : IUpgradableOccupant
     // 철거: 건설 비용 + 그동안 강화에 쓴 비용을 환불한다(ProductionFacility.Release()와 동일 패턴).
     public void Release()
     {
-        var resources = constructCostPaid;
-        var refund = new (ProductionType Type, int Amount)[resources.Length + totalUpgradeSpent.Length];
-        for (int i = 0; i < resources.Length; i++)
-        {
-            refund[i] = (resources[i].Type, -resources[i].Amount);
-        }
-        for (int i = 0; i < totalUpgradeSpent.Length; i++)
-        {
-            refund[resources.Length + i] = (totalUpgradeSpent[i].Type, -totalUpgradeSpent[i].Amount);
-        }
-        resourcesManager.ProductChanged(refund);
+        resourcesManager.ProductChanged(constructCostPaid.BuildRefundWith(totalUpgradeSpent));
     }
 
     public void Upgrade()
@@ -99,10 +89,7 @@ public class House : IUpgradableOccupant
 
         resourcesManager.ProductChanged(upgradeCostCopy);
 
-        for (int i = 0; i < totalUpgradeSpent.Length; i++)
-        {
-            totalUpgradeSpent[i] = (totalUpgradeSpent[i].Type, totalUpgradeSpent[i].Amount + upgradeCostCopy[i].Amount);
-        }
+        upgradeCostCopy.AccumulateInto(totalUpgradeSpent);
 
         var baseCost = config.UpgradeCost.ApplyDiscount(UpgradeCostDiscount);
         for (int i = 0; i < upgradeCostCopy.Length; i++)

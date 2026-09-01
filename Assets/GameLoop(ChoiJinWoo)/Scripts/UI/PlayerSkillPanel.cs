@@ -23,10 +23,12 @@ public class PlayerSkillPanel : MonoBehaviour
     private EnviromentManager enviromentManager;
     private PlayerManaManager mana;
     private PlayerSkillCastController cast;
-    private Keyboard keyboard;
     [SerializeField] private Key skill1Key = Key.Digit1;
     [SerializeField] private Key skill2Key = Key.Digit2;
     [SerializeField] private Key skill3Key = Key.Digit3;
+    private InputAction skill1Action;
+    private InputAction skill2Action;
+    private InputAction skill3Action;
 
     [Inject]
     private void Construct(GameManager gameManager, EnviromentManager enviromentManager, PlayerManaManager mana)
@@ -41,7 +43,20 @@ public class PlayerSkillPanel : MonoBehaviour
 
     private void Start()
     {
-        keyboard = Keyboard.current;
+        skill1Action = new InputAction("PlayerSkill1", binding: Keyboard.current[skill1Key].path);
+        skill1Action.performed += _ => TryCastHotkey(0);
+        skill1Action.Enable();
+
+        skill2Action = new InputAction("PlayerSkill2", binding: Keyboard.current[skill2Key].path);
+        skill2Action.performed += _ => TryCastHotkey(1);
+        skill2Action.Enable();
+
+        skill3Action = new InputAction("PlayerSkill3", binding: Keyboard.current[skill3Key].path);
+        skill3Action.performed += _ => TryCastHotkey(2);
+        skill3Action.Enable();
+
+        mana.ManaChanged += RefreshManaDisplay;
+        RefreshManaDisplay();
 
         foreach (Entry entry in entries)
         {
@@ -71,6 +86,14 @@ public class PlayerSkillPanel : MonoBehaviour
     {
         enviromentManager.OnNight -= Show;
         gameManager.ChangeToDay -= Hide;
+        mana.ManaChanged -= RefreshManaDisplay;
+
+        skill1Action.Disable();
+        skill1Action.Dispose();
+        skill2Action.Disable();
+        skill2Action.Dispose();
+        skill3Action.Disable();
+        skill3Action.Dispose();
     }
 
     // 밤 전환이 끝난 패널의 등장 연출을 시작한다.
@@ -85,7 +108,8 @@ public class PlayerSkillPanel : MonoBehaviour
         skillSlide.Close();
     }
 
-    private void Update()
+    // mana.ManaChanged(밤 회복 틱마다 발화)를 구독해 갱신한다 - 매 프레임 폴링하지 않는다.
+    private void RefreshManaDisplay()
     {
         if (manaBar != null)
         {
@@ -98,32 +122,16 @@ public class PlayerSkillPanel : MonoBehaviour
             entry.button.interactable = mana.CurrentMana >= entry.skill.manaCost;
             entry.button.transition = entry.button.interactable ? Selectable.Transition.ColorTint : Selectable.Transition.None;
         }
+    }
 
-        if (keyboard == null) return;
-        // playerSkillGroup(CanvasGroup)의 blocksRaycasts는 버튼 클릭만 막고 여기서 직접 폴링하는
-        // 키보드 입력은 못 막는다(GameSpeedUI와 동일한 이유) - PlayerSkillMention 스텝 등 튜토리얼
-        // 진행 중엔 BlockHotkeys로 직접 막아야 한다.
+    // playerSkillGroup(CanvasGroup)의 blocksRaycasts는 버튼 클릭만 막고 InputAction으로 받는 키보드
+    // 입력은 못 막는다(GameSpeedUI와 동일한 이유) - PlayerSkillMention 스텝 등 튜토리얼 진행 중엔
+    // BlockHotkeys로 직접 막아야 한다.
+    private void TryCastHotkey(int index)
+    {
         if (TutorialInputGate.BlockHotkeys) return;
+        if (mana.CurrentMana < entries[index].skill.manaCost) return;
 
-        if (keyboard[skill1Key].wasPressedThisFrame)
-        {
-            if (mana.CurrentMana < entries[0].skill.manaCost) return;
-
-            entries[0].button.onClick?.Invoke();
-        }
-
-        if (keyboard[skill2Key].wasPressedThisFrame)
-        {
-            if (mana.CurrentMana < entries[1].skill.manaCost) return;
-
-            entries[1].button.onClick?.Invoke();
-        }
-
-        if (keyboard[skill3Key].wasPressedThisFrame)
-        {
-            if (mana.CurrentMana < entries[2].skill.manaCost) return;
-
-            entries[2].button.onClick?.Invoke();
-        }
+        entries[index].button.onClick?.Invoke();
     }
 }

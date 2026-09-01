@@ -48,6 +48,8 @@ public class CenterHubPanel : MonoBehaviour, IClosablePanel
     {
         panelStack.Push(this);
         outsideCloser.MarkOpened();
+        GlobalUiInputSignals.ClickPerformed += HandleCloseCheck;
+        GlobalUiInputSignals.EscapePerformed += HandleCloseCheck;
         // 허브 패널이 열릴 땐 지역 상세 패널을 닫는다. 실제 SetActive(true)는 openButton에 붙은
         // UIButtonHeld가 처리하므로(이 컴포넌트가 아님), 클릭 리스너 실행 순서에 기대지 않도록
         // 이 컴포넌트가 켜질 때마다 항상 실행되는 OnEnable에서 처리한다.
@@ -99,6 +101,8 @@ public class CenterHubPanel : MonoBehaviour, IClosablePanel
     {
         panelStack.Remove(this);
         LocalizeTextManager.OnLanguageChanged -= Refresh;
+        GlobalUiInputSignals.ClickPerformed -= HandleCloseCheck;
+        GlobalUiInputSignals.EscapePerformed -= HandleCloseCheck;
 
         if (tradeFoodButton != null) tradeFoodButton.onClick.RemoveAllListeners();
         if (tradeIronButton != null) tradeIronButton.onClick.RemoveAllListeners();
@@ -109,7 +113,7 @@ public class CenterHubPanel : MonoBehaviour, IClosablePanel
 
     // addCitizenPanel은 하이러키상 자식이 아니라 필드로만 참조되는 별도 패널이라, 열려있는 동안엔
     // 그 안의 클릭을 이 패널의 바깥 클릭으로 오판하지 않도록 판정을 쉰다.
-    private void Update()
+    private void HandleCloseCheck()
     {
         if (addCitizenPanel != null && addCitizenPanel.gameObject.activeSelf) return;
         if (panelStack.IsTop(this) && outsideCloser.ShouldClose()) Close();
