@@ -23007,9 +23007,37 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 931396756}
     m_Modifications:
+    - target: {fileID: 326905721016914598, guid: 2a68ec03577869b449ea1d5f1fb2c174, type: 3}
+      propertyPath: State.CanMelee
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2959573717060247494, guid: 2a68ec03577869b449ea1d5f1fb2c174, type: 3}
+      propertyPath: State.CanMelee
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3833170817543263456, guid: 2a68ec03577869b449ea1d5f1fb2c174, type: 3}
+      propertyPath: State.CanMelee
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4572391435813885624, guid: 2a68ec03577869b449ea1d5f1fb2c174, type: 3}
+      propertyPath: State.CanMelee
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4699491760244130495, guid: 2a68ec03577869b449ea1d5f1fb2c174, type: 3}
+      propertyPath: State.CanMelee
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 5581972147424868009, guid: 2a68ec03577869b449ea1d5f1fb2c174, type: 3}
       propertyPath: m_Name
       value: MapModule_A
+      objectReference: {fileID: 0}
+    - target: {fileID: 7064786172707363206, guid: 2a68ec03577869b449ea1d5f1fb2c174, type: 3}
+      propertyPath: State.CanMelee
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7984784056092208104, guid: 2a68ec03577869b449ea1d5f1fb2c174, type: 3}
+      propertyPath: State.CanMelee
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8751462804981830479, guid: 2a68ec03577869b449ea1d5f1fb2c174, type: 3}
       propertyPath: m_LocalPosition.x
@@ -23051,8 +23079,20 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 8827368878933378944, guid: 2a68ec03577869b449ea1d5f1fb2c174, type: 3}
+      propertyPath: State.CanMelee
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
-    m_RemovedGameObjects: []
+    m_RemovedGameObjects:
+    - {fileID: 5041584585329501117, guid: 2a68ec03577869b449ea1d5f1fb2c174, type: 3}
+    - {fileID: 8094668070076440790, guid: 2a68ec03577869b449ea1d5f1fb2c174, type: 3}
+    - {fileID: 7264466846233518200, guid: 2a68ec03577869b449ea1d5f1fb2c174, type: 3}
+    - {fileID: 2038707937312207577, guid: 2a68ec03577869b449ea1d5f1fb2c174, type: 3}
+    - {fileID: 4249210761629956413, guid: 2a68ec03577869b449ea1d5f1fb2c174, type: 3}
+    - {fileID: 6672689564094045213, guid: 2a68ec03577869b449ea1d5f1fb2c174, type: 3}
+    - {fileID: 1065815269209532931, guid: 2a68ec03577869b449ea1d5f1fb2c174, type: 3}
+    - {fileID: 3028307349506238844, guid: 2a68ec03577869b449ea1d5f1fb2c174, type: 3}
     m_AddedGameObjects:
     - targetCorrespondingSourceObject: {fileID: 6789751177485780487, guid: 2a68ec03577869b449ea1d5f1fb2c174, type: 3}
       insertIndex: -1
