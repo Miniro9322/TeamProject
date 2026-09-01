@@ -11,6 +11,7 @@ public class MapGame : MonoBehaviour
     private ResourcesManager resourcesManager;
     private CitizenManager citizenManager;
     private EnviromentManager enviromentManager;
+    private DayNightData dayNightData;
     private HeroRoster heroRoster;
     private BuffManager buffManager;
     private PlayerManaManager playerManaManager;
@@ -22,19 +23,21 @@ public class MapGame : MonoBehaviour
     public ResourcesManager ResourcesManager { get { return resourcesManager; } }
     public CitizenManager CitizenManager { get { return citizenManager; } }
     public EnviromentManager EnviromentManager { get { return enviromentManager; } }
+    public DayNightData DayNightData { get { return dayNightData; } }
     public HeroRoster HeroRoster { get { return heroRoster; } }
     public BuffManager BuffManager { get { return buffManager; } }
     public PlayerManaManager PlayerManaManager { get { return playerManaManager; } }
 
 
     [Inject]
-    private void Construct(ResourcesManager resourcesManager, UiManager uiManager, GameManager gameManager, CitizenManager citizenManager, EnviromentManager enviromentManager, HeroRoster heroRoster, BuffManager buffManager, PlayerManaManager playerManaManager)
+    private void Construct(ResourcesManager resourcesManager, UiManager uiManager, GameManager gameManager, CitizenManager citizenManager, EnviromentManager enviromentManager, DayNightData dayNightData, HeroRoster heroRoster, BuffManager buffManager, PlayerManaManager playerManaManager)
     {
         this.uiManager = uiManager;
         this.gameManager = gameManager;
         this.resourcesManager = resourcesManager;
         this.citizenManager = citizenManager;
         this.enviromentManager = enviromentManager;
+        this.dayNightData = dayNightData;
         this.heroRoster = heroRoster;
         this.buffManager = buffManager;
         this.playerManaManager = playerManaManager;
