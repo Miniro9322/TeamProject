@@ -148,7 +148,7 @@ public class DayNightButton : MonoBehaviour
         nightKeyAction.Dispose();
     }
 
-    // 버튼을 내린 밤 모습으로 맞추고 버튼·N키 입력을 잠근다
+    // 버튼을 내린 밤 모습으로 맞추고, 아이콘도 밤 방향으로 맞춘 뒤 버튼·N키 입력을 잠근다 (로드 복원 전용, 연출 없이 즉시)
     public void RestoreNightLock()
     {
         canToggle = false;
