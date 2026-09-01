@@ -5,15 +5,13 @@ using UnityEngine;
 public class DesertLineEffect
 {
     private readonly MapBoard board;
-    private readonly GameObject strongPrefab;
-    private readonly GameObject weakPrefab;
+    private readonly GameObject windPrefab;
     private readonly List<GameObject> spawned = new();
 
-    public DesertLineEffect(MapBoard board, GameObject strongPrefab, GameObject weakPrefab)
+    public DesertLineEffect(MapBoard board, GameObject windPrefab)
     {
         this.board = board;
-        this.strongPrefab = strongPrefab;
-        this.weakPrefab = weakPrefab;
+        this.windPrefab = windPrefab;
     }
 
     // 이미 계산된 결과를 그대로 화면에 배치한다.
@@ -21,8 +19,8 @@ public class DesertLineEffect
     {
         Hide();
         Quaternion rotation = WorldDirectionCalc.ReadRotation(board, wind);
-        SpawnAll(data.StrongTiles, strongPrefab, rotation);
-        SpawnAll(data.WeakTiles, weakPrefab, rotation);
+        SpawnAll(data.StrongTiles, windPrefab, rotation);
+        SpawnAll(data.WeakTiles, windPrefab, rotation);
     }
 
     // 배치된 모든 이펙트를 치운다.

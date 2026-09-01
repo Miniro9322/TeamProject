@@ -67,7 +67,6 @@ public class MapAssemble : MonoBehaviour
             desertZone.ArrowSlidePeriod);
         DesertLineEffect lineEffect = new DesertLineEffect(
             desertBoard,
-            Resources.Load<GameObject>("ZoneEffectPrefab/DesertStrongVFX"),
             Resources.Load<GameObject>("ZoneEffectPrefab/DesertWeakVFX"));
         desertZoneEffect = new DesertZoneEffect(
             desertZone,
@@ -76,7 +75,8 @@ public class MapAssemble : MonoBehaviour
             windwallData,
             mapGame.Units,
             windPreview,
-            lineEffect);
+            lineEffect,
+            mapGame.Rule);
 
         DayNightBuildRule dayNightRule = new DayNightBuildRule();
         dayNightRule.rule = mapGame.Rule;
