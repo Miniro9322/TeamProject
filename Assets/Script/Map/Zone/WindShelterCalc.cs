@@ -19,8 +19,7 @@ public class WindShelterCalc
         WindShelterData data = new();
         CollectTiles(cells, data);
         CollectHighs();
-        ResolveShelters(groundTiles, data);
-        ResolveShelters(highTiles, data);
+        ResolveGrounds(data);
         return data;
     }
 
@@ -88,14 +87,14 @@ public class WindShelterCalc
         highCells.Add(cell);
     }
 
-    // 타일 목록마다 이웃 고지를 확인해 바람 막힘 정보를 계산해서 채운다.
-    private void ResolveShelters(List<Tile> tiles, WindShelterData data)
+    // 모든 평지 타일에 대해 바람 막힘 여부를 계산해서 채운다.
+    private void ResolveGrounds(WindShelterData data)
     {
-        for (int index = 0; index < tiles.Count; index++)
+        for (int groundIndex = 0; groundIndex < groundTiles.Count; groundIndex++)
         {
-            Tile tile = tiles[index];
-            WindShelter shelter = ResolveShelter(tile.Coord);
-            data.KeepShelter(tile, shelter);
+            Tile groundTile = groundTiles[groundIndex];
+            WindShelter shelter = ResolveShelter(groundTile.Coord);
+            data.KeepShelter(groundTile, shelter);
         }
     }
 
