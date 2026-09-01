@@ -29,6 +29,9 @@ public class PlayerSkillPanel : MonoBehaviour
     private InputAction skill1Action;
     private InputAction skill2Action;
     private InputAction skill3Action;
+    // 씬 로딩 중 게임을 끄면 Start가 끝나기 전에 OnDestroy가 불릴 수 있어, 이때 아래 필드들이
+    // 아직 null이라 OnDestroy가 터진다. 이 플래그로 Start 완료 여부를 확인하고 조기 종료한다.
+    private bool started;
 
     [Inject]
     private void Construct(GameManager gameManager, EnviromentManager enviromentManager, PlayerManaManager mana)
@@ -80,10 +83,17 @@ public class PlayerSkillPanel : MonoBehaviour
         enviromentManager.OnNight += Show;
         gameManager.ChangeToDay += Hide;
         skillSlide.HideNow(); // 시작은 낮이므로 연출 없이 꺼둔다
+
+        started = true;
     }
 
     private void OnDestroy()
     {
+        if (!started)
+        {
+            return;
+        }
+
         enviromentManager.OnNight -= Show;
         gameManager.ChangeToDay -= Hide;
         mana.ManaChanged -= RefreshManaDisplay;

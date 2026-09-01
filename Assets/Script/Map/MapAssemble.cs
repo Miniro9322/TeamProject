@@ -40,6 +40,9 @@ public class MapAssemble : MonoBehaviour
     private List<IceSnowfall> iceSnowfalls;
     private CampfireLightController campfireLights;
     private MapBoard desertBoard;
+    // 씬 로딩 중 게임을 끄면 Start가 끝나기 전에 OnDestroy가 불릴 수 있어, 이때 아래 필드들이
+    // 아직 null이라 OnDestroy가 터진다. 이 플래그로 Start 완료 여부를 확인하고 조기 종료한다.
+    private bool started;
 
     private void Start()
     {
@@ -183,10 +186,17 @@ public class MapAssemble : MonoBehaviour
         {
             mapGame.Rule.ChangeToNight += expand.CancelChoices;
         }
+
+        started = true;
     }
 
     private void OnDestroy()
     {
+        if (!started)
+        {
+            return;
+        }
+
         ghost.ClearGhosts();
         mapGame.Rule.ChangeToNight -= view.ClearMode;
         desertBoard.Module.OnStateChanged -= RefreshDesertDay;

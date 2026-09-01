@@ -25,6 +25,12 @@ public class TitleUI : MonoBehaviour
     private readonly SlotPreviewReader previewReader = new SlotPreviewReader();
 
     private InputAction escapeAction;
+    // ESC가 눌린 "이전 프레임 끝" 시점에 열려 있던 패널이 있었는지 담아둔다 - UiManager와 같은 이유
+    // (HasEscapeCloseTarget 주석 참고). settingPanel/upgradePanel도 각자 GlobalUiInputSignals.
+    // EscapePerformed를 구독해 스스로 닫는데, 이 escapeAction은 별개의 InputAction이라 그 구독자와
+    // 같은 프레임 안에서 어느 쪽이 먼저 처리되는지 보장이 없다. 지금 상태를 그 자리에서 실시간으로
+    // 물어보면, 패널 쪽이 먼저 닫힌 뒤일 때 "열린 게 없었다"고 오판해 QuitAlert까지 같이 띄워버린다.
+    private bool hadPanelOpenLastFrame;
 
     private void OnEnable()
     {
@@ -57,9 +63,14 @@ public class TitleUI : MonoBehaviour
             return;
         }
 
-        if (IsAnyPanelOpen()) return;
+        if (hadPanelOpenLastFrame) return;
 
         OnQuitAlert();
+    }
+
+    private void LateUpdate()
+    {
+        hadPanelOpenLastFrame = IsAnyPanelOpen();
     }
 
     private bool IsAnyPanelOpen()
@@ -78,6 +89,12 @@ public class TitleUI : MonoBehaviour
         upgradePanel.SetActive(false);
         tutorialChoicePanel.SetActive(false);
         RefreshLoad();
+
+        // QuitAlert는 전용 스크립트가 없는 단순 토글 패널이라, 열고 닫는 코드가 어디서 불리든
+        // (이 클래스든, 아이콘의 UIButtonHeld.Toggle이든) OnEnable/OnDisable로 ExclusiveUiCoordinator에
+        // 등록되도록 여기서 붙여준다 - BuildModePanel.Awake()와 같은 기법.
+        if (QuitAlert.GetComponent<ExclusivePanelPresence>() == null)
+            QuitAlert.AddComponent<ExclusivePanelPresence>();
     }
 
     private void Start()
@@ -206,19 +223,12 @@ public class TitleUI : MonoBehaviour
     public void OnUpgrade()
     {
         if (upgradePanel == null) return;
-
-        if(upgradePanel.activeSelf)
-            upgradePanel.SetActive(false);
-        else
-            upgradePanel.SetActive(true);
+        SetPanelOpen(upgradePanel, !upgradePanel.activeSelf);
     }
 
     public void OnSetting()
     {
-        if(settingPanel.activeSelf)
-            settingPanel.SetActive(false);
-        else
-            settingPanel.SetActive(true);
+        SetPanelOpen(settingPanel, !settingPanel.activeSelf);
     }
 
     public void OnQuitAlert()
@@ -242,16 +252,20 @@ public class TitleUI : MonoBehaviour
 
     // QuitAlert(Alert 프리팹)에는 PanelReveal이 붙어 있다 - 버튼 클릭이든 Esc든 항상 그 스케일
     // 연출을 거쳐 여닫도록 SetActive 대신 여기를 거친다.
-    private void SetQuitAlertOpen(bool open)
+    private void SetQuitAlertOpen(bool open) => SetPanelOpen(QuitAlert, open);
+
+    // settingPanel/upgradePanel도 씬에 PanelReveal이 붙어 있다 - 있으면 그 스케일 연출로,
+    // 없으면 예전처럼 SetActive로 여닫는다.
+    private static void SetPanelOpen(GameObject panel, bool open)
     {
-        PanelReveal reveal = QuitAlert.GetComponent<PanelReveal>();
+        PanelReveal reveal = panel.GetComponent<PanelReveal>();
         if (reveal != null)
         {
             if (open) reveal.Show();
             else reveal.Hide();
             return;
         }
-        QuitAlert.SetActive(open);
+        panel.SetActive(open);
     }
 
     public void OnQuit()

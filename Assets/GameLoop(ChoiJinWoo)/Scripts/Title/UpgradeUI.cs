@@ -5,7 +5,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
-public class UpgradeUI : MonoBehaviour
+public class UpgradeUI : MonoBehaviour, IExclusiveUiPanel
 {
     [SerializeField] private List<BaseUpgradeData> SystemUpgradeData;
     [SerializeField] private GameObject SystemUpgradeParent;
@@ -21,23 +21,27 @@ public class UpgradeUI : MonoBehaviour
 
     private UpgradeState upgradeState;
     private ClickOutsideCloser outsideCloser;
+    private PanelReveal panelReveal;
     private readonly Dictionary<BaseUpgradeData, BaseUpgradeButton> nodes = new();
 
     private void Awake()
     {
         upgradeState = new UpgradeState();
         outsideCloser = new ClickOutsideCloser((RectTransform)transform, openButtonRect);
+        panelReveal = GetComponent<PanelReveal>();
     }
 
     private void OnEnable()
     {
         outsideCloser.MarkOpened();
+        ExclusiveUiCoordinator.NotifyOpened(this);
         GlobalUiInputSignals.ClickPerformed += HandleCloseCheck;
         GlobalUiInputSignals.EscapePerformed += HandleCloseCheck;
     }
 
     private void OnDisable()
     {
+        ExclusiveUiCoordinator.NotifyClosed(this);
         GlobalUiInputSignals.ClickPerformed -= HandleCloseCheck;
         GlobalUiInputSignals.EscapePerformed -= HandleCloseCheck;
     }
@@ -46,8 +50,17 @@ public class UpgradeUI : MonoBehaviour
     {
         if (outsideCloser.ShouldClose())
         {
-            gameObject.SetActive(false);
+            Close();
         }
+    }
+
+    // ExclusiveUiCoordinator가 다른 배타 패널이 열렸을 때 이 패널을 닫으라고 부르는 창구.
+    public void RequestClose() => Close();
+
+    private void Close()
+    {
+        if (panelReveal != null) panelReveal.Hide();
+        else gameObject.SetActive(false);
     }
 
     private void Start()
@@ -94,7 +107,7 @@ public class UpgradeUI : MonoBehaviour
     private void RefreshAll()
     {
         foreach (var kv in nodes)
-            kv.Value.Set(kv.Key, upgradeState.IsUnlocked(kv.Key.id));
+            kv.Value.Set(kv.Key, upgradeState.IsUnlocked(kv.Key.id), kv.Key.prerequisites.All(p => upgradeState.IsUnlocked(p.id)));
 
         if (pointsText != null)
             pointsText.text = upgradeState.Points.ToString();
@@ -110,6 +123,6 @@ public class UpgradeUI : MonoBehaviour
 
     public void OnClose()
     {
-        gameObject.SetActive(false);
+        Close();
     }
 }

@@ -74,7 +74,7 @@ public class BuildModePanel : MonoBehaviour
     {
         if (heroPanel.activeSelf) SetPanelOpen(heroPanel, false);
         if (classUpgradePanel.activeSelf) SetPanelOpen(classUpgradePanel, false);
-        if (heroInventory.activeSelf) heroInventory.SetActive(false);
+        if (heroInventory.activeSelf) SetPanelOpen(heroInventory, false);
         heroArchiveButton?.Close();
         panelSlide.Close();
     }
@@ -216,7 +216,7 @@ public class BuildModePanel : MonoBehaviour
         }
         if (heroInventory.activeSelf && view.IsOff && inventoryCloser.ClickedOutside())
         {
-            heroInventory.SetActive(false);
+            SetPanelOpen(heroInventory, false);
         }
     }
 
@@ -242,7 +242,7 @@ public class BuildModePanel : MonoBehaviour
             || (heroArchiveButton != null && heroArchiveButton.IsOpen))
         {
             SetPanelOpen(heroPanel, false);
-            heroInventory.SetActive(false);
+            SetPanelOpen(heroInventory, false);
             SetPanelOpen(classUpgradePanel, false);
             heroArchiveButton?.Close();
         }
@@ -329,7 +329,7 @@ public class BuildModePanel : MonoBehaviour
         {
             SetPanelOpen(heroPanel, true);
             heroPanelCloser.MarkOpened();
-            if (heroInventory.activeSelf) heroInventory.SetActive(false);
+            if (heroInventory.activeSelf) SetPanelOpen(heroInventory, false);
             if (classUpgradePanel.activeSelf)
             {
                 SetPanelOpen(classUpgradePanel, false);
@@ -370,7 +370,7 @@ public class BuildModePanel : MonoBehaviour
     private void CloseForPlaceMode()
     {
         reopenInventoryAfterMode = heroInventory.activeSelf;
-        if (reopenInventoryAfterMode) heroInventory.SetActive(false);
+        if (reopenInventoryAfterMode) SetPanelOpen(heroInventory, false);
 
         reopenClassUpgradeAfterMode = classUpgradePanel.activeSelf;
         if (reopenClassUpgradeAfterMode) SetPanelOpen(classUpgradePanel, false);
@@ -397,7 +397,7 @@ public class BuildModePanel : MonoBehaviour
 
         if (heroInventory.activeSelf)
         {
-            heroInventory.SetActive(false);
+            SetPanelOpen(heroInventory, false);
         }
         else
         {
@@ -409,8 +409,11 @@ public class BuildModePanel : MonoBehaviour
     {
         if (heroInventory.activeSelf) return;
 
-        heroInventory.SetActive(true);
-        PanelPopIn.Play((RectTransform)heroInventory.transform);
+        // heroInventory에 PanelReveal이 붙어 있으면 그쪽이 이미 0->1 스케일 연출을 담당하므로 PanelPopIn을
+        // 또 돌리지 않는다 - 같은 localScale을 두 애니메이션이 동시에 건드리면 서로의 값을 덮어써 버린다.
+        bool hasReveal = heroInventory.GetComponent<PanelReveal>() != null;
+        SetPanelOpen(heroInventory, true);
+        if (!hasReveal) PanelPopIn.Play((RectTransform)heroInventory.transform);
         inventoryCloser.MarkOpened();
         if (classUpgradePanel.activeSelf)
         {
@@ -431,7 +434,7 @@ public class BuildModePanel : MonoBehaviour
         {
             SetPanelOpen(classUpgradePanel, true);
             classUpgradeCloser.MarkOpened();
-            if (heroInventory.activeSelf) heroInventory.SetActive(false);
+            if (heroInventory.activeSelf) SetPanelOpen(heroInventory, false);
             if (heroPanel.activeSelf) SetPanelOpen(heroPanel, false);
         }
     }

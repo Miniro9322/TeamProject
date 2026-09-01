@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 // 팝업 오브젝트 1개를 확인 콜백만 갈아끼워 재사용한다 (문구는 LocalizeText가 담당).
-public class ConfirmPopup : MonoBehaviour
+public class ConfirmPopup : MonoBehaviour, IExclusiveUiPanel
 {
     [SerializeField] private Button confirmButton;
     [SerializeField] private Button cancelButton;
@@ -17,6 +17,13 @@ public class ConfirmPopup : MonoBehaviour
         confirmButton.onClick.AddListener(OnConfirm);
         cancelButton.onClick.AddListener(OnCancel);
     }
+
+    // 설정/업그레이드/종료 확인 등 다른 타이틀 오버레이와 동시에 겹쳐 뜨면 안 된다.
+    private void OnEnable() => ExclusiveUiCoordinator.NotifyOpened(this);
+    private void OnDisable() => ExclusiveUiCoordinator.NotifyClosed(this);
+
+    // ExclusiveUiCoordinator가 다른 배타 패널이 열렸을 때 이 패널을 닫으라고 부르는 창구.
+    public void RequestClose() => Cancel();
 
     // 확인 콜백만 갈아끼워 팝업을 띄운다 (호출한 패널보다 항상 위에 보이게 그리기 순서를 맨 뒤로 보낸다).
     public void ShowPopup(Action onConfirmed)

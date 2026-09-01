@@ -2912,6 +2912,7 @@ GameObject:
   - component: {fileID: 7016323883189846162}
   - component: {fileID: 610561040628998963}
   - component: {fileID: 198441023496768405}
+  - component: {fileID: 4521768355135512838}
   m_Layer: 5
   m_Name: SettingPanel
   m_TagString: Untagged
@@ -3002,6 +3003,19 @@ MonoBehaviour:
   systemVolume: {fileID: 9108736351290195619}
   screenWide: {fileID: 4701141987696263679}
   openButton: {fileID: 0}
+--- !u!114 &4521768355135512838
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2636789312600890898}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dd28c4146faf6c7439ceb445b2e98df0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PanelReveal
+  scaleSpeed: 5
 --- !u!1 &2805873440309618096
 GameObject:
   m_ObjectHideFlags: 0
