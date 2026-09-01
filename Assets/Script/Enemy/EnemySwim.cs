@@ -139,7 +139,7 @@ public class EnemySwim
             if (_marker == null)
             {
                 if (_markerPrefab == null) return;
-                _marker = PoolManager.Instance.Spawn(_markerPrefab, pos, Quaternion.identity);
+                _marker = PoolManager.Instance.Spawn(_markerPrefab, pos,_markerPrefab.transform.rotation);
             }
             else
             {
