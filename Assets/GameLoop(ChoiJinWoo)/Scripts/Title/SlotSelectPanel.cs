@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
-using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 // 슬롯 패널에서 사용할 새 게임과 불러오기 모드를 구분한다.
@@ -31,26 +30,36 @@ public class SlotSelectPanel : MonoBehaviour
     public event Action<SlotSelectMode> SlotConfirmed;
     public event Action SaveChanged;
 
+    // LoadHeldLink/NewGameHeldLink가 "패널이 열려있고 + 지금 모드가 자기 것인지"를 매 프레임 폴링하는
+    // 대신 구독할 수 있도록, 열림 여부/모드가 바뀌는 모든 지점(Open*/Close/삭제로 자동 닫힘)에서 발화한다.
+    public event Action ModeChanged;
+
     private SlotPreviewReader previewReader;
     private readonly SlotDelete slotDelete = new SlotDelete();
     private readonly List<SlotRowView> spawnedRows = new List<SlotRowView>();
 
     private SlotSelectMode mode;
     public SlotSelectMode Mode => mode;
-    private Keyboard keyboard;
     private ClickOutsideCloser outsideCloser;
 
     // 닫기 버튼에 실행 메서드를 연결한다.
     private void Awake()
     {
         closeButton.onClick.AddListener(OnClose);
-        keyboard = Keyboard.current;
         outsideCloser = new ClickOutsideCloser((RectTransform)transform, newGameButton, loadButton);
     }
 
     private void OnEnable()
     {
         outsideCloser.MarkOpened();
+        GlobalUiInputSignals.ClickPerformed += HandleOutsideClick;
+        GlobalUiInputSignals.EscapePerformed += HandleEscape;
+    }
+
+    private void OnDisable()
+    {
+        GlobalUiInputSignals.ClickPerformed -= HandleOutsideClick;
+        GlobalUiInputSignals.EscapePerformed -= HandleEscape;
     }
 
     // TitleUI가 만든 리더를 그대로 받아 쓴다 (자기 것을 새로 안 만듦).
@@ -59,22 +68,19 @@ public class SlotSelectPanel : MonoBehaviour
         previewReader = reader;
     }
 
-    // ESC와 바깥 클릭을 같은 창구(ShouldClose)로 묶어서, 가장 위에 떠 있는 창 한 겹만 닫는다
-    // (확인 팝업이 떠 있으면 그것부터, 아니면 슬롯 선택 패널 자체를).
-    private void Update()
+    // 바깥 클릭 - 가장 위에 떠 있는 창 한 겹만 닫는다(확인 팝업이 떠 있으면 그것부터, 아니면 패널 자체를).
+    private void HandleOutsideClick()
     {
-        if (outsideCloser.ClickedOutside())
-        {
-            // 확인 팝업이 떠 있으면 바깥 클릭도 ESC와 동일하게 팝업만 먼저 닫는다.
-            if (confirmPopup.gameObject.activeSelf)
-                confirmPopup.Cancel();
-            else
-                OnClose();
-        }
+        if (!outsideCloser.ClickedOutside()) return;
 
-        if (keyboard == null) return;
-        if (!keyboard.escapeKey.wasPressedThisFrame) return;
+        if (confirmPopup.gameObject.activeSelf)
+            confirmPopup.Cancel();
+        else
+            OnClose();
+    }
 
+    private void HandleEscape()
+    {
         if (confirmPopup.gameObject.activeSelf)
             confirmPopup.Cancel();
         else
@@ -89,6 +95,7 @@ public class SlotSelectPanel : MonoBehaviour
         BuildRows(true);
         gameObject.SetActive(true);
         ResetScroll();
+        ModeChanged?.Invoke();
     }
 
     // 불러오기 모드로 저장된 슬롯 목록만 연다.
@@ -99,6 +106,7 @@ public class SlotSelectPanel : MonoBehaviour
         BuildRows(false);
         gameObject.SetActive(true);
         ResetScroll();
+        ModeChanged?.Invoke();
     }
 
     // 슬롯을 고르지 않고 패널과 열려있는 팝업을 모두 닫는다.
@@ -106,6 +114,7 @@ public class SlotSelectPanel : MonoBehaviour
     {
         confirmPopup.Cancel();
         gameObject.SetActive(false);
+        ModeChanged?.Invoke();
     }
 
     // 현재 모드에 필요한 슬롯 행을 다시 만든다.
@@ -192,6 +201,7 @@ public class SlotSelectPanel : MonoBehaviour
         if (spawnedRows.Count == 0)
         {
             gameObject.SetActive(false);
+            ModeChanged?.Invoke();
             return;
         }
 
@@ -212,5 +222,6 @@ public class SlotSelectPanel : MonoBehaviour
 
         gameObject.SetActive(false);
         SlotConfirmed?.Invoke(mode);
+        ModeChanged?.Invoke();
     }
 }

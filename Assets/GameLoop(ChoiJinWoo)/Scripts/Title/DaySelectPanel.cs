@@ -30,9 +30,21 @@ public class DaySelectPanel : MonoBehaviour
         outsideCloser = new ClickOutsideCloser((RectTransform)transform);
     }
 
+    private void OnEnable()
+    {
+        GlobalUiInputSignals.ClickPerformed += HandleCloseCheck;
+        GlobalUiInputSignals.EscapePerformed += HandleCloseCheck;
+    }
+
+    private void OnDisable()
+    {
+        GlobalUiInputSignals.ClickPerformed -= HandleCloseCheck;
+        GlobalUiInputSignals.EscapePerformed -= HandleCloseCheck;
+    }
+
     // ESC와 바깥 클릭을 같은 창구(ShouldClose)로 묶어서, 확인 팝업이 떠 있으면 그것부터,
     // 아니면 일차 선택 패널 자체를 닫는다 (SlotSelectPanel과 동일한 패턴).
-    private void Update()
+    private void HandleCloseCheck()
     {
         if (!outsideCloser.ShouldClose()) return;
 

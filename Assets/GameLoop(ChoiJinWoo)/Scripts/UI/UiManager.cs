@@ -30,14 +30,13 @@ public class UiManager : MonoBehaviour
     private PanelReveal guidePanelReveal;
     [SerializeField] private TextMeshProUGUI dayText;
     [SerializeField] private TextMeshProUGUI upgradeResourceText;
-    [SerializeField] private Key MenuKey = Key.Escape;
     [SerializeField] private Key guideOpenKey = Key.G;
 
     public byte UnlockedHero;
     public byte UnlockedEnemy;
 
     public event Action UnlockChanged;
-    private Keyboard keyboard;
+    private InputAction guideOpenAction;
 
     private UiPanelStack panelStack;
     private BuildModePanel buildModePanel;
@@ -68,23 +67,39 @@ public class UiManager : MonoBehaviour
         menuPanel.SetActive(false);
         guidePanel.SetActive(false);
         requestSupportUi.OnUnlock += UpdateUnlock;
-        keyboard = Keyboard.current;
+
+        GlobalUiInputSignals.Enable();
+        GlobalUiInputSignals.EscapePerformed += HandleEscape;
+
+        guideOpenAction = new InputAction("OpenGuide", binding: Keyboard.current[guideOpenKey].path);
+        guideOpenAction.performed += OnGuideOpenPerformed;
+        guideOpenAction.Enable();
     }
 
-    private void Update()
+    private void OnDestroy()
     {
-        if (keyboard == null) return;
+        GlobalUiInputSignals.EscapePerformed -= HandleEscape;
+        GlobalUiInputSignals.Disable();
 
-        if (keyboard[MenuKey].wasPressedThisFrame && !TutorialInputGate.BlockEscapeClose)
-        {
-            if (menuPanel.activeSelf)
-                menuPanel.SetActive(false);
-            else if (!hadEscapeCloseTargetLastFrame) // ESC로 닫거나 취소할 다른 게 있으면 그것부터 - 메뉴는 안 연다
-                menuPanel.SetActive(true);
-        }
+        guideOpenAction.performed -= OnGuideOpenPerformed;
+        guideOpenAction.Disable();
+        guideOpenAction.Dispose();
+    }
 
-        if (keyboard[guideOpenKey].wasPressedThisFrame && !TutorialInputGate.BlockHotkeys)
-            OpenGuide();
+    // MenuKey(ESC)를 GlobalUiInputSignals가 대신 감지해 알려준다 - 매 프레임 폴링하지 않는다.
+    private void HandleEscape()
+    {
+        if (TutorialInputGate.BlockEscapeClose) return;
+
+        if (menuPanel.activeSelf)
+            menuPanel.SetActive(false);
+        else if (!hadEscapeCloseTargetLastFrame) // ESC로 닫거나 취소할 다른 게 있으면 그것부터 - 메뉴는 안 연다
+            menuPanel.SetActive(true);
+    }
+
+    private void OnGuideOpenPerformed(InputAction.CallbackContext context)
+    {
+        if (!TutorialInputGate.BlockHotkeys) OpenGuide();
     }
 
     private void LateUpdate()

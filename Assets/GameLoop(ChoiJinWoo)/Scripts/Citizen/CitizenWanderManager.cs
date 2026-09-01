@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
@@ -5,6 +6,7 @@ using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.AI;
 using VContainer;
+using Random = UnityEngine.Random;
 
 // 표시 시민 수 = round(clamp01((CurrentCitizen - HeroUsedCitizen) / estimatedMaxCitizenCeiling) * visibleCap)
 // 밤에는 전원 hubPoint로 귀가 후 디스폰, 낮이 되면 다시 목표치만큼 스폰한다.
@@ -23,8 +25,6 @@ public class CitizenWanderManager : MonoBehaviour
     [SerializeField] private float greetDuration = 2.5f; // 제스처 재생 후 서 있는 시간(각자 animDelay 이후부터)
     [SerializeField] private string greetAnimTrigger = "Greet";
 
-    private float nextGreetCheckTime;
-
     [Header("단체 대화")]
     [SerializeField] private float groupCheckInterval = 6f;
     [SerializeField] private float groupChance = 0.2f;
@@ -35,8 +35,6 @@ public class CitizenWanderManager : MonoBehaviour
     [SerializeField] private float groupJoinTimeout = 8f;
     [SerializeField] private float groupChatDuration = 4f;
     [SerializeField] private string groupChatAnimTrigger = "Chat";
-
-    private float nextGroupCheckTime;
 
     private class GroupSession
     {
@@ -92,6 +90,28 @@ public class CitizenWanderManager : MonoBehaviour
 
         hubGroundPosition = ResolveHubGroundPosition();
         InitializeAsync(lifetimeCts.Token).Forget();
+        RunGreetCheckLoop(lifetimeCts.Token).Forget();
+        RunGroupChatCheckLoop(lifetimeCts.Token).Forget();
+    }
+
+    // 이전엔 Update()에서 Time.time과 비교해가며 매 프레임 폴링했다 - 이미 파일 전체가 UniTask 루프
+    // 스타일이라 그와 동일하게 대기-후-실행 루프로 바꿔 Update() 자체를 없앤다.
+    private async UniTask RunGreetCheckLoop(CancellationToken token)
+    {
+        while (!token.IsCancellationRequested)
+        {
+            await UniTask.Delay(TimeSpan.FromSeconds(greetCheckInterval), cancellationToken: token);
+            if (!isNight) TryTriggerGreetings();
+        }
+    }
+
+    private async UniTask RunGroupChatCheckLoop(CancellationToken token)
+    {
+        while (!token.IsCancellationRequested)
+        {
+            await UniTask.Delay(TimeSpan.FromSeconds(groupCheckInterval), cancellationToken: token);
+            if (!isNight) TryStartGroupChat();
+        }
     }
 
     // 워밍업 스폰과 초기 표시 스폰을 한 프레임에 몰아서 하면 씬 로딩 직후 그 프레임에 스파이크가 생긴다
@@ -132,23 +152,6 @@ public class CitizenWanderManager : MonoBehaviour
         citizenManager.CitizenChanged -= OnCitizenChanged;
         gameManager.ChangeToNight -= OnNight;
         gameManager.ChangeToDay -= OnDay;
-    }
-
-    private void Update()
-    {
-        if (isNight || hubPoint == null) return;
-
-        if (Time.time >= nextGreetCheckTime)
-        {
-            nextGreetCheckTime = Time.time + greetCheckInterval;
-            TryTriggerGreetings();
-        }
-
-        if (Time.time >= nextGroupCheckTime)
-        {
-            nextGroupCheckTime = Time.time + groupCheckInterval;
-            TryStartGroupChat();
-        }
     }
 
     // 가까운 시민 쌍마다 확률을 굴려 인사를 트리거한다. 같은 체크에서 한 시민이 여러 상대와

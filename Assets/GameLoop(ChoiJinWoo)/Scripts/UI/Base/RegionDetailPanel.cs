@@ -24,6 +24,9 @@ public class RegionDetailPanel : MonoBehaviour, IClosablePanel
     // 지금 열려서 보여주고 있는 지역 - 같은 지역 노드를 다시 눌렀는지 오버뷰가 판단하는 데 쓴다.
     public RegionFacilitySlots CurrentRegion => gameObject.activeSelf ? region : null;
 
+    // RegionNodeHeldLink가 CurrentRegion을 매 프레임 폴링하는 대신 구독할 수 있도록 Open/Close/OnDisable에서 발화한다.
+    public event System.Action RegionChanged;
+
     [Inject]
     private void Construct(UiPanelStack panelStack)
     {
@@ -60,11 +63,13 @@ public class RegionDetailPanel : MonoBehaviour, IClosablePanel
         panelStack.Push(this);
         outsideCloser.MarkOpened();
         LocalizeTextManager.OnLanguageChanged += Refresh;
+        GlobalUiInputSignals.ClickPerformed += HandleCloseCheck;
+        GlobalUiInputSignals.EscapePerformed += HandleCloseCheck;
     }
 
     // buildChoicePanel/buildingPanel도 같은 UiPanelStack에 Push되는 패널이라, 둘 중 하나가 열리면
-    // 그게 스택 맨 위가 되어 IsTop(this)가 자연히 false가 된다 - 그쪽 Update()가 먼저 처리하고 여긴 쉰다.
-    private void Update()
+    // 그게 스택 맨 위가 되어 IsTop(this)가 자연히 false가 된다 - 그쪽이 먼저 처리하고 여긴 쉰다.
+    private void HandleCloseCheck()
     {
         if (panelStack.IsTop(this) && outsideCloser.ShouldClose()) Close();
     }
@@ -85,8 +90,12 @@ public class RegionDetailPanel : MonoBehaviour, IClosablePanel
         else gameObject.SetActive(true);
         outsideCloser.MarkOpened();
         Refresh();
+        RegionChanged?.Invoke();
     }
 
+    // RegionChanged는 여기서 바로 발화하지 않는다 - panelReveal.Hide()는 축소 애니메이션이 끝난 뒤에야
+    // 실제로 SetActive(false)를 부르므로(OnDisable에서 발화), CurrentRegion(gameObject.activeSelf 기준)이
+    // 실제로 바뀌는 시점과 맞추기 위해서다.
     public void Close()
     {
         if (panelReveal != null) panelReveal.Hide();
@@ -108,6 +117,8 @@ public class RegionDetailPanel : MonoBehaviour, IClosablePanel
     {
         panelStack.Remove(this);
         LocalizeTextManager.OnLanguageChanged -= Refresh;
+        GlobalUiInputSignals.ClickPerformed -= HandleCloseCheck;
+        GlobalUiInputSignals.EscapePerformed -= HandleCloseCheck;
 
         UnsubscribeOpenOccupant();
 
@@ -119,6 +130,7 @@ public class RegionDetailPanel : MonoBehaviour, IClosablePanel
 
         buildChoicePanel.gameObject.SetActive(false);
         buildingPanel.gameObject.SetActive(false);
+        RegionChanged?.Invoke();
     }
 
     private void Refresh()

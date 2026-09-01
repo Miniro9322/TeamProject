@@ -32,9 +32,17 @@ public class UpgradeUI : MonoBehaviour
     private void OnEnable()
     {
         outsideCloser.MarkOpened();
+        GlobalUiInputSignals.ClickPerformed += HandleCloseCheck;
+        GlobalUiInputSignals.EscapePerformed += HandleCloseCheck;
     }
 
-    private void Update()
+    private void OnDisable()
+    {
+        GlobalUiInputSignals.ClickPerformed -= HandleCloseCheck;
+        GlobalUiInputSignals.EscapePerformed -= HandleCloseCheck;
+    }
+
+    private void HandleCloseCheck()
     {
         if (outsideCloser.ShouldClose())
         {

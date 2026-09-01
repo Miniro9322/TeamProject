@@ -20,6 +20,7 @@ public class TutorialManager : MonoBehaviour
     private BaseConstructor baseConstructor;
     private HeroRoster heroRoster;
     private PlacePalette placePalette;
+    private BuildModePanel buildModePanel;
     private BuildingPanel buildingPanel;
     private GameManager gameManager;
     private ResourcesManager resourcesManager;
@@ -79,6 +80,7 @@ public class TutorialManager : MonoBehaviour
     [Inject]
     private void Construct(CitizenManager citizenManager,
         BaseConstructor baseConstructor, HeroRoster heroRoster, PlacePalette placePalette,
+        BuildModePanel buildModePanel,
         BuildingPanel buildingPanel, GameManager gameManager, ResourcesManager resourcesManager,
         RegionOverviewPanel regionOverviewPanel, MapGame mapGame, MapView mapView, UiManager uiManager,
         EnviromentManager enviromentManager,
@@ -88,6 +90,7 @@ public class TutorialManager : MonoBehaviour
         this.baseConstructor = baseConstructor;
         this.heroRoster = heroRoster;
         this.placePalette = placePalette;
+        this.buildModePanel = buildModePanel;
         this.buildingPanel = buildingPanel;
         this.gameManager = gameManager;
         this.resourcesManager = resourcesManager;
@@ -530,7 +533,9 @@ public class TutorialManager : MonoBehaviour
         if (!IsActive(TutorialStepId.RelocateHero)) return;
         if (kind != OccupantKind.MeleeHero && kind != OccupantKind.RangedHero) return;
 
-        placePalette.ClearMode();
+        // placePalette.ClearMode()를 직접 부르면 BuildModePanel.CloseForPlaceMode()가 재배치
+        // 시작 때 닫아둔 영웅 인벤토리가 다시 열리지 않은 채로 남는다(ReopenAfterPlaceMode() 우회).
+        buildModePanel.CancelPlaceModeFromTutorial();
         CompleteStep();
     }
 

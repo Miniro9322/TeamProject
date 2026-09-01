@@ -63,4 +63,32 @@ public static class ResourceCostExtensions
         }
         return result;
     }
+
+    // House.Release()/ProductionFacility.Release()가 똑같이 쓰던, 건설비+누적 강화비를 하나의
+    // 환불 배열(부호 반전)로 합치는 로직.
+    public static (ProductionType Type, int Amount)[] BuildRefundWith(
+        this (ProductionType Type, int Amount)[] constructPaid,
+        (ProductionType Type, int Amount)[] upgradeSpent)
+    {
+        var refund = new (ProductionType Type, int Amount)[constructPaid.Length + upgradeSpent.Length];
+        for (int i = 0; i < constructPaid.Length; i++)
+        {
+            refund[i] = (constructPaid[i].Type, -constructPaid[i].Amount);
+        }
+        for (int i = 0; i < upgradeSpent.Length; i++)
+        {
+            refund[constructPaid.Length + i] = (upgradeSpent[i].Type, -upgradeSpent[i].Amount);
+        }
+        return refund;
+    }
+
+    // House.Upgrade()/ProductionFacility.Upgrade()가 똑같이 쓰던, 이번에 낸 강화비를 누적 합계에 더하는 로직.
+    // totalSpent는 배열(참조 타입)이라 반환 없이 그 자리에서 갱신된다.
+    public static void AccumulateInto(this (ProductionType Type, int Amount)[] cost, (ProductionType Type, int Amount)[] totalSpent)
+    {
+        for (int i = 0; i < totalSpent.Length; i++)
+        {
+            totalSpent[i] = (totalSpent[i].Type, totalSpent[i].Amount + cost[i].Amount);
+        }
+    }
 }

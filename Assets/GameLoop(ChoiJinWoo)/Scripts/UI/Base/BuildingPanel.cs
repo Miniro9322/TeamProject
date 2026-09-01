@@ -57,6 +57,8 @@ public class BuildingPanel : MonoBehaviour, IClosablePanel
         panelStack.Push(this);
         outsideCloser.MarkOpened();
         LocalizeTextManager.OnLanguageChanged += UpdatePanel;
+        GlobalUiInputSignals.ClickPerformed += HandleCloseCheck;
+        GlobalUiInputSignals.EscapePerformed += HandleCloseCheck;
         demolishCheckPanel.gameObject.SetActive(false);
     }
 
@@ -78,7 +80,7 @@ public class BuildingPanel : MonoBehaviour, IClosablePanel
         else gameObject.SetActive(false);
     }
 
-    private void Update()
+    private void HandleCloseCheck()
     {
         if (panelStack.IsTop(this) && outsideCloser.ShouldClose()) Close();
     }
@@ -180,6 +182,7 @@ public class BuildingPanel : MonoBehaviour, IClosablePanel
         var current = Occupant;
         if (current != null) current.Changed += UpdatePanel;
         UpdatePanel();
+        StateChanged?.Invoke();
     }
 
     private void UnsubscribeOccupant()
@@ -192,14 +195,21 @@ public class BuildingPanel : MonoBehaviour, IClosablePanel
     {
         panelStack.Remove(this);
         LocalizeTextManager.OnLanguageChanged -= UpdatePanel;
+        GlobalUiInputSignals.ClickPerformed -= HandleCloseCheck;
+        GlobalUiInputSignals.EscapePerformed -= HandleCloseCheck;
 
         UnsubscribeOccupant();
         facility = null;
         house = null;
+        StateChanged?.Invoke();
     }
 
     // 튜토리얼이 "업그레이드 버튼을 실제로 눌렀는지"만 골라 판정할 수 있도록 알려준다.
     public event System.Action Upgraded;
+
+    // FacilitySlotHeldLink가 "이 패널이 열려있고 + SlotIndex가 자기 슬롯인지"를 매 프레임 폴링하는 대신
+    // 구독할 수 있도록, 열림/닫힘(OnEnable·OnDisable)과 같은 슬롯 그룹 안에서 SlotIndex가 바뀌는 지점(InitOccupant)에서 발화한다.
+    public event System.Action StateChanged;
 
     public void OnUpgrade()
     {

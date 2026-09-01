@@ -31,6 +31,8 @@ public class LoadOptionPopup : MonoBehaviour
     private void OnEnable()
     {
         LocalizeTextManager.OnLanguageChanged += RefreshText;
+        GlobalUiInputSignals.ClickPerformed += HandleCloseCheck;
+        GlobalUiInputSignals.EscapePerformed += HandleCloseCheck;
         outsideCloser.MarkOpened();
     }
 
@@ -38,10 +40,12 @@ public class LoadOptionPopup : MonoBehaviour
     private void OnDisable()
     {
         LocalizeTextManager.OnLanguageChanged -= RefreshText;
+        GlobalUiInputSignals.ClickPerformed -= HandleCloseCheck;
+        GlobalUiInputSignals.EscapePerformed -= HandleCloseCheck;
     }
 
     // ESC와 바깥 클릭 모두 취소 버튼과 동일하게 처리한다.
-    private void Update()
+    private void HandleCloseCheck()
     {
         if (outsideCloser.ShouldClose()) Cancel();
     }

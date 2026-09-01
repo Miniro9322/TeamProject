@@ -50,6 +50,8 @@ public class SettingUI : MonoBehaviour
     private void OnEnable()
     {
         outsideCloser.MarkOpened();
+        GlobalUiInputSignals.ClickPerformed += HandleCloseCheck;
+        GlobalUiInputSignals.EscapePerformed += HandleCloseCheck;
 
         //창 모드
         screenMode.ClearOptions();
@@ -113,6 +115,9 @@ public class SettingUI : MonoBehaviour
 
     private void OnDisable()
     {
+        GlobalUiInputSignals.ClickPerformed -= HandleCloseCheck;
+        GlobalUiInputSignals.EscapePerformed -= HandleCloseCheck;
+
         foreach (var (slider, _) in VolumeSliders)
         {
             slider.onValueChanged.RemoveAllListeners();
@@ -133,26 +138,21 @@ public class SettingUI : MonoBehaviour
         PlayerPrefs.SetInt("ResHeight", res.height);
     }
 
+    // MenuUI처럼 이 패널을 자기 내용물로 품고 있는 상위 패널이 있으면, 이 패널만 닫히고 상위 패널은
+    // 열린 채로 남아 텅 빈 화면이 되는 걸 막을 수 있게 닫힘을 알린다(구독하지 않으면 원래처럼 이 패널만 닫힘).
+    public event System.Action Closed;
+
     public void OnClose()
     {
         gameObject.SetActive(false);
+        Closed?.Invoke();
     }
 
-    private void Update()
+    private void HandleCloseCheck()
     {
         if (outsideCloser.ShouldClose())
         {
-            gameObject.SetActive(false);
-        }
-
-        if (outsideCloser.ClickedOutside())
-        {
-            gameObject.SetActive(false);
-        }
-
-        if (outsideCloser.ClickedOutside())
-        {
-            gameObject.SetActive(false);
+            OnClose();
         }
     }
 

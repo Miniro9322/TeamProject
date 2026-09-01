@@ -15,16 +15,14 @@ public class AddCitizen : MonoBehaviour
     [SerializeField] private Image costIcon;
     [SerializeField] private TextMeshProUGUI costText;
     [SerializeField] private int costAmount;
-    [SerializeField] private Key closeKey = Key.Escape;
     [SerializeField] private RectTransform openButtonRect; // 이 패널을 여닫는 토글 버튼 — 바깥 클릭 판정에서 제외
     [SerializeField] private RectTransform createButtonRect; // "생성" 확인 버튼 - 튜토리얼 스포트라이트용 참조
 
     public RectTransform CreateButtonRect => createButtonRect;
     private int amount = 0;
-    private Keyboard keyboard;
-    private Mouse mouse;
     private ClickOutsideCloser outsideCloser;
     private PanelReveal panelReveal;
+    private InputAction rightClickAction;
 
     [Inject]
     private void Construct(CitizenManager citizenManager, ResourcesManager resourcesManager, ResourceIconSet resourceIconSet)
@@ -42,6 +40,30 @@ public class AddCitizen : MonoBehaviour
         // 인스펙터 편집 편의상 활성 상태로 저장돼 있어 스케일이 (1,1,1)로 남아있다 - 여기서
         // 스케일만 0으로 맞춰 첫 Show()가 확대 연출 없이 바로 나타나는 걸 막는다.
         if (panelReveal != null) transform.localScale = Vector3.zero;
+
+        rightClickAction = new InputAction("AddCitizenRightClickClose", InputActionType.Button, "<Mouse>/rightButton");
+        rightClickAction.performed += OnRightClickPerformed;
+    }
+
+    // 패널이 열려있는 동안만(=이 오브젝트가 활성 상태인 동안만) 반응하도록 이전 Update()와 같은 생명주기로 맞춘다.
+    private void OnEnable()
+    {
+        GlobalUiInputSignals.ClickPerformed += HandleOutsideClick;
+        GlobalUiInputSignals.EscapePerformed += HandleEscape;
+        rightClickAction.Enable();
+    }
+
+    private void OnDisable()
+    {
+        GlobalUiInputSignals.ClickPerformed -= HandleOutsideClick;
+        GlobalUiInputSignals.EscapePerformed -= HandleEscape;
+        rightClickAction.Disable();
+    }
+
+    private void OnDestroy()
+    {
+        rightClickAction.performed -= OnRightClickPerformed;
+        rightClickAction.Dispose();
     }
 
     public void OpenPanel()
@@ -56,8 +78,6 @@ public class AddCitizen : MonoBehaviour
             if (panelReveal == null) panelReveal = GetComponent<PanelReveal>();
             if (panelReveal != null) panelReveal.Show();
             else gameObject.SetActive(true);
-            keyboard = Keyboard.current;
-            mouse = Mouse.current;
             outsideCloser.MarkOpened();
             amount = 0;
             UpdatePanel();
@@ -71,16 +91,21 @@ public class AddCitizen : MonoBehaviour
         else gameObject.SetActive(false);
     }
 
-    private void Update()
+    private void OnRightClickPerformed(InputAction.CallbackContext context)
     {
-        if (keyboard == null || mouse == null) return;
-        if (!TutorialInputGate.BlockEscapeClose &&
-            (keyboard[closeKey].wasPressedThisFrame || mouse.rightButton.wasPressedThisFrame))
-        {
-            Close();
-            return;
-        }
+        if (TutorialInputGate.BlockEscapeClose) return;
+        Close();
+    }
 
+    private void HandleEscape()
+    {
+        if (TutorialInputGate.BlockEscapeClose) return;
+        Close();
+    }
+
+    // ClickOutsideCloser.ClickedOutside()가 TutorialInputGate.BlockEscapeClose를 내부에서 이미 확인한다.
+    private void HandleOutsideClick()
+    {
         if (outsideCloser.ClickedOutside())
         {
             Close();

@@ -30,6 +30,7 @@ public class RegionOverviewPanel : MonoBehaviour, IClosablePanel, IExclusiveUiPa
     private UiPanelStack panelStack;
     private GameManager gameManager;
     private EnviromentManager enviromentManager;
+    private InputAction openHotkeyAction;
     private bool isNight;
     // 지역 해금 알림을 확인했는지 담는 저장 원본
     private bool regionUnlockNoticeSeen = true;
@@ -49,8 +50,11 @@ public class RegionOverviewPanel : MonoBehaviour, IClosablePanel, IExclusiveUiPa
 
         // 열기 단축키는 패널이 닫혀있는 동안(=이 오브젝트가 비활성인 동안) 감지되어야 하는데,
         // 이 오브젝트는 씬에서 처음부터 비활성 상태라 Update()가 전혀 돌지 않는다(레드닷 구독과 동일한 이유).
-        // InputSystem.onAfterUpdate는 GameObject 활성 여부와 무관하게 매 업데이트마다 호출되므로 여기서 구독한다.
-        InputSystem.onAfterUpdate += CheckOpenHotkey;
+        // InputAction의 performed 콜백은 GameObject 활성 여부와 무관하게 발화하므로 매 프레임 폴링 없이도 동작한다.
+        openHotkeyAction = new InputAction("OpenRegionOverview", binding: Keyboard.current[openBaseKey].path);
+        openHotkeyAction.performed += OnOpenHotkeyPerformed;
+        openHotkeyAction.Enable();
+
         outsideCloser = new ClickOutsideCloser((RectTransform)transform, openButton != null ? openButton.transform : null);
 
         SubscribeModulesDeferred().Forget();
@@ -69,7 +73,10 @@ public class RegionOverviewPanel : MonoBehaviour, IClosablePanel, IExclusiveUiPa
     {
         gameManager.ChangeToNight -= OnNight;
         enviromentManager.OnDay -= OnDayStart;
-        InputSystem.onAfterUpdate -= CheckOpenHotkey;
+
+        openHotkeyAction.performed -= OnOpenHotkeyPerformed;
+        openHotkeyAction.Disable();
+        openHotkeyAction.Dispose();
 
         foreach (var module in registry.AllModules.Values)
         {
@@ -114,6 +121,8 @@ public class RegionOverviewPanel : MonoBehaviour, IClosablePanel, IExclusiveUiPa
         panelStack.Push(this);
         BindModules();
         Refresh();
+        GlobalUiInputSignals.ClickPerformed += HandleCloseCheck;
+        GlobalUiInputSignals.EscapePerformed += HandleCloseCheck;
     }
 
     private void OnDisable()
@@ -121,6 +130,8 @@ public class RegionOverviewPanel : MonoBehaviour, IClosablePanel, IExclusiveUiPa
         ExclusiveUiCoordinator.NotifyClosed(this);
         panelStack.Remove(this);
         UnbindModules();
+        GlobalUiInputSignals.ClickPerformed -= HandleCloseCheck;
+        GlobalUiInputSignals.EscapePerformed -= HandleCloseCheck;
 
         detailPanel.Close();
         if (hubPanel != null) hubPanel.Close();
@@ -206,9 +217,9 @@ public class RegionOverviewPanel : MonoBehaviour, IClosablePanel, IExclusiveUiPa
 
     public void RequestClose() => Close();
 
-    private void Update()
+    // 메뉴/가이드 등이 위에 떠 있는 동안은 ESC/바깥클릭에 반응하지 않고 그쪽부터 닫히게 양보한다.
+    private void HandleCloseCheck()
     {
-        // 메뉴/가이드 등이 위에 떠 있는 동안은 ESC/바깥클릭에 반응하지 않고 그쪽부터 닫히게 양보한다.
         if (hadOtherExclusivePanelLastFrame) return;
         if (panelStack.IsTop(this) && outsideCloser.ShouldClose()) Close();
     }
@@ -218,20 +229,13 @@ public class RegionOverviewPanel : MonoBehaviour, IClosablePanel, IExclusiveUiPa
         hadOtherExclusivePanelLastFrame = ExclusiveUiCoordinator.HasOtherOpen(this);
     }
 
-    private void CheckOpenHotkey()
+    private void OnOpenHotkeyPerformed(InputAction.CallbackContext context)
     {
-        // InputSystem.onAfterUpdate는 static 이벤트라 씬 오브젝트 생명주기와 무관하게 계속 불린다 -
-        // 이 오브젝트가 파괴된 뒤에도 OnDestroy()가 구독을 끊기 전까지의 짧은 틈에 한 번 더 불릴 수
-        // 있으므로, Unity의 "파괴됨" 판정(== null)을 직접 확인해야 한다.
-        if (this == null) return;
+        if (TutorialInputGate.BlockHotkeys) return;
 
-        var keyboard = Keyboard.current;
-        if (keyboard != null && keyboard[openBaseKey].wasPressedThisFrame && !TutorialInputGate.BlockHotkeys)
-        {
-            if (gameObject.activeSelf)
-                gameObject.SetActive(false);
-            else
-                gameObject.SetActive(true);
-        }
+        if (gameObject.activeSelf)
+            gameObject.SetActive(false);
+        else
+            gameObject.SetActive(true);
     }
 }
