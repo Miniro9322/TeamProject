@@ -89,13 +89,19 @@ public class UiManager : MonoBehaviour
     }
 
     // MenuKey(ESC)를 GlobalUiInputSignals가 대신 감지해 알려준다 - 매 프레임 폴링하지 않는다.
+    // 튜토리얼 중에는 다른 패널들의 ESC 닫기는 여전히 막혀 있지만(BlockEscapeClose), 설정(메뉴)만은
+    // 예외로 ESC로 열고 닫을 수 있게 한다 - 볼륨 등 설정을 튜토리얼 도중에도 조절할 수 있어야 한다.
     private void HandleEscape()
     {
-        if (TutorialInputGate.BlockEscapeClose) return;
-
         if (menuPanel.activeSelf)
+        {
             CloseMenuPanel();
-        else if (!hadEscapeCloseTargetLastFrame) // ESC로 닫거나 취소할 다른 게 있으면 그것부터 - 메뉴는 안 연다
+            return;
+        }
+
+        // 배치 대기처럼 맵 클릭을 기다리는 순간에는 다른 패널들과 마찬가지로 새로 여는 것만 막는다.
+        if (TutorialInputGate.BlockPanelOpen) return;
+        if (!hadEscapeCloseTargetLastFrame) // ESC로 닫거나 취소할 다른 게 있으면 그것부터 - 메뉴는 안 연다
             ShowMenuPanel();
     }
 

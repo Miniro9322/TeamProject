@@ -47,6 +47,10 @@ public class DayNightButton : MonoBehaviour
         nightKeyAction.performed += OnNightKeyPerformed;
         nightKeyAction.Enable();
 
+        Debug.Log(gameManager.CanBuild);
+
+        icon.localRotation = gameManager.CanBuild ? Quaternion.identity : Quaternion.Euler(0f, 0f, 180f);
+
         started = true;
     }
 
@@ -150,8 +154,7 @@ public class DayNightButton : MonoBehaviour
         canToggle = false;
         slideAnim.Play(DownHash, 0, 0f);
 
-        currentZ = 180f;
-        icon.localRotation = Quaternion.Euler(0f, 0f, currentZ);
+        RotateIconBy(180f, null).Forget();
     }
 
     // 세이브 로드처럼 화면 연출 없이 조용히 일차가 바뀌었을 때 "Day N" 글자만 다시 찍는다 (로드 복원 전용)

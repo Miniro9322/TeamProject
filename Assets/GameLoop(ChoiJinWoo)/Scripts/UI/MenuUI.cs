@@ -35,6 +35,9 @@ public class MenuUI : MonoBehaviour, IExclusiveUiPanel
     {
         ExclusiveUiCoordinator.NotifyOpened(this);
         outsideCloser.MarkOpened();
+        // 같은 Canvas 안에서는 그리기 순서가 하이러키의 형제 순서를 따른다 - ConfirmPopup.ShowPopup()과
+        // 같은 방식으로 맨 뒤로 보내 다른 UI보다 항상 위에 그려지게 한다.
+        transform.SetAsLastSibling();
         // settingPanel은 이 메뉴의 내용물이라, 그 안의 X 버튼(SettingUI.OnClose)으로 설정만 닫히고
         // 메뉴 자체는 빈 채로 열려있는 채 남는 걸 막는다 - 설정이 닫히면 메뉴도 같이 닫는다.
         // SetActive(true)보다 먼저 구독해야 한다 - SettingUI.OnEnable()이 이 SetActive 호출 중에
