@@ -37,7 +37,7 @@ public class DesertEffectCalc
         }
     }
 
-    // 블로커 자신은 건너뛰고, 노출 칸만 강한/약한 중 하나로 데이터에 담는다.
+    // 유닛이 선 칸은 건너뛰고, 노출 칸만 강한/약한 중 하나로 데이터에 담는다.
     private void ResolveCell(Vector2Int cell, DesertEffectData data)
     {
         if (!board.TryGetCell(cell, out Tile tile))
@@ -45,7 +45,7 @@ public class DesertEffectCalc
             return;
         }
 
-        if (IsBlockerTile(tile))
+        if (units.HasUnit(tile.Coord))
         {
             return;
         }
@@ -58,7 +58,7 @@ public class DesertEffectCalc
         KeepResolved(cell, tile, data);
     }
 
-    // 이 타일이 바람을 실제로 맞아 막아서는 블로커(고지 또는 유닛)인지 확인한다.
+    // 이 타일이 뒤 칸의 바람을 막아 세우는 블로커(고지 또는 유닛)인지 확인한다. 강한/약한 분류에만 쓴다.
     private bool IsBlockerTile(Tile tile)
     {
         if (tile.IsHigh)

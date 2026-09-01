@@ -65,15 +65,6 @@ public class EnemyInfo : MonoBehaviour
     [Tooltip("고유 특성으로 표기한 스킬의 글자색. 특성 단어와 눈으로 구분되게 다른 색을 주는 게 좋다.")]
     public Color signatureSkillColor = new Color(0.95f, 0.55f, 0.85f); // 고유 스킬 - 분홍
 
-    [Header("책 펼침 연출")]
-    [Tooltip("책 펼침 애니메이터(BookAnimatorCon). 비워두면 트리거를 쏘지 않고 페이드만 한다.")]
-    [SerializeField] private Animator bookAnimator;
-    [Tooltip("펼침을 시작시킬 트리거 이름. BookAnimatorCon의 파라미터와 같아야 한다.")]
-    [SerializeField] private string openTrigger = "Open";
-    [Tooltip("페이드할 대상. 비워두면 텍스트들과 적 아이콘(e_Image)의 alpha를 직접 건드린다 — " +
-             "컴포넌트 추가 없이 바로 동작한다. 테두리·배경까지 통째로 페이드하려면 그것들을 묶은 부모에 " +
-             "CanvasGroup을 붙여 여기 꽂는다(그 경우 아래 개별 alpha는 건드리지 않는다).")]
-    [SerializeField] private CanvasGroup textGroup;
     [Tooltip("펼침 시작 후 텍스트가 뜨기 시작할 시각(초). 펼침 클립 길이의 8할쯤으로 맞추면 '다 펼쳐질 때쯤' 뜬다. " +
              "클립에 Animation Event로 AnimEvent_BookOpened를 걸어두면 그게 먼저 걸리고 이 값은 안전망(타임아웃)으로만 쓰인다.")]
     [SerializeField] private float revealDelay = 0.5f;
@@ -301,17 +292,6 @@ public class EnemyInfo : MonoBehaviour
         SetActive(leftArrowButton, page > 0);
         SetActive(rightArrowButton, page < LastPage);
     }
-
-    // data.Attribute 원본("Fly|Cloaking|FireZoneSkill" 등)을 파싱해 각 항목을 번역·결합. 없으면 "특성 없음"(None).
-    //
-    // EnemyAttribute로 파싱되는 토큰은 특성, 아니면 SkillTable의 스킬 ID로 본다 —
-    // "고유 특성으로 이 스킬을 가진다"를 특성 줄에 같이 세우기 위함이다.
-    // 표시 순서는 CSV에 적은 순서를 그대로 따른다(enum 선언 순서가 아니다) — 저작자가 순서를 쥔다.
-    //
-    // 이 칸은 표시 전용이다. 적이 실제로 그 스킬을 쓰는지는 EnemyTable의 Skills 칸이 정하고,
-    // EnemyBase.ParseAttribute는 여기 적힌 스킬 ID를 (enum이 아니므로) 조용히 무시한다.
-    // 파싱·링크 규칙 자체는 EnemyAttributeText로 옮겼다 — 스테이지 정보 툴팁도 같은 문자열을 써야
-    // AttributeTooltip의 link ID 규약이 한 곳에만 남는다. 색과 구분자는 여기 인스펙터 값 그대로다.
     private string LocalizeAttributes(string raw)
         => EnemyAttributeText.Build(raw, AttrColor, signatureSkillColor, attributeSeparator, this);
 
@@ -333,10 +313,6 @@ public class EnemyInfo : MonoBehaviour
         }
     }
 
-    // ---- 책 펼침 + 텍스트 페이드 ----
-
-    /// <summary>펼침 클립 마지막 프레임에 Animation Event로 이 이름을 걸면 정확한 타이밍에 텍스트가 뜬다.
-    /// 안 걸어도 revealDelay가 안전망으로 대신 띄운다(EnemyBase의 AnimEvent_Burrowed와 같은 구조).</summary>
     public void AnimEvent_BookOpened() => bookOpenedEvent = true;
 
     // 책을 펼치고, 다 펼쳐질 때쯤 텍스트를 서서히 띄운다.
@@ -413,7 +389,7 @@ public class EnemyInfo : MonoBehaviour
     // 도감 제목(m_ArchiveText)은 책과 무관하게 항상 보여야 하므로 건드리지 않는다.
     private void SetRevealAlpha(float a)
     {
-        if (textGroup != null) { textGroup.alpha = a; return; }
+        // if (textGroup != null) { textGroup.alpha = a; return; }
 
         SetAlpha(e_NameText, a);
         SetAlpha(e_TypeText, a);
@@ -421,8 +397,6 @@ public class EnemyInfo : MonoBehaviour
         SetAlpha(e_DescText, a);
         SetAlpha(e_SkillNameText, a);
         SetAlpha(e_SkillDescText, a);
-        // 아이콘은 enabled로 켜고 끄는 것과 별개로 색 alpha만 조절한다 —
-        // Info가 sprite 유무로 enabled를 정한 뒤에도 이 값이 그대로 남아 같은 타이밍에 떠오른다.
         SetAlpha(e_Image, a);
     }
 

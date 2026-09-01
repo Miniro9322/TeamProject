@@ -32,19 +32,28 @@ public class WindwallCalc
         return tile.IsWindwall;
     }
 
-    // 가림막 한 칸에서 네 방향 팔을 보관하고, 이 가림막 혼자만의 범위도 함께 모은다.
+    // 가림막 한 칸에서 네 방향 팔을 방향마다 따로 보관한다.
     private static void KeepArms(IReadOnlyDictionary<Vector2Int, Tile> cells, WindwallData data, Vector2Int origin, int reach)
     {
-        List<Tile> range = new();
-        KeepOrigin(cells, origin, range);
-
         for (int index = 0; index < GridCalculator.Directions.Length; index++)
         {
             Vector2Int wind = GridCalculator.Directions[index];
-            KeepArm(cells, data, origin, wind, reach, range);
+            KeepOneWind(cells, data, origin, wind, reach);
         }
+    }
 
-        data.KeepRange(origin, range);
+    // 한 바람 방향의 팔만 담은 범위를 만들어 그 방향 칸에 보관한다.
+    private static void KeepOneWind(
+        IReadOnlyDictionary<Vector2Int, Tile> cells,
+        WindwallData data,
+        Vector2Int origin,
+        Vector2Int wind,
+        int reach)
+    {
+        List<Tile> range = new();
+        KeepOrigin(cells, origin, range);
+        KeepArm(cells, data, origin, wind, reach, range);
+        data.KeepRange(wind, origin, range);
     }
 
     // 표시용 범위 목록에만 원점(가림막 자신)을 담는다.
