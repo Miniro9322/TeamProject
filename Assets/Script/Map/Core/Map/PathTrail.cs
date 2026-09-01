@@ -33,6 +33,7 @@ public class PathTrail : MonoBehaviour
     private bool isRefreshPending; //재생 요청이 대기 중인지 여부. 재생 중이면 무시.
     private float elapsed;
     private float moveTime;
+    private int requestVersion; //대기 중이던 낮 예약이 그 사이 다른 재생 요청(밤 전환 등)에 밀렸는지 판단하는 순번표
 
     // 필요한 컴포넌트 참조를 초기화합니다.
     private void Awake()
@@ -82,10 +83,12 @@ public class PathTrail : MonoBehaviour
         if (!module.IsPreparing || isRefreshPending) return;
 
         isRefreshPending = true;
+        int myVersion = ++requestVersion;
         bool isCanceled = await UniTask.NextFrame(this.GetCancellationTokenOnDestroy()).SuppressCancellationThrow();
         isRefreshPending = false;
 
         if (isCanceled || !isActiveAndEnabled || !module.IsPreparing) return;
+        if (myVersion != requestVersion) return; //기다리는 동안 밤 전환 등 다른 요청이 새로 들어왔으면 덮어쓰지 않는다
 
         LoadPoints();
         isLooping = true;
@@ -97,6 +100,7 @@ public class PathTrail : MonoBehaviour
     {
         if (!module.IsUnlocked) return;
 
+        requestVersion++; //대기 중이던 낮 예약을 무효화한다
         LoadPoints();
         isLooping = false;
         BeginRuns();
