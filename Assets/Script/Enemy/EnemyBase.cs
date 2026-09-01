@@ -38,7 +38,7 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
     public Slider healthSlider;
     [Tooltip("체력바가 현재 체력을 따라가는 속도. 클수록 빠르게 붙는다.")]
     private float sliderSpeed = 10f;
-    [Tooltip("체력바 패널에 위에 보일 보스 이름")] //일반 엘리트는 일단 없음(추후 고민)
+    [Tooltip("체력바 패널에 위에 보일 보스 이름")]
     public TMP_Text bossName;
     [Tooltip("보스 체력바의 현재 체력/최대 체력 텍스트(예: 4800/5000). 비우면 표시하지 않음.")]
     public TMP_Text hpText;
@@ -133,14 +133,8 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
     public WaveSpawner Owner => waveSpawner;
     public void SetOwner(WaveSpawner spawner) => waveSpawner = spawner;
 
-    // 이번 생존 동안 웨이브 카운트를 이미 내렸는지. 사망/본진 도달 경로가 모두 SendDieEvent를 타므로
-    // 이 플래그가 이중 감소를 막는다(이중 감소하면 적이 남았는데 EnemyAllClear가 먼저 터져 웨이브가 앞서간다).
     private bool _dieEventSent;
 
-    // 이 유닛이 판에서 빠졌음을 스포너에 딱 한 번 알린다.
-    // 카운트를 못 내리면 Enemycount가 0에 닿지 않아 EnemyAllClear가 영영 안 터지므로(웨이브 정지),
-    // 사망 처리가 어떤 경로로 끝나든(정상/애니 타임아웃/취소) 반드시 여기를 지나가야 한다.
-    // Owner가 없는 적(씬에 직접 배치, SpawnerTest 등)도 있으므로 null 조건 호출.
     private void SendDieEvent()
     {
         if (_dieEventSent) return;
@@ -335,49 +329,16 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
 
     protected virtual void Update()
     {
-        // 물 구간이면 이동 상태를 IsMoving 대신 IsSwim으로 보고하게 한다(둘이 동시에 켜지지 않는다).
         _move.SwimAnim = _swim.UseSwimAnim;
-        // active=사망/기절·속박 아님 → 그 동안 이동 정지(Idle).
-        // 잠행 몹은 파고들기/솟아오르기 모션 중에도 멈춘다 — 안 그러면 걸어가면서 땅을 파고 솟는 게 보인다.
-        // 수영 몹도 잠수(Pool)/상승(Up) 모션 중엔 멈춘다 — 같은 이유.
         _move.Tick(!IsDead && !CannotMove && !_burrow.IsTransitioning && !_swim.IsTransitioning, CurrentMoveSpeed);
-        // 본진 도달은 위 _move.Tick 안에서 ArrivedAtCore로 터져 그 자리에서 풀에 반납된다(SetActive(false) → OnDisable).
-        // 그런데 Unity는 비활성화됐다고 지금 돌고 있는 Update를 끊지 않으므로 아래가 그대로 이어서 실행된다 —
-        // OnDisable의 _burrow.Reset()이 방금 반납한 지면 마커를 _burrow.Tick이 다시 꺼내고,
-        // 이미 비활성이라 OnDisable이 또 돌 일이 없어 그 마커가 본진에 영영 남았다. 여기서 끊는다.
-        // (사망은 DieRoutine이 await 뒤에 반납하므로 Update 밖이라 원래 이 문제가 없다.)
         if (!gameObject.activeInHierarchy) return;
-        UpdateExposedAttribute();       // 저지 상태에 따라 Hero가 보는 Attribute를 갱신
+        UpdateExposedAttribute();
         _cloak.Tick(CloakClear);
-        // 은신과 같은 트리거(저지/사망) — 저지되면 솟아오른다. 사망은 CloakClear에 섞여 있어 구분이 안 되므로
-        // 흙먼지를 거둘지 판단할 IsDead를 따로 넘긴다(솟아오르는 연출은 그대로 두고 마커만 거둔다).
         _burrow.Tick(CloakClear, transform.position, IsDead);
-        // 이동이 끝난 뒤에 불러야 이번 프레임 위치로 칸을 판정한다(물칸 진입/이탈 감지).
-        // 죽으면 물거품을 끌고 가지 않는다(_debuffEffects.Tick의 IsDead와 같은 취지 — 사망이 연출을 이긴다).
-        // 사망 애니가 도는 동안에도 이 Update는 계속 돌기 때문에, 여기서 안 넘기면 거품이 사망 내내 남는다.
         _swim.Tick(Board, transform.position, IsDead);
-        // 불 칸 점화는 Map 쪽 FireReceiver가 타일 진입/이탈로 걸어 준다(적·영웅 공용) —
-        // 여기서 위치를 폴링하던 EnemyFireTile은 그것과 중복이라 걷어냈다.
-        // 화염족 처리(ImmuneDebuffs로 막고 OnDebuffBlocked가 재생·오라 창을 여는 것)는 누가 걸든 그대로 동작한다.
         StunTick();
     }
 
-#if UNITY_EDITOR
-    private void EditorDebuffHotkeys()
-    {
-        if (Keyboard.current == null) return;
-
-        if (Keyboard.current.numpad1Key.wasPressedThisFrame) Stun(3f);
-        if (Keyboard.current.numpad2Key.wasPressedThisFrame) ApplyDebuff(DebuffLoader.Get("Root_Basic"));
-        if (Keyboard.current.numpad3Key.wasPressedThisFrame) ApplyDebuff(DebuffLoader.Get("Silence_Basic"));
-        if (Keyboard.current.numpad4Key.wasPressedThisFrame) ApplyDebuff(DebuffLoader.Get("Ignite_Basic"));
-        if (Keyboard.current.numpad5Key.wasPressedThisFrame) ApplyDebuff(DebuffLoader.Get("Exhaust_Basic"));
-        if (Keyboard.current.numpad6Key.wasPressedThisFrame) ApplyDebuff(DebuffLoader.Get("Bleed_Basic"));
-        if (Keyboard.current.numpad7Key.wasPressedThisFrame) ApplyDebuff(DebuffLoader.Get("ArmorBreak_Basic"));
-        if (Keyboard.current.numpad8Key.wasPressedThisFrame) ApplyDebuff(DebuffLoader.Get("Frost_Basic"));
-        if (Keyboard.current.numpad9Key.wasPressedThisFrame) ApplyDebuff(DebuffLoader.Get("SandStom_Map"));
-    }
-#endif
 
     // 체력바는 LateUpdate에서 굴린다 — 이동(Update)과 카메라 회전(CameraInput.Update)이 모두 끝난 뒤라야
     // 빌보드가 한 프레임 밀리지 않는다.
@@ -470,11 +431,6 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
     // Stun bool 파라미터가 있으면 그걸로(Stun 스테이트가 연출 담당), 없으면 애니를 얼려서 "굳음"으로 대체.
     private void StunTick()
     {
-        // 죽으면 스턴 연출을 끌고 가지 않는다(_debuffEffects.Tick의 IsDead와 같은 취지 — 사망이 연출을 이긴다).
-        // 안 그러면 Stun bool이 켜진 채 남아 Animator가 Stun 스테이트에서 못 나오고, Die 전이가 스턴이
-        // 풀릴 때까지 밀린다 — 스턴 시간만큼 멈춰 서 있다가 죽는다. 스턴이 5초 넘게 남았으면
-        // WaitForDeathAnim의 타임아웃이 먼저 터져 사망 애니 없이 사라진다.
-        // Stun 파라미터가 없는 적도 같은 이유로 막아야 한다(그쪽은 animator.speed가 0으로 얼어붙는다).
         bool stunned = IsStunned && !IsDead;
         if (_stunAnimActive == stunned) return;
         _stunAnimActive = stunned;
