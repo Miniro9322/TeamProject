@@ -69,7 +69,7 @@ public class PlayerGroundZoneEffect : MonoBehaviour
         if (this.gameManager != null) this.gameManager.ChangeToDay += ForceEnd;
         ApplyVisualScale();
         SpawnSelfEffect();
-        if (!string.IsNullOrEmpty(spawnSoundKey)) EnemySoundManager.Play(spawnSoundKey);
+        if (!string.IsNullOrEmpty(spawnSoundKey)) EnemySoundManager.Play(spawnSoundKey, at: transform.position);
         if (!string.IsNullOrEmpty(sustainSoundKey)) sustainVoice = EnemySoundManager.PlayLoop(sustainSoundKey);
         if (duration > 0f) FitParticlesToDuration(duration);
     }
@@ -221,7 +221,7 @@ public class PlayerGroundZoneEffect : MonoBehaviour
             Debug.Log(heal);
             if (heal <= 0f) return;
             target.Heal(heal);
-            if (!string.IsNullOrEmpty(hitSoundKey)) EnemySoundManager.Play(hitSoundKey);
+            if (!string.IsNullOrEmpty(hitSoundKey)) EnemySoundManager.Play(hitSoundKey, at: transform.position);
             SpawnHitEffect(transform.position);
             return;
         }
@@ -262,7 +262,7 @@ public class PlayerGroundZoneEffect : MonoBehaviour
             if (dmg > 0 && go.GetComponentInParent<IDamageAble>() is IDamageAble d)
             {
                 d.TakeDamage(dmg);
-                if (!string.IsNullOrEmpty(hitSoundKey)) EnemySoundManager.Play(hitSoundKey);
+                if (!string.IsNullOrEmpty(hitSoundKey)) EnemySoundManager.Play(hitSoundKey, at: go.transform.position);
                 SpawnHitEffect(go.transform.position);
             }
 

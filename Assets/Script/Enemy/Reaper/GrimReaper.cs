@@ -108,13 +108,13 @@ public class GrimReaper : EnemyBase
         {
             EnemySoundAttack();
             dmg.TakeDamage(Mathf.RoundToInt(AttackPower * mul));
-            string key = _hitIndex==1 ? "ReaperFirstAttack" : "DebuffBleed";
-            EnemySoundManager.Play(key);
+            string key ="DebuffBleed";
+            EnemySoundManager.Play(key, at: transform.position);
         }
     }
     public override void DieSound()
     {
         base.DieSound();
-        EnemySoundManager.Play("GhostDie");
+        EnemySoundManager.Play("GhostDie", at: transform.position);
     }
 }

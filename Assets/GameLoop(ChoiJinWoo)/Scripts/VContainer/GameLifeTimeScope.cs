@@ -79,6 +79,7 @@ public class GameLifeTimeScope : LifetimeScope
         builder.Register<SaveChangeTracker>(Lifetime.Singleton).As<IStartable>().As<ITickable>().AsSelf();
         builder.Register<SaveKey>(Lifetime.Singleton).AsSelf();
         builder.Register<SaveCipher>(Lifetime.Singleton).AsSelf();
+        builder.Register<DayNightData>(Lifetime.Singleton).AsSelf();
 
         if (sunLight != null)
         {

@@ -72,7 +72,7 @@ public class GroundZoneEffect : MonoBehaviour
         this.release = release;
         ApplyVisualScale();
         SpawnSelfEffect();
-        if (!string.IsNullOrEmpty(spawnSoundKey)) EnemySoundManager.Play(spawnSoundKey);
+        if (!string.IsNullOrEmpty(spawnSoundKey)) EnemySoundManager.Play(spawnSoundKey, at: transform.position);
         if (!string.IsNullOrEmpty(sustainSoundKey)) sustainVoice = EnemySoundManager.PlayLoop(sustainSoundKey);
         if (duration > 0f) FitParticlesToDuration(duration);
     }
@@ -215,7 +215,7 @@ public class GroundZoneEffect : MonoBehaviour
             if (target == null) return;
             heal = heal + target.SC[StatType.HP] * hpHealPer;
             target.Heal(heal);
-            if (!string.IsNullOrEmpty(hitSoundKey)) EnemySoundManager.Play(hitSoundKey);
+            if (!string.IsNullOrEmpty(hitSoundKey)) EnemySoundManager.Play(hitSoundKey, at: transform.position);
             SpawnHitEffect(transform.position);
             return;
         }
@@ -257,7 +257,7 @@ public class GroundZoneEffect : MonoBehaviour
             {
                 d.TakeDamage(dmg);
                 owner.NotifyHit(go, dmg, false);
-                if (!string.IsNullOrEmpty(hitSoundKey)) EnemySoundManager.Play(hitSoundKey);
+                if (!string.IsNullOrEmpty(hitSoundKey)) EnemySoundManager.Play(hitSoundKey, at: go.transform.position);
                 SpawnDamageHitEffect(go);
             }
 

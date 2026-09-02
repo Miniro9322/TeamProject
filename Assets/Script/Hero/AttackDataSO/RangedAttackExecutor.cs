@@ -82,7 +82,7 @@ public class RangedAttackExecutor : IAttackExecutor
         Projectile arrow = pool.Get();
         arrow.transform.SetPositionAndRotation(ctx.MuzzleOrSelf.position, ctx.MuzzleOrSelf.rotation);
         AttackDamageUtil.SpawnCasterEffect(ctx.hero, data.attackEffect, ctx.MuzzleOrSelf.position, ctx.MuzzleOrSelf.rotation, data.attackEffectLifetime);
-        if (!string.IsNullOrEmpty(data.attackSoundKey)) EnemySoundManager.Play(data.attackSoundKey);
+        if (!string.IsNullOrEmpty(data.attackSoundKey)) EnemySoundManager.Play(data.attackSoundKey, at: ctx.MuzzleOrSelf.position);
 
         if (data.attackType == AttackType.Area && data.areaShape == AreaShape.Line)
         {

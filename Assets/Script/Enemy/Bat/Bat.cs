@@ -30,13 +30,13 @@ public class Bat : EnemyBase
     public override void EnemySoundAttack()
     {
         base.EnemySoundAttack();
-        EnemySoundManager.Play("DashSkill");
+        EnemySoundManager.Play("DashSkill", at: transform.position);
 
     }
     public override void DieSound()
     {
         base.DieSound();
-        EnemySoundManager.Play("FlyDie");
+        EnemySoundManager.Play("FlyDie", at: transform.position);
     }
 
     private async UniTask AttackTarget(GameObject target,GameObject attackprefab)
@@ -58,7 +58,7 @@ public class Bat : EnemyBase
             if (target != null && target.GetComponentInParent<IDamageAble>() is IDamageAble dmg)
             {
                 dmg.TakeDamage(Mathf.FloorToInt(Stats[StatType.ATK]));
-                EnemySoundManager.Play("SpiderAttack");
+                EnemySoundManager.Play("SpiderAttack", at: transform.position);
             }
         }
         catch(System.OperationCanceledException)

@@ -62,7 +62,7 @@ public class DesertZoneEffect : ZoneDebuffEffect, IDisposable
     private void ApplyNight(BoardHeroes heroes)
     {
         Vector2Int wind = desertZone.WindDirection;
-        UnitShelter unitShelter = new(ReadCells(heroes));
+        UnitShelter unitShelter = new(ReadTiles(heroes));
         DesertEffectData effectData = new DesertEffectCalc().BuildData(board, shelterData, unitShelter, windwallData, wind);
         lineEffect.Show(wind, effectData);
         ApplyEach(heroes, wind, unitShelter);
@@ -115,15 +115,26 @@ public class DesertZoneEffect : ZoneDebuffEffect, IDisposable
         Debug.Log($"[Zone] 현재 바람={directionText} 벡터={wind}");
     }
 
-    // 영웅 목록에서 좌표만 모읍니다.
-    private static List<Vector2Int> ReadCells(BoardHeroes heroes)
+    // 영웅 목록에서 실제 서 있는 타일만 모읍니다.
+    private List<Tile> ReadTiles(BoardHeroes heroes)
     {
-        List<Vector2Int> cells = new();
+        List<Tile> tiles = new();
         for (int index = 0; index < heroes.Areas.Count; index++)
         {
-            cells.Add(heroes.Areas[index].Origin);
+            KeepTile(heroes.Areas[index].Origin, tiles);
         }
 
-        return cells;
+        return tiles;
+    }
+
+    // 좌표에 실제 타일이 있을 때만 목록에 담습니다.
+    private void KeepTile(Vector2Int origin, List<Tile> tiles)
+    {
+        if (!board.TryGetCell(origin, out Tile tile))
+        {
+            return;
+        }
+
+        tiles.Add(tile);
     }
 }

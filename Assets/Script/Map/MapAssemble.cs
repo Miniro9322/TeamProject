@@ -32,6 +32,7 @@ public class MapAssemble : MonoBehaviour
 
     private List<PathTrail> pathTrails;
     private List<EnemyLanes> laneModules;
+    private TrailNightController trailNight;
     private PlaceGhost ghost;
     private HeroSkillCastController skillCast;
     private PlayerSkillCastController playerSkillCast;
@@ -46,6 +47,8 @@ public class MapAssemble : MonoBehaviour
 
     private void Start()
     {
+        trailNight = new TrailNightController(mapGame.DayNightData);
+
         List<MapBoard> boards;
         CollectModuleComponents(out boards, out pathTrails, out laneModules);
         BuildCampfires(boards);
@@ -155,9 +158,11 @@ public class MapAssemble : MonoBehaviour
         };
         foreach(PathTrail trail in pathTrails)
         {
-            mapGame.Rule.ChangeToDay += trail.PlayLoop;
-            mapGame.Rule.ChangeToNight += trail.PlayOnce;
+            mapGame.EnviromentManager.OnDay += trail.PlayLoop;
+            mapGame.EnviromentManager.OnNight += trail.PlayOnce;
         }
+
+        mapGame.Rule.ChangeToNight += trailNight.StopAll;
 
         mapGame.Rule.ChangeToDay += OnDayChanged;
         OnDayChanged(); // 첫 날짜도 시작하자마자 바로 맞춘다 — 이벤트가 처음 울릴 때까지 기다리지 않는다
@@ -235,9 +240,12 @@ public class MapAssemble : MonoBehaviour
         {
             foreach (PathTrail trail in pathTrails)
             {
-                mapGame.Rule.ChangeToDay -= trail.PlayLoop;
-                mapGame.Rule.ChangeToNight -= trail.PlayOnce;
+                mapGame.EnviromentManager.OnDay -= trail.PlayLoop;
+                mapGame.EnviromentManager.OnNight -= trail.PlayOnce;
             }
+
+            mapGame.Rule.ChangeToNight -= trailNight.StopAll;
+            trailNight.Release();
         }
     }
 
@@ -291,6 +299,7 @@ public class MapAssemble : MonoBehaviour
             if (trail != null)
             {
                 trails.Add(trail);
+                trailNight.Collect(logic, trail);
             }
 
             EnemyLanes lane = logic.GetComponent<EnemyLanes>();

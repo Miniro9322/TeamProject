@@ -51,7 +51,7 @@ AudioSource:
   Mute: 0
   Spatialize: 0
   SpatializePostEffects: 0
-  Priority: 128
+  Priority: 0
   DopplerLevel: 1
   MinDistance: 1
   MaxDistance: 500
@@ -180,7 +180,7 @@ AudioSource:
   Mute: 0
   Spatialize: 0
   SpatializePostEffects: 0
-  Priority: 128
+  Priority: 10
   DopplerLevel: 1
   MinDistance: 1
   MaxDistance: 500
@@ -309,7 +309,7 @@ AudioSource:
   Mute: 0
   Spatialize: 0
   SpatializePostEffects: 0
-  Priority: 128
+  Priority: 200
   DopplerLevel: 1
   MinDistance: 1
   MaxDistance: 500
@@ -446,3 +446,12 @@ MonoBehaviour:
   sfxGroup: {fileID: -7033615790429585393, guid: 2c9e2cd8a3ed13245a3dea3437270331, type: 2}
   bgmGroup: {fileID: -4311578250631035521, guid: 2c9e2cd8a3ed13245a3dea3437270331, type: 2}
   systemGroup: {fileID: 3809148806851132749, guid: 2c9e2cd8a3ed13245a3dea3437270331, type: 2}
+  importantUsesSystemGroup: 1
+  importantCutsSfxTails: 1
+  importantBgmDuck: 0.25
+  duckFadeIn: 0.08
+  duckRelease: 0.5
+  maxConcurrentPerKey: 3
+  maxConcurrentTotal: 50
+  cullOffscreen: 1
+  offscreenMargin: 0.3
