@@ -108,7 +108,7 @@ public class GrimReaper : EnemyBase
         {
             EnemySoundAttack();
             dmg.TakeDamage(Mathf.RoundToInt(AttackPower * mul));
-            string key = _hitIndex==1 ? "ReaperFirstAttack" : "DebuffBleed";
+            string key ="DebuffBleed";
             EnemySoundManager.Play(key, at: transform.position);
         }
     }

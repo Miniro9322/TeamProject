@@ -68,9 +68,13 @@ public class EnemySoundManager : MonoBehaviour
     private const float PlayThrottle = 0.15f;
     private readonly Dictionary<string, float> lastPlayTime = new Dictionary<string, float>();
 
-    [Header("같은 키 동시 재생 상한")]
+    [Header("동시 재생 상한")]
     [Tooltip("한 키의 효과음이 동시에 몇 개까지 울릴 수 있는지. 위 스로틀이 '너무 빨리 다시'를 막는 것과 달리 이건 '동시에 너무 많이'를 막는다. 0 이하면 제한 없음.")]
     [SerializeField] private int maxConcurrentPerKey = 3;
+    private int maxConcurrentTotal = 56;
+
+    // 전역 동시 재생 장부. 여러 키가 섞여 길이가 제각각이라 '끝나는 시각'을 담는다(키별 장부는 시작 시각).
+    private readonly List<float> activeEndTimes = new List<float>();
 
     // 키별로 아직 울리고 있다고 보는 재생의 시작 시각. 클립 길이가 지나면 끝난 것으로 간주해 비운다.
     // AudioSource를 세지 않는 이유: soundTime이 없는 효과음은 공용 sfxSource의 PlayOneShot으로 나가서
@@ -234,7 +238,6 @@ public class EnemySoundManager : MonoBehaviour
     // 둘 다 우회시키면 정작 제일 뭉개지는 상황만 그대로 남는다.
     private bool TryReserveVoice(EnemySoundDataBase.Entry e, float now)
     {
-        if (maxConcurrentPerKey <= 0) return true;
         if (e.clip == null) return true;   // 셀 기준이 없으니 여기서 판단하지 않고 아래 재생부로 넘긴다
 
         // 실제로 들리는 길이. soundTime이 있으면 그 시각에 잘리는데, 루프면 그 초 동안 반복하므로
@@ -244,19 +247,54 @@ public class EnemySoundManager : MonoBehaviour
         else length = e.clip.length;
         if (length <= 0f) return true;
 
-        if (!activeStarts.TryGetValue(e.key, out List<float> starts))
+        // 만료 정리와 상한 확인을 먼저 다 하고, 통과했을 때만 두 장부에 함께 기록한다 —
+        // 한쪽만 먼저 적으면 다른 쪽에서 거부됐을 때 울리지도 않은 소리가 장부에 남는다.
+        PruneExpired(now);
+        if (maxConcurrentTotal > 0 && CountActiveVoices() >= maxConcurrentTotal) return false;
+
+        List<float> starts = null;
+        if (maxConcurrentPerKey > 0)
         {
-            starts = new List<float>(maxConcurrentPerKey);
-            activeStarts[e.key] = starts;
+            if (!activeStarts.TryGetValue(e.key, out starts))
+            {
+                starts = new List<float>(maxConcurrentPerKey);
+                activeStarts[e.key] = starts;
+            }
+
+            // 끝난 것부터 걷어낸다. 리스트가 상한 크기(기본 3)라 매번 훑어도 비용이 없다.
+            for (int i = starts.Count - 1; i >= 0; i--)
+                if (now - starts[i] >= length) starts.RemoveAt(i);
+
+            if (starts.Count >= maxConcurrentPerKey) return false;
         }
 
-        // 끝난 것부터 걷어낸다. 리스트가 상한 크기(기본 3)라 매번 훑어도 비용이 없다.
-        for (int i = starts.Count - 1; i >= 0; i--)
-            if (now - starts[i] >= length) starts.RemoveAt(i);
-
-        if (starts.Count >= maxConcurrentPerKey) return false;
-        starts.Add(now);
+        starts?.Add(now);
+        activeEndTimes.Add(now + length);
         return true;
+    }
+
+    // 전역 장부에서 이미 끝난 항목을 지운다. 키별 장부와 달리 여러 키가 섞여 길이가 제각각이라
+    // 시작 시각이 아니라 '끝나는 시각'을 담아 두고 그걸로 만료를 잰다.
+    private void PruneExpired(float now)
+    {
+        for (int i = activeEndTimes.Count - 1; i >= 0; i--)
+            if (now >= activeEndTimes[i]) activeEndTimes.RemoveAt(i);
+    }
+
+    // 지금 울리고 있는 보이스 수. Play로 낸 원샷은 개별 보이스를 볼 방법이 없어 클립 길이로 추정하지만,
+    // BGM과 PlayLoop 루프는 전용 AudioSource를 물고 있어 isPlaying으로 실측할 수 있다 —
+    // 이 둘은 Play를 거치지 않아 추정 장부에 없으므로, 여기서 더해야 총량이 실제와 맞는다.
+    // (PlayTimed로 난 소리는 Play를 거쳐 이미 장부에 있으니 manualStop 루프만 센다 — 이중 계수 방지)
+    private int CountActiveVoices()
+    {
+        int n = activeEndTimes.Count;
+        if (bgmSource != null && bgmSource.isPlaying) n++;
+        for (int i = 0; i < timedVoices.Count; i++)
+        {
+            TimedVoice v = timedVoices[i];
+            if (v.manualStop && v.source != null && v.source.isPlaying) n++;
+        }
+        return n;
     }
 
     /// <summary>
