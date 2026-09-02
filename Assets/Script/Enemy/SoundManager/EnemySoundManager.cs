@@ -61,8 +61,50 @@ public class EnemySoundManager : MonoBehaviour
     // 같은 키 효과음이 너무 짧은 간격으로 중복 재생되는 것만 막는 스로틀.
     // 상태를 SoundDatabase(SO 에셋)에 저장하면 에디터 세션 간에 값이 남아 소리가 안 나므로,
     // 런타임 전용 딕셔너리에 보관한다(세션마다 초기화).
-    private const float PlayThrottle = 0.05f;
+    //
+    // 0.05(초당 20번)에서 0.15로 올렸다. 같은 클립이 거의 동시에 겹치면 파형이 상관관계가 있어
+    // 2배마다 +6dB로 합쳐지고 미세하게 어긋난 시작점끼리 콤 필터링을 일으킨다 — 소리가 커지는
+    // 동시에 뭉개진다. 서로 다른 클립이 겹치는 것(비상관, +3dB)보다 훨씬 나쁘므로 여기부터 막는다.
+    private const float PlayThrottle = 0.15f;
     private readonly Dictionary<string, float> lastPlayTime = new Dictionary<string, float>();
+
+    [Header("같은 키 동시 재생 상한")]
+    [Tooltip("한 키의 효과음이 동시에 몇 개까지 울릴 수 있는지. 위 스로틀이 '너무 빨리 다시'를 막는 것과 달리 이건 '동시에 너무 많이'를 막는다. 0 이하면 제한 없음.")]
+    [SerializeField] private int maxConcurrentPerKey = 3;
+
+    // 키별로 아직 울리고 있다고 보는 재생의 시작 시각. 클립 길이가 지나면 끝난 것으로 간주해 비운다.
+    // AudioSource를 세지 않는 이유: soundTime이 없는 효과음은 공용 sfxSource의 PlayOneShot으로 나가서
+    // 개별 보이스를 들여다볼 방법이 아예 없다(isPlaying은 "뭐라도 울리는 중"만 알려준다).
+    // 클립 길이로 추정하면 PlayOneShot이든 timedVoices든 같은 규칙이 적용된다.
+    // lastPlayTime과 같은 이유로 런타임 전용이다 — 남은 항목도 시간이 지나면 스스로 만료된다.
+    private readonly Dictionary<string, List<float>> activeStarts = new Dictionary<string, List<float>>();
+
+    [Header("화면 밖 소리 컷")]
+    [Tooltip("위치를 넘긴 효과음만 대상. 끄면 전부 재생한다 — 컷 때문에 소리가 빠지는지 A/B로 확인할 때 쓴다.")]
+    [SerializeField] private bool cullOffscreen = true;
+    [Tooltip("화면 밖 어디까지 허용할지(뷰포트 비율). 0.3이면 가로는 화면 폭의 30%, 세로는 높이의 30%만큼 바깥까지 들린다. 화면 밖 개체가 효과음 무리에 기여하지 않게 해서 혼잡을 줄인다.")]
+    [SerializeField] private float offscreenMargin = 0.3f;
+
+    // Camera.main은 MainCamera 태그가 붙은 '활성' 카메라만 찾는다. 이 매니저는 씬을 넘어 살아남으므로
+    // 씬 전환 중에는 파괴된 참조(Unity의 가짜 null이라 == null이 참이 되어 다시 찾는다)나 null이 올 수 있다.
+    private Camera listenerCam;
+    private Camera ListenerCam => listenerCam != null ? listenerCam : (listenerCam = Camera.main);
+
+    // 화면 밖에서 난 소리인지. 카메라가 오빗+줌(CameraRig: distance 5~120, pitch 5~89°)이라
+    // 절대 거리로는 판정할 수 없어서 뷰포트로 투영해 본다 — 줌/팬/피치/종횡비가 전부 반영된 좌표가 나온다.
+    // 탑다운이라 높낮이를 따로 다루지 않는다: 투영이 알아서 처리한다.
+    private bool IsOffscreen(Vector3 worldPos)
+    {
+        if (!cullOffscreen) return false;
+        Camera cam = ListenerCam;
+        // 카메라를 못 찾으면 컷하지 않는다 — 판정이 안 되는 상황에서 조용해지는 것보다 한 번 더 울리는 게 낫다.
+        if (cam == null) return false;
+
+        Vector3 vp = cam.WorldToViewportPoint(worldPos);
+        if (vp.z < 0f) return true;   // 카메라 뒤
+        return vp.x < -offscreenMargin || vp.x > 1f + offscreenMargin
+            || vp.y < -offscreenMargin || vp.y > 1f + offscreenMargin;
+    }
 
     // soundTime이 들어있는 클립 전용 재생 슬롯.
     // 공용 sfxSource의 PlayOneShot으로는 중간에 못 끊는다 — 끊으려면 sfxSource.Stop()인데
@@ -144,19 +186,35 @@ public class EnemySoundManager : MonoBehaviour
     // (예: 라인 관통 화살이 적을 연속으로 맞힐 때) 아래 스로틀을 우회한다 — 스로틀은 서로 무관한
     // 소스가 우연히 겹치는 걸 막기 위한 것이라, 한 번의 공격 안에서 일부러 반복 재생하는 경우까지
     // 막으면 안 된다.
-    public static void Play(string key, bool ignoreThrottle = false)
+    // at: 소리가 난 월드 좌표. 넘기면 화면 밖일 때 재생하지 않는다(offscreenMargin 참조).
+    // 안 넘기면 지금까지와 동일하게 위치 판정 없이 재생한다 — UI/책장 넘김처럼 월드 위치가 없는 소리용.
+    public static void Play(string key, bool ignoreThrottle = false, Vector3? at = null)
     {
         if (Instance == null || Instance.db == null) return;
         var e = Instance.db.Get(key);
         if (e == null) { Debug.LogWarning($"SoundDatabase에 '{key}' 키 없음"); return; }
 
+        // 화면 밖 컷은 스로틀/동시 상한보다 먼저 본다. 어차피 안 낼 소리가 스로틀 기록이나 슬롯을 먹으면
+        // 화면 안에 있는 다른 개체가 같은 키를 내려 할 때 엉뚱하게 막힌다.
+        //
+        // 컷은 Sfx에만 적용한다. System(버튼음·알림)은 위치를 넘겨도 절대 컷하지 않는다 — UI는 카메라가
+        // 어디를 보고 있든 들려야 하고, 애초에 화면 밖이라는 개념이 없다. Bgm도 같은 이유로 제외.
+        // 호출부가 위치를 넘기든 말든 이 규칙이 지켜지도록 판정을 여기 한 곳에 둔다.
+        if (at.HasValue
+            && e.type == EnemySoundDataBase.SoundType.Sfx
+            && Instance.IsOffscreen(at.Value)) return;
+
         // 같은 키 중복 재생 스로틀: 런타임 딕셔너리 + 언스케일드 타임(일시정지 timeScale=0 영향 없음)
         float now = Time.unscaledTime;
-        if (!ignoreThrottle)
-        {
-            if (Instance.lastPlayTime.TryGetValue(key, out float last) && now - last < PlayThrottle) return;
-            Instance.lastPlayTime[key] = now;
-        }
+        if (
+            Instance.lastPlayTime.TryGetValue(key, out float last)
+            && now - last < PlayThrottle) return;
+
+        // 동시 상한은 스로틀을 통과한 뒤에 본다 — 스로틀에 막힌 호출은 위에서 이미 돌아갔으니 슬롯을 먹지 않는다.
+        if (!Instance.TryReserveVoice(e, now)) return;
+
+
+        Instance.lastPlayTime[key] = now;
 
         // 출력 경로는 DB 항목의 type이 정한다 — System으로 표시한 항목(버튼음 등)은 System 그룹으로 나가
         // 설정창의 System 슬라이더를 따르고, 효과음 무리와 채널이 분리된다.
@@ -168,6 +226,39 @@ public class EnemySoundManager : MonoBehaviour
         src.PlayOneShot(e.clip, e.volume);
     }
 
+    // 이 키가 이미 상한만큼 울리고 있으면 false(=이번 재생은 버린다). 통과하면 시작 시각을 기록한다.
+    //
+    // ignoreThrottle이 켜져 있어도 이 상한은 적용한다 — 그 플래그는 "한 발의 공격 안에서 일부러 빠르게
+    // 반복"을 허용하려는 것이고(관통 화살), 여기서 막는 건 "동시에 몇 개가 울리는가"라 다른 층이다.
+    // 오히려 관통 화살이 적 여럿을 연속으로 스치는 순간이 같은 키 스택이 가장 심한 경우여서,
+    // 둘 다 우회시키면 정작 제일 뭉개지는 상황만 그대로 남는다.
+    private bool TryReserveVoice(EnemySoundDataBase.Entry e, float now)
+    {
+        if (maxConcurrentPerKey <= 0) return true;
+        if (e.clip == null) return true;   // 셀 기준이 없으니 여기서 판단하지 않고 아래 재생부로 넘긴다
+
+        // 실제로 들리는 길이. soundTime이 있으면 그 시각에 잘리는데, 루프면 그 초 동안 반복하므로
+        // 클립 길이가 아니라 soundTime이 곧 들리는 길이가 된다.
+        float length;
+        if (e.soundTime > 0f) length = e.loop ? e.soundTime : Mathf.Min(e.soundTime, e.clip.length);
+        else length = e.clip.length;
+        if (length <= 0f) return true;
+
+        if (!activeStarts.TryGetValue(e.key, out List<float> starts))
+        {
+            starts = new List<float>(maxConcurrentPerKey);
+            activeStarts[e.key] = starts;
+        }
+
+        // 끝난 것부터 걷어낸다. 리스트가 상한 크기(기본 3)라 매번 훑어도 비용이 없다.
+        for (int i = starts.Count - 1; i >= 0; i--)
+            if (now - starts[i] >= length) starts.RemoveAt(i);
+
+        if (starts.Count >= maxConcurrentPerKey) return false;
+        starts.Add(now);
+        return true;
+    }
+
     /// <summary>
     /// 반드시 들려야 하는 소리(보스 Warning 등). Play와 달리 세 가지를 같이 한다:
     ///   ① System 그룹으로 내보내 효과음 무리와 채널을 분리하고,
@@ -175,6 +266,9 @@ public class EnemySoundManager : MonoBehaviour
     ///   ③ 재생하는 동안 BGM을 눌러(덕킹) 자리를 비운다.
     /// AudioSource.priority로는 해결되지 않는다 — 그건 보이스 한계를 넘길 때만 쓰이는 값이고,
     /// 효과음은 전부 sfxSource 하나로 나가서 우선순위가 애초에 동일하다.
+    ///
+    /// Play를 거치지 않으므로 스로틀과 동시 상한이 둘 다 적용되지 않는다 — 우연이 아니라 의도다.
+    /// "반드시 들려야 하는 소리"가 효과음 혼잡 때문에 걸러지면 이 함수의 존재 이유가 사라진다.
     /// </summary>
     public static void PlayImportant(string key)
     {
@@ -208,9 +302,10 @@ public class EnemySoundManager : MonoBehaviour
         src.PlayOneShot(e.clip, e.volume);
     }
 
-    // 명시적으로 멈출 때까지 유지되는 루프 사운드. PlayThrottle(중복 재생 스로틀)은 적용하지
-    // 않는다 — 같은 키를 쓰는 여러 인스턴스(예: 장판 여러 개)가 동시에 각자 독립적으로 재생/정지
-    // 되어야 하기 때문. 반환된 AudioSource를 호출부가 들고 있다가 필요할 때 직접 Stop()해야 한다.
+    // 명시적으로 멈출 때까지 유지되는 루프 사운드. PlayThrottle(중복 재생 스로틀)과 키별 동시 상한이
+    // 둘 다 적용되지 않는다 — 같은 키를 쓰는 여러 인스턴스(예: 장판 여러 개)가 동시에 각자 독립적으로
+    // 재생/정지 되어야 하기 때문. 상한에 걸려 재생이 버려지면 호출부는 null을 받고도 그 사실을 모른 채
+    // 영영 안 끊기는 루프를 기대하게 된다. 반환된 AudioSource를 호출부가 들고 있다가 직접 Stop()해야 한다.
     public static AudioSource PlayLoop(string key)
     {
         if (Instance == null || Instance.db == null) return null;

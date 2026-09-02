@@ -22,7 +22,7 @@ public class HealAttackExecutor : IAttackExecutor
             await AttackEventWindow.RunHits(ctx.animEvents, windowDuration, async token =>
             {
                 ctx.hero.SpawnEffect(data.attackEffect, ctx.self.position, data.attackEffectLifetime);
-                if (!string.IsNullOrEmpty(data.attackSoundKey)) EnemySoundManager.Play(data.attackSoundKey);
+                if (!string.IsNullOrEmpty(data.attackSoundKey)) EnemySoundManager.Play(data.attackSoundKey, at: ctx.self.position);
                 await AttackDamageUtil.ApplyInstantHeal(data, ctx, token);
             }, ct);
         }

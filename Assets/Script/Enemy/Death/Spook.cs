@@ -5,6 +5,6 @@ public class Spook : EnemyBase
     public override void DieSound()
     {
         base.DieSound();
-        EnemySoundManager.Play("GhostDie");
+        EnemySoundManager.Play("GhostDie", at: transform.position);
     }
 }

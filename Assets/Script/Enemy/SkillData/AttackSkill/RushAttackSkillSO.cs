@@ -48,7 +48,7 @@ public class RushAttackSkillSO : AttackSkillDataSO
         try
         {
             owner.animator.SetTrigger("Skill");
-            EnemySoundManager.Play("RushReady");
+            EnemySoundManager.Play("RushReady", at: owner.transform.position);
             GameObject go = PoolManager.Instance.Spawn(onSkillEffectPrefab,owner.transform.position,Quaternion.identity);
             await WaitForAnimationEnd(owner,"Skill",animTimeout,token); // 상태 이름과 정확히 일치해야 함(대소문자 구분)
             PoolManager.Instance.Despawn(go);
@@ -103,8 +103,8 @@ public class RushAttackSkillSO : AttackSkillDataSO
         // 5일마다 한 단계(+10). 괄호가 없으면 (10*DayCount)/5 = 매일 +2가 되어 계단이 생기지 않는다.
         int subDamage = 10 * (owner.GameManager.DayCount / 5);
         int dmg = damage > 0f ? Mathf.RoundToInt(damage+subDamage) : owner.AttackPower+subDamage;
-        EnemySoundManager.Play("RushAttack");
-        EnemySoundManager.Play("RushAttackHit");
+        EnemySoundManager.Play("RushAttack", at: owner.transform.position);
+        EnemySoundManager.Play("RushAttackHit", at: target.transform.position);
         target.TakeDamage(dmg);
     }
 

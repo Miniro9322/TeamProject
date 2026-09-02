@@ -43,7 +43,7 @@ public class DashSkillDataSO : UtilitySkillDataSO
             int seg = 0;
             // total<=0(이미 경로 끝 등)이면 이동할 것이 없어 루프를 건너뛴다(무한루프 방지).
             if(!owner.Board.IsBlocked(owner.gameObject))
-            EnemySoundManager.Play("DashSkill");
+            EnemySoundManager.Play("DashSkill", at: owner.transform.position);
             while (moveSpeed > 0f && seg < points.Count && owner != null && !owner.IsDead)
             {
                 if (owner.Board.IsBlocked(owner.gameObject)) { stopped = true; break; }

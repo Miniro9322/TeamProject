@@ -119,7 +119,7 @@ public class Projectile : MonoBehaviour
 
     private void SpawnFlashEffect(Hero hero)
     {
-        if (!string.IsNullOrEmpty(projectileSoundKey)) EnemySoundManager.Play(projectileSoundKey);
+        if (!string.IsNullOrEmpty(projectileSoundKey)) EnemySoundManager.Play(projectileSoundKey, at: transform.position);
         if (flashEffectPrefab != null && hero != null)
             AttackDamageUtil.SpawnCasterEffect(hero, flashEffectPrefab, transform.position, transform.rotation, flashEffectLifetime);
         if (projectileEffect != null)
@@ -159,7 +159,7 @@ public class Projectile : MonoBehaviour
                 if ((hitPoint - closestToHit).sqrMagnitude > hitDistance * hitDistance) break;
                 // 적들이 서로 가까우면 화살이 지나는 간격이 0.05초 스로틀보다 짧아 대부분 씹힐 수 있다 —
                 // 한 발이 라인 위 여러 적을 연속으로 맞히는 의도된 다중 히트이므로 스로틀을 우회한다.
-                if (!string.IsNullOrEmpty(hitSoundKey)) EnemySoundManager.Play(hitSoundKey, ignoreThrottle: true);
+                if (!string.IsNullOrEmpty(hitSoundKey)) EnemySoundManager.Play(hitSoundKey, ignoreThrottle: true, at: hitPoint);
                 SpawnHitEffect(hitPoint);
                 nextHitIndex++;
             }
@@ -173,7 +173,7 @@ public class Projectile : MonoBehaviour
             // Hit()의 범위 공격/장판 스폰이 transform.position을 기준으로 하므로,
             // 관통/스쳐 지나간 경우에도 실제 명중 지점(선분상 최근접점)으로 스냅해 둔다.
             transform.position = closest;
-            if (visualOnly) { if (!string.IsNullOrEmpty(hitSoundKey)) EnemySoundManager.Play(hitSoundKey); SpawnHitEffect(dest); Return(); }
+            if (visualOnly) { if (!string.IsNullOrEmpty(hitSoundKey)) EnemySoundManager.Play(hitSoundKey, at: dest); SpawnHitEffect(dest); Return(); }
             else Hit();
             return;
         }
@@ -201,7 +201,7 @@ public class Projectile : MonoBehaviour
 
     private void Hit()
     {
-        if (!string.IsNullOrEmpty(hitSoundKey)) EnemySoundManager.Play(hitSoundKey);
+        if (!string.IsNullOrEmpty(hitSoundKey)) EnemySoundManager.Play(hitSoundKey, at: transform.position);
         RangeShape aoeShape = cfg.areaShape == AreaShape.Square ? RangeShape.Square : RangeShape.Diamond;
 
         if (cfg.areaShape == AreaShape.Chain)
