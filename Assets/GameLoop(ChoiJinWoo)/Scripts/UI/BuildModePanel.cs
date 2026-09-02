@@ -169,27 +169,27 @@ public class BuildModePanel : MonoBehaviour
 
     private void OnUpgradeHotkey(InputAction.CallbackContext context)
     {
-        if (!TutorialInputGate.BlockHotkeys) OnClassUpgradeButton();
+        if (!TutorialInputGate.BlockHotkeys && game.Rule.CanBuild) OnClassUpgradeButton();
     }
 
     private void OnReplaceHotkey(InputAction.CallbackContext context)
     {
-        if (!TutorialInputGate.BlockHotkeys) OnReplaceButton();
+        if (!TutorialInputGate.BlockHotkeys && game.Rule.CanBuild) OnReplaceButton();
     }
 
     private void OnRemoveHotkey(InputAction.CallbackContext context)
     {
-        if (!TutorialInputGate.BlockHotkeys) OnRemoveButton();
+        if (!TutorialInputGate.BlockHotkeys && game.Rule.CanBuild) OnRemoveButton();
     }
 
     private void OnInventoryHotkey(InputAction.CallbackContext context)
     {
-        if (!TutorialInputGate.BlockHotkeys) OnInventoryButton();
+        if (!TutorialInputGate.BlockHotkeys && game.Rule.CanBuild) OnInventoryButton();
     }
 
     private void OnCreateHeroHotkey(InputAction.CallbackContext context)
     {
-        if (!TutorialInputGate.BlockHotkeys) OnHeroButton();
+        if (!TutorialInputGate.BlockHotkeys && game.Rule.CanBuild) OnHeroButton();
     }
 
     // ESC로 메뉴를 열지 말지 판단할 때 쓴다(UiManager) - 여기서 취소/닫을 게 있으면 ESC는

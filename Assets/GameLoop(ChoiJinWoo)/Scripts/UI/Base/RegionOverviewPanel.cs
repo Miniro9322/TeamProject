@@ -232,6 +232,7 @@ public class RegionOverviewPanel : MonoBehaviour, IClosablePanel, IExclusiveUiPa
     private void OnOpenHotkeyPerformed(InputAction.CallbackContext context)
     {
         if (TutorialInputGate.BlockHotkeys) return;
+        if (isNight) return; // 거점 버튼과 동일하게 밤에는 단축키로도 못 연다(OpenPanel과 동일 규칙)
 
         if (gameObject.activeSelf)
             gameObject.SetActive(false);
