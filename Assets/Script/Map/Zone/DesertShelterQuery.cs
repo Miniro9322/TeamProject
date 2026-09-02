@@ -13,7 +13,7 @@ public static class DesertShelterQuery
     {
         WindShelter tileShelter = terrain.ReadShelter(tile);
         bool highShelter = WindShelterQuery.IsSheltered(tileShelter, wind);
-        bool unitBlock = units.IsSheltered(tile.Coord, wind);
+        bool unitBlock = units.IsSheltered(tile, wind);
         bool wallBlock = walls.HasArm(wind, tile.Coord);
         return !highShelter && !unitBlock && !wallBlock;
     }
