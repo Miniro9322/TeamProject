@@ -140,6 +140,7 @@ public class PlayerSkillPanel : MonoBehaviour
     private void TryCastHotkey(int index)
     {
         if (TutorialInputGate.BlockHotkeys) return;
+        if (gameManager.CanBuild) return; // 낮에는 동작 안 함(CanBuild==true가 낮) - 패널이 숨겨져 있어도 키 입력은 막혀 있지 않으므로 별도 체크 필요
         if (mana.CurrentMana < entries[index].skill.manaCost) return;
 
         entries[index].button.onClick?.Invoke();
