@@ -17,11 +17,11 @@ public class SpiderKing : EnemyBase
     public override void EnemySoundAttack()
     {
         base.EnemySoundAttack();
-        EnemySoundManager.Play("SpiderAttack");
+        EnemySoundManager.Play("SpiderAttack", at: transform.position);
     }
     public override void DieSound()
     {
         base.DieSound();
-        EnemySoundManager.Play("SpiderKingDie");
+        EnemySoundManager.Play("SpiderKingDie", at: transform.position);
     }
 }

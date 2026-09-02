@@ -185,7 +185,7 @@ public class PhantomBlitz : AttackSkillDataSO
             {
                 target.TakeDamage(damageValue);
                 SpawnEffect(onAttackEffectPrefab, target.transform.position, rot);
-                if (!string.IsNullOrEmpty(hitSoundKey)) EnemySoundManager.Play(hitSoundKey);
+                if (!string.IsNullOrEmpty(hitSoundKey)) EnemySoundManager.Play(hitSoundKey, at: target.transform.position);
             }
 
             // 공격 애니가 끝날 때까지만 남는다 — "한 대만 때리고 바로 사라진다".

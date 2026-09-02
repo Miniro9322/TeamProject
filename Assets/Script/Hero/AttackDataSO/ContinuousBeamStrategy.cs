@@ -125,7 +125,7 @@ public class ContinuousBeamStrategy : IAttackDeliveryStrategy
         {
             if (hero.Target == null) return false;
             // 끝점 갱신은 스폰 시 등록한 Track이 매 프레임 알아서 하므로 여기서 다시 부를 필요가 없다.
-            if (!string.IsNullOrEmpty(data.attackSoundKey)) EnemySoundManager.Play(data.attackSoundKey);
+            if (!string.IsNullOrEmpty(data.attackSoundKey)) EnemySoundManager.Play(data.attackSoundKey, at: ctx.self.position);
             for (int i = 0; i < slots.Count; i++)
                 await AttackDamageUtil.ApplyInstantDamage(data, hero.Context, ct);
             return true;
@@ -170,7 +170,7 @@ public class ContinuousBeamStrategy : IAttackDeliveryStrategy
         if (slots.Count == 0) return false;
 
         // 기존 슬롯은 스폰 시 등록한 Track이 매 프레임 알아서 끝점을 갱신하므로 여기서 다시 부를 필요가 없다.
-        if (!string.IsNullOrEmpty(data.attackSoundKey)) EnemySoundManager.Play(data.attackSoundKey);
+        if (!string.IsNullOrEmpty(data.attackSoundKey)) EnemySoundManager.Play(data.attackSoundKey, at: ctx.self.position);
         foreach (var (target, _) in slots)
         {
             AttackContext slotCtx = hero.Context;
@@ -243,7 +243,7 @@ public class ContinuousBeamStrategy : IAttackDeliveryStrategy
     {
         Projectile arrow = pool.Get();
         arrow.transform.SetPositionAndRotation(ctx.MuzzleOrSelf.position, ctx.MuzzleOrSelf.rotation);
-        if (!string.IsNullOrEmpty(data.attackSoundKey)) EnemySoundManager.Play(data.attackSoundKey);
+        if (!string.IsNullOrEmpty(data.attackSoundKey)) EnemySoundManager.Play(data.attackSoundKey, at: ctx.MuzzleOrSelf.position);
 
         arrow.Launch(target.transform, damage, pool,
             ProjectileAoEConfig.From(data, hero, ctx.sc, ctx.buffManager, ctx.self.position));

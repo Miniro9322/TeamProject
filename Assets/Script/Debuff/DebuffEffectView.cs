@@ -204,7 +204,7 @@ public static class DebuffEffectView
                 // 지금은 이쪽과 EnemyDebuffEffects가 장부(ledger) 유무의 반대편을 보고 있어 같은 대상에 둘이 겹치지 않는다
                 // (여기 오는 건 DebuffSO가 ledger == null일 때만 Track한 대상, 저쪽은 tracker가 있어야 그린다).
                 // 그 갈림이 바뀌면 같은 디버프에 소리가 두 번 나므로 그때 한쪽으로 몰아야 한다.
-                if (!string.IsNullOrEmpty(effects[i].soundKey)) EnemySoundManager.Play(effects[i].soundKey);
+                if (!string.IsNullOrEmpty(effects[i].soundKey)) EnemySoundManager.Play(effects[i].soundKey, at: pos);
             }
             else
                 slots[i].transform.position = pos;   // 영웅이 움직여도(넉백 등) 따라붙게
