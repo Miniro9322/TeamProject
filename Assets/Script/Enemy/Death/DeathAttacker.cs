@@ -16,12 +16,12 @@ public class DeathAttacker : EnemyBase
     }
     public override void EnemySoundAttack()
     {
-        EnemySoundManager.Play("DeathNormalAttack");
-        EnemySoundManager.Play("DeathNormalAttack2");
+        EnemySoundManager.Play("DeathNormalAttack", at: transform.position);
+        EnemySoundManager.Play("DeathNormalAttack2", at: transform.position);
     }
     public override void DieSound()
     {
         base.DieSound();
-        EnemySoundManager.Play("DeathDie");
+        EnemySoundManager.Play("DeathDie", at: transform.position);
     }
 }

@@ -72,14 +72,14 @@ public class EnemyBurrow
             {
                 _surfaced = false;          // 파고들기 시작 → 즉시 공격·피격 불가(안전한 방향으로 먼저 닫는다)
                 if(!dead)
-                EnemySoundManager.Play("Burrow");
+                EnemySoundManager.Play("Burrow", at: markerPos);
             }
             else
             {
                 _buried = false;
                 SetRenderers(true);         // 솟아오르는 모습이 보여야 하므로 애니 시작 전에 켠다
                 if(!dead)
-                EnemySoundManager.Play("BurrowUp");
+                EnemySoundManager.Play("BurrowUp", at: markerPos);
             }
             SetBurrowedBool(hide);
         }

@@ -14,7 +14,7 @@ public class WindShelterDebug : MonoBehaviour
     {
         WindShelterData shelterData = new WindShelterCalc().BuildData(desertBoard.Cells);
         WindwallData windwallData = new WindwallCalc().BuildData(desertBoard.Cells, desertZone.WindwallReach);
-        UnitShelter unitShelter = new(CollectHeroCells());
+        UnitShelter unitShelter = new(CollectHeroTiles());
         Vector2Int wind = desertZone.WindDirection;
 
         foreach (Tile tile in desertBoard.Cells.Values)
@@ -34,18 +34,18 @@ public class WindShelterDebug : MonoBehaviour
         }
     }
 
-    // 지금 사막 보드에 서 있는 영웅 칸만 모은다.
-    private List<Vector2Int> CollectHeroCells()
+    // 지금 사막 보드에 서 있는 영웅 타일만 모은다.
+    private List<Tile> CollectHeroTiles()
     {
-        List<Vector2Int> cells = new();
+        List<Tile> tiles = new();
         foreach (Tile tile in desertBoard.Cells.Values)
         {
             if (tile.OccupantObject != null && tile.OccupantObject.TryGetComponent(out Hero _))
             {
-                cells.Add(tile.Coord);
+                tiles.Add(tile);
             }
         }
 
-        return cells;
+        return tiles;
     }
 }
