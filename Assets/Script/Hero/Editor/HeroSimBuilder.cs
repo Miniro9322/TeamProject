@@ -12,9 +12,9 @@ public static class HeroSimBuilder
 
     private static readonly List<HeroStatGain> EmptyGains = new();
 
-    // 영웅 한 명의 표 한 줄을 만든다.
+    // 영웅 한 명의 표 한 줄을 만든다. enemyDefense는 상대 적을 골랐을 때만 0보다 크다.
     public static HeroSimResult BuildResult(HeroSimEntry entry, HeroUpgradeConfig tierConfig,
-        HeroClassUpgradeConfig classConfig, HeroSimInput input, float titleBonus)
+        HeroClassUpgradeConfig classConfig, HeroSimInput input, float titleBonus, int enemyDefense)
     {
         HeroTierUpgradeEntry tierEntry = tierConfig.GetEntry(entry.HeroData.Tier);
         HeroClassUpgradeEntry classEntry = classConfig.GetEntry(entry.HeroData.HeroType);
@@ -25,10 +25,11 @@ public static class HeroSimBuilder
 
         List<HeroSimHeavyChance> heavies = HeroSimCalc.ResolveHeavyRatios(entry);
         float attackPower = stats[StatType.ATK];
-        float average = HeroSimCalc.CalculateAverageHit(entry.BasePattern, heavies, attackPower);
+        float average = HeroSimCalc.CalculateAverageHit(entry.BasePattern, heavies, attackPower, enemyDefense);
 
         return new HeroSimResult
         {
+            Icon = entry.HeroData.Icon,
             HeroName = entry.HeroData.HeroName,
             Tier = entry.HeroData.Tier,
             MaxHp = stats[StatType.HP],
@@ -36,7 +37,7 @@ public static class HeroSimBuilder
             Defence = stats[StatType.DEF],
             AttackSpeed = stats[StatType.AS],
             BlockCount = stats[StatType.BLK],
-            NormalHitDamage = HeroSimCalc.CalculateNormalHit(entry.BasePattern, attackPower),
+            NormalHitDamage = HeroSimCalc.CalculateNormalHit(entry.BasePattern, attackPower, enemyDefense),
             AverageHitDamage = average,
             DamagePerSecond = average * stats[StatType.AS],
             CumulativeCost = SumUpgradeCost(tierEntry, classEntry, input),

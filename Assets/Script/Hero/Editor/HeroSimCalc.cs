@@ -9,6 +9,7 @@ public static class HeroSimCalc
     private const float PermanentDuration = 0f;
     private const float FullSwingRatio = 1f;
     private const float MinimumRemainRatio = 0f;
+    private const int MinimumHitDamage = 1;
 
     private static readonly StatType[] TrackedStats =
         { StatType.HP, StatType.ATK, StatType.DEF, StatType.BLK, StatType.AS };
@@ -136,29 +137,31 @@ public static class HeroSimCalc
         }
     }
 
-    // 공격 하나가 한 번 나갈 때 들어가는 총 피해. 런타임과 같이 한 발마다 정수로 자른다.
-    public static float CalculateHitDamage(AttackDataSO attack, float attackPower)
+    // 공격 하나가 한 번 나갈 때 들어가는 총 피해. 런타임(EnemyBase.TakeDamage)과 같이
+    // 한 발마다 정수로 자르고, 적 방어력을 뺀 뒤 최소 1은 보장한다.
+    public static float CalculateHitDamage(AttackDataSO attack, float attackPower, int enemyDefense)
     {
         int damagePerShot = (int)(attackPower * attack.attackPer);
-        return damagePerShot * attack.attackCount;
+        int hitDamage = Mathf.Max(MinimumHitDamage, damagePerShot - enemyDefense);
+        return hitDamage * attack.attackCount;
     }
 
     // 평타 로테이션 전체의 1타 평균 피해.
-    public static float CalculateNormalHit(List<AttackDataSO> basePattern, float attackPower)
+    public static float CalculateNormalHit(List<AttackDataSO> basePattern, float attackPower, int enemyDefense)
     {
         if (basePattern.Count == 0) return 0f;
 
         float total = 0f;
         for (int index = 0; index < basePattern.Count; index++)
         {
-            total += CalculateHitDamage(basePattern[index], attackPower);
+            total += CalculateHitDamage(basePattern[index], attackPower, enemyDefense);
         }
         return total / basePattern.Count;
     }
 
     // 평타와 강공이 섞여 나올 때의 평균 1타 피해.
     public static float CalculateAverageHit(List<AttackDataSO> basePattern,
-        List<HeroSimHeavyChance> heavies, float attackPower)
+        List<HeroSimHeavyChance> heavies, float attackPower, int enemyDefense)
     {
         float normalRatio = FullSwingRatio;
         float total = 0f;
@@ -166,12 +169,12 @@ public static class HeroSimCalc
         for (int index = 0; index < heavies.Count; index++)
         {
             if (heavies[index].HeavyAttack == null) continue;
-            total += CalculateHitDamage(heavies[index].HeavyAttack, attackPower) * heavies[index].SwingRatio;
+            total += CalculateHitDamage(heavies[index].HeavyAttack, attackPower, enemyDefense) * heavies[index].SwingRatio;
             normalRatio -= heavies[index].SwingRatio;
         }
 
         normalRatio = Mathf.Max(MinimumRemainRatio, normalRatio);
-        return total + CalculateNormalHit(basePattern, attackPower) * normalRatio;
+        return total + CalculateNormalHit(basePattern, attackPower, enemyDefense) * normalRatio;
     }
 
     // 0레벨부터 목표 레벨까지 실제로 지불하는 자원 총합. 자원 종류별 값을 모두 더한다.

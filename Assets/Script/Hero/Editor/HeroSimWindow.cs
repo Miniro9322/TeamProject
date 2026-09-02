@@ -15,7 +15,7 @@ public class HeroSimWindow : EditorWindow
     private const string MeleeLabel = "근접";
     private const string RangedLabel = "원거리";
     private const string ConditionNote =
-        "적 방어력 0 기준 · 강공 재발동은 적 1마리 기준 · 스탠스 교체와 스택 버프, 오라/장판, 디버프는 미반영";
+        "적을 고르면 그 적의(일차 반영) 방어력을 반영 · 안 고르면 방어력 0 기준 · 강공 재발동은 적 1마리 기준 · 스탠스 교체와 스택 버프, 오라/장판, 디버프는 미반영";
     private const string MissingConfigNote =
         "강화 설정 에셋을 찾지 못했습니다 — Assets/HeroData 아래 Config 두 개를 확인하세요.";
 
@@ -31,6 +31,7 @@ public class HeroSimWindow : EditorWindow
     private HeroClassUpgradeConfig classConfig;
 
     private readonly HeroSimInput input = new();
+    private readonly HeroSimEnemyPicker enemyPicker = new();
     private List<HeroSimResult> results = new();
     private string[] tierOptions = { AllFilterLabel };
     private readonly string[] typeOptions = { AllFilterLabel, MeleeLabel, RangedLabel };
@@ -59,6 +60,7 @@ public class HeroSimWindow : EditorWindow
         classConfig = HeroSimSource.LoadClassConfig();
         titleUpgrades = HeroSimSource.LoadTitleStatUpgrades();
         tierOptions = BuildTierOptions();
+        enemyPicker.Load();
         RebuildResults();
     }
 
@@ -95,6 +97,7 @@ public class HeroSimWindow : EditorWindow
         input.ClassUpgradeCount = DrawLevelSlider(ClassLevelLabel, input.ClassUpgradeCount, classConfig.maxLevel);
         input.TitleUnlockCount = EditorGUILayout.IntSlider(TitleLabel, input.TitleUnlockCount,
             MinimumUpgradeCount, titleUpgrades.Count);
+        enemyPicker.Draw();
 
         if (EditorGUI.EndChangeCheck()) RebuildResults();
     }
@@ -123,11 +126,12 @@ public class HeroSimWindow : EditorWindow
     {
         results = new List<HeroSimResult>();
         float titleBonus = HeroSimCalc.CalculateTitleBonus(titleUpgrades, input.TitleUnlockCount);
+        int enemyDefense = enemyPicker.Defense;
 
         for (int index = 0; index < entries.Count; index++)
         {
             if (!PassesFilter(entries[index])) continue;
-            results.Add(HeroSimBuilder.BuildResult(entries[index], tierConfig, classConfig, input, titleBonus));
+            results.Add(HeroSimBuilder.BuildResult(entries[index], tierConfig, classConfig, input, titleBonus, enemyDefense));
         }
     }
 

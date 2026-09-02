@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using UnityEngine;
 
 // 영웅 한 명분 원본 데이터 묶음. 에셋에서 읽은 값만 담고 계산은 하지 않는다.
 public class HeroSimEntry
@@ -37,6 +38,7 @@ public class HeroSimInput
 // 표 한 줄에 출력할 계산 결과.
 public class HeroSimResult
 {
+    public Sprite Icon;
     public string HeroName;
     public int Tier;
 
