@@ -87,7 +87,7 @@ public class LoadManager : IStartable
         saveRestore.RestoreRegionNotice(data.regionUnlockNoticeSeen);
 
         ApplyDayStartPhase(data);
-        //ApplyNightReadyPhase(data); //밤 페이즈에서 게임 종료시 밤 시작 페이즈로 고정한다.
+        //ApplyNightReadyPhase(data);
     }
 
     // DayStart 저장본에만 생산과 완벽방어 보상을 한 번 적용한다

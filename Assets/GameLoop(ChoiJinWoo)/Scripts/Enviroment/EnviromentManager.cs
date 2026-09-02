@@ -30,15 +30,17 @@ public class EnviromentManager : MonoBehaviour
     private bool isNight = false;
     private GameManager gameManager;
     private ResourcesManager resourcesManager;
+    private DayNightData dayNightData;
 
     public event Action OnDay;
     public event Action OnNight;
 
     [Inject]
-    private void Construct(GameManager gameManager, ResourcesManager resourcesManager)
+    private void Construct(GameManager gameManager, ResourcesManager resourcesManager, DayNightData dayNightData)
     {
         this.gameManager = gameManager;
         this.resourcesManager = resourcesManager;
+        this.dayNightData = dayNightData;
     }
 
     private void Awake()
@@ -127,12 +129,14 @@ public class EnviromentManager : MonoBehaviour
         {
             SetNight();
             gameManager.ChangeCanSpawnEnemy(true);
+            dayNightData.Keep(true);
             OnNight?.Invoke();
         }
         else
         {
             SetDay();
             gameManager.ChangeCanBuild(true);
+            dayNightData.Keep(false);
             OnDay?.Invoke();
             if (gameManager.perfactDefence)
                 resourcesManager.GetSpecial();
