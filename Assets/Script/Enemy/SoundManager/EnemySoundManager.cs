@@ -71,7 +71,7 @@ public class EnemySoundManager : MonoBehaviour
     [Header("동시 재생 상한")]
     [Tooltip("한 키의 효과음이 동시에 몇 개까지 울릴 수 있는지. 위 스로틀이 '너무 빨리 다시'를 막는 것과 달리 이건 '동시에 너무 많이'를 막는다. 0 이하면 제한 없음.")]
     [SerializeField] private int maxConcurrentPerKey = 3;
-    private int maxConcurrentTotal = 56;
+    private int maxConcurrentTotal = 52;
 
     // 전역 동시 재생 장부. 여러 키가 섞여 길이가 제각각이라 '끝나는 시각'을 담는다(키별 장부는 시작 시각).
     private readonly List<float> activeEndTimes = new List<float>();
