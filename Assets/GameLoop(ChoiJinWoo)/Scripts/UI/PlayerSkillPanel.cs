@@ -16,9 +16,8 @@ public class PlayerSkillPanel : MonoBehaviour
     }
 
     [SerializeField] private List<Entry> entries;
-    [SerializeField] private Image manaRing;
+    [SerializeField] private Slider manaBar;
     [SerializeField] private SkillSlide skillSlide;
-    [SerializeField] private SkillRadialToggle radialToggle;
 
     private GameManager gameManager;
     private EnviromentManager enviromentManager;
@@ -87,7 +86,6 @@ public class PlayerSkillPanel : MonoBehaviour
         // 전환 애니메이션 진행 중). OnNight은 그 전환이 실제로 다 끝난 시점에 발동한다.
         enviromentManager.OnNight += Show;
         gameManager.ChangeToDay += Hide;
-        radialToggle.Collapsed += SlideDownAfterCollapse;
         skillSlide.HideNow(); // 시작은 낮이므로 연출 없이 꺼둔다
 
         started = true;
@@ -102,7 +100,6 @@ public class PlayerSkillPanel : MonoBehaviour
 
         enviromentManager.OnNight -= Show;
         gameManager.ChangeToDay -= Hide;
-        radialToggle.Collapsed -= SlideDownAfterCollapse;
         mana.ManaChanged -= RefreshManaDisplay;
 
         skill1Action.Disable();
@@ -117,46 +114,29 @@ public class PlayerSkillPanel : MonoBehaviour
     private void Show()
     {
         isFullyNight = true;
-        // skillSlide.Open()이 먼저 패널을 활성화해야 Buttons_Skill의 Animator가 켜져서
-        // 아래 리셋이 실제로 반영된다 - 비활성 상태에서 Animator.Play()는 무시된다.
         skillSlide.Open();
-        radialToggle.ResetCollapsedNow(); // 매번 접힌 상태에서 다시 시작한다
     }
 
-    // 낮 전환이 시작된 패널의 퇴장 연출을 시작한다. 펼쳐진 상태면 접힘부터 재생하고, 그 이벤트가
-    // 끝난 뒤 패널을 내린다 - 이미 접혀있으면 바로 내린다.
+    // 낮 전환이 시작된 패널의 퇴장 연출을 시작한다.
     private void Hide()
     {
         isFullyNight = false;
-        if (radialToggle.IsSpread)
-        {
-            radialToggle.Collapse();
-            return;
-        }
-        skillSlide.Close();
-    }
-
-    // 패널 슬라이드업이 끝난 시점에 SkillIn 애니메이션 이벤트가 호출한다 - 아이콘을 누른 것처럼 스킬 3개를 펼친다.
-    public void SpreadSkillButtons()
-    {
-        radialToggle.Spread();
-    }
-
-    // radialToggle.Collapsed(접힘 연출이 끝난 시점)를 구독해 그제서야 패널을 내린다.
-    private void SlideDownAfterCollapse()
-    {
         skillSlide.Close();
     }
 
     // mana.ManaChanged(밤 회복 틱마다 발화)를 구독해 갱신한다 - 매 프레임 폴링하지 않는다.
     private void RefreshManaDisplay()
     {
-        manaRing.fillAmount = mana.CurrentMana / mana.MaxMana;
+        if (manaBar != null)
+        {
+            manaBar.maxValue = mana.MaxMana;
+            manaBar.value = mana.CurrentMana;
+        }
 
         foreach (Entry entry in entries)
         {
             entry.button.interactable = mana.CurrentMana >= entry.skill.manaCost;
-            entry.button.transition = Selectable.Transition.ColorTint;
+            entry.button.transition = entry.button.interactable ? Selectable.Transition.ColorTint : Selectable.Transition.None;
         }
     }
 
