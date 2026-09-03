@@ -12,6 +12,9 @@ public class SkillRadialToggle : MonoBehaviour
     private static readonly int CollapseHash = Animator.StringToHash("SkillCollapse");
     private Animator anim;
     private bool spread;
+    // Play()로 시간을 순간이동시키면 Unity가 지나친 구간의 애니메이션 이벤트를 같이 발화시킨다 -
+    // ResetCollapsedNow()가 그 부작용으로 Collapsed를 잘못 쏘는 걸 막는 데 쓴다.
+    private bool suppressNextCollapsedEvent;
 
     // 지금 펼쳐진 상태인지 - PlayerSkillPanel이 낮 전환 시 접힘 연출을 재생할지 판단하는 데 쓴다.
     public bool IsSpread => spread;
@@ -56,14 +59,21 @@ public class SkillRadialToggle : MonoBehaviour
     // 연출 없이 즉시 접힌 상태로 되돌린다 - 밤이 시작될 때마다 매번 초기화하는 데 쓴다.
     public void ResetCollapsedNow()
     {
+        suppressNextCollapsedEvent = true;
         anim.Play(CollapseHash, 0, 1f);
         spread = false;
     }
 
     // SkillCollapse 애니메이션 이벤트가 접힘 연출이 끝난 시점에 호출한다 - 같은 오브젝트의
-    // Animator가 재생하므로 이벤트는 여기(SkillRadialToggle)로 와야 찾을 수 있다.
+    // Animator가 재생하므로 이벤트는 여기(SkillRadialToggle)로 와야 찾을 수 있다. ResetCollapsedNow()의
+    // 순간이동으로 인해 잘못 발화된 경우는 걸러낸다.
     public void NotifyCollapsed()
     {
+        if (suppressNextCollapsedEvent)
+        {
+            suppressNextCollapsedEvent = false;
+            return;
+        }
         Collapsed?.Invoke();
     }
 }

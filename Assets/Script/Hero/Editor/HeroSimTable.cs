@@ -6,11 +6,11 @@ public static class HeroSimTable
 {
     private const float NameWidth = 104f;
     private const float TierWidth = 34f;
-    private const float StatWidth = 66f;
+    private const float StatWidth = 116f;
     private const float DamageWidth = 74f;
     private const float CostWidth = 96f;
     private const float TraitWidth = 150f;
-    private const float RowHeight = 70f;
+    private const float RowHeight = 82f;
     private const float IconSize = 48f;
 
     private const string IntegerFormat = "N0";
@@ -60,10 +60,10 @@ public static class HeroSimTable
         {
             DrawNameCell(result.Icon, result.HeroName);
             DrawCell(result.Tier.ToString(), TierWidth, EditorStyles.label);
-            DrawCell(result.MaxHp.ToString(IntegerFormat), StatWidth, EditorStyles.label);
-            DrawCell(result.AttackPower.ToString(StatFormat), StatWidth, EditorStyles.label);
-            DrawCell(result.Defence.ToString(StatFormat), StatWidth, EditorStyles.label);
-            DrawCell(result.AttackSpeed.ToString(SpeedFormat), StatWidth, EditorStyles.label);
+            DrawStatCell(result.MaxHp.ToString(IntegerFormat), result.HpGrowth, StatWidth);
+            DrawStatCell(result.AttackPower.ToString(StatFormat), result.AttackGrowth, StatWidth);
+            DrawStatCell(result.Defence.ToString(StatFormat), result.DefenceGrowth, StatWidth);
+            DrawStatCell(result.AttackSpeed.ToString(SpeedFormat), result.AttackSpeedGrowth, StatWidth);
             DrawCell(result.BlockCount.ToString(IntegerFormat), TierWidth, EditorStyles.label);
             DrawCell(result.NormalHitDamage.ToString(IntegerFormat), DamageWidth, EditorStyles.label);
             DrawCell(result.AverageHitDamage.ToString(StatFormat), DamageWidth, EditorStyles.label);
@@ -78,6 +78,17 @@ public static class HeroSimTable
     {
         GUILayout.Label(text, style, GUILayout.Width(width), GUILayout.ExpandHeight(true));
         DrawCellGrid(GUILayoutUtility.GetLastRect());
+    }
+
+    // 스탯 칸: 값을 위에, 강화 0단계 대비 증가율을 아래에 세로로 쌓고 칸 전체에 표 선을 긋는다.
+    private static void DrawStatCell(string valueText, string growthText, float width)
+    {
+        using (var scope = new EditorGUILayout.VerticalScope(GUILayout.Width(width), GUILayout.Height(RowHeight)))
+        {
+            GUILayout.Label(valueText, EditorStyles.label, GUILayout.Width(width));
+            GUILayout.Label(growthText, EditorStyles.wordWrappedMiniLabel, GUILayout.Width(width));
+            DrawCellGrid(scope.rect);
+        }
     }
 
     // 맨 왼쪽 칸: 아이콘을 위에, 이름을 아래에 세로로 쌓고 칸 전체에 표 선을 긋는다.

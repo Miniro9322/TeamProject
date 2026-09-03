@@ -9,6 +9,14 @@ public static class HeroSimBuilder
     private const string NoTraitLabel = "없음";
     private const string UnmodeledMark = "⚠";
     private const float PercentScale = 100f;
+    private const float BaselineZero = 0f;
+    private const string ZeroGrowthLabel = "0%";
+    private const string FixedGrowthFormat = "+{0:N1}(고정)";
+    private const string PercentGrowthFormat = "+{0:N0}%";
+    private const string GrowthRateSeparator = " · ";
+    private const string PercentPerLevelFormat = "{0:N0}%/lv";
+    private const string FlatPerLevelFormat = "+{0:N1}/lv";
+    private const string NoRateLabel = "-/lv";
 
     private static readonly List<HeroStatGain> EmptyGains = new();
 
@@ -18,10 +26,12 @@ public static class HeroSimBuilder
     {
         HeroTierUpgradeEntry tierEntry = tierConfig.GetEntry(entry.HeroData.Tier);
         HeroClassUpgradeEntry classEntry = classConfig.GetEntry(entry.HeroData.HeroType);
+        IReadOnlyList<HeroStatGain> classGains = ClassGainsOf(classEntry);
 
         Dictionary<StatType, float> stats = HeroSimCalc.CalculateStats(entry.StatData,
             TierGainsOf(tierEntry), input.TierUpgradeCount,
-            ClassGainsOf(classEntry), input.ClassUpgradeCount, titleBonus);
+            classGains, input.ClassUpgradeCount, titleBonus);
+        Dictionary<StatType, float> baseline = HeroSimCalc.BaselineStats(entry.StatData);
 
         List<HeroSimHeavyChance> heavies = HeroSimCalc.ResolveHeavyRatios(entry);
         float attackPower = stats[StatType.ATK];
@@ -37,6 +47,10 @@ public static class HeroSimBuilder
             Defence = stats[StatType.DEF],
             AttackSpeed = stats[StatType.AS],
             BlockCount = stats[StatType.BLK],
+            HpGrowth = BuildGrowthCell(stats[StatType.HP], baseline[StatType.HP], classGains, StatType.HP),
+            AttackGrowth = BuildGrowthCell(stats[StatType.ATK], baseline[StatType.ATK], classGains, StatType.ATK),
+            DefenceGrowth = BuildGrowthCell(stats[StatType.DEF], baseline[StatType.DEF], classGains, StatType.DEF),
+            AttackSpeedGrowth = BuildGrowthCell(stats[StatType.AS], baseline[StatType.AS], classGains, StatType.AS),
             NormalHitDamage = HeroSimCalc.CalculateNormalHit(entry.BasePattern, attackPower, enemyDefense),
             AverageHitDamage = average,
             DamagePerSecond = average * stats[StatType.AS],
@@ -45,14 +59,43 @@ public static class HeroSimBuilder
         };
     }
 
+    // 강화 0단계 대비 지금 스탯 증가율에, 직업 강화 레벨당 증가치를 이어 붙인다.
+    private static string BuildGrowthCell(float current, float baseline, IReadOnlyList<HeroStatGain> classGains, StatType statType)
+    {
+        return BuildGrowthText(current, baseline) + GrowthRateSeparator + ClassRateText(classGains, statType);
+    }
+
+    // 강화 0단계 대비 지금 스탯이 몇 % 늘었는지 문구로 만든다. 기준값이 0이면 %를 못 구하니 증가분만 적는다.
+    private static string BuildGrowthText(float current, float baseline)
+    {
+        if (baseline == BaselineZero && current == BaselineZero) return ZeroGrowthLabel;
+        if (baseline == BaselineZero) return string.Format(FixedGrowthFormat, current);
+
+        float percent = (current - baseline) / baseline * PercentScale;
+        return string.Format(PercentGrowthFormat, percent);
+    }
+
+    // 직업 강화표에서 이 스탯의 레벨당 증가치를 찾는다. Additive면 %로, 그 외엔 원래 수치 그대로 적는다.
+    private static string ClassRateText(IReadOnlyList<HeroStatGain> classGains, StatType statType)
+    {
+        for (int index = 0; index < classGains.Count; index++)
+        {
+            HeroStatGain gain = classGains[index];
+            if (gain.statType != statType) continue;
+            if (gain.modifierType == ModifierType.Additive) return string.Format(PercentPerLevelFormat, gain.amountPerLevel * PercentScale);
+            return string.Format(FlatPerLevelFormat, gain.amountPerLevel);
+        }
+        return NoRateLabel;
+    }
+
     // 티어 강화와 직업 강화에 지금까지 들어간 자원 총합.
     private static int SumUpgradeCost(HeroTierUpgradeEntry tierEntry, HeroClassUpgradeEntry classEntry, HeroSimInput input)
     {
         int total = 0;
         if (tierEntry != null)
-            total += HeroSimCalc.CalculateCumulativeCost(tierEntry.GetCostForLevel, input.TierUpgradeCount);
+            total += HeroSimCostCalc.CalculateCumulativeCost(tierEntry.GetCostForLevel, input.TierUpgradeCount);
         if (classEntry != null)
-            total += HeroSimCalc.CalculateCumulativeCost(classEntry.GetCostForLevel, input.ClassUpgradeCount);
+            total += HeroSimCostCalc.CalculateCumulativeCost(classEntry.GetCostForLevel, input.ClassUpgradeCount);
         return total;
     }
 

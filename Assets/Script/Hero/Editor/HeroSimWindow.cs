@@ -7,7 +7,7 @@ public class HeroSimWindow : EditorWindow
 {
     private const string MenuPath = "Tools/Hero/Hero Simulator";
     private const string WindowTitle = "Hero Simulator";
-    private const string TierLevelLabel = "티어 강화 LV";
+    private const string TierLevelLabel = "티어 강화 LV (미사용)";
     private const string ClassLevelLabel = "직업 강화 LV";
     private const string TitleLabel = "타이틀 강화 칸";
     private const string ReloadLabel = "에셋 다시 읽기";
@@ -93,7 +93,11 @@ public class HeroSimWindow : EditorWindow
         }
 
         EditorGUIUtility.labelWidth = SliderLabelWidth;
-        input.TierUpgradeCount = DrawLevelSlider(TierLevelLabel, input.TierUpgradeCount, tierConfig.maxLevel);
+        using (new EditorGUI.DisabledScope(true))
+        {
+            DrawLevelSlider(TierLevelLabel, MinimumUpgradeCount, tierConfig.maxLevel);
+        }
+        input.TierUpgradeCount = MinimumUpgradeCount;
         input.ClassUpgradeCount = DrawLevelSlider(ClassLevelLabel, input.ClassUpgradeCount, classConfig.maxLevel);
         input.TitleUnlockCount = EditorGUILayout.IntSlider(TitleLabel, input.TitleUnlockCount,
             MinimumUpgradeCount, titleUpgrades.Count);

@@ -48,6 +48,12 @@ public class HeroSimResult
     public float AttackSpeed;
     public float BlockCount;
 
+    // 강화 0단계(원본 StatDataSO) 대비 지금 스탯이 몇 % 늘었는지 표기용 문구.
+    public string HpGrowth;
+    public string AttackGrowth;
+    public string DefenceGrowth;
+    public string AttackSpeedGrowth;
+
     public float NormalHitDamage;
     public float AverageHitDamage;
     public float DamagePerSecond;

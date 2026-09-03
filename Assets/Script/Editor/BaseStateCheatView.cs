@@ -15,9 +15,10 @@ public static class BaseStateCheatView
     {
         GameManager gameManager = container.Resolve<GameManager>();
         PlayerManaManager manaManager = container.Resolve<PlayerManaManager>();
+        MapRegistry mapRegistry = container.Resolve<MapRegistry>();
 
         DrawBaseHpRow(gameManager);
-        DrawUnlockRow(gameManager);
+        DrawUnlockRow(mapRegistry);
         DrawToggleRow(gameManager);
         DrawManaRow(manaManager);
     }
@@ -55,25 +56,26 @@ public static class BaseStateCheatView
     }
 
     // 지역 확장 버튼을 그린다
-    private static void DrawUnlockRow(GameManager gameManager)
+    private static void DrawUnlockRow(MapRegistry mapRegistry)
     {
         EditorGUILayout.LabelField("해금", EditorStyles.boldLabel);
-        DrawExpandMapButton(gameManager);
+        DrawExpandMapButton(mapRegistry);
         EditorGUILayout.Space();
     }
 
-    // 지역 확장 이벤트를 강제로 발생시키는 버튼을 그린다
-    private static void DrawExpandMapButton(GameManager gameManager)
+    // 아직 안 열린 모듈 중 순서상 다음 하나를 즉시 여는 버튼을 그린다
+    private static void DrawExpandMapButton(MapRegistry mapRegistry)
     {
-        if (IsButtonPressed("지역 확장")) gameManager.ExpandMapForce();
+        if (IsButtonPressed("지역 확장")) mapRegistry.UnlockNextModule();
     }
 
-    // 건설 가능, 적 스폰 허용 토글을 그린다
+    // 건설 가능, 적 스폰 허용, 지역확장 토글을 그린다
     private static void DrawToggleRow(GameManager gameManager)
     {
         EditorGUILayout.LabelField("진행 토글", EditorStyles.boldLabel);
         DrawBuildToggle(gameManager);
         DrawSpawnToggle(gameManager);
+        DrawSupportToggle(gameManager);
         EditorGUILayout.Space();
     }
 
@@ -95,6 +97,16 @@ public static class BaseStateCheatView
         bool valuePicked = EditorGUI.EndChangeCheck();
 
         if (IsValuePicked(valuePicked)) gameManager.ChangeCanSpawnEnemy(pickedValue);
+    }
+
+    // 지역확장 여부 토글을 그리고 바뀐 순간에만 지정한다 - 켜두면 다음 결과 화면 전환 때 모듈이 순서대로 하나 자동으로 열린다
+    private static void DrawSupportToggle(GameManager gameManager)
+    {
+        EditorGUI.BeginChangeCheck();
+        bool pickedValue = EditorGUILayout.Toggle("지역확장", gameManager.RequestSupport);
+        bool valuePicked = EditorGUI.EndChangeCheck();
+
+        if (IsValuePicked(valuePicked)) gameManager.ChangeRequest(pickedValue);
     }
 
     // 플레이어 마나를 가득 채우는 버튼을 그린다

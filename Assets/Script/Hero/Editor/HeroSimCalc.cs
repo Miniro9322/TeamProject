@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -32,6 +31,19 @@ public static class HeroSimCalc
         AddUpgradeGains(stats, tierGains, tierUpgradeCount);
         AddUpgradeGains(stats, classGains, classUpgradeCount);
         return ResolveStats(stats);
+    }
+
+    // 강화 0단계(원본 StatDataSO)의 스탯 5종. 증가율 표기의 기준값으로 쓴다.
+    public static Dictionary<StatType, float> BaselineStats(StatDataSO statData)
+    {
+        return new Dictionary<StatType, float>
+        {
+            [StatType.HP] = statData.maxHp,
+            [StatType.ATK] = statData.attackPower,
+            [StatType.DEF] = statData.defence,
+            [StatType.BLK] = statData.blockCount,
+            [StatType.AS] = statData.attackSpeed,
+        };
     }
 
     // 타이틀 강화 합계를 ATK·DEF의 장착 계층에 얹는다. 런타임 HeroStatManager와 같은 자리다.
@@ -175,27 +187,5 @@ public static class HeroSimCalc
 
         normalRatio = Mathf.Max(MinimumRemainRatio, normalRatio);
         return total + CalculateNormalHit(basePattern, attackPower, enemyDefense) * normalRatio;
-    }
-
-    // 0레벨부터 목표 레벨까지 실제로 지불하는 자원 총합. 자원 종류별 값을 모두 더한다.
-    public static int CalculateCumulativeCost(Func<int, (ProductionType Type, int Amount)[]> costOfLevel, int upgradeCount)
-    {
-        int total = 0;
-        for (int level = 0; level < upgradeCount; level++)
-        {
-            total += SumLevelCost(costOfLevel(level));
-        }
-        return total;
-    }
-
-    // 한 레벨의 자원 비용을 모두 더한다. 원본이 음수로 돌려주므로 부호를 뒤집는다.
-    private static int SumLevelCost((ProductionType Type, int Amount)[] costs)
-    {
-        int total = 0;
-        for (int index = 0; index < costs.Length; index++)
-        {
-            total -= costs[index].Amount;
-        }
-        return total;
     }
 }
