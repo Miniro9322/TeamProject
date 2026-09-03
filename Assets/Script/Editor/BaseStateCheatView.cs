@@ -2,10 +2,9 @@ using UnityEditor;
 using UnityEngine;
 using VContainer;
 
-// 기지 체력과 지역 확장, 영웅 해금, 진행 토글, 플레이어 마나를 즉시 바꾸는 치트 구역
+// 기지 체력과 지역 확장, 진행 토글, 플레이어 마나를 즉시 바꾸는 치트 구역
 public static class BaseStateCheatView
 {
-    private const byte AllUnlockedHeroFlags = 127;
     private const int DefaultBaseHp = 20;
     private const float StateButtonHeight = 24f;
 
@@ -55,15 +54,11 @@ public static class BaseStateCheatView
         if (IsButtonPressed("게임오버")) gameManager.HpDamage(EnemyClass.Boss);
     }
 
-    // 지역 확장과 영웅 전체 해금 버튼을 그린다
+    // 지역 확장 버튼을 그린다
     private static void DrawUnlockRow(GameManager gameManager)
     {
         EditorGUILayout.LabelField("해금", EditorStyles.boldLabel);
-
-        EditorGUILayout.BeginHorizontal();
         DrawExpandMapButton(gameManager);
-        DrawUnlockHeroButton(gameManager);
-        EditorGUILayout.EndHorizontal();
         EditorGUILayout.Space();
     }
 
@@ -73,19 +68,12 @@ public static class BaseStateCheatView
         if (IsButtonPressed("지역 확장")) gameManager.ExpandMapForce();
     }
 
-    // 영웅 종류를 전부 해금하는 버튼을 그린다
-    private static void DrawUnlockHeroButton(GameManager gameManager)
-    {
-        if (IsButtonPressed("영웅 전부 해금")) gameManager.RestoreUnlockedHero(AllUnlockedHeroFlags);
-    }
-
-    // 건설 가능, 적 스폰 허용, 지원 요청 토글을 그린다
+    // 건설 가능, 적 스폰 허용 토글을 그린다
     private static void DrawToggleRow(GameManager gameManager)
     {
         EditorGUILayout.LabelField("진행 토글", EditorStyles.boldLabel);
         DrawBuildToggle(gameManager);
         DrawSpawnToggle(gameManager);
-        DrawSupportToggle(gameManager);
         EditorGUILayout.Space();
     }
 
@@ -107,16 +95,6 @@ public static class BaseStateCheatView
         bool valuePicked = EditorGUI.EndChangeCheck();
 
         if (IsValuePicked(valuePicked)) gameManager.ChangeCanSpawnEnemy(pickedValue);
-    }
-
-    // 지원 요청 여부 토글을 그리고 바뀐 순간에만 지정한다
-    private static void DrawSupportToggle(GameManager gameManager)
-    {
-        EditorGUI.BeginChangeCheck();
-        bool pickedValue = EditorGUILayout.Toggle("지원 요청", gameManager.RequestSupport);
-        bool valuePicked = EditorGUI.EndChangeCheck();
-
-        if (IsValuePicked(valuePicked)) gameManager.ChangeRequest(pickedValue);
     }
 
     // 플레이어 마나를 가득 채우는 버튼을 그린다
