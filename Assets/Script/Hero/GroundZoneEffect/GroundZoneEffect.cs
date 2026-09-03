@@ -102,6 +102,7 @@ public class GroundZoneEffect : MonoBehaviour
                 if (!persistent) elapsed += dt;
                 tickTimer += dt;
                 if (tickTimer >= tickInterval) { tickTimer = 0f; Tick(); }
+                UpdatePersistentEffectVisibility();
                 await UniTask.Yield(token);
             }
         }
@@ -146,7 +147,11 @@ public class GroundZoneEffect : MonoBehaviour
     private void SpawnAllyBuffEffect(Hero ally)
     {
         if (buffReceiveEffect == null) return;
-        GameObject fx = owner.SpawnPersistentEffect(buffReceiveEffect, ally.transform.position);
+        // SpawnPersistentEffect(스폰 시점 컷)가 아니라 Always를 쓴다 — 이 인스턴스는 아군이 범위를
+        // 벗어날 때까지 계속 추적하며 매 프레임(RunLifetime) 가시성을 따로 토글하므로, 스폰 시점에
+        // 화면 밖이라고 아예 건너뛰면 나중에 화면에 들어와도 켤 인스턴스가 없어 영구히 안 보이게 된다.
+        GameObject fx = owner.SpawnPersistentEffectAlways(buffReceiveEffect, ally.transform.position,
+            buffReceiveEffect.transform.localRotation);
         if (fx == null) return;
         fx.transform.SetParent(ally.transform, worldPositionStays: true);
         buffEffectInstances[ally] = fx;
@@ -161,7 +166,9 @@ public class GroundZoneEffect : MonoBehaviour
     private void SpawnHealPresenceEffect(Hero ally)
     {
         if (healReceiveEffect == null) return;
-        GameObject fx = owner.SpawnPersistentEffect(healReceiveEffect, ally.transform.position);
+        // 이유는 SpawnAllyBuffEffect와 동일 — Always로 스폰하고 가시성은 RunLifetime에서 매 프레임 관리.
+        GameObject fx = owner.SpawnPersistentEffectAlways(healReceiveEffect, ally.transform.position,
+            healReceiveEffect.transform.localRotation);
         if (fx == null) return;
         fx.transform.SetParent(ally.transform, worldPositionStays: true);
         healEffectInstances[ally] = fx;
@@ -198,6 +205,21 @@ public class GroundZoneEffect : MonoBehaviour
             if (ally != null) DespawnHealPresenceEffect(ally);
             return true;
         });
+    }
+
+    // selfEffect(오라/장판 표시)와 아군에 붙는 버프/힐 수신 이펙트는 스폰 시점 컷 없이 항상 살아있으므로,
+    // 매 프레임 현재 위치 기준으로 화면 안/밖 여부를 다시 확인해 렌더러/파티클만 켜고 끈다. Tick()의
+    // 데미지/힐/버프 적용 로직과는 무관하게 실행되므로 화면 표시 여부가 판정에 영향을 주지 않는다.
+    private void UpdatePersistentEffectVisibility()
+    {
+        if (selfEffectInstance != null)
+            VfxVisibility.SetVisualActive(selfEffectInstance, !VfxVisibility.IsOffscreen(selfEffectInstance.transform.position));
+        foreach (GameObject fx in buffEffectInstances.Values)
+            if (fx != null)
+                VfxVisibility.SetVisualActive(fx, !VfxVisibility.IsOffscreen(fx.transform.position));
+        foreach (GameObject fx in healEffectInstances.Values)
+            if (fx != null)
+                VfxVisibility.SetVisualActive(fx, !VfxVisibility.IsOffscreen(fx.transform.position));
     }
 
     private void Tick()
@@ -276,7 +298,10 @@ public class GroundZoneEffect : MonoBehaviour
     private void SpawnSelfEffect()
     {
         if (selfEffect == null) return;
-        selfEffectInstance = owner.SpawnEffect(selfEffect, transform.position, selfEffect.transform.rotation, duration > 0f ? duration : 0f);
+        // SpawnEffect(스폰 시점 컷)가 아니라 Always를 쓴다 — 오라(duration<=0)/장판 자체가 살아있는
+        // 동안 계속 유지되며 RunLifetime이 매 프레임 가시성을 따로 토글하므로, 스폰 시점에 화면 밖이면
+        // 아예 건너뛰는 기존 방식으로는 나중에 화면에 들어와도 켤 인스턴스가 없다.
+        selfEffectInstance = owner.SpawnEffectAlways(selfEffect, transform.position, selfEffect.transform.rotation, duration > 0f ? duration : 0f);
         if (selfEffectInstance == null) return;
         // 장판 자신의 transform(ApplyVisualScale로 이미 스케일됨)이 아니라 owner에 직접 매달아야
         // 스케일이 중첩되지 않는다.

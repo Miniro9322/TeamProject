@@ -74,6 +74,7 @@ public class Projectile : MonoBehaviour
     private Transform target;
     private Vector3 destination;
     private bool visualOnly;
+    private bool visible = true;
     private float damage;
     private float elapsed;
     private IObjectPool<Projectile> pool;
@@ -93,6 +94,7 @@ public class Projectile : MonoBehaviour
         this.hero = cfg.hero;
         this.visualOnly = false;
         elapsed = 0f;
+        ResetVisibility();
 
         if (target != null && TryLook(target.position - transform.position, out Quaternion look))
             transform.rotation = look;
@@ -110,6 +112,7 @@ public class Projectile : MonoBehaviour
         elapsed = 0f;
         pendingHitPoints = hitPoints;
         nextHitIndex = 0;
+        ResetVisibility();
 
         if (TryLook(destination - transform.position, out Quaternion look))
             transform.rotation = look;
@@ -129,8 +132,29 @@ public class Projectile : MonoBehaviour
         }
     }
 
+    // 풀에서 재사용될 때 이전 비행에서 꺼진 상태(화면 밖에서 반납된 경우)로 남아있지 않도록 초기화한다.
+    private void ResetVisibility()
+    {
+        visible = true;
+        VfxVisibility.SetVisualActive(gameObject, true);
+    }
+
+    // 이동/충돌 판정과 완전히 분리된 순수 표시 토글 — 화면 밖이면 렌더러/파티클만 끄고, 이 메서드를
+    // 호출하는 Update()의 나머지 로직(이동, 히트 판정, Hit())은 화면 표시 여부와 무관하게 계속 실행된다.
+    private void UpdateVisibility()
+    {
+        bool offscreen = VfxVisibility.IsOffscreen(transform.position);
+        if (offscreen == visible)
+        {
+            visible = !offscreen;
+            VfxVisibility.SetVisualActive(gameObject, visible);
+        }
+    }
+
     private void Update()
     {
+        UpdateVisibility();
+
         elapsed += Time.deltaTime;
         if (elapsed >= maxLifetime || (!visualOnly && target == null))
         {
