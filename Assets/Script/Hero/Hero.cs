@@ -138,6 +138,17 @@ public class Hero : MonoBehaviour, IDamageAble, IUnit, IStunAble, IDebuffCarrier
         return go;
     }
 
+    // SpawnEffect와 동일하지만 SpawnPersistentEffectAlways를 통해 화면 밖이어도 스폰을 생략하지 않는다.
+    // 스폰 후 계속 살아남는 이펙트(GroundZoneEffect의 self/오라 등) 전용 — 호출부가 매 프레임
+    // VfxVisibility.SetVisualActive로 직접 가시성을 관리해야 한다.
+    public GameObject SpawnEffectAlways(GameObject prefab, Vector3 pos, Quaternion rot, float lifetime)
+    {
+        GameObject go = SpawnPersistentEffectAlways(prefab, pos, rot);
+        if (go != null && lifetime > 0f)
+            ReturnEffectAfter(prefab, go, lifetime).Forget();
+        return go;
+    }
+
     // 회전을 생략하면 identity가 아니라 프리팹 자신에게 구워둔 회전을 쓴다 — Quaternion.identity를
     // 넘기면 눕혀두거나 특정 방향을 보게 만든 프리팹의 로컬 회전이 스폰 때마다 지워지기 때문.
     // localRotation을 쓰는 이유: hitEffect 필드가 (일부 장판 프리팹처럼) 스폰된 다른 오브젝트의
@@ -153,15 +164,31 @@ public class Hero : MonoBehaviour, IDamageAble, IUnit, IStunAble, IDebuffCarrier
     {
         if (prefab == null) return null;
         // 순수 연출용 이펙트 — 화면 밖(마진 포함)이면 인스턴스화 자체를 생략한다. 이 시점에 도달하는
-        // 모든 호출부는 피해/디버프가 이미 적용된 뒤의 연출 스폰뿐이다(AttackDamageUtil.SpawnHitEffect,
-        // HeroActiveSkill 캐스터 이펙트, BeamLinkEffect 등) — SpawnGroundZone(별도 메서드, 장판 자체가
-        // 데미지/힐 틱 소유자)은 이 메서드를 타지 않으므로 영향 없다.
+        // 모든 호출부는 피해/디버프가 이미 적용된 뒤의, 1회성·단명 연출 스폰뿐이다(AttackDamageUtil.
+        // SpawnHitEffect, HeroActiveSkill 캐스터 이펙트, BeamLinkEffect 등) — SpawnGroundZone(별도
+        // 메서드, 장판 자체가 데미지/힐 틱 소유자)은 이 메서드를 타지 않으므로 영향 없다. 인스턴스를
+        // 계속 추적하며 매 프레임 가시성을 재검사할 대상(GroundZoneEffect의 self/버프/힐 이펙트 등)은
+        // 대신 SpawnPersistentEffectAlways를 써야 한다 — 그래야 나중에 화면에 들어와도 켤 인스턴스가
+        // 남아있다.
         if (VfxVisibility.IsOffscreen(pos)) return null;
+        return SpawnPersistentEffectAlways(prefab, pos, rot);
+    }
+
+    // SpawnPersistentEffect와 동일하지만 화면 밖이어도 스폰을 생략하지 않는다. 스폰 후에도 계속
+    // 살아남아 위치가 바뀌는 이펙트(GroundZoneEffect의 self/오라, 아군에 붙는 버프/힐 수신 이펙트 등)
+    // 전용 — 호출부가 매 프레임 VfxVisibility.SetVisualActive로 직접 가시성을 관리해야 한다.
+    public GameObject SpawnPersistentEffectAlways(GameObject prefab, Vector3 pos, Quaternion rot)
+    {
+        if (prefab == null) return null;
         IObjectPool<GameObject> pool = GetEffectPool(prefab);
         GameObject go = pool.Get();
         while (go == null)
             go = pool.Get();
         go.transform.SetPositionAndRotation(pos, rot);
+        // 이전 대여 때 화면 밖이라 VfxVisibility.SetVisualActive(false)로 꺼진 채 반납됐을 수 있다 —
+        // 새로 스폰되는 인스턴스는 항상 보이는 상태로 시작해야 하므로 렌더러를 명시적으로 켠다.
+        foreach (Renderer r in go.GetComponentsInChildren<Renderer>(true))
+            r.enabled = true;
         foreach (ParticleSystem ps in go.GetComponentsInChildren<ParticleSystem>(true))
         {
             ps.Clear(true);
