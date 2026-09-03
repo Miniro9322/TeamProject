@@ -198,6 +198,16 @@ public class RegionDetailPanel : MonoBehaviour, IClosablePanel
             return;
         }
 
+        OpenBuiltSlot(index);
+    }
+
+    // 지어진 칸을 BuildingPanel로 연다 - 슬롯 클릭과, FacilityBuildChoicePanel에서 건설을 막 끝낸
+    // 직후(선택 팝업을 닫으면서 그 칸을 이어서 보여주는 용도) 둘 다에서 쓴다.
+    public void OpenBuiltSlot(int index)
+    {
+        if (region == null || index >= region.Slots.Count) return;
+
+        var slot = region.Slots[index];
         if (slot.Occupant is not IUpgradableOccupant occupant) return;
 
         buildChoicePanel.Close(); // 빈 칸용 패널이 열려있었다면 정리

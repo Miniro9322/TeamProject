@@ -32,6 +32,10 @@ public class PlayerSkillPanel : MonoBehaviour
     // 씬 로딩 중 게임을 끄면 Start가 끝나기 전에 OnDestroy가 불릴 수 있어, 이때 아래 필드들이
     // 아직 null이라 OnDestroy가 터진다. 이 플래그로 Start 완료 여부를 확인하고 조기 종료한다.
     private bool started;
+    // gameManager.CanBuild는 밤 전환이 "시작"되자마자 false가 돼서, 그걸로 단축키를 막으면 낮->밤
+    // 전환 연출이 다 끝나기도 전에 스킬을 쓸 수 있었다. 패널이 실제로 뜨는 시점(OnNight)과 맞춰
+    // 이 플래그로 따로 추적한다.
+    private bool isFullyNight;
 
     [Inject]
     private void Construct(GameManager gameManager, EnviromentManager enviromentManager, PlayerManaManager mana)
@@ -109,12 +113,14 @@ public class PlayerSkillPanel : MonoBehaviour
     // 밤 전환이 끝난 패널의 등장 연출을 시작한다.
     private void Show()
     {
+        isFullyNight = true;
         skillSlide.Open();
     }
 
     // 낮 전환이 시작된 패널의 퇴장 연출을 시작한다.
     private void Hide()
     {
+        isFullyNight = false;
         skillSlide.Close();
     }
 
@@ -140,7 +146,7 @@ public class PlayerSkillPanel : MonoBehaviour
     private void TryCastHotkey(int index)
     {
         if (TutorialInputGate.BlockHotkeys) return;
-        if (gameManager.CanBuild) return; // 낮에는 동작 안 함(CanBuild==true가 낮) - 패널이 숨겨져 있어도 키 입력은 막혀 있지 않으므로 별도 체크 필요
+        if (!isFullyNight) return; // 완전히 밤이 된 뒤(패널이 뜬 뒤)에만 동작 - 패널이 숨겨져 있어도 키 입력은 막혀 있지 않으므로 별도 체크 필요
         if (mana.CurrentMana < entries[index].skill.manaCost) return;
 
         entries[index].button.onClick?.Invoke();
