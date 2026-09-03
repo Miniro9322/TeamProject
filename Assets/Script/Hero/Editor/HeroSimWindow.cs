@@ -131,11 +131,12 @@ public class HeroSimWindow : EditorWindow
         results = new List<HeroSimResult>();
         float titleBonus = HeroSimCalc.CalculateTitleBonus(titleUpgrades, input.TitleUnlockCount);
         int enemyDefense = enemyPicker.Defense;
+        float enemyHp = enemyPicker.Hp;
 
         for (int index = 0; index < entries.Count; index++)
         {
             if (!PassesFilter(entries[index])) continue;
-            results.Add(HeroSimBuilder.BuildResult(entries[index], tierConfig, classConfig, input, titleBonus, enemyDefense));
+            results.Add(HeroSimBuilder.BuildResult(entries[index], tierConfig, classConfig, input, titleBonus, enemyDefense, enemyHp));
         }
     }
 

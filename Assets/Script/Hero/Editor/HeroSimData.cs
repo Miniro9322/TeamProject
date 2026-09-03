@@ -60,4 +60,7 @@ public class HeroSimResult
 
     public int CumulativeCost;
     public string TraitNote;
+
+    // 상대 적을 골랐을 때만 값이 붙는 처치 시간(초). 안 골랐으면 "-".
+    public string TimeToKill;
 }

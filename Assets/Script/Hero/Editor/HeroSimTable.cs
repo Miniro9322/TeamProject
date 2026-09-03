@@ -27,6 +27,7 @@ public static class HeroSimTable
     private const string NormalHeader = "평타 1타";
     private const string AverageHeader = "평균 1타";
     private const string DpsHeader = "초당 피해";
+    private const string KillHeader = "처치 시간";
     private const string CostHeader = "누적 비용";
     private const string TraitHeader = "트레잇";
 
@@ -48,6 +49,7 @@ public static class HeroSimTable
             DrawCell(NormalHeader, DamageWidth, EditorStyles.boldLabel);
             DrawCell(AverageHeader, DamageWidth, EditorStyles.boldLabel);
             DrawCell(DpsHeader, DamageWidth, EditorStyles.boldLabel);
+            DrawCell(KillHeader, DamageWidth, EditorStyles.boldLabel);
             DrawCell(CostHeader, CostWidth, EditorStyles.boldLabel);
             DrawCell(TraitHeader, TraitWidth, EditorStyles.boldLabel);
         }
@@ -68,6 +70,7 @@ public static class HeroSimTable
             DrawCell(result.NormalHitDamage.ToString(IntegerFormat), DamageWidth, EditorStyles.label);
             DrawCell(result.AverageHitDamage.ToString(StatFormat), DamageWidth, EditorStyles.label);
             DrawCell(result.DamagePerSecond.ToString(IntegerFormat), DamageWidth, EditorStyles.label);
+            DrawCell(result.TimeToKill, DamageWidth, EditorStyles.label);
             DrawCell(result.CumulativeCost.ToString(IntegerFormat), CostWidth, EditorStyles.label);
             DrawCell(result.TraitNote, TraitWidth, EditorStyles.label);
         }

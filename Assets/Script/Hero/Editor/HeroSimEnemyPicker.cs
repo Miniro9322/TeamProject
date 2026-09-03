@@ -21,6 +21,9 @@ public class HeroSimEnemyPicker
 
     public int Defense => ComputeDefense();
 
+    // 고른 적의 일차 반영 체력. 안 골랐으면 0(=TTK 계산에서 "적 없음" 신호로 쓴다).
+    public float Hp => ComputeHp();
+
     // 적 목록을 CSV 표에서 다시 읽는다.
     public void Load()
     {
@@ -54,6 +57,16 @@ public class HeroSimEnemyPicker
         EnemyTable.Data data = entries[enemyIndex - NameToEntryOffset];
         EnemyStatScaling.Stats scaled = EnemyStatScaling.Compute(data, data.Class, dayCount);
         return Mathf.RoundToInt(scaled.Defense);
+    }
+
+    // 고른 적의 일차 반영 체력을 계산한다.
+    private float ComputeHp()
+    {
+        if (IsNoneSelected()) return 0f;
+
+        EnemyTable.Data data = entries[enemyIndex - NameToEntryOffset];
+        EnemyStatScaling.Stats scaled = EnemyStatScaling.Compute(data, data.Class, dayCount);
+        return scaled.Hp;
     }
 
     // 드롭다운에 올릴 이름 목록을 만든다.

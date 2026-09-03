@@ -17,12 +17,15 @@ public static class HeroSimBuilder
     private const string PercentPerLevelFormat = "{0:N0}%/lv";
     private const string FlatPerLevelFormat = "+{0:N1}/lv";
     private const string NoRateLabel = "-/lv";
+    private const string NoEnemySelectedLabel = "-";
+    private const string TimeToKillFormat = "{0:N2}초";
+    private const float ZeroDamagePerSecond = 0f;
 
     private static readonly List<HeroStatGain> EmptyGains = new();
 
     // 영웅 한 명의 표 한 줄을 만든다. enemyDefense는 상대 적을 골랐을 때만 0보다 크다.
     public static HeroSimResult BuildResult(HeroSimEntry entry, HeroUpgradeConfig tierConfig,
-        HeroClassUpgradeConfig classConfig, HeroSimInput input, float titleBonus, int enemyDefense)
+        HeroClassUpgradeConfig classConfig, HeroSimInput input, float titleBonus, int enemyDefense, float enemyHp)
     {
         HeroTierUpgradeEntry tierEntry = tierConfig.GetEntry(entry.HeroData.Tier);
         HeroClassUpgradeEntry classEntry = classConfig.GetEntry(entry.HeroData.HeroType);
@@ -36,6 +39,7 @@ public static class HeroSimBuilder
         List<HeroSimHeavyChance> heavies = HeroSimCalc.ResolveHeavyRatios(entry);
         float attackPower = stats[StatType.ATK];
         float average = HeroSimCalc.CalculateAverageHit(entry.BasePattern, heavies, attackPower, enemyDefense);
+        float damagePerSecond = average * stats[StatType.AS];
 
         return new HeroSimResult
         {
@@ -53,10 +57,20 @@ public static class HeroSimBuilder
             AttackSpeedGrowth = BuildGrowthCell(stats[StatType.AS], baseline[StatType.AS], classGains, StatType.AS),
             NormalHitDamage = HeroSimCalc.CalculateNormalHit(entry.BasePattern, attackPower, enemyDefense),
             AverageHitDamage = average,
-            DamagePerSecond = average * stats[StatType.AS],
+            DamagePerSecond = damagePerSecond,
             CumulativeCost = SumUpgradeCost(tierEntry, classEntry, input),
             TraitNote = BuildTraitNote(entry, heavies),
+            TimeToKill = BuildTimeToKillText(enemyHp, damagePerSecond),
         };
+    }
+
+    // 상대 적의 체력을 초당 피해로 나눠 처치 시간을 만든다. 적을 안 골랐으면 "-"를 준다.
+    private static string BuildTimeToKillText(float enemyHp, float damagePerSecond)
+    {
+        if (enemyHp <= BaselineZero) return NoEnemySelectedLabel;
+        if (damagePerSecond <= ZeroDamagePerSecond) return NoEnemySelectedLabel;
+
+        return string.Format(TimeToKillFormat, enemyHp / damagePerSecond);
     }
 
     // 강화 0단계 대비 지금 스탯 증가율에, 직업 강화 레벨당 증가치를 이어 붙인다.
