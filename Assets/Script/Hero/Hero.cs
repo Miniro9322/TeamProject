@@ -152,6 +152,11 @@ public class Hero : MonoBehaviour, IDamageAble, IUnit, IStunAble, IDebuffCarrier
     public GameObject SpawnPersistentEffect(GameObject prefab, Vector3 pos, Quaternion rot)
     {
         if (prefab == null) return null;
+        // 순수 연출용 이펙트 — 화면 밖(마진 포함)이면 인스턴스화 자체를 생략한다. 이 시점에 도달하는
+        // 모든 호출부는 피해/디버프가 이미 적용된 뒤의 연출 스폰뿐이다(AttackDamageUtil.SpawnHitEffect,
+        // HeroActiveSkill 캐스터 이펙트, BeamLinkEffect 등) — SpawnGroundZone(별도 메서드, 장판 자체가
+        // 데미지/힐 틱 소유자)은 이 메서드를 타지 않으므로 영향 없다.
+        if (VfxVisibility.IsOffscreen(pos)) return null;
         IObjectPool<GameObject> pool = GetEffectPool(prefab);
         GameObject go = pool.Get();
         while (go == null)

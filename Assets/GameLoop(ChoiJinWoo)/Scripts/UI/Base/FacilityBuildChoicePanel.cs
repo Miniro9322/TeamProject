@@ -238,9 +238,11 @@ public class FacilityBuildChoicePanel : MonoBehaviour, IClosablePanel
 
         if (constructor.TryBuild(currentOption, region, slotIndex, out _))
         {
+            int builtSlotIndex = slotIndex;
             infoPanel.SetActive(false);
             Close();
             StateChanged?.Invoke();
+            if (parentPanel != null) parentPanel.OpenBuiltSlot(builtSlotIndex);
         }
         else
         {

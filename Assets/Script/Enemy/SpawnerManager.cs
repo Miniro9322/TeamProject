@@ -136,10 +136,21 @@ public class SpawnerManager : MonoBehaviour
 
     // 지역별 로컬 진행도. 그 지역이 해금된 날을 1일차로 다시 센다 —
     // 나중에 해금된 지역이 글로벌 DayCount 배율을 그대로 물려받아 첫 웨이브부터 몰리는 걸 막는다.
-    // 오프셋은 해금되는 그 순간(UnlockRegion 호출 시점)이 아니라, 이 지역 정보가 처음 조회되는 시점에 확정한다.
+    // 오프셋은 해금되는 순간이나 정보 조회 시점이 아니라, 그 지역의 첫 밤 스폰(SpawnStage) 때 확정한다.
     // ResultState처럼 UnlockNextModule()이 OnDay()로 DayCount가 오르기 "직전"에 불리는 경로가 있어서,
-    // 해금 시점에 바로 계산하면 아직 안 오른 DayCount 기준으로 오프셋이 고정되어 그 지역이 영구히 하루씩 밀린다.
-    public int LocalStage(int region) => CurrentDay - EnsureOffset(region);
+    // 그 사이에 굳히면(해금 이벤트와 같은 프레임에 트레일·포탈 조회가 끼어든다) 아직 안 오른 DayCount
+    // 기준으로 고정되어 그 지역이 영구히 하루씩 밀린다.
+    public int LocalStage(int region)
+    {
+        // 조회 전용 — 오프셋을 굳히지 않는다. 잠긴 지역, 그리고 해금됐지만 아직 첫 밤을 안 지난
+        // 지역(해금은 DayCount가 오르기 직전에 일어난다)은 둘 다 1일차로 답한다.
+        if (!IsUnlocked(region)) return 1;
+        return _unlockOffset.TryGetValue(region, out int off) ? CurrentDay - off : 1;
+    }
+
+    // 실제 스폰 시점의 진행도. 오프셋을 굳히는 건 이 경로에서만 — 이 시점의 DayCount는 이미 그 밤의
+    // 값이라 "아직 안 오른 DayCount로 굳는" 어긋남이 구조적으로 불가능하다.
+    private int SpawnStage(int region) => CurrentDay - EnsureOffset(region);
 
     /// <summary>
     /// 이 지역의 오프셋을 돌려주고, 아직 없으면 지금 일차를 1일차로 삼아 정해 넣는다.
@@ -465,7 +476,7 @@ public class SpawnerManager : MonoBehaviour
         var unlocked = UnlockedRegions();
         // 웨이브 조합(어떤 몹이 나올지)은 지역별 LocalStage, 마릿수 배율은 글로벌 DayCount 기준으로 유지한다.
         foreach (int region in unlocked)
-            _byRegion[region].SpawnWave(region, LocalStage(region), unlocked.Count, CurrentDay, PathSeed(region));
+            _byRegion[region].SpawnWave(region, SpawnStage(region), unlocked.Count, CurrentDay, PathSeed(region));
     }
 
 
@@ -473,7 +484,7 @@ public class SpawnerManager : MonoBehaviour
     {
         if (!IsUnlocked(region)) return;
         if (_byRegion.TryGetValue(region, out WaveSpawner s))
-            s.SpawnWave(region, LocalStage(region), UnlockedCount(), CurrentDay, PathSeed(region));
+            s.SpawnWave(region, SpawnStage(region), UnlockedCount(), CurrentDay, PathSeed(region));
     }
     private void OnRegionClear() //몹 다잡았을때
     {
