@@ -131,7 +131,7 @@ public class PlayerSkillPanel : MonoBehaviour
         if (radialToggle.IsSpread)
         {
             radialToggle.Collapse();
-            return;
+            //return;
         }
         skillSlide.Close();
     }

@@ -59,6 +59,7 @@ public class SkillRadialToggle : MonoBehaviour
     // 연출 없이 즉시 접힌 상태로 되돌린다 - 밤이 시작될 때마다 매번 초기화하는 데 쓴다.
     public void ResetCollapsedNow()
     {
+        //Debug.Log("ResetCollapsedNow() called");
         suppressNextCollapsedEvent = true;
         anim.Play(CollapseHash, 0, 1f);
         spread = false;
@@ -69,11 +70,12 @@ public class SkillRadialToggle : MonoBehaviour
     // 순간이동으로 인해 잘못 발화된 경우는 걸러낸다.
     public void NotifyCollapsed()
     {
+        //Debug.Log($"NotifyCollapsed() called {suppressNextCollapsedEvent}");
         if (suppressNextCollapsedEvent)
         {
             suppressNextCollapsedEvent = false;
             return;
         }
-        Collapsed?.Invoke();
+        //Collapsed?.Invoke();
     }
 }
