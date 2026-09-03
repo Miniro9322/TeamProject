@@ -125,6 +125,7 @@ public class PathTrailCalc
         hasSwim = false;
 
         int region = spawner.Region;
+         if (!SpawnerManager.Instance.IsUnlocked(region)) return;
         int stage = SpawnerManager.Instance.LocalStage(region);
         int lookupId = WaveSpawner.GetStageLookupId(stage);
         CollectKindsFromWave(DataTableManager.WaveTable.GetWave(region, lookupId), ref hasGround, ref hasAir, ref hasSwim);
