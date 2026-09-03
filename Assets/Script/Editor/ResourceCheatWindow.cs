@@ -1,158 +1,113 @@
+using System;
 using UnityEditor;
 using UnityEngine;
+using VContainer;
 
-// 테스트용으로 자원·시민을 즉시 지급하는 에디터 전용 창
+// 테스트용 치트를 탭으로 나눠 보여주는 에디터 전용 창
 public class ResourceCheatWindow : EditorWindow
 {
-    private const int DefaultResourceAmount = 1000;
-    private const int DefaultCitizenAmount = 10;
-    private const float GrantButtonHeight = 24f;
+    private const string WindowTitle = "자원 치트";
+    private const string ScopeSlotLabel = "조립 스코프";
+    private const string EditModeText = "게임을 Play로 실행한 뒤에 사용할 수 있습니다.";
+    private const string ScopeMissingText = "씬에서 GameLifeTimeScope를 찾지 못했습니다 — 게임 씬이 열려 있는지 확인하거나 위 칸에 직접 물려 주세요.";
 
-    private int resourceAmount = DefaultResourceAmount;
-    private int citizenAmount = DefaultCitizenAmount;
+    // 탭 이름과 아래 tabDrawers의 순서를 반드시 같게 유지한다
+    private static readonly string[] TabLabels = { "자원·시민", "영웅 강화", "진행", "기지" };
+
+    [SerializeField] private GameLifeTimeScope lifeTimeScope;
+    [SerializeField] private int tabIndex;
+
+    private Action<IObjectResolver>[] tabDrawers;
 
     // 메뉴에서 자원 치트 창을 연다
     [MenuItem("Tools/Debug/자원 치트")]
     public static void OpenCheatWindow()
     {
-        GetWindow<ResourceCheatWindow>("자원 치트");
+        GetWindow<ResourceCheatWindow>(WindowTitle);
     }
 
-    // 실행 상태를 확인하고 지급 화면을 그린다
+    // 탭 번호와 그리기 담당을 같은 순서로 묶어둔다
+    private void OnEnable()
+    {
+        tabDrawers = new Action<IObjectResolver>[]
+        {
+            DrawBaseTab,
+            HeroUpgradeCheatView.DrawUpgradeSection,
+            DayFlowCheatView.DrawFlowSection,
+            BaseStateCheatView.DrawStateSection,
+        };
+    }
+
+    // 실행 상태와 스코프를 확인하고 고른 탭을 그린다
     private void OnGUI()
     {
-        if (!Application.isPlaying)
+        AssignScopeOnce();
+        DrawScopeSlot();
+
+        if (IsEditMode())
         {
-            EditorGUILayout.HelpBox("게임을 Play로 실행한 뒤에 사용할 수 있습니다.", MessageType.Info);
+            EditorGUILayout.HelpBox(EditModeText, MessageType.Info);
             return;
         }
 
-        ResourcesManager resourcesManager = FindFirstObjectByType<ResourcesManager>();
-        CitizenManager citizenManager = FindFirstObjectByType<CitizenManager>();
-
-        if (IsManagerMissing(resourcesManager, citizenManager))
+        if (IsScopeMissing())
         {
-            EditorGUILayout.HelpBox("현재 씬에서 자원 또는 시민 관리자를 찾지 못했습니다.", MessageType.Warning);
+            EditorGUILayout.HelpBox(ScopeMissingText, MessageType.Warning);
             return;
         }
 
-        DrawResourceSection(resourcesManager);
-        DrawCitizenSection(citizenManager);
+        DrawTabBar();
+        DrawSelectedTab(lifeTimeScope.Container);
     }
 
-    // 자원·시민 관리자 중 하나라도 없는지 판정한다
-    private bool IsManagerMissing(ResourcesManager resourcesManager, CitizenManager citizenManager)
+    // 슬롯이 비어 있을 때만 씬의 조립 스코프를 한 번 물린다
+    private void AssignScopeOnce()
     {
-        if (resourcesManager == null)
-        {
-            return true;
-        }
-
-        return citizenManager == null;
+        if (IsScopeMissing()) TakeSceneScope();
     }
 
-    // 자원 지급 수량 칸과 버튼들을 그린다
-    private void DrawResourceSection(ResourcesManager resourcesManager)
+    // 씬에 있는 조립 스코프를 슬롯에 담는다
+    private void TakeSceneScope()
     {
-        EditorGUILayout.LabelField("자원", EditorStyles.boldLabel);
-        resourceAmount = EditorGUILayout.IntField("지급 수량", resourceAmount);
+        lifeTimeScope = FindFirstObjectByType<GameLifeTimeScope>();
+    }
 
-        EditorGUILayout.BeginHorizontal();
-        DrawResourceButton(resourcesManager, "나무", ProductionType.Wood);
-        DrawResourceButton(resourcesManager, "식량", ProductionType.Food);
-        DrawResourceButton(resourcesManager, "골드", ProductionType.Gold);
-        DrawResourceButton(resourcesManager, "철", ProductionType.Iron);
-        DrawResourceButton(resourcesManager, "석재", ProductionType.Stone);
-        EditorGUILayout.EndHorizontal();
+    // 컨테이너를 꺼낼 조립 스코프를 물리는 칸을 그린다
+    private void DrawScopeSlot()
+    {
+        lifeTimeScope = (GameLifeTimeScope)EditorGUILayout.ObjectField(
+            ScopeSlotLabel, lifeTimeScope, typeof(GameLifeTimeScope), true);
+    }
 
-        EditorGUILayout.BeginHorizontal();
-        DrawSpecialButton(resourcesManager);
-        DrawGrantAllButton(resourcesManager);
-        EditorGUILayout.EndHorizontal();
+    // 탭 이름 줄을 그리고 고른 번호를 기억한다
+    private void DrawTabBar()
+    {
+        tabIndex = GUILayout.Toolbar(tabIndex, TabLabels);
         EditorGUILayout.Space();
     }
 
-    // 자원 한 종류를 지급하는 버튼을 그린다
-    private void DrawResourceButton(ResourcesManager resourcesManager, string buttonLabel, ProductionType productionType)
+    // 고른 탭의 그리기 담당을 호출한다
+    private void DrawSelectedTab(IObjectResolver container)
     {
-        if (!GUILayout.Button(buttonLabel, GUILayout.Height(GrantButtonHeight)))
-        {
-            return;
-        }
-
-        GrantSingleResource(resourcesManager, productionType, resourceAmount);
+        tabDrawers[tabIndex](container);
     }
 
-    // 특수자원을 지급하는 버튼을 그린다
-    private void DrawSpecialButton(ResourcesManager resourcesManager)
+    // 자원과 시민 탭을 그린다
+    private void DrawBaseTab(IObjectResolver container)
     {
-        if (!GUILayout.Button("특수자원", GUILayout.Height(GrantButtonHeight)))
-        {
-            return;
-        }
-
-        GrantSpecialResource(resourcesManager, resourceAmount);
+        ResourceGrantView.DrawGrantSection(container);
+        ResourceExtraCheatView.DrawExtraSection(container);
     }
 
-    // 자원 5종을 한 번에 지급하는 버튼을 그린다
-    private void DrawGrantAllButton(ResourcesManager resourcesManager)
+    // 지금이 편집 모드인지 판단한다
+    private bool IsEditMode()
     {
-        if (!GUILayout.Button("자원 전부 지급", GUILayout.Height(GrantButtonHeight)))
-        {
-            return;
-        }
-
-        GrantAllResources(resourcesManager, resourceAmount);
+        return Application.isPlaying == false;
     }
 
-    // 시민 추가 수량 칸과 버튼을 그린다
-    private void DrawCitizenSection(CitizenManager citizenManager)
+    // 조립 스코프가 아직 안 물렸는지 판단한다
+    private bool IsScopeMissing()
     {
-        EditorGUILayout.LabelField("시민", EditorStyles.boldLabel);
-        citizenAmount = EditorGUILayout.IntField("추가 수량", citizenAmount);
-
-        if (!GUILayout.Button("시민 추가", GUILayout.Height(GrantButtonHeight)))
-        {
-            return;
-        }
-
-        GrantCitizen(citizenManager, citizenAmount);
-    }
-
-    // 자원 한 종류를 원하는 만큼 더한다
-    private void GrantSingleResource(ResourcesManager resourcesManager, ProductionType productionType, int amount)
-    {
-        resourcesManager.ProductChanged(new[] { (productionType, amount) });
-    }
-
-    // 자원 5종을 같은 수량으로 한 번에 더한다
-    private void GrantAllResources(ResourcesManager resourcesManager, int amount)
-    {
-        resourcesManager.ProductChanged(new[]
-        {
-            (ProductionType.Wood, amount),
-            (ProductionType.Food, amount),
-            (ProductionType.Gold, amount),
-            (ProductionType.Iron, amount),
-            (ProductionType.Stone, amount),
-        });
-    }
-
-    // 특수자원만 원하는 만큼 더한다
-    private void GrantSpecialResource(ResourcesManager resourcesManager, int amount)
-    {
-        resourcesManager.RestoreResources(
-            resourcesManager.Wood,
-            resourcesManager.Food,
-            resourcesManager.Gold,
-            resourcesManager.Iron,
-            resourcesManager.Stone,
-            resourcesManager.Special + amount);
-    }
-
-    // 시민을 원하는 만큼 더한다
-    private void GrantCitizen(CitizenManager citizenManager, int amount)
-    {
-        citizenManager.IncreaseCitizen(amount);
+        return lifeTimeScope == null;
     }
 }
