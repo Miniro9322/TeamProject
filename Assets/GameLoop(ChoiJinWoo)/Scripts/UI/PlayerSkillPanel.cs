@@ -16,7 +16,7 @@ public class PlayerSkillPanel : MonoBehaviour
     }
 
     [SerializeField] private List<Entry> entries;
-    [SerializeField] private Slider manaBar;
+    [SerializeField] private Image manaRing;
     [SerializeField] private SkillSlide skillSlide;
 
     private GameManager gameManager;
@@ -121,16 +121,12 @@ public class PlayerSkillPanel : MonoBehaviour
     // mana.ManaChanged(밤 회복 틱마다 발화)를 구독해 갱신한다 - 매 프레임 폴링하지 않는다.
     private void RefreshManaDisplay()
     {
-        if (manaBar != null)
-        {
-            manaBar.maxValue = mana.MaxMana;
-            manaBar.value = mana.CurrentMana;
-        }
+        manaRing.fillAmount = mana.CurrentMana / mana.MaxMana;
 
         foreach (Entry entry in entries)
         {
             entry.button.interactable = mana.CurrentMana >= entry.skill.manaCost;
-            entry.button.transition = entry.button.interactable ? Selectable.Transition.ColorTint : Selectable.Transition.None;
+            entry.button.transition = Selectable.Transition.ColorTint;
         }
     }
 
