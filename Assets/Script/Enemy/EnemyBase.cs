@@ -493,10 +493,10 @@ public abstract class EnemyBase : MonoBehaviour,IDamageAble,IUnit,IStunAble,IDeb
             Debug.LogWarning($"[{name}] GameManager를 찾을 수 없음 — HpDamage 스킵.", this);
         else
         {
-            int before = gm.Hp;
+            // [애널리틱스 비활성화] int before = gm.Hp;
             gm.HpDamage(Class);
-            int region = waveSpawner != null ? waveSpawner.Region : -1;
-            AnalyticsRecorder.EnemyLeaked(enemyKey, Class.ToString(), region, gm.DayCount, before - gm.Hp, gm.Hp);
+            // [애널리틱스 비활성화] int region = waveSpawner != null ? waveSpawner.Region : -1;
+            // [애널리틱스 비활성화] AnalyticsRecorder.EnemyLeaked(enemyKey, Class.ToString(), region, gm.DayCount, before - gm.Hp, gm.Hp);
         }
         SendDieEvent();
         if (Board != null) Board.RemoveEnemy(gameObject);

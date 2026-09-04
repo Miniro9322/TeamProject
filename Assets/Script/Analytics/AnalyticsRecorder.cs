@@ -93,36 +93,41 @@ public static class AnalyticsRecorder
 
     private static readonly List<string> Buffer = new();
     private static Runner runner;
-    private static AnalyticsSettings settings;
-    private static string FilePath;
+    private static AnalyticsSettings settings = null; // [애널리틱스 비활성화] 로드하지 않으므로 항상 null
+    private static string FilePath = null;              // [애널리틱스 비활성화] 로컬 파일 경로 미사용
 
     private static void EnsureInit()
     {
         if (runner != null) return;
 
+        // ───────── [애널리틱스 비활성화] ─────────
+        // 설정 에셋 로드(Resources/Test·Build)와 로컬 로그 폴더/파일 준비를 모두 끈다.
+        // settings가 null로 남으므로 SendRemote는 그대로 빠져나가고, FlushNow도 아무것도 하지 않는다.
+        // 되살리려면 이 블록의 주석을 풀고, EnemyBase/WaveSpawner의 "[애널리틱스 비활성화]" 호출부도 함께 푼다.
+        //
         // 에디터 플레이는 Resources/Test, 빌드는 Resources/Build를 쓴다 —
         // 개발 중 테스트 기록이 실제 배포 집계에 섞이지 않게 엔드포인트를 갈라 둔 것이다.
         // #if로 나누면 컴파일 때 한쪽이 아예 사라져 빌드에서 Test를 집는 경로 자체가 없어진다
         // (Test.asset 자체는 Resources에 있으니 빌드에 데이터로는 같이 실린다).
         // (개발 빌드도 Test로 보내려면 아래 조건을 UNITY_EDITOR || DEVELOPMENT_BUILD로 바꾼다.)
-#if UNITY_EDITOR
-        const string settingsName = "Test";
-#else
-        const string settingsName = "Build";
-#endif
-        settings = Resources.Load<AnalyticsSettings>(settingsName);
-        // 에셋을 못 찾으면 원격 전송이 조용히 죽는다(아래 Flush가 null이면 그냥 건너뛴다) —
-        // 어느 쪽을 집었는지 남겨야 "왜 시트에 안 들어오지"를 추적할 수 있다.
-        if (settings == null)
-            Debug.LogWarning($"AnalyticsRecorder: Resources/{settingsName} 에셋이 없습니다 — " +
-                "원격 전송 없이 로컬 파일에만 기록합니다.");
-        // else
-        //     Debug.Log($"AnalyticsRecorder: 설정 '{settingsName}' 사용");
-
-        string dir = Path.Combine(Application.persistentDataPath, "Analytics");
-        try { Directory.CreateDirectory(dir); }
-        catch (Exception e) { Debug.LogWarning($"AnalyticsRecorder: 로그 폴더 생성 실패 — {e.Message}"); }
-        FilePath = Path.Combine(dir, $"session_{SessionId}.jsonl");
+// #if UNITY_EDITOR
+//         const string settingsName = "Test";
+// #else
+//         const string settingsName = "Build";
+// #endif
+//         settings = Resources.Load<AnalyticsSettings>(settingsName);
+//         // 에셋을 못 찾으면 원격 전송이 조용히 죽는다(아래 Flush가 null이면 그냥 건너뛴다) —
+//         // 어느 쪽을 집었는지 남겨야 "왜 시트에 안 들어오지"를 추적할 수 있다.
+//         if (settings == null)
+//             Debug.LogWarning($"AnalyticsRecorder: Resources/{settingsName} 에셋이 없습니다 — " +
+//                 "원격 전송 없이 로컬 파일에만 기록합니다.");
+//         // else
+//         //     Debug.Log($"AnalyticsRecorder: 설정 '{settingsName}' 사용");
+//
+//         string dir = Path.Combine(Application.persistentDataPath, "Analytics");
+//         try { Directory.CreateDirectory(dir); }
+//         catch (Exception e) { Debug.LogWarning($"AnalyticsRecorder: 로그 폴더 생성 실패 — {e.Message}"); }
+//         FilePath = Path.Combine(dir, $"session_{SessionId}.jsonl");
 
         var go = new GameObject("AnalyticsRecorder");
         UnityEngine.Object.DontDestroyOnLoad(go);
@@ -237,9 +242,15 @@ public static class AnalyticsRecorder
 
     private static void Enqueue(object record)
     {
-        Buffer.Add(JsonUtility.ToJson(record));
-        int max = settings != null ? settings.maxBufferedEvents : 50;
-        if (Buffer.Count >= max) runner.FlushNow();
+        // ───────── [애널리틱스 비활성화] ─────────
+        // 여기서 수집 자체를 끊는다 — 버퍼에 아무것도 쌓이지 않으므로 FlushNow는 항상 즉시 빠져나가고,
+        // 로컬 파일 기록도 원격(구글시트) 전송도 일어나지 않는다. 이벤트를 쌓아두고 버리는 게 아니라
+        // 애초에 만들지 않는 것이라, 나중에 되살릴 때 유실된 구간이 생기지 않는다.
+        // 되살리려면 아래 3줄의 주석을 풀고, EnemyBase/WaveSpawner의 "[애널리틱스 비활성화]" 호출부와
+        // EnsureInit의 설정 로드 블록도 함께 푼다.
+        // Buffer.Add(JsonUtility.ToJson(record));
+        // int max = settings != null ? settings.maxBufferedEvents : 50;
+        // if (Buffer.Count >= max) runner.FlushNow();
     }
 
     // 실제 파일 쓰기/네트워크 전송/주기적 flush를 맡는 hidden MonoBehaviour.
