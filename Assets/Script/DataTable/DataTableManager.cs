@@ -41,7 +41,7 @@ public static class DataTableManager
     {
         if (!tables.ContainsKey(id))
         {
-            Debug.Log($"테이블 없음: {id}");
+            // Debug.Log($"테이블 없음: {id}");
             return null;
         }
         return tables[id] as T;

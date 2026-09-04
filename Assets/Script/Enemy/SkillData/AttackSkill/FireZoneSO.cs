@@ -86,9 +86,9 @@ public class FireZoneSO : AttackSkillDataSO
         if (!loggedNumbers)
         {
             loggedNumbers = true;
-            Debug.Log($"FireZoneSO({name}): 틱 피해 대상 최대체력 {percentPerTick:F2}% + 시전자 공격력 {atkPercent:F2}%" +
-                      $" / {interval}초 간격 (출처 {damageSourceDebuffId}), " +
-                      $"발동={(onlyWhileFlameEmpowered ? "화염족이 불에 닿은 동안만" : "항상")}");
+            // Debug.Log($"FireZoneSO({name}): 틱 피해 대상 최대체력 {percentPerTick:F2}% + 시전자 공격력 {atkPercent:F2}%" +
+            //           $" / {interval}초 간격 (출처 {damageSourceDebuffId}), " +
+            //           $"발동={(onlyWhileFlameEmpowered ? "화염족이 불에 닿은 동안만" : "항상")}");
         }
     }
 
@@ -107,7 +107,7 @@ public class FireZoneSO : AttackSkillDataSO
         if (!loggedScale)
         {
             loggedScale = true;
-            Debug.Log($"FireZoneSO({name}): range {cellRange} → localScale {factor:0.###}");
+            // Debug.Log($"FireZoneSO({name}): range {cellRange} → localScale {factor:0.###}");
         }
     }
 

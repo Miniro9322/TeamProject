@@ -37,6 +37,6 @@ public class FogTester : MonoBehaviour
         }
         _hidden = !_hidden;
 
-        Debug.Log(_hidden ? "[FogTester] 안개 끔" : "[FogTester] 안개 켬");
+        // Debug.Log(_hidden ? "[FogTester] 안개 끔" : "[FogTester] 안개 켬");
     }
 }

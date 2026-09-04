@@ -160,7 +160,7 @@ public class ProductionFacility : IUpgradableOccupant
         upgradeCount++;
         if(upgradeCount % 5 == 0)
         {
-            UnityEngine.Debug.Log("특수 자원 생산 시작");
+            // UnityEngine.Debug.Log("특수 자원 생산 시작");
         }
         else if(upgradeCount % 2 == 1)
         {

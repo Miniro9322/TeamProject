@@ -215,14 +215,20 @@ public class PlayerGroundZoneEffect : MonoBehaviour
             UpdateHealPresence(alliesInRange);
 
             if (healAmount <= 0f && hpHealPer <= 0f) return;
-            Hero target = AttackDamageUtil.FindLowestHpAlly(alliesInRange);
-            if (target == null) return;
-            float heal = healAmount + target.SC[StatType.HP] * hpHealPer;
-            Debug.Log(heal);
-            if (heal <= 0f) return;
-            target.Heal(heal);
-            if (!string.IsNullOrEmpty(hitSoundKey)) EnemySoundManager.Play(hitSoundKey, at: transform.position);
-            SpawnHitEffect(transform.position);
+            bool healedAny = false;
+            foreach (GameObject go in alliesInRange)
+            {
+                if (go.GetComponentInParent<Hero>() is not Hero ally) continue;
+                float heal = healAmount + ally.SC[StatType.HP] * hpHealPer;
+                if (heal <= 0f) continue;
+                ally.Heal(heal);
+                healedAny = true;
+            }
+            if (healedAny)
+            {
+                if (!string.IsNullOrEmpty(hitSoundKey)) EnemySoundManager.Play(hitSoundKey, at: transform.position);
+                SpawnHitEffect(transform.position);
+            }
             return;
         }
 

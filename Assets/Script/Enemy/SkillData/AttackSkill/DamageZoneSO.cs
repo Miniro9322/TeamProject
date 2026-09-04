@@ -32,7 +32,7 @@ public class DamageZoneSO : AttackSkillDataSO
         if (!loggedScale)
         {
             loggedScale = true;
-            Debug.Log($"DamageZoneSO({name}): range {cellRange} → localScale {factor:0.###}");
+            // Debug.Log($"DamageZoneSO({name}): range {cellRange} → localScale {factor:0.###}");
         }
     }
 

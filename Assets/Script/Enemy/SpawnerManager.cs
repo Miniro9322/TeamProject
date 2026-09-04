@@ -169,8 +169,8 @@ public class SpawnerManager : MonoBehaviour
 
         off = CurrentDay - 1;
         _unlockOffset[region] = off;
-        Debug.Log($"SpawnerManager: {region}지역 진행도 기준 확정 — 오프셋 {off} " +
-                  $"(글로벌 {CurrentDay}일차 = 이 지역 {CurrentDay - off}일차)", this);
+        // Debug.Log($"SpawnerManager: {region}지역 진행도 기준 확정 — 오프셋 {off} " +
+        //           $"(글로벌 {CurrentDay}일차 = 이 지역 {CurrentDay - off}일차)", this);
         return off;
     }
 

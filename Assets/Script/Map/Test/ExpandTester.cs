@@ -28,7 +28,7 @@ public class ExpandTester : MonoBehaviour
     private void EnterDay()
     {
         bool opened = registry.UnlockNextModule();
-        Debug.Log(opened ? "[ExpandTester] 다음 모듈 해금" : "[ExpandTester] 더 해금할 모듈 없음");
+        // Debug.Log(opened ? "[ExpandTester] 다음 모듈 해금" : "[ExpandTester] 더 해금할 모듈 없음");
     
     }
 
@@ -36,6 +36,6 @@ public class ExpandTester : MonoBehaviour
     private void EnterNight()
     {
         
-        Debug.Log("[ExpandTester] 밤 강제 진입");
+        // Debug.Log("[ExpandTester] 밤 강제 진입");
     }
 }

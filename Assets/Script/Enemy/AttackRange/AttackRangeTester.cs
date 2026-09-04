@@ -34,8 +34,8 @@ public class AttackRangeTester : MonoBehaviour
         var target = EnemyTargeting.FindNearest(
             transform.position, range, EnemyRegistry.Alive, e => e.transform.position);
 
-        Debug.Log(target != null
-            ? $"AttackRangeTester: 범위({range}칸) 내 최근접 = {target.name}"
-            : $"AttackRangeTester: 범위({range}칸) 내 대상 없음");
+        // Debug.Log(target != null
+        //     ? $"AttackRangeTester: 범위({range}칸) 내 최근접 = {target.name}"
+        //     : $"AttackRangeTester: 범위({range}칸) 내 대상 없음");
     }
 }

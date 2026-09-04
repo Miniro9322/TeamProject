@@ -104,7 +104,7 @@ public class DesertZoneEffect : ZoneDebuffEffect, IDisposable
     // 영웅의 확정된 밤 노출 상태를 로그로 출력합니다.
     private static void LogShelter(Hero hero, Vector2Int cell, Vector2Int wind, bool unsheltered)
     {
-        Debug.Log($"[Zone] {hero.name} 사막 밤 - 좌표={cell} 바람={wind} 노출={unsheltered}");
+        // Debug.Log($"[Zone] {hero.name} 사막 밤 - 좌표={cell} 바람={wind} 노출={unsheltered}");
     }
 
     // 현재 바람 방향을 로그로 출력합니다.
@@ -112,7 +112,7 @@ public class DesertZoneEffect : ZoneDebuffEffect, IDisposable
     {
         Vector2Int wind = desertZone.WindDirection;
         string directionText = WindDirectionText.ReadDirection(wind);
-        Debug.Log($"[Zone] 현재 바람={directionText} 벡터={wind}");
+        // Debug.Log($"[Zone] 현재 바람={directionText} 벡터={wind}");
     }
 
     // 영웅 목록에서 실제 서 있는 타일만 모읍니다.

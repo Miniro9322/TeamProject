@@ -69,9 +69,9 @@ public class PlaceAction
         {
             HeroSelectionService.Select(hero);
             //유닛 확인용 로그
-            Debug.Log(
-            $"{hero.HeroName} - 체력 {hero.SC[StatType.HP]} · 공격 {hero.SC[StatType.ATK]} · " +
-            $"방어 {hero.SC[StatType.DEF]} · 저지 {hero.SC[StatType.BLK]}");
+            // Debug.Log(
+            // $"{hero.HeroName} - 체력 {hero.SC[StatType.HP]} · 공격 {hero.SC[StatType.ATK]} · " +
+            // $"방어 {hero.SC[StatType.DEF]} · 저지 {hero.SC[StatType.BLK]}");
             
             return;
         }
@@ -101,7 +101,7 @@ public class PlaceAction
         HeroRosterEntry entry = palette.CurrentRuntimeEntry;   // 배치 전에 미리 캡처(성공 후 모드가 바뀔 수 있음)
         if (IsEntryPlaced(entry)) return;
         if (IsAreaBlocked(data)) return;
-        if (IsNightTime()) { Debug.Log("밤에는 배치할 수 없습니다."); return; } // 테스트용
+        if (IsNightTime()) { /* Debug.Log("밤에는 배치할 수 없습니다."); */ return; } // 테스트용
         if (!placer.TryPlace(data, slot, out GameObject placedUnit)) return;
         if (!string.IsNullOrEmpty(placeSoundKey)) EnemySoundManager.Play(placeSoundKey);
 

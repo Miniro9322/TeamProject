@@ -533,7 +533,7 @@ public class WaveSpawner : MonoBehaviour
         {
             AnalyticsRecorder.RoundEnd(region, _roundDayCount, Time.time - _roundStartTime);
             EnemyAllClear?.Invoke();
-            Debug.Log("적 전멸 이벤트 발생");
+            // Debug.Log("적 전멸 이벤트 발생");
         }
     }
 

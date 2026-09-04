@@ -83,12 +83,12 @@ public static class SwimPathfinder
         const int NearFreeWaterCost = 1;
         List<Tile> waterFirst = Search(startTile, goalCell, NearFreeWaterCost, 0, NearFreeWaterCost);
 
-        Debug.Log(
-            $"[SwimPath] 배율={multiplier} 페널티={penaltyTiles}칸 " +
-            $"(한 칸당 땅 {TileCost} / 물 {waterCost}, 물 드나들 때마다 {transitionCost})\n" +
-            $"  고른 길    → {Describe(path, waterCost, transitionCost)}\n" +
-            $"  물 최대한  → {Describe(waterFirst, waterCost, transitionCost)}\n" +
-            $"  ※ 비용은 둘 다 위 설정으로 잰 값이고, 낮을수록 빨리 도착한다 — 그래서 낮은 쪽을 고른다.");
+        // Debug.Log(
+        //     $"[SwimPath] 배율={multiplier} 페널티={penaltyTiles}칸 " +
+        //     $"(한 칸당 땅 {TileCost} / 물 {waterCost}, 물 드나들 때마다 {transitionCost})\n" +
+        //     $"  고른 길    → {Describe(path, waterCost, transitionCost)}\n" +
+        //     $"  물 최대한  → {Describe(waterFirst, waterCost, transitionCost)}\n" +
+        //     $"  ※ 비용은 둘 다 위 설정으로 잰 값이고, 낮을수록 빨리 도착한다 — 그래서 낮은 쪽을 고른다.");
     }
 
     // 경로를 "N칸(물 M칸) 비용 C" 한 줄로. 경로가 없으면 그렇게 적는다.

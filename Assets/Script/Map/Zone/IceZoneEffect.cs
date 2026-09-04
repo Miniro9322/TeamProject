@@ -47,11 +47,11 @@ public class IceZoneEffect : ZoneDebuffEffect
     {
         if (protectedCell)
         {
-            Debug.Log($"[Zone] {hero.name} 모닥불 보호 - 얼음 효과 면역");
+            // Debug.Log($"[Zone] {hero.name} 모닥불 보호 - 얼음 효과 면역");
             return;
         }
 
         Apply(hero);
-        Debug.Log($"[Zone] {hero.name} 얼음 지대 진입 - 효과 적용");
+        // Debug.Log($"[Zone] {hero.name} 얼음 지대 진입 - 효과 적용");
     }
 }

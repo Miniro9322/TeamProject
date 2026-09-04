@@ -36,7 +36,7 @@ public static class EnemyArchiveData
         if (string.IsNullOrEmpty(enemyKey)) return;
         if (!unlocked.Add(enemyKey)) return;   // 이미 있으면 false → 조기 반환
 
-        Debug.Log($"[도감] 새 적 해금: {enemyKey} (총 {unlocked.Count}종)");
+        // Debug.Log($"[도감] 새 적 해금: {enemyKey} (총 {unlocked.Count}종)");
         Save();
         OnUnlocked?.Invoke(enemyKey);
     }

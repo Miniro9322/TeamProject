@@ -116,8 +116,8 @@ public static class AnalyticsRecorder
         if (settings == null)
             Debug.LogWarning($"AnalyticsRecorder: Resources/{settingsName} 에셋이 없습니다 — " +
                 "원격 전송 없이 로컬 파일에만 기록합니다.");
-        else
-            Debug.Log($"AnalyticsRecorder: 설정 '{settingsName}' 사용");
+        // else
+        //     Debug.Log($"AnalyticsRecorder: 설정 '{settingsName}' 사용");
 
         string dir = Path.Combine(Application.persistentDataPath, "Analytics");
         try { Directory.CreateDirectory(dir); }

@@ -47,7 +47,7 @@ public class DayNightButton : MonoBehaviour
         nightKeyAction.performed += OnNightKeyPerformed;
         nightKeyAction.Enable();
 
-        Debug.Log(gameManager.CanBuild);
+        // Debug.Log(gameManager.CanBuild);
 
         icon.localRotation = gameManager.CanBuild ? Quaternion.identity : Quaternion.Euler(0f, 0f, 180f);
 
