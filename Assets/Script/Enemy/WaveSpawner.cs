@@ -430,8 +430,8 @@ public class WaveSpawner : MonoBehaviour
         }
     }
 
-    private float _roundStartTime;
-    private int _roundDayCount;
+    // [애널리틱스 비활성화] private float _roundStartTime;
+    // [애널리틱스 비활성화] private int _roundDayCount;
 
     /// <param name="pathSeed">이 지역·이 밤의 경로 추첨 시드 문자열. SpawnerManager가 게임 시드로 만들어 넘긴다.
     /// null이면 예전처럼 전역 Random으로 경로를 뽑는다(시드를 못 얻는 테스트 씬).
@@ -473,9 +473,9 @@ public class WaveSpawner : MonoBehaviour
                 Enemycount += w.Count;
             }
         }
-        _roundStartTime = Time.time;
-        _roundDayCount = currentStage;
-        AnalyticsRecorder.RoundStart(region, currentStage, Enemycount);
+        // [애널리틱스 비활성화] _roundStartTime = Time.time;
+        // [애널리틱스 비활성화] _roundDayCount = currentStage;
+        // [애널리틱스 비활성화] AnalyticsRecorder.RoundStart(region, currentStage, Enemycount);
     }
 
 
@@ -531,7 +531,7 @@ public class WaveSpawner : MonoBehaviour
         Enemycount--;
         if(Enemycount<=0)
         {
-            AnalyticsRecorder.RoundEnd(region, _roundDayCount, Time.time - _roundStartTime);
+            // [애널리틱스 비활성화] AnalyticsRecorder.RoundEnd(region, _roundDayCount, Time.time - _roundStartTime);
             EnemyAllClear?.Invoke();
             // Debug.Log("적 전멸 이벤트 발생");
         }
