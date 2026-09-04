@@ -13,6 +13,7 @@ public class PlayerSkillPanel : MonoBehaviour
     {
         public Button button;
         public PlayerSkillSlot skill;
+        [NonSerialized] public CanvasGroup canvasGroup;
     }
 
     [SerializeField] private List<Entry> entries;
@@ -63,9 +64,6 @@ public class PlayerSkillPanel : MonoBehaviour
         skill3Action.performed += _ => TryCastHotkey(2);
         skill3Action.Enable();
 
-        mana.ManaChanged += RefreshManaDisplay;
-        RefreshManaDisplay();
-
         foreach (Entry entry in entries)
         {
             PlayerSkillSlot slot = entry.skill;
@@ -80,7 +78,20 @@ public class PlayerSkillPanel : MonoBehaviour
             {
                 tooltip.SetMessaege(string.Format(DataTableManager.StringTable.Get(slot.skillDescKey), slot.manaCost));
             }
+
+            // Button.ColorTint는 targetGraphic 하나만 어둡게 해서, Icon/Ring 등 자식 이미지는
+            // 마나 부족 상태에서도 그대로 밝게 남는다. CanvasGroup.alpha로 자식까지 한 번에 어둡게 한다.
+            entry.canvasGroup = entry.button.GetComponent<CanvasGroup>();
+            if (entry.canvasGroup == null)
+            {
+                entry.canvasGroup = entry.button.gameObject.AddComponent<CanvasGroup>();
+            }
         }
+
+        // entries의 canvasGroup을 위 루프에서 먼저 채운 뒤에 호출해야 한다 - RefreshManaDisplay가
+        // canvasGroup.alpha를 건드리므로 순서가 바뀌면 첫 호출에서 NullReferenceException이 난다.
+        mana.ManaChanged += RefreshManaDisplay;
+        RefreshManaDisplay();
 
         // ChangeToNight이 아니라 EnviromentManager.OnNight을 쓴다 - ChangeToNight은 밤 전환이
         // "시작"되자마자 발동하는데, 그 순간엔 화면이 아직 밤으로 다 안 바뀌어 있다(빛/스카이박스
@@ -155,8 +166,10 @@ public class PlayerSkillPanel : MonoBehaviour
 
         foreach (Entry entry in entries)
         {
-            entry.button.interactable = mana.CurrentMana >= entry.skill.manaCost;
-            entry.button.transition = Selectable.Transition.ColorTint;
+            bool canCast = mana.CurrentMana >= entry.skill.manaCost;
+            entry.button.interactable = canCast;
+            //entry.button.transition = Selectable.Transition.ColorTint;
+            entry.canvasGroup.alpha = canCast ? 1f : 0.07f;
         }
     }
 
