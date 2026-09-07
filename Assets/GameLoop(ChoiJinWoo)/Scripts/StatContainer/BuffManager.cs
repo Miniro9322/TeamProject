@@ -65,7 +65,6 @@ public class BuffManager : ITickable
         }
     }
 
-    // Persistent 버프(장판형 아군 버프 등)의 명시적 해제 — ApplyStackingModifier(진입)의 반대짝(이탈).
     public void RemoveBuff(IUnit target, StatType type, object source)
     {
         int index = activeBuffs.FindIndex(b => b.Target == target && b.StatType == type && b.Source == source);
@@ -91,7 +90,6 @@ public class BuffManager : ITickable
         });
     }
 
-    // 대상에게 특정 출처가 건 효과만 제거한다.
     public void RemoveBuffs(IUnit target, object source)
     {
         for (int buffIndex = activeBuffs.Count - 1; buffIndex >= 0; buffIndex--)
@@ -111,8 +109,6 @@ public class BuffManager : ITickable
         }
     }
 
-    // StackingMaxEffectTrait처럼 "지금 스택이 최대치에 도달했는가"를 확인해야 하는 트레잇을 위한 조회.
-    // 매칭되는 버프가 없으면 0.
     public int GetStacks(IUnit target, object source)
         => activeBuffs.Find(b => b.Target == target && b.Source == source)?.Stacks ?? 0;
 }

@@ -28,10 +28,6 @@ public class TopBar : MonoBehaviour
         this.gameManager = gameManager;
     }
 
-    // 프리팹으로 컨테이너가 직접 Instantiate하면 Awake가 주입보다 먼저 실행돼(Unity의 Instantiate는
-    // 컴포넌트 생성 즉시 동기로 Awake를 호출하고, VContainer의 주입은 그 Instantiate 호출이 끝난 뒤에야
-    // 이어서 처리된다) resourcesManager 등이 아직 null이다. Start는 그 다음 업데이트에서 호출되므로
-    // 그때는 주입이 이미 끝나있어 안전하다.
     private void Start()
     {
         resourcesManager.ProductUpdate += UpdateResourcesUI;

@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-// House가 MonoBehaviour였을 때 프리팹 인스펙터에 있던 데이터를 그대로 옮긴 SO.
 [CreateAssetMenu(fileName = "HouseConfig", menuName = "Scriptable Objects/HouseConfig")]
 public class HouseConfig : ScriptableObject
 {
@@ -23,7 +22,7 @@ public class HouseConfig : ScriptableObject
     [SerializeField] private List<ResourceCost> upgradeCost;
 
     public int MaxCitizenAmount => maxCitizenAmount;
-    public string HouseName => houseName; // 저장 데이터의 buildKey로도 쓰인다 - 표시용이 아니다
+    public string HouseName => houseName;
     public string HouseInfo => houseInfo;
     public string HouseDisplayName => DataTableManager.StringTable.Get(houseNameKey);
     public string HouseDisplayInfo => DataTableManager.StringTable.Get(houseInfoKey);

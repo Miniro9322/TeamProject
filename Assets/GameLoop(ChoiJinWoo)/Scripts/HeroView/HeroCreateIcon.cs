@@ -4,7 +4,6 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
 
-// 생성 버튼 하나(근접용 인스턴스 1개, 원거리용 인스턴스 1개). 아이콘/라벨은 인스펙터에서 미리 세팅.
 public class HeroCreateIcon : MonoBehaviour
 {
     [SerializeField] private Button button;

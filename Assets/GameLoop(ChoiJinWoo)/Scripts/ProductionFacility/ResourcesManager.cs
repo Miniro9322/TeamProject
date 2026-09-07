@@ -25,7 +25,6 @@ public class ResourcesManager : MonoBehaviour
 
     public event Action ProductUpdate;
 
-    // 0일차 튜토리얼 리셋용 스냅샷 - 보너스 적용 직후 값을 그대로 기억해뒀다가 Reset()에서 되돌린다.
     private int initialWood, initialFood, initialGold, initialIron, initialStone, initialSpecial;
 
     [Inject]
@@ -46,7 +45,6 @@ public class ResourcesManager : MonoBehaviour
         initialSpecial = special;
     }
 
-    // 0일차 튜토리얼에서 쌓은 자원을 전부 시작값으로 되돌린다.
     public void Reset()
     {
         wood = initialWood;
@@ -86,8 +84,6 @@ public class ResourcesManager : MonoBehaviour
 
     public int GetAmount(ProductionType type) => Resource(type);
 
-    // 자원 종류 하나당 필드 하나씩 직렬화해야 해서(Dictionary는 인스펙터 지원이 없음) 필드는 그대로 두고,
-    // 타입 -> 필드 매핑만 한 곳에 모아 ProductChanged/CheckResources의 중복 switch를 없앤다.
     private ref int Resource(ProductionType type)
     {
         switch (type)
@@ -116,7 +112,6 @@ public class ResourcesManager : MonoBehaviour
         ProductUpdate?.Invoke();
     }
 
-    // 세이브 데이터로 자원 6종을 그대로 덮어쓴다 (로드 복원 전용)
     public void RestoreResources(int wood, int food, int gold, int iron, int stone, int special)
     {
         this.wood = wood;

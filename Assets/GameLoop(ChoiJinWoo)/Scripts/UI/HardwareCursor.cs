@@ -1,7 +1,6 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-// 왼쪽 버튼 누름 상태에 따라 운영체제 커서 그림을 평상시/눌림 텍스처로 교체한다.
 public class HardwareCursor : MonoBehaviour
 {
     private const TextureFormat CursorTextureFormat = TextureFormat.RGBA32;
@@ -18,7 +17,6 @@ public class HardwareCursor : MonoBehaviour
     private Texture2D normalTexture;
     private Texture2D pressedTexture;
 
-    // 좌클릭 입력을 만들고 커서 텍스처를 미리 구워둔다.
     private void Awake()
     {
         clickAction = new InputAction(
@@ -29,7 +27,6 @@ public class HardwareCursor : MonoBehaviour
         RebuildCursorTextures();
     }
 
-    // 활성화되는 동안 클릭 이벤트를 구독하고 평상시 그림을 적용한다.
     private void OnEnable()
     {
         clickAction.performed += OnPressed;
@@ -38,7 +35,6 @@ public class HardwareCursor : MonoBehaviour
         ApplyNormalCursor();
     }
 
-    // 비활성화되면 구독을 끊고 운영체제 기본 커서로 되돌린다.
     private void OnDisable()
     {
         clickAction.Disable();
@@ -47,7 +43,6 @@ public class HardwareCursor : MonoBehaviour
         Cursor.SetCursor(null, Vector2.zero, CursorMode.Auto);
     }
 
-    // 입력 자원과 생성해둔 텍스처를 정리한다.
     private void OnDestroy()
     {
         clickAction.Dispose();
@@ -55,7 +50,6 @@ public class HardwareCursor : MonoBehaviour
         DestroyCursorTexture(pressedTexture);
     }
 
-    // 인스펙터 값이 바뀌면 커서 텍스처를 즉시 다시 굽고, 플레이 중이면 화면에도 바로 반영한다.
     private void OnValidate()
     {
         RebuildCursorTextures();
@@ -66,25 +60,21 @@ public class HardwareCursor : MonoBehaviour
         }
     }
 
-    // 눌림 텍스처로 커서 그림을 바꾼다.
     private void OnPressed(InputAction.CallbackContext context)
     {
         Cursor.SetCursor(pressedTexture, hotspot, CursorMode.Auto);
     }
 
-    // 평상시 텍스처로 커서 그림을 되돌린다.
     private void OnReleased(InputAction.CallbackContext context)
     {
         ApplyNormalCursor();
     }
 
-    // 평상시 커서 그림을 운영체제에 적용한다.
     private void ApplyNormalCursor()
     {
         Cursor.SetCursor(normalTexture, hotspot, CursorMode.Auto);
     }
 
-    // 목표 크기의 평상시 텍스처와, 그걸 축소·하강시킨 눌림 텍스처를 새로 만든다.
     private void RebuildCursorTextures()
     {
         if (sourceTexture == null)
@@ -102,7 +92,6 @@ public class HardwareCursor : MonoBehaviour
         pressedTexture = BuildPressedTexture(normalTexture, pressedScale, pressedOffsetY);
     }
 
-    // GPU 필터링(바일리니어)으로 원본을 목표 크기로 리사이즈한다.
     private Texture2D ResizeWithGpu(Texture2D source, int width, int height)
     {
         RenderTexture renderTexture = RenderTexture.GetTemporary(width, height, 0, RenderTextureFormat.ARGB32);
@@ -121,7 +110,6 @@ public class HardwareCursor : MonoBehaviour
         return result;
     }
 
-    // 평상시 텍스처를 GPU로 축소하고, 그만큼 캔버스 위쪽에 여백을 더한 자리에 붙여 눌림 텍스처를 만든다(잘림 원천 차단).
     private Texture2D BuildPressedTexture(Texture2D normal, float scale, float offsetY)
     {
         int width = normal.width;
@@ -141,7 +129,6 @@ public class HardwareCursor : MonoBehaviour
         return pressed;
     }
 
-    // 투명하게 비운 캔버스의 지정된 위치에 작은 텍스처를 GPU로 그대로 복사해 옮긴다.
     private Texture2D CompositeOnTransparentCanvas(Texture2D source, int canvasWidth, int canvasHeight, int destX, int destY)
     {
         RenderTexture renderTexture = RenderTexture.GetTemporary(canvasWidth, canvasHeight, 0, RenderTextureFormat.ARGB32);
@@ -161,7 +148,6 @@ public class HardwareCursor : MonoBehaviour
         return result;
     }
 
-    // 재생성 전 이전 텍스처를 정리한다.
     private void DestroyCursorTexture(Texture2D texture)
     {
         if (texture == null)

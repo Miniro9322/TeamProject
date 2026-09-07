@@ -20,7 +20,6 @@ public class CitizenManager : MonoBehaviour
 
     public event Action CitizenChanged;
 
-    // 0일차 튜토리얼 리셋용 스냅샷 - 보너스 적용 직후 값을 그대로 기억해뒀다가 Reset()에서 되돌린다.
     private int initialMaxCitizen;
     private int initialCurrentCitizen;
 
@@ -35,7 +34,6 @@ public class CitizenManager : MonoBehaviour
         initialCurrentCitizen = currentCitizen;
     }
 
-    // 0일차 튜토리얼에서 지은 집/모집한 시민/일꾼 배치를 전부 시작 상태로 되돌린다.
     public void Reset()
     {
         maxCitizen = initialMaxCitizen;
@@ -97,14 +95,12 @@ public class CitizenManager : MonoBehaviour
         UpdateCitizen();
     }
 
-    // 세이브 데이터로 현재 시민 수를 그대로 덮어쓴다 (로드 복원 전용)
     public void RestoreCitizen(int amount)
     {
         currentCitizen = amount;
         UpdateCitizen();
     }
 
-    // 시민 사용량을 저장된 값 그대로 지정한다 (로드 복원 전용)
     public void RestoreUsedCitizen(int facilityUsed, int heroUsed)
     {
         usedCitizen = facilityUsed;

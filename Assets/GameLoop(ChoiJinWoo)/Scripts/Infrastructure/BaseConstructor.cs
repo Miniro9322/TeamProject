@@ -1,6 +1,3 @@
-// 기반시설 UI에서 곧장 건물을 짓는 담당. 맵 배치가 없고(PlacementArea/MapBoard 불필요),
-// ProductionFacility/House가 이제 POCO라 풀링/프리팹 인스턴스화도 필요 없다 - BuildableFacility의
-// 설정 SO(facilityValue/houseConfig)로 곧장 만든다.
 public class BaseConstructor
 {
     private readonly ResourcesManager resourcesManager;
@@ -9,7 +6,6 @@ public class BaseConstructor
     private readonly UpgradeState upgradeState;
     private readonly ProductionEconomyConfig economyConfig;
 
-    // 튜토리얼이 "집을 지었는지"만 골라 판정할 수 있도록(built is House) 건설 성공 시 결과물을 그대로 흘려보낸다.
     public event System.Action<object> Built;
 
     public BaseConstructor(
@@ -69,7 +65,6 @@ public class BaseConstructor
         return house;
     }
 
-    // 세이브 데이터로 기반시설을 자원 차감 없이 복원해 슬롯에 채운다 (로드 복원 전용)
     public object RestoreBuild(BuildableFacility option, RegionFacilitySlots region, BuildSave save)
     {
         object built = option.kind == OccupantKind.Resource
@@ -95,7 +90,6 @@ public class BaseConstructor
         return house;
     }
 
-    // CostSave 배열을 ProductionFacility/House가 쓰는 튜플 배열로 바꾼다
     private static (ProductionType Type, int Amount)[] ToPairs(CostSave[] costs)
     {
         (ProductionType Type, int Amount)[] pairs = new (ProductionType, int)[costs.Length];

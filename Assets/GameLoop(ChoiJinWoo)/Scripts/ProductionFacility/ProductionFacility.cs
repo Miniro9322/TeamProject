@@ -1,7 +1,5 @@
 using System;
 
-// 맵 배치가 사라지면서(§기반시설 UI) GameObject/Transform이 필요 없어져 일반 클래스로 전환했다.
-// IPlaceAble의 Board/OnBreak/OnResur는 실사용 없는 죽은 구현이었다(Hero만 실제로 씀) - 같이 제거.
 public class ProductionFacility : IUpgradableOccupant
 {
     private readonly ProductionValue basicValue;
@@ -20,13 +18,11 @@ public class ProductionFacility : IUpgradableOccupant
     private float UpgradeCostDiscount => upgradeState.GetTotalEffect(economyConfig.UpgradeCostUpgrades);
     private int ProductAmountBonus => (int)upgradeState.GetTotalEffect(economyConfig.ProductAmountUpgrades);
 
-    // 건설 비용 미리보기/체크용 — 인스턴스 없이도 PreviewConstructCost로 같은 계산을 쓸 수 있다.
     public (ProductionType Type, int Amount)[] GetConstructCost() =>
         basicValue.ConstructProduct.ApplyDiscount(ConstructCostDiscount);
 
     public event Action OnWorkerChanged;
 
-    // House도 같은 이름의 이벤트를 갖지 않아도 되도록, 인터페이스 쪼는 기존 OnWorkerChanged에 얹는다.
     event Action IUpgradableOccupant.Changed
     {
         add => OnWorkerChanged += value;
@@ -54,7 +50,6 @@ public class ProductionFacility : IUpgradableOccupant
 
     public int MaxUpgrade => maxUpgrade;
 
-    // 실제로 낸 건설·강화 비용을 그대로 읽는다 (세이브 전용 조회)
     public (ProductionType Type, int Amount)[] ConstructCostPaid => constructCostPaid;
     public (ProductionType Type, int Amount)[] TotalUpgradeSpent => totalUpgradeSpent;
 
@@ -76,7 +71,6 @@ public class ProductionFacility : IUpgradableOccupant
         this.upgradeState = upgradeState;
     }
 
-    // 인스턴스를 만들지 않고도(건설 전 미리보기) 같은 할인 공식으로 건설 비용을 계산한다.
     public static (ProductionType Type, int Amount)[] PreviewConstructCost(
         ProductionValue basicValue, ProductionEconomyConfig economyConfig, UpgradeState upgradeState)
     {
@@ -111,8 +105,6 @@ public class ProductionFacility : IUpgradableOccupant
         UpdateInfo();
     }
 
-    // 철거: 인력 반납 + 매니저 등록 해제 + 건설 비용/그동안 쓴 업그레이드 비용 환불.
-    // GameObject가 없으므로 이걸로 생명주기가 끝난다.
     public void Release()
     {
         ReleaseAllWorkers();
@@ -158,11 +150,8 @@ public class ProductionFacility : IUpgradableOccupant
     public void Upgrade()
     {
         upgradeCount++;
-        if(upgradeCount % 5 == 0)
-        {
-            // UnityEngine.Debug.Log("특수 자원 생산 시작");
-        }
-        else if(upgradeCount % 2 == 1)
+        
+        if(upgradeCount % 2 == 1)
         {
             amountUpgrade++;
             productAmount += amountUpgrade * 10;
@@ -182,7 +171,6 @@ public class ProductionFacility : IUpgradableOccupant
 
         resourcesManager.ProductChanged(upgradeCostCopy);
 
-        // 철거 시 환불할 수 있게 지금까지 업그레이드에 쓴 비용을 누적해둔다.
         upgradeCostCopy.AccumulateInto(totalUpgradeSpent);
 
         var baseCost = basicValue.UpgradeCost.ApplyDiscount(UpgradeCostDiscount);
@@ -199,7 +187,6 @@ public class ProductionFacility : IUpgradableOccupant
         return upgradeCount < maxUpgrade && resourcesManager.CheckResources(upgradeCostCopy);
     }
 
-    // 세이브 데이터로 건설·강화 상태를 자원 차감 없이 그대로 복원한다 (로드 복원 전용)
     public void RestoreState(
         int savedUpgradeCount,
         int savedWorkerAmount,

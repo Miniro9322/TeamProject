@@ -33,7 +33,6 @@ public class House : IUpgradableOccupant
 
     public int MaxUpgrade => maxUpgrade;
 
-    // 실제로 낸 건설·강화 비용을 그대로 읽는다 (세이브 전용 조회)
     public (ProductionType Type, int Amount)[] ConstructCostPaid => constructCostPaid;
     public (ProductionType Type, int Amount)[] TotalUpgradeSpent => totalUpgradeSpent;
 
@@ -53,8 +52,6 @@ public class House : IUpgradableOccupant
         this.economyConfig = economyConfig;
     }
 
-    // 인스턴스를 만들지 않고도(건설 전 미리보기) 같은 할인 공식으로 건설 비용을 계산한다
-    // (ProductionFacility.PreviewConstructCost와 동일 패턴).
     public static (ProductionType Type, int Amount)[] PreviewConstructCost(
         HouseConfig config, ProductionEconomyConfig economyConfig, UpgradeState upgradeState)
     {
@@ -76,7 +73,6 @@ public class House : IUpgradableOccupant
         }
     }
 
-    // 철거: 건설 비용 + 그동안 강화에 쓴 비용을 환불한다(ProductionFacility.Release()와 동일 패턴).
     public void Release()
     {
         resourcesManager.ProductChanged(constructCostPaid.BuildRefundWith(totalUpgradeSpent));
@@ -105,7 +101,6 @@ public class House : IUpgradableOccupant
         return upgradeCount < maxUpgrade && resourcesManager.CheckResources(upgradeCostCopy);
     }
 
-    // 세이브 데이터로 건설·강화 상태를 자원 차감 없이 그대로 복원한다 (최대 시민은 정상 반영, 로드 복원 전용)
     public void RestoreState(
         int savedUpgradeCount,
         (ProductionType Type, int Amount)[] savedConstructPaid,

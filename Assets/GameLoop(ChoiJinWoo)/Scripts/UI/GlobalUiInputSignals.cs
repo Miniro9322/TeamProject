@@ -1,10 +1,6 @@
 using System;
 using UnityEngine.InputSystem;
 
-// 마우스 클릭/ESC를 매 프레임 폴링하던 각 패널의 Update()를 대체하는 공용 입력 신호.
-// TutorialInputGate/ExclusiveUiCoordinator와 같은 정적 서비스 패턴을 따른다 - Title 씬은
-// VContainer 컨테이너가 없어 DI로 배선할 수 없기 때문이다.
-// Main 씬은 UiManager.Awake/OnDestroy가, Title 씬은 TitleUI.OnEnable/OnDisable이 Enable/Disable을 호출한다.
 public static class GlobalUiInputSignals
 {
     private static InputAction clickAction;

@@ -89,8 +89,6 @@ public class EnviromentManager : MonoBehaviour
     {
         if (sunLight == null) return;
 
-        // 버튼을 클릭한 이 시점(첫 await 이전 = 동기 실행 구간)에 BGM 페이드를 바로 시작한다.
-        // 조명 보간이 끝난 뒤(SetDay/SetNight)에 걸면 버튼 클릭과 소리 전환 사이에 지연이 생긴다.
         EnemySoundManager.PlayRandomBgm(toNight ? nightBgmKeys : dayBgmKeys, bgmFadeDuration);
 
         Color startColor = sunLight.color;
@@ -121,7 +119,6 @@ public class EnviromentManager : MonoBehaviour
 
         if (sunLight == null) return;
 
-        // 최종값 정확히 세팅
         sunLight.color = targetColor;
         sunLight.intensity = targetIntensity;
         RenderSettings.ambientLight = targetAmbient;

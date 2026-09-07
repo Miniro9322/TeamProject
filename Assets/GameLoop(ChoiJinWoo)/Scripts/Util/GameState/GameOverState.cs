@@ -26,7 +26,6 @@ public class GameOverState : IState
         DeleteSaveSlot();
     }
 
-    // 판이 끝났으니 이 슬롯의 세이브 파일을 지운다 (같은 밤을 다시 치르며 업그레이드 보상을 반복 수확하지 못하게).
     private void DeleteSaveSlot()
     {
         if (!SaveManager.ToolEnabled) return;
