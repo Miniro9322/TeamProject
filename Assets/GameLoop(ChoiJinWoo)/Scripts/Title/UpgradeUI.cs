@@ -16,7 +16,7 @@ public class UpgradeUI : MonoBehaviour, IExclusiveUiPanel
     [SerializeField] private UpgradeInfoUI upgradeInfoPanel;
     [SerializeField] private BaseUpgradeButton buttonPrefab;
     [SerializeField] private TextMeshProUGUI pointsText;
-    [SerializeField] private RectTransform openButtonRect; // 이 패널을 여는 버튼 — 바깥 클릭 판정에서 제외
+    [SerializeField] private RectTransform openButtonRect;
     [SerializeField] private int cheatAddPointsAmount = 100;
 
     private UpgradeState upgradeState;

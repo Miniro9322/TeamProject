@@ -16,7 +16,6 @@ public class SettingUI : MonoBehaviour, IExclusiveUiPanel
     [SerializeField] private Slider systemVolume;
     private readonly FullScreenMode[] screenModes =
     {
-        FullScreenMode.ExclusiveFullScreen,
         FullScreenMode.FullScreenWindow,
         FullScreenMode.Windowed,
     };
@@ -59,7 +58,6 @@ public class SettingUI : MonoBehaviour, IExclusiveUiPanel
 
         var options = new List<string>
         {
-            DataTableManager.StringTable.Get("UI_Setting_FullScreen"),
             DataTableManager.StringTable.Get("UI_Setting_BorderlessWindow"),
             DataTableManager.StringTable.Get("UI_Setting_Window"),
         };

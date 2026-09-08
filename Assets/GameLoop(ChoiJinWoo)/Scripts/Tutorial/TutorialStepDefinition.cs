@@ -1,8 +1,6 @@
 using System;
 using UnityEngine;
 
-// 튜토리얼 한 단계 안에서 순서대로 거쳐가는 UI 하나. messageKey를 비워두면 이 waypoint가 속한
-// 단계의 기본 문구(TutorialStepDefinition.messageKey)를 그대로 쓴다.
 [Serializable]
 public class TutorialWaypoint
 {
@@ -24,8 +22,6 @@ public class TutorialWaypoint
     public string messageKey;
 }
 
-// 튜토리얼 한 단계의 저작 데이터. messageKey는 DataTableManager.StringTable.Get(...)으로 표시한다
-// (TooltipUi.Show, GuideUI.ShowSpecificGuide와 같은 컨벤션).
 [Serializable]
 public class TutorialStepDefinition
 {

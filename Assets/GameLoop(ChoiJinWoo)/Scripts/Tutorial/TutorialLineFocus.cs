@@ -14,7 +14,6 @@ public class TutorialLineFocus : MonoBehaviour
     private float elapsed;
     private bool isMoving;
 
-    // 강조선이 보이는 동안 이동 사각형을 갱신합니다.
     private void LateUpdate()
     {
         if (!CanMove())
@@ -34,13 +33,11 @@ public class TutorialLineFocus : MonoBehaviour
         ApplyRect(current);
     }
 
-    // 컴포넌트가 꺼질 때 이동 상태를 초기화합니다.
     private void OnDisable()
     {
         StopMove();
     }
 
-    // 강조선 이동을 실행할 수 있는지 반환합니다.
     private bool CanMove()
     {
         if (topLine == null || bottomLine == null)
@@ -63,7 +60,6 @@ public class TutorialLineFocus : MonoBehaviour
             && rightLine.gameObject.activeInHierarchy;
     }
 
-    // 기존 강조선이 만든 최종 사각형을 반환합니다.
     private Rect ReadRect()
     {
         Vector2 topSize = topLine.sizeDelta;
@@ -79,14 +75,12 @@ public class TutorialLineFocus : MonoBehaviour
         return Rect.MinMaxRect(xMin, yMin, xMax, yMax);
     }
 
-    // 강조선 반복 이동을 처음부터 시작합니다.
     private void BeginMove()
     {
         elapsed = 0f;
         isMoving = true;
     }
 
-    // 일시 정지와 무관한 시간으로 이동 시간을 갱신합니다.
     private void AdvanceTime()
     {
         float totalTime = moveTime + holdTime;
@@ -94,7 +88,6 @@ public class TutorialLineFocus : MonoBehaviour
         elapsed = Mathf.Repeat(elapsed, totalTime);
     }
 
-    // 현재 이동 진행도를 반환합니다.
     private float GetProgress()
     {
         if (elapsed >= moveTime)
@@ -107,7 +100,6 @@ public class TutorialLineFocus : MonoBehaviour
         return 1f - remain * remain * remain;
     }
 
-    // 최종 사각형을 기준으로 현재 이동 사각형을 반환합니다.
     private Rect GetRect(Rect target)
     {
         float progress = GetProgress();
@@ -123,7 +115,6 @@ public class TutorialLineFocus : MonoBehaviour
             center.y + half.y);
     }
 
-    // 현재 사각형을 강조선 네 방향에 적용합니다.
     private void ApplyRect(Rect current)
     {
         float thickness = topLine.sizeDelta.y;
@@ -134,7 +125,6 @@ public class TutorialLineFocus : MonoBehaviour
         SetRect(rightLine, current.xMax - thickness, current.yMin, current.xMax, current.yMax);
     }
 
-    // 전달받은 경계로 강조선의 크기와 위치를 설정합니다.
     private void SetRect(RectTransform line, float xMin, float yMin, float xMax, float yMax)
     {
         float width = Mathf.Max(0f, xMax - xMin);
@@ -146,7 +136,6 @@ public class TutorialLineFocus : MonoBehaviour
             (yMin + yMax) * 0.5f);
     }
 
-    // 강조선 이동 시간과 실행 상태를 초기화합니다.
     private void StopMove()
     {
         elapsed = 0f;

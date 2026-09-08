@@ -6,9 +6,6 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
-// 씬/프리팹에 흩어진 텍스트가 참조 중인 특정 폰트를 다른 폰트로 일괄 교체하는 툴.
-// Text/TMP_Text는 폰트를 컴포넌트에 직접 직렬화해서 들고 있어서, Project Settings의
-// 기본 폰트를 바꿔도 기존 오브젝트에는 반영되지 않는다 - 그래서 이 툴이 필요하다.
 public class FontReplacerWindow : EditorWindow
 {
     private enum Scope
