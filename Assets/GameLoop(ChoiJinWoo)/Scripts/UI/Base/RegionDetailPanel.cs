@@ -4,16 +4,14 @@ using UnityEngine;
 using UnityEngine.UI;
 using VContainer;
 
-// 지역 하나의 상세 패널(사이드 패널) - 구조물 그리드 + 인구 로우.
-// 빈 칸 클릭 -> FacilityBuildChoicePanel, 지어진 칸 클릭 -> BuildingPanel(인력/업그레이드).
 public class RegionDetailPanel : MonoBehaviour, IClosablePanel
 {
     [SerializeField] private TextMeshProUGUI regionNameText;
-    [SerializeField] private List<FacilitySlotView> slotViews; // 인스펙터에서 최대 슬롯 개수만큼 미리 배치
+    [SerializeField] private List<FacilitySlotView> slotViews;
     [SerializeField] private FacilityBuildChoicePanel buildChoicePanel;
     [SerializeField] private BuildingPanel buildingPanel;
     [SerializeField] private Button closeButton;
-    [SerializeField] private RegionOverviewPanel overviewPanel; // 지역 노드 버튼 클릭은 "바깥 클릭"이 아니다
+    [SerializeField] private RegionOverviewPanel overviewPanel;
 
     private RegionFacilitySlots region;
     private IUpgradableOccupant openOccupant;
@@ -21,10 +19,8 @@ public class RegionDetailPanel : MonoBehaviour, IClosablePanel
     private ClickOutsideCloser outsideCloser;
     private PanelReveal panelReveal;
 
-    // 지금 열려서 보여주고 있는 지역 - 같은 지역 노드를 다시 눌렀는지 오버뷰가 판단하는 데 쓴다.
     public RegionFacilitySlots CurrentRegion => gameObject.activeSelf ? region : null;
 
-    // RegionNodeHeldLink가 CurrentRegion을 매 프레임 폴링하는 대신 구독할 수 있도록 Open/Close/OnDisable에서 발화한다.
     public event System.Action RegionChanged;
 
     [Inject]
@@ -67,8 +63,6 @@ public class RegionDetailPanel : MonoBehaviour, IClosablePanel
         GlobalUiInputSignals.EscapePerformed += HandleCloseCheck;
     }
 
-    // buildChoicePanel/buildingPanel도 같은 UiPanelStack에 Push되는 패널이라, 둘 중 하나가 열리면
-    // 그게 스택 맨 위가 되어 IsTop(this)가 자연히 false가 된다 - 그쪽이 먼저 처리하고 여긴 쉰다.
     private void HandleCloseCheck()
     {
         if (panelStack.IsTop(this) && outsideCloser.ShouldClose()) Close();
@@ -78,7 +72,6 @@ public class RegionDetailPanel : MonoBehaviour, IClosablePanel
     {
         if (region != null) region.OnSlotsChanged -= Refresh;
 
-        // 다른 지역으로 옮겨가는 거라, 이전 지역 슬롯에 물려있던 팝업은 정리한다.
         buildChoicePanel.Close();
         buildingPanel.gameObject.SetActive(false);
         UnsubscribeOpenOccupant();
@@ -93,9 +86,6 @@ public class RegionDetailPanel : MonoBehaviour, IClosablePanel
         RegionChanged?.Invoke();
     }
 
-    // RegionChanged는 여기서 바로 발화하지 않는다 - panelReveal.Hide()는 축소 애니메이션이 끝난 뒤에야
-    // 실제로 SetActive(false)를 부르므로(OnDisable에서 발화), CurrentRegion(gameObject.activeSelf 기준)이
-    // 실제로 바뀌는 시점과 맞추기 위해서다.
     public void Close()
     {
         if (panelReveal != null) panelReveal.Hide();
@@ -175,23 +165,19 @@ public class RegionDetailPanel : MonoBehaviour, IClosablePanel
 
     private void OnSlotClicked(int index)
     {
-        // 튜토리얼이 영웅 배치 대기 중(맵 클릭용으로 화면을 전부 풀어둔 상태)일 땐 이 슬롯 클릭으로
-        // BuildingPanel/FacilityBuildChoicePanel이 열리면 그게 맵을 덮어 배치를 끝낼 수 없게 되어
-        // 튜토리얼이 멈춘다 - TutorialInputGate.cs 참고.
         if (TutorialInputGate.BlockPanelOpen) return;
         if (region == null || index >= region.Slots.Count) return;
 
         var slot = region.Slots[index];
         if (slot.IsEmpty)
         {
-            // 이미 이 칸의 선택 팝업이 열려있는 채로 같은 칸을 또 누르면 닫는다(토글).
             if (buildChoicePanel.gameObject.activeSelf && buildChoicePanel.SlotIndex == index)
             {
                 buildChoicePanel.Close();
                 return;
             }
 
-            buildingPanel.gameObject.SetActive(false); // 지어진 칸용 패널이 열려있었다면 정리
+            buildingPanel.gameObject.SetActive(false);
             UnsubscribeOpenOccupant();
 
             buildChoicePanel.Open(region, index);
@@ -201,8 +187,6 @@ public class RegionDetailPanel : MonoBehaviour, IClosablePanel
         OpenBuiltSlot(index);
     }
 
-    // 지어진 칸을 BuildingPanel로 연다 - 슬롯 클릭과, FacilityBuildChoicePanel에서 건설을 막 끝낸
-    // 직후(선택 팝업을 닫으면서 그 칸을 이어서 보여주는 용도) 둘 다에서 쓴다.
     public void OpenBuiltSlot(int index)
     {
         if (region == null || index >= region.Slots.Count) return;
@@ -210,7 +194,7 @@ public class RegionDetailPanel : MonoBehaviour, IClosablePanel
         var slot = region.Slots[index];
         if (slot.Occupant is not IUpgradableOccupant occupant) return;
 
-        buildChoicePanel.Close(); // 빈 칸용 패널이 열려있었다면 정리
+        buildChoicePanel.Close();
 
         UnsubscribeOpenOccupant();
         openOccupant = occupant;

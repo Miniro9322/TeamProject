@@ -61,6 +61,9 @@ public class GameLifeTimeScope : LifetimeScope
         });
         builder.Register<UiPanelStack>(Lifetime.Singleton).AsSelf();
         builder.Register<TutorialState>(Lifetime.Singleton).AsSelf();
+        builder.Register<TutorialTriggers>(Lifetime.Singleton).AsSelf();
+        builder.Register<TutorialGate>(Lifetime.Singleton).AsSelf();
+        builder.Register<TutorialRollback>(Lifetime.Singleton).AsSelf();
 
         builder.Register<GimmickTileData>(Lifetime.Singleton).AsSelf();
 

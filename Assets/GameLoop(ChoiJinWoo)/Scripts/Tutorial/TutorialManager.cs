@@ -3,6 +3,11 @@ using Cysharp.Threading.Tasks;
 using UnityEngine;
 using VContainer;
 
+/// <summary>
+/// 튜토리얼 시퀀스의 진행(어느 단계인지 / 다음으로 넘김)과 오버레이 표시만 담당한다.
+/// 단계 완료 판정은 <see cref="TutorialTriggers"/>, 입력/HUD 차단은 <see cref="TutorialGate"/>,
+/// 0일차 리셋은 <see cref="TutorialRollback"/>이 맡는다.
+/// </summary>
 public class TutorialManager : MonoBehaviour
 {
     [SerializeField] private TutorialOverlayUI overlay;
@@ -16,78 +21,45 @@ public class TutorialManager : MonoBehaviour
         "PlaceHero의 placeHeroMapClickMessageKey와 같은 이유로 화면 전체를 막지 않는다.")]
     [SerializeField] private string relocateHeroMapClickMessageKey;
 
-    private CitizenManager citizenManager;
-    private BaseConstructor baseConstructor;
-    private HeroRoster heroRoster;
-    private PlacePalette placePalette;
-    private BuildModePanel buildModePanel;
-    private BuildingPanel buildingPanel;
-    private GameManager gameManager;
-    private ResourcesManager resourcesManager;
-    private RegionOverviewPanel regionOverviewPanel;
-    private MapGame mapGame;
-    private MapView mapView;
-    private UiManager uiManager;
-    private EnviromentManager enviromentManager;
-    private SaveManager saveManager;
+    [Tooltip("0일차 리셋이 끝난 뒤(진짜 1일차 시작) 한 번 보여줄 완료 메시지 키.")]
+    [SerializeField] private string completionMessageKey;
+
     private TutorialState state;
+    private TutorialTriggers triggers;
+    private TutorialGate gate;
+    private TutorialRollback rollback;
+    private PlacePalette placePalette;
+    private EnviromentManager enviromentManager;
+    private UiManager uiManager;
 
     private int currentIndex = -1;
-    private int citizenSnapshot;
-    private int usedCitizenSnapshot;
     private string lastShownMessageKey;
-    private readonly HashSet<HeroRosterEntry> placedSnapshot = new();
 
     private TutorialWaypoint currentWaypoint;
     private bool waypointDirty = true;
 
     private bool sequenceFinished;
     private bool dayZeroResetDone;
-
-    private CanvasGroup sceneHudGroup;
-    private CanvasGroup uiManagerHudGroup;
-    private bool hudBlocked;
-
-    private CanvasGroup gameSpeedGroup;
-    private bool gameSpeedBlocked;
-
-    private CanvasGroup heroUpgradeGroup;
-    private bool heroUpgradeBlocked;
-
-    [Tooltip("0일차 리셋이 끝난 뒤(진짜 1일차 시작) 한 번 보여줄 완료 메시지 키.")]
-    [SerializeField] private string completionMessageKey;
     private bool showingCompletionMessage;
 
     [Inject]
-    private void Construct(CitizenManager citizenManager,
-        BaseConstructor baseConstructor, HeroRoster heroRoster, PlacePalette placePalette,
-        BuildModePanel buildModePanel,
-        BuildingPanel buildingPanel, GameManager gameManager, ResourcesManager resourcesManager,
-        RegionOverviewPanel regionOverviewPanel, MapGame mapGame, MapView mapView, UiManager uiManager,
-        EnviromentManager enviromentManager,
-        SaveManager saveManager, TutorialState state)
+    private void Construct(TutorialState state, TutorialTriggers triggers, TutorialGate gate,
+        TutorialRollback rollback, PlacePalette placePalette, EnviromentManager enviromentManager,
+        UiManager uiManager)
     {
-        this.citizenManager = citizenManager;
-        this.baseConstructor = baseConstructor;
-        this.heroRoster = heroRoster;
-        this.placePalette = placePalette;
-        this.buildModePanel = buildModePanel;
-        this.buildingPanel = buildingPanel;
-        this.gameManager = gameManager;
-        this.resourcesManager = resourcesManager;
-        this.regionOverviewPanel = regionOverviewPanel;
-        this.mapGame = mapGame;
-        this.mapView = mapView;
-        this.uiManager = uiManager;
-        this.enviromentManager = enviromentManager;
-        this.saveManager = saveManager;
         this.state = state;
+        this.triggers = triggers;
+        this.gate = gate;
+        this.rollback = rollback;
+        this.placePalette = placePalette;
+        this.enviromentManager = enviromentManager;
+        this.uiManager = uiManager;
     }
 
     private void Start()
     {
         WireRuntimeWaypoints();
-        ResolveHudGroups();
+        gate.Resolve(steps);
 
         if (state.Seen || steps.Length == 0)
         {
@@ -129,65 +101,6 @@ public class TutorialManager : MonoBehaviour
         if (go.GetComponent<TutorialActivityWatcher>() == null) go.AddComponent<TutorialActivityWatcher>();
     }
 
-    private void ResolveHudGroups()
-    {
-        sceneHudGroup = ResolveHudGroup(regionOverviewPanel.transform);
-        uiManagerHudGroup = ResolveHudGroup(uiManager.GameSpeedUiRect);
-
-        gameSpeedGroup = GetOrAddCanvasGroup(uiManager.GameSpeedUiRect);
-        heroUpgradeGroup = GetOrAddCanvasGroup(FindStepTarget(TutorialStepId.HeroUpgradeMention));
-    }
-
-    private RectTransform FindStepTarget(TutorialStepId id)
-    {
-        foreach (var step in steps)
-        {
-            if (step.id == id && step.waypoints != null && step.waypoints.Length > 0)
-                return step.waypoints[0].target;
-        }
-        return null;
-    }
-
-    private static CanvasGroup ResolveHudGroup(Transform anchor)
-    {
-        if (anchor == null) return null;
-
-        Canvas canvas = anchor.GetComponentInParent<Canvas>(true);
-        if (canvas == null) return null;
-
-        return GetOrAddCanvasGroup(canvas.transform);
-    }
-
-    private static CanvasGroup GetOrAddCanvasGroup(Transform target)
-    {
-        if (target == null) return null;
-
-        CanvasGroup group = target.GetComponent<CanvasGroup>();
-        return group != null ? group : target.gameObject.AddComponent<CanvasGroup>();
-    }
-
-    private void SetHudBlocked(bool blocked)
-    {
-        if (hudBlocked == blocked) return;
-        hudBlocked = blocked;
-
-        SetGroupBlocked(sceneHudGroup, blocked);
-        SetGroupBlocked(uiManagerHudGroup, blocked);
-    }
-
-    private void SetBlocked(CanvasGroup group, ref bool current, bool blocked)
-    {
-        if (current == blocked) return;
-        current = blocked;
-        SetGroupBlocked(group, blocked);
-    }
-
-    private static void SetGroupBlocked(CanvasGroup group, bool blocked)
-    {
-        if (group == null) return;
-        group.blocksRaycasts = !blocked;
-    }
-
     private void OnEnable()
     {
         TutorialInputGate.BlockEscapeClose = true;
@@ -195,14 +108,10 @@ public class TutorialManager : MonoBehaviour
         TutorialInputGate.BlockSave = true;
         TutorialInputGate.BlockHeroRetrieve = true;
         TutorialActivityWatcher.Changed += OnWaypointActivityChanged;
-        citizenManager.CitizenChanged += OnCitizenChanged;
-        baseConstructor.Built += OnBuilt;
-        heroRoster.Changed += OnHeroRosterChanged;
-        buildingPanel.Upgraded += OnUpgraded;
+        triggers.StepShouldComplete += OnStepShouldComplete;
+        triggers.Enable();
         overlay.AcknowledgeClicked += OnAcknowledgeClicked;
-        gameManager.ChangeToNight += OnChangeToNight;
         enviromentManager.OnDay += OnDayTransitionComplete;
-        mapView.Replaced += OnHeroReplaced;
     }
 
     private void OnDisable()
@@ -211,22 +120,12 @@ public class TutorialManager : MonoBehaviour
         TutorialInputGate.BlockHotkeys = false;
         TutorialInputGate.BlockSave = false;
         TutorialInputGate.BlockHeroRetrieve = false;
-        TutorialInputGate.BlockPanelOpen = false;
-        TutorialInputGate.BlockHeroUpgradeOpen = false;
-        TutorialInputGate.BlockHeroPlacementFromInventory = false;
         TutorialActivityWatcher.Changed -= OnWaypointActivityChanged;
-        SetHudBlocked(false);
-        SetBlocked(gameSpeedGroup, ref gameSpeedBlocked, false);
-        SetBlocked(heroUpgradeGroup, ref heroUpgradeBlocked, false);
-        TutorialInputGate.BlockPlayerSkillCast = false;
-        citizenManager.CitizenChanged -= OnCitizenChanged;
-        baseConstructor.Built -= OnBuilt;
-        heroRoster.Changed -= OnHeroRosterChanged;
-        buildingPanel.Upgraded -= OnUpgraded;
+        triggers.StepShouldComplete -= OnStepShouldComplete;
+        triggers.Disable();
         overlay.AcknowledgeClicked -= OnAcknowledgeClicked;
-        gameManager.ChangeToNight -= OnChangeToNight;
         enviromentManager.OnDay -= OnDayTransitionComplete;
-        mapView.Replaced -= OnHeroReplaced;
+        gate.ReleaseAll();
     }
 
     private void Update()
@@ -234,24 +133,16 @@ public class TutorialManager : MonoBehaviour
         if (sequenceFinished) return;
 
         bool awaitingPlaceClick = IsActive(TutorialStepId.PlaceHero) && placePalette.Mode == PlaceMode.Place;
-
         bool awaitingRelocateClick = IsActive(TutorialStepId.RelocateHero) && placePalette.Mode == PlaceMode.Replace;
         bool awaitingMapClick = awaitingPlaceClick || awaitingRelocateClick;
 
-        TutorialInputGate.BlockPanelOpen = awaitingMapClick;
-        SetHudBlocked(awaitingMapClick);
+        gate.UpdateGating(steps[currentIndex].id, awaitingMapClick);
+
         if (awaitingMapClick)
         {
             ShowUnblockedMessage(awaitingRelocateClick ? relocateHeroMapClickMessageKey : placeHeroMapClickMessageKey);
             return;
         }
-
-        TutorialInputGate.BlockHeroUpgradeOpen = IsActive(TutorialStepId.HeroUpgradeMention);
-        SetBlocked(heroUpgradeGroup, ref heroUpgradeBlocked, IsActive(TutorialStepId.HeroUpgradeMention));
-        TutorialInputGate.BlockHeroPlacementFromInventory = IsActive(TutorialStepId.HeroCombineMention);
-
-        SetBlocked(gameSpeedGroup, ref gameSpeedBlocked, IsActive(TutorialStepId.GameSpeedMention));
-        TutorialInputGate.BlockPlayerSkillCast = IsActive(TutorialStepId.PlayerSkillMention);
 
         var step = steps[currentIndex];
         if (waypointDirty)
@@ -264,12 +155,12 @@ public class TutorialManager : MonoBehaviour
         if (waypoint == null && step.waypoints != null && step.waypoints.Length > 0)
         {
             overlay.Hide();
-            SetHudBlocked(true);
+            gate.SetHudBlocked(true);
             lastShownMessageKey = null;
             return;
         }
 
-        SetHudBlocked(false);
+        gate.SetHudBlocked(false);
         overlay.Show(step.completesOnAcknowledge);
 
         RefreshMessage(waypoint);
@@ -301,8 +192,8 @@ public class TutorialManager : MonoBehaviour
             if (waypoint?.target == null) continue;
             if (waypoint.blockedWhile != null && waypoint.blockedWhile.activeInHierarchy) continue;
 
-            GameObject gate = waypoint.activationCheck != null ? waypoint.activationCheck : waypoint.target.gameObject;
-            if (gate.activeInHierarchy) return waypoint;
+            GameObject gateObject = waypoint.activationCheck != null ? waypoint.activationCheck : waypoint.target.gameObject;
+            if (gateObject.activeInHierarchy) return waypoint;
         }
         return null;
     }
@@ -325,9 +216,7 @@ public class TutorialManager : MonoBehaviour
         var step = steps[index];
         if (step.pauseTimeWhileActive) uiManager.GameSpeedUi.OnButtonClick((int)Speed.Zero);
 
-        citizenSnapshot = citizenManager.CurrentCitizen;
-        usedCitizenSnapshot = citizenManager.UsedCitizen;
-        SnapshotPlacedHeroes();
+        triggers.BeginStep(step.id);
 
         lastShownMessageKey = null;
         currentWaypoint = ResolveWaypoint();
@@ -336,13 +225,12 @@ public class TutorialManager : MonoBehaviour
         RefreshMessage(currentWaypoint);
     }
 
-    private void SnapshotPlacedHeroes()
+    private void OnStepShouldComplete(TutorialStepId id)
     {
-        placedSnapshot.Clear();
-        foreach (var entry in heroRoster.Entries)
-        {
-            if (entry.State == HeroRosterState.Placed) placedSnapshot.Add(entry);
-        }
+        if (sequenceFinished) return;
+        if (currentIndex < 0 || currentIndex >= steps.Length) return;
+        if (steps[currentIndex].id != id) return;
+        CompleteStep();
     }
 
     private void CompleteStep()
@@ -360,13 +248,8 @@ public class TutorialManager : MonoBehaviour
         overlay.Hide();
         TutorialInputGate.BlockEscapeClose = false;
         TutorialInputGate.BlockHotkeys = false;
-        TutorialInputGate.BlockPanelOpen = false;
-        TutorialInputGate.BlockHeroUpgradeOpen = false;
-        TutorialInputGate.BlockHeroPlacementFromInventory = false;
-        SetHudBlocked(false);
-        SetBlocked(gameSpeedGroup, ref gameSpeedBlocked, false);
-        SetBlocked(heroUpgradeGroup, ref heroUpgradeBlocked, false);
-        TutorialInputGate.BlockPlayerSkillCast = false;
+        gate.ReleaseAll();
+        triggers.Stop();
         sequenceFinished = true;
         TryFullyDisable();
     }
@@ -381,8 +264,7 @@ public class TutorialManager : MonoBehaviour
     {
         if (steps.Length == 0) return;
 
-        state.Reset();
-        gameManager.ResetDayCountForTutorialReplay();
+        rollback.PrepareReplay();
         currentIndex = -1;
         sequenceFinished = false;
         dayZeroResetDone = false;
@@ -412,83 +294,16 @@ public class TutorialManager : MonoBehaviour
         if (steps[currentIndex].completesOnAcknowledge) CompleteStep();
     }
 
-    private void OnBuilt(object built)
-    {
-        if (!IsActive(TutorialStepId.BuildHouse)) return;
-        if (built is House) CompleteStep();
-    }
-
-    private void OnCitizenChanged()
-    {
-        if (IsActive(TutorialStepId.RecruitCitizen))
-        {
-            if (citizenManager.CurrentCitizen > citizenSnapshot) CompleteStep();
-        }
-        else if (IsActive(TutorialStepId.AssignWorker))
-        {
-            if (citizenManager.UsedCitizen > usedCitizenSnapshot) CompleteStep();
-        }
-    }
-
-    private void OnUpgraded()
-    {
-        if (!IsActive(TutorialStepId.BuildingUpgradeMention)) return;
-        CompleteStep();
-    }
-
-    private void OnHeroRosterChanged()
-    {
-        if (!IsActive(TutorialStepId.PlaceHero)) return;
-
-        foreach (var entry in heroRoster.Entries)
-        {
-            if (entry.State == HeroRosterState.Placed && !placedSnapshot.Contains(entry))
-            {
-                CompleteStep();
-                return;
-            }
-        }
-    }
-
-    private void OnHeroReplaced(GameObject unit, OccupantKind kind)
-    {
-        if (!IsActive(TutorialStepId.RelocateHero)) return;
-        if (kind != OccupantKind.MeleeHero && kind != OccupantKind.RangedHero) return;
-
-        buildModePanel.CancelPlaceModeFromTutorial();
-        CompleteStep();
-    }
-
-    private void OnChangeToNight()
-    {
-        if (!IsActive(TutorialStepId.NightMention)) return;
-        CompleteStep();
-    }
-
     private void OnDayTransitionComplete()
     {
         if (dayZeroResetDone) return;
         dayZeroResetDone = true;
-        DeferredReset().Forget();
+        RunRollback().Forget();
     }
 
-    private async UniTaskVoid DeferredReset()
+    private async UniTaskVoid RunRollback()
     {
-        await UniTask.Yield();
-
-        ResetHeroes();
-        ResetBuildings();
-        resourcesManager.Reset();
-        citizenManager.Reset();
-        gameManager.ResetHpToFull();
-
-        gameManager.perfactDefence = false;
-
-        state.MarkSeen();
-
-        TutorialInputGate.BlockSave = false;
-        saveManager.SaveNow();
-
+        await rollback.RunAsync();
         ShowCompletionMessage();
     }
 
@@ -501,45 +316,5 @@ public class TutorialManager : MonoBehaviour
         overlay.Show(true);
         overlay.SetSpotlight(null);
         overlay.SetMessage(completionMessageKey);
-    }
-
-    private void ResetHeroes()
-    {
-        foreach (var entry in new List<HeroRosterEntry>(heroRoster.Entries))
-        {
-            GameObject unit = entry.PlacedUnit;
-            if (unit != null)
-            {
-                if (mapGame.Units.TryGetArea(unit, out PlacementArea area))
-                {
-                    AreaPlace.Remove(area);
-                    mapGame.Units.Remove(unit);
-                }
-
-                if (unit.TryGetComponent(out Hero hero))
-                {
-                    hero.PrepareForDespawn();
-                    PoolManager.Instance.Despawn(unit);
-                }
-                else
-                {
-                    Destroy(unit);
-                }
-            }
-
-            citizenManager.FreeCitizenForHero(entry.CitizenCost);
-            heroRoster.Remove(entry);
-        }
-    }
-
-    private void ResetBuildings()
-    {
-        foreach (var region in regionOverviewPanel.Regions)
-        {
-            for (int i = 0; i < region.Slots.Count; i++)
-            {
-                if (!region.Slots[i].IsEmpty) baseConstructor.Demolish(region, i);
-            }
-        }
     }
 }
