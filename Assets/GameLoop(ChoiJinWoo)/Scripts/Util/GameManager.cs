@@ -6,11 +6,13 @@ using VContainer;
 public class GameManager : MonoBehaviour
 {
     private FSM fsm = new();
+    public FSM FSM => fsm;
 
     private IState day;
     private IState night;
     private IState result;
     private IState gameover;
+    public IState Gameover => gameover;
 
     private bool canBuild = true;
     private UiManager uiManager;
@@ -35,6 +37,7 @@ public class GameManager : MonoBehaviour
     public event Action ChangeToDay;
     public event Action ChangeToNight;
     public event Action ExpandMap;
+    public event Action OnGameOver;
 
     [SerializeField] private HeroType initialUnlockedHero = HeroType.SwordMan | HeroType.Archer;
     private byte unlockedHero;
@@ -177,7 +180,7 @@ public class GameManager : MonoBehaviour
         if (hp <= 0)
         {
             hp = 0;
-            fsm.ChangeState(gameover);
+            OnGameOver?.Invoke();
         }
     }
 

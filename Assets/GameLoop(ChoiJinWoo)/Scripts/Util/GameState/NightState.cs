@@ -14,6 +14,7 @@ public class NightState : IState
     public void Enter()
     {
         gameManager.perfactDefence = false;
+        gameManager.OnGameOver += GameOver;
         Night().Forget();
     }
 
@@ -22,6 +23,7 @@ public class NightState : IState
         gameManager.ChangeCanSpawnEnemy(false);
         if (gameManager.Hp == gameManager.todayHp)
             gameManager.perfactDefence = true;
+        gameManager.OnGameOver -= GameOver;
     }
 
     public void Update()
@@ -34,5 +36,10 @@ public class NightState : IState
         await UniTask.WaitUntil(() => gameManager.CanSpawnEnemy);
         gameManager.UiManager.ToggleGameSpeedUi(true);
         gameManager.SpawnEnemy();
+    }
+
+    private void GameOver()
+    {
+        gameManager.FSM.ChangeState(gameManager.Gameover);
     }
 }
