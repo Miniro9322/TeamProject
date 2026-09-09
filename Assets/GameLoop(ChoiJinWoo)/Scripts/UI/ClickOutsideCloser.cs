@@ -27,7 +27,20 @@ public class ClickOutsideCloser
         return Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame;
     }
 
-    public bool ShouldClose() => EscapePressed() || ClickedOutside();
+    // Esc로 닫히는 경우엔 전역 신호에 "이번 Esc는 이 패널이 처리했다"고 표시해, 더 낮은 우선순위
+    // (UiManager의 메뉴 열기 등)가 같은 Esc에 또 반응하지 않게 한다. 이 메서드는 <가드> && ShouldClose()
+    // 형태로만 호출되므로(여기 도달했다는 건 가드를 통과했다는 뜻), Esc면 호출한 패널이 곧 닫힌다 -
+    // 따라서 여기서 소비를 표시해도 "닫지도 않았는데 소비만 한" 상태는 생기지 않는다. 클릭 신호 쪽에서
+    // 불릴 땐 EscapePressed()가 false라 소비가 표시되지 않는다.
+    public bool ShouldClose()
+    {
+        if (EscapePressed())
+        {
+            GlobalUiInputSignals.ConsumeEscape();
+            return true;
+        }
+        return ClickedOutside();
+    }
 
     public bool ClickedOutside()
     {

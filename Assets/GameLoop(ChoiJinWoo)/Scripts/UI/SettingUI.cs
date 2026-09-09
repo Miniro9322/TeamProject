@@ -53,6 +53,12 @@ public class SettingUI : MonoBehaviour, IExclusiveUiPanel
         outsideCloser.MarkOpened();
         if (Closed == null) ExclusiveUiCoordinator.NotifyOpened(this);
         GlobalUiInputSignals.ClickPerformed += HandleCloseCheck;
+        // 독립 실행(Title 씬)일 때만 Esc로 직접 닫는다. Main 씬에선 Closed 구독자(MenuUI)가 닫기를
+        // 주관하므로 HandleCloseCheck가 Closed != null로 조기 반환한다. 예전엔 TitleUI의 별도
+        // escapeAction과 처리 순서가 안 맞아 Esc 한 번에 설정창이 닫히면서 종료창까지 같이 떠서
+        // 이 구독을 빼 뒀지만, 이제 Esc가 우선순위 체인(EscapePerformed에서 소비 → TitleUI의
+        // fallback은 호출 안 됨)으로 처리되므로 그 충돌이 없다.
+        GlobalUiInputSignals.EscapePerformed += HandleCloseCheck;
 
         screenMode.ClearOptions();
 

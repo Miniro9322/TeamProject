@@ -17,7 +17,6 @@ public class RegionOverviewPanel : MonoBehaviour, IClosablePanel, IExclusiveUiPa
     [SerializeField] private Key openBaseKey = Key.B;
 
     private ClickOutsideCloser outsideCloser;
-    private bool hadOtherExclusivePanelLastFrame;
 
     public IReadOnlyList<RegionNodeView> Nodes => nodes;
     public IReadOnlyList<RegionFacilitySlots> Regions => regions;
@@ -110,8 +109,8 @@ public class RegionOverviewPanel : MonoBehaviour, IClosablePanel, IExclusiveUiPa
         panelStack.Push(this);
         BindModules();
         Refresh();
-        GlobalUiInputSignals.ClickPerformed += HandleCloseCheck;
-        GlobalUiInputSignals.EscapePerformed += HandleCloseCheck;
+        GlobalUiInputSignals.ClickPerformed += HandleOutsideClick;
+        GlobalUiInputSignals.EscapePerformedLow += HandleEscapeClose;
     }
 
     private void OnDisable()
@@ -119,8 +118,8 @@ public class RegionOverviewPanel : MonoBehaviour, IClosablePanel, IExclusiveUiPa
         ExclusiveUiCoordinator.NotifyClosed(this);
         panelStack.Remove(this);
         UnbindModules();
-        GlobalUiInputSignals.ClickPerformed -= HandleCloseCheck;
-        GlobalUiInputSignals.EscapePerformed -= HandleCloseCheck;
+        GlobalUiInputSignals.ClickPerformed -= HandleOutsideClick;
+        GlobalUiInputSignals.EscapePerformedLow -= HandleEscapeClose;
 
         detailPanel.Close();
         if (hubPanel != null) hubPanel.Close();
@@ -205,15 +204,21 @@ public class RegionOverviewPanel : MonoBehaviour, IClosablePanel, IExclusiveUiPa
 
     public void RequestClose() => Close();
 
-    private void HandleCloseCheck()
+    // 바깥 클릭: 지역 스택 맨 위(상세/허브 패널이 위에 없을 때)일 때만 닫는다.
+    private void HandleOutsideClick()
     {
-        if (hadOtherExclusivePanelLastFrame) return;
-        if (panelStack.IsTop(this) && outsideCloser.ShouldClose()) Close();
+        if (panelStack.IsTop(this) && outsideCloser.ClickedOutside()) Close();
     }
 
-    private void LateUpdate()
+    // Esc: 이 패널은 모달 패널(메뉴/가이드 등)보다 우선순위가 낮은 EscapePerformedLow로 받는다.
+    // 위에 뜬 모달이 이번 Esc를 이미 소비했다면 이 단계는 호출되지 않으므로, 예전처럼
+    // "다른 배타 패널이 떠 있었나"를 LateUpdate로 폴링(hadOtherExclusivePanelLastFrame)할 필요가 없다.
+    private void HandleEscapeClose()
     {
-        hadOtherExclusivePanelLastFrame = ExclusiveUiCoordinator.HasOtherOpen(this);
+        if (TutorialInputGate.BlockEscapeClose) return;
+        if (!panelStack.IsTop(this)) return;
+        Close();
+        GlobalUiInputSignals.ConsumeEscape();
     }
 
     private void OnOpenHotkeyPerformed(InputAction.CallbackContext context)

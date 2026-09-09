@@ -9,7 +9,6 @@ using UnityEngine;
 using UnityEngine.Audio;
 using UnityEngine.SceneManagement;
 using UnityEngine.EventSystems;
-using UnityEngine.InputSystem;
 
 public class TitleUI : MonoBehaviour
 {
@@ -24,38 +23,27 @@ public class TitleUI : MonoBehaviour
     [SerializeField] private ConfirmPopup confirmPopup;
     private readonly SlotPreviewReader previewReader = new SlotPreviewReader();
 
-    private InputAction escapeAction;
-    // ESC가 눌린 "이전 프레임 끝" 시점에 열려 있던 패널이 있었는지 담아둔다 - UiManager와 같은 이유
-    // (HasEscapeCloseTarget 주석 참고). settingPanel/upgradePanel도 각자 GlobalUiInputSignals.
-    // EscapePerformed를 구독해 스스로 닫는데, 이 escapeAction은 별개의 InputAction이라 그 구독자와
-    // 같은 프레임 안에서 어느 쪽이 먼저 처리되는지 보장이 없다. 지금 상태를 그 자리에서 실시간으로
-    // 물어보면, 패널 쪽이 먼저 닫힌 뒤일 때 "열린 게 없었다"고 오판해 QuitAlert까지 같이 띄워버린다.
-    private bool hadPanelOpenLastFrame;
-
     private void OnEnable()
     {
         // Title 씬에는 VContainer 컨테이너가 없어 이 씬의 진입점인 TitleUI가 직접 켠다 - SlotSelectPanel/
         // DaySelectPanel/LoadOptionPopup/UpgradeUI 등 Title 씬의 패널들이 이 신호를 구독한다.
         GlobalUiInputSignals.Enable();
-
-        escapeAction = new InputAction("Escape", binding: "<Keyboard>/escape");
-        escapeAction.performed += OnEscapePerformed;
-        escapeAction.Enable();
+        GlobalUiInputSignals.EscapePerformedFallback += OnEscape;
     }
 
     private void OnDisable()
     {
+        GlobalUiInputSignals.EscapePerformedFallback -= OnEscape;
         GlobalUiInputSignals.Disable();
-
-        escapeAction.performed -= OnEscapePerformed;
-        escapeAction.Disable();
-        escapeAction.Dispose();
     }
 
-    // 열려 있는 패널이 없을 때만 종료 확인창을 띄운다 - 패널이 열려 있으면 각 패널이 알아서 Esc를 처리한다.
+    // EscapePerformedFallback(최저 우선순위)로 받는다 - upgradePanel처럼 GlobalUiInputSignals를 구독하는
+    // 패널이 이번 Esc를 소비하면 이 메서드는 호출되지 않는다. settingPanel/tutorialChoicePanel은 자체
+    // Esc 구독이 없어(닫기 버튼/바깥 클릭으로만 닫힘) 여기서 실시간으로 걸러준다 - fallback이 항상
+    // 마지막에 돌기 때문에 지난 프레임을 캐싱하지 않아도 값이 어긋나지 않는다.
     // ConfirmPopup(세이브 덮어쓰기 확인창)은 자기 스스로 Esc를 구독하지 않고 Cancel()만 열어두는
     // 방식이라, 여기서 직접 불러줘야 한다.
-    private void OnEscapePerformed(InputAction.CallbackContext context)
+    private void OnEscape()
     {
         if (confirmPopup != null && confirmPopup.gameObject.activeSelf)
         {
@@ -63,14 +51,9 @@ public class TitleUI : MonoBehaviour
             return;
         }
 
-        if (hadPanelOpenLastFrame) return;
+        if (IsAnyPanelOpen()) return;
 
         OnQuitAlert();
-    }
-
-    private void LateUpdate()
-    {
-        hadPanelOpenLastFrame = IsAnyPanelOpen();
     }
 
     private bool IsAnyPanelOpen()

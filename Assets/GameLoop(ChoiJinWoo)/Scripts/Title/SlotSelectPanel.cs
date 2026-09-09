@@ -85,6 +85,7 @@ public class SlotSelectPanel : MonoBehaviour
             confirmPopup.Cancel();
         else
             OnClose();
+        GlobalUiInputSignals.ConsumeEscape();
     }
 
     // 새 게임 모드로 전체 슬롯 목록을 연다.

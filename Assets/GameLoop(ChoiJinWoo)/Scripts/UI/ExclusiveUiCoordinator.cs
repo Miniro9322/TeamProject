@@ -26,11 +26,4 @@ public static class ExclusiveUiCoordinator
     }
 
     public static void NotifyClosed(IExclusiveUiPanel self) => openPanels.Remove(self);
-
-    public static bool HasOtherOpen(IExclusiveUiPanel self)
-    {
-        foreach (IExclusiveUiPanel panel in openPanels)
-            if (!ReferenceEquals(panel, self)) return true;
-        return false;
-    }
 }

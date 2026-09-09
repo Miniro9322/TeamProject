@@ -95,6 +95,7 @@ public class AddCitizen : MonoBehaviour
     {
         if (TutorialInputGate.BlockEscapeClose) return;
         Close();
+        GlobalUiInputSignals.ConsumeEscape();
     }
 
     private void HandleOutsideClick()

@@ -37,7 +37,6 @@ public class UiManager : MonoBehaviour
     private UiPanelStack panelStack;
     private BuildModePanel buildModePanel;
     private AddCitizen addCitizen;
-    private bool hadEscapeCloseTargetLastFrame;
 
     [Inject]
     private void Construct(UiPanelStack panelStack, BuildModePanel buildModePanel, AddCitizen addCitizen)
@@ -62,7 +61,7 @@ public class UiManager : MonoBehaviour
         requestSupportUi.OnUnlock += UpdateUnlock;
 
         GlobalUiInputSignals.Enable();
-        GlobalUiInputSignals.EscapePerformed += HandleEscape;
+        GlobalUiInputSignals.EscapePerformedFallback += HandleEscape;
 
         guideOpenAction = new InputAction("OpenGuide", binding: Keyboard.current[guideOpenKey].path);
         guideOpenAction.performed += OnGuideOpenPerformed;
@@ -71,7 +70,7 @@ public class UiManager : MonoBehaviour
 
     private void OnDestroy()
     {
-        GlobalUiInputSignals.EscapePerformed -= HandleEscape;
+        GlobalUiInputSignals.EscapePerformedFallback -= HandleEscape;
         GlobalUiInputSignals.Disable();
 
         guideOpenAction.performed -= OnGuideOpenPerformed;
@@ -79,6 +78,11 @@ public class UiManager : MonoBehaviour
         guideOpenAction.Dispose();
     }
 
+    // 이제 EscapePerformedFallback(가장 낮은 우선순위)로 받는다 - GlobalUiInputSignals를 구독하는
+    // 패널이 이번 Esc를 소비했으면 이 메서드는 호출되지 않는다. 그래서 예전처럼 지난 프레임 상태를
+    // LateUpdate로 캐싱할 필요가 없다. HasEscapeCloseTarget()가 남아 있는 건 도감(EnemyArchiveManager)
+    // 처럼 GlobalUiInputSignals를 안 거치고 자체적으로 Esc를 처리하는 패널까지 걸러주기 위함이고,
+    // fallback이 항상 마지막에 돌기 때문에 실시간 조회로도 값이 어긋나지 않는다.
     private void HandleEscape()
     {
         if (menuPanel.activeSelf)
@@ -88,8 +92,9 @@ public class UiManager : MonoBehaviour
         }
 
         if (TutorialInputGate.BlockPanelOpen) return;
-        if (!hadEscapeCloseTargetLastFrame)
-            ShowMenuPanel();
+        if (HasEscapeCloseTarget()) return;
+
+        ShowMenuPanel();
     }
 
     private void OnGuideOpenPerformed(InputAction.CallbackContext context)
@@ -97,11 +102,7 @@ public class UiManager : MonoBehaviour
         if (!TutorialInputGate.BlockHotkeys) OpenGuide();
     }
 
-    private void LateUpdate()
-    {
-        hadEscapeCloseTargetLastFrame = HasEscapeCloseTarget();
-    }
-
+    // GlobalUiInputSignals를 거치지 않는 별도 Esc 경로를 가진 패널(도감 등)이 열려 있으면 ESC로 메뉴를 열지 않는다.
     private bool HasEscapeCloseTarget()
     {
         return (panelStack != null && panelStack.HasAny)

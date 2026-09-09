@@ -246,6 +246,13 @@ public class BuildModePanel : MonoBehaviour
             SetPanelOpen(classUpgradePanel, false);
             heroArchiveButton?.Close();
         }
+        else
+        {
+            // 취소/닫을 게 없으면 이번 Esc는 소비하지 않고 다음 우선순위(메뉴 열기 등)로 넘긴다.
+            return;
+        }
+
+        GlobalUiInputSignals.ConsumeEscape();
     }
 
     // EventSystem의 전역 선택 변화를 이벤트로 받으려면 모든 버튼 프리팹에 ISelectHandler를 추가해야 해서

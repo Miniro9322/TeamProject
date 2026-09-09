@@ -144,6 +144,7 @@ public class StageEnemyInfoView : MonoBehaviour
     {
         if (TutorialInputGate.BlockEscapeClose) return;
         Hide();
+        GlobalUiInputSignals.ConsumeEscape();
     }
 
     private void OnScrollMoved(Vector2 _) => ClampContentPosition();
