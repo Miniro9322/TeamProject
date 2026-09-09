@@ -1,5 +1,4 @@
 using System;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -15,16 +14,21 @@ public class BaseUpgradeButton : MonoBehaviour
     public BaseUpgradeData Data { get; private set; }
     public event Action<BaseUpgradeData> Clicked;
 
+    private void Awake()
+    {
+        // 리스너는 한 번만 건다. 예전엔 Set()이 호출될 때마다(RefreshAll 등) Remove/Add 하며 클로저를 새로 할당했다.
+        button.onClick.AddListener(() => Clicked?.Invoke(Data));
+    }
+
     public void Set(BaseUpgradeData data, bool unlocked, bool canUnlock)
     {
         Data = data;
         icon.sprite = data.icon;
-        icon.color = data.iconColor;
         buttonImage.sprite = unlocked ? unlockedIcon : lockedIcon;
-        var color = buttonImage.color;
-        color.a = lockedAlpha;
-        icon.color = canUnlock ? buttonImage.color : color;
-        button.onClick.RemoveAllListeners();
-        button.onClick.AddListener(() => Clicked?.Invoke(data));
+
+        // NOTE: data.iconColor는 현재 이 버튼 아이콘에는 반영되지 않는다(UpgradeInfoUI에서만 사용).
+        var lockedColor = buttonImage.color;
+        lockedColor.a = lockedAlpha;
+        icon.color = canUnlock ? buttonImage.color : lockedColor;
     }
 }

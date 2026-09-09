@@ -44,11 +44,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cb6f632782a94674f93e54845558826e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ResourcesManager
-  wood: 500
-  food: 500
-  gold: 500
-  iron: 500
-  stone: 500
+  startingAmounts:
+  - Type: 0
+    Amount: 500
+  - Type: 1
+    Amount: 500
+  - Type: 2
+    Amount: 500
+  - Type: 3
+    Amount: 500
+  - Type: 4
+    Amount: 500
   special: 0
   tradeAmount: 300
   startingResourceUpgrades:

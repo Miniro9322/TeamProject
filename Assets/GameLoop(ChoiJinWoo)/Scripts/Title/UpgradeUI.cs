@@ -1,9 +1,9 @@
 using System.Collections.Generic;
-using System.Linq;
 using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
+using VContainer;
 
 public class UpgradeUI : MonoBehaviour, IExclusiveUiPanel
 {
@@ -17,18 +17,37 @@ public class UpgradeUI : MonoBehaviour, IExclusiveUiPanel
     [SerializeField] private BaseUpgradeButton buttonPrefab;
     [SerializeField] private TextMeshProUGUI pointsText;
     [SerializeField] private RectTransform openButtonRect;
-    [SerializeField] private int cheatAddPointsAmount = 100;
 
     private UpgradeState upgradeState;
+    private UpgradeStatePlayerPrefsStore fallbackStore; // 스코프 없는 씬에서 폴백으로 만든 경우에만 사용
     private ClickOutsideCloser outsideCloser;
     private PanelReveal panelReveal;
     private readonly Dictionary<BaseUpgradeData, BaseUpgradeButton> nodes = new();
 
+    [Inject]
+    private void Construct(UpgradeState upgradeState)
+    {
+        this.upgradeState = upgradeState;
+    }
+
     private void Awake()
     {
-        upgradeState = new UpgradeState();
+        // 정상 경로: Title.unity 의 TitleLifetimeScope 가 Construct()로 주입.
+        // 스코프가 없는 씬(테스트용 TestTitle 등)에서는 자체 인스턴스 + 자체 store 로 폴백한다.
+        if (upgradeState == null)
+        {
+            Debug.LogWarning("UpgradeUI: UpgradeState가 주입되지 않았습니다. 씬에 LifetimeScope가 없어 자체 인스턴스로 폴백합니다.", this);
+            upgradeState = new UpgradeState();
+            fallbackStore = new UpgradeStatePlayerPrefsStore(upgradeState);
+        }
+
         outsideCloser = new ClickOutsideCloser((RectTransform)transform, openButtonRect);
         panelReveal = GetComponent<PanelReveal>();
+    }
+
+    private void OnDestroy()
+    {
+        fallbackStore?.Dispose();
     }
 
     private void OnEnable()
@@ -70,7 +89,18 @@ public class UpgradeUI : MonoBehaviour, IExclusiveUiPanel
         CreateButton(HeroUpgradeData, HeroUpgradeParent);
         upgradeInfoPanel.ConfirmClicked += OnConfirmUnlock;
         RefreshAll();
-        OnNodeClicked(nodes.First().Key);
+
+        var firstNode = FirstNode();
+        if (firstNode != null) OnNodeClicked(firstNode);
+    }
+
+    // 패널을 열 때 처음 선택할 노드. 기존엔 Dictionary 순서에 의존한 nodes.First()였다.
+    private BaseUpgradeData FirstNode()
+    {
+        if (SystemUpgradeData.Count > 0) return SystemUpgradeData[0];
+        if (FacilityUpgradeData.Count > 0) return FacilityUpgradeData[0];
+        if (HeroUpgradeData.Count > 0) return HeroUpgradeData[0];
+        return null;
     }
 
     private void CreateButton(List<BaseUpgradeData> datas, GameObject parents)
@@ -85,13 +115,12 @@ public class UpgradeUI : MonoBehaviour, IExclusiveUiPanel
 
     private void OnNodeClicked(BaseUpgradeData data)
     {
-        bool alreadyUnlocked = upgradeState.IsUnlocked(data.id);
-        upgradeInfoPanel.Show(data, !alreadyUnlocked && CanUnlock(data));
+        upgradeInfoPanel.Show(data, upgradeState.CanUnlock(data));
     }
 
     private void OnConfirmUnlock(BaseUpgradeData data)
     {
-        if (!CanUnlock(data)) return;
+        if (!upgradeState.CanUnlock(data)) return;
         if (!upgradeState.TrySpendPoints(data.cost)) return;
 
         upgradeState.Unlock(data.id);
@@ -99,15 +128,10 @@ public class UpgradeUI : MonoBehaviour, IExclusiveUiPanel
         upgradeInfoPanel.Show(data, false); // 방금 해금했으니 확정 버튼은 다시 비활성화
     }
 
-    private bool CanUnlock(BaseUpgradeData data) =>
-        !upgradeState.IsUnlocked(data.id) &&
-        upgradeState.CanAfford(data.cost) &&
-        data.prerequisites.All(p => upgradeState.IsUnlocked(p.id));
-
     private void RefreshAll()
     {
         foreach (var kv in nodes)
-            kv.Value.Set(kv.Key, upgradeState.IsUnlocked(kv.Key.id), kv.Key.prerequisites.All(p => upgradeState.IsUnlocked(p.id)));
+            kv.Value.Set(kv.Key, upgradeState.IsUnlocked(kv.Key.id), upgradeState.ArePrerequisitesMet(kv.Key));
 
         if (pointsText != null)
             pointsText.text = upgradeState.Points.ToString();
@@ -118,7 +142,7 @@ public class UpgradeUI : MonoBehaviour, IExclusiveUiPanel
     {
         upgradeState.ResetAll(nodes.Keys);
         RefreshAll();
-        upgradeInfoPanel.OnReset(CanUnlock(upgradeInfoPanel.Current));
+        upgradeInfoPanel.OnReset(upgradeState.CanUnlock(upgradeInfoPanel.Current));
     }
 
     public void OnClose()

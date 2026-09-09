@@ -4,11 +4,10 @@ using System.Threading;
 using Cysharp.Threading.Tasks;
 using TMPro;
 using UnityEngine;
+using VContainer;
 
 public class CenterFeedbackUi : MonoBehaviour
 {
-    public static CenterFeedbackUi Instance { get; private set; }
-
     [SerializeField] private RectTransform template;
     [SerializeField] private int maxActive = 6;
     [SerializeField] private float riseDistance = 60f;
@@ -20,24 +19,25 @@ public class CenterFeedbackUi : MonoBehaviour
     private readonly Queue<RectTransform> active = new();
     private readonly Dictionary<RectTransform, CancellationTokenSource> playing = new();
 
-    private void Awake()
-    {
-        Instance = this;
+    private TooltipUi tooltipUi;
 
-        basePosition = template.anchoredPosition;
-        template.gameObject.SetActive(false);
+    [Inject]
+    private void Construct(TooltipUi tooltipUi)
+    {
+        this.tooltipUi = tooltipUi;
     }
 
-    private void OnDestroy()
+    private void Awake()
     {
-        if (Instance == this) Instance = null;
+        basePosition = template.anchoredPosition;
+        template.gameObject.SetActive(false);
     }
 
     public void Show(string messageKey)
     {
         if (string.IsNullOrEmpty(messageKey)) return;
 
-        if (TooltipUi.Instance != null) TooltipUi.Instance.Hide();
+        if (tooltipUi != null) tooltipUi.Hide();
 
         RectTransform instance = Rent();
         active.Enqueue(instance);

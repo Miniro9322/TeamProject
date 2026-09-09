@@ -23,21 +23,25 @@ public class UpgradeInfoUI : MonoBehaviour
 
     private void OnEnable()
     {
-        if (current == null) return;
-        nameText.text = DataTableManager.StringTable.Get(current.displayName);
-        descText.text = DataTableManager.StringTable.Get(current.description);
+        if (current != null) Bind(current);
     }
 
     public void Show(BaseUpgradeData data, bool canUnlockNow)
     {
         current = data;
+        Bind(data);
+        confirmButton.gameObject.SetActive(canUnlockNow); // 여기서만 잠금 여부가 반영됨
+        gameObject.SetActive(true);
+    }
+
+    // name/desc만 갱신하던 OnEnable과, 전체를 갱신하던 Show의 표시 로직을 하나로 합친다.
+    private void Bind(BaseUpgradeData data)
+    {
         nameText.text = DataTableManager.StringTable.Get(data.displayName);
         descText.text = DataTableManager.StringTable.Get(data.description);
         costText.text = data.cost.ToString();
         icon.sprite = data.icon;
         icon.color = data.iconColor;
-        confirmButton.gameObject.SetActive(canUnlockNow); // 여기서만 잠금 여부가 반영됨
-        gameObject.SetActive(true);
     }
 
     public void OnReset(bool canUnlock)

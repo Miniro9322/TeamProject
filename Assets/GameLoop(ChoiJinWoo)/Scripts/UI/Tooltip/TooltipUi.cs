@@ -5,7 +5,10 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-// 씬에 하나만 두는 툴팁 창. TooltipTrigger들이 Instance로 직접 호출해서 띄우고 끈다.
+// 씬에 하나만 두는 툴팁 창.
+// VContainer에도 등록되어 있어(UiInstaller) DI로 관리되는 쪽(CenterFeedbackUi 등)은 주입받아 쓴다.
+// static Instance는 DI 파이프라인 밖에 있는 leaf 위젯 TooltipTrigger(버튼 프리팹마다 붙고 런타임 생성됨)
+// 전용 접근 경로로만 남겨둔다. TooltipTrigger가 DI로 들어오면 제거 가능.
 public class TooltipUi : MonoBehaviour
 {
     public static TooltipUi Instance { get; private set; }

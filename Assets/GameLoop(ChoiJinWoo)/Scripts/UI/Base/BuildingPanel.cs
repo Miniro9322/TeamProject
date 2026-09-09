@@ -30,16 +30,18 @@ public class BuildingPanel : MonoBehaviour, IClosablePanel
     private BaseConstructor constructor;
     private ResourceIconSet resourceIconSet;
     private ResourcesManager resourcesManager;
+    private CenterFeedbackUi centerFeedbackUi;
     private ClickOutsideCloser outsideCloser;
     private PanelReveal panelReveal;
 
     [Inject]
-    private void Construct(UiPanelStack panelStack, BaseConstructor constructor, ResourceIconSet resourceIconSet, ResourcesManager resourcesManager)
+    private void Construct(UiPanelStack panelStack, BaseConstructor constructor, ResourceIconSet resourceIconSet, ResourcesManager resourcesManager, CenterFeedbackUi centerFeedbackUi)
     {
         this.panelStack = panelStack;
         this.constructor = constructor;
         this.resourceIconSet = resourceIconSet;
         this.resourcesManager = resourcesManager;
+        this.centerFeedbackUi = centerFeedbackUi;
     }
 
     private void Awake()
@@ -217,7 +219,7 @@ public class BuildingPanel : MonoBehaviour, IClosablePanel
 
         if (!resourcesManager.CheckResources(Occupant.UpgradeCostCopy))
         {
-            CenterFeedbackUi.Instance.Show("UI_Base_NotEnoughResources");
+            centerFeedbackUi.Show("UI_Base_NotEnoughResources");
             return;
         }
 

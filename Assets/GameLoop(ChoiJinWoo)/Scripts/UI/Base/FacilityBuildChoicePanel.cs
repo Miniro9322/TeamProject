@@ -28,6 +28,7 @@ public class FacilityBuildChoicePanel : MonoBehaviour, IClosablePanel
     private ProductionEconomyConfig economyConfig;
     private ResourceIconSet resourceIconSet;
     private UiPanelStack panelStack;
+    private CenterFeedbackUi centerFeedbackUi;
     private RegionFacilitySlots region;
     private int slotIndex;
     public int SlotIndex => slotIndex;
@@ -46,7 +47,7 @@ public class FacilityBuildChoicePanel : MonoBehaviour, IClosablePanel
     private PanelReveal infoPanelReveal;
 
     [Inject]
-    private void Construct(BaseConstructor constructor, ResourcesManager resourcesManager, UpgradeState upgradeState, ProductionEconomyConfig economyConfig, ResourceIconSet resourceIconSet, UiPanelStack panelStack)
+    private void Construct(BaseConstructor constructor, ResourcesManager resourcesManager, UpgradeState upgradeState, ProductionEconomyConfig economyConfig, ResourceIconSet resourceIconSet, UiPanelStack panelStack, CenterFeedbackUi centerFeedbackUi)
     {
         this.constructor = constructor;
         this.resourcesManager = resourcesManager;
@@ -54,6 +55,7 @@ public class FacilityBuildChoicePanel : MonoBehaviour, IClosablePanel
         this.economyConfig = economyConfig;
         this.resourceIconSet = resourceIconSet;
         this.panelStack = panelStack;
+        this.centerFeedbackUi = centerFeedbackUi;
     }
 
     private void Awake()
@@ -231,7 +233,7 @@ public class FacilityBuildChoicePanel : MonoBehaviour, IClosablePanel
 
         if (!constructor.CanBuild(currentOption))
         {
-            CenterFeedbackUi.Instance.Show("UI_Base_NotEnoughResources");
+            centerFeedbackUi.Show("UI_Base_NotEnoughResources");
             EventSystem.current.SetSelectedGameObject(null);
             return;
         }
