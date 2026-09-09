@@ -204,15 +204,13 @@ public class RegionOverviewPanel : MonoBehaviour, IClosablePanel, IExclusiveUiPa
 
     public void RequestClose() => Close();
 
-    // 바깥 클릭: 지역 스택 맨 위(상세/허브 패널이 위에 없을 때)일 때만 닫는다.
+    // 바깥 클릭: 지역 스택 맨 위일 때만 닫는다.
     private void HandleOutsideClick()
     {
         if (panelStack.IsTop(this) && outsideCloser.ClickedOutside()) Close();
     }
 
-    // Esc: 이 패널은 모달 패널(메뉴/가이드 등)보다 우선순위가 낮은 EscapePerformedLow로 받는다.
-    // 위에 뜬 모달이 이번 Esc를 이미 소비했다면 이 단계는 호출되지 않으므로, 예전처럼
-    // "다른 배타 패널이 떠 있었나"를 LateUpdate로 폴링(hadOtherExclusivePanelLastFrame)할 필요가 없다.
+    // Esc: 모달 패널보다 낮은 EscapePerformedLow로 받는다 - 위 모달이 소비했으면 호출되지 않는다.
     private void HandleEscapeClose()
     {
         if (TutorialInputGate.BlockEscapeClose) return;

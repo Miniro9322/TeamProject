@@ -248,8 +248,7 @@ public class BuildModePanel : MonoBehaviour
         }
         else
         {
-            // 취소/닫을 게 없으면 이번 Esc는 소비하지 않고 다음 우선순위(메뉴 열기 등)로 넘긴다.
-            return;
+            return; // 처리할 게 없으면 Esc를 소비하지 않고 넘긴다
         }
 
         GlobalUiInputSignals.ConsumeEscape();

@@ -1976,6 +1976,7 @@ MonoBehaviour:
   - {fileID: 1770505819}
   - {fileID: 675725708}
   - {fileID: 1203471287}
+  loadingCamera: {fileID: 1047512135}
   loadingText: {fileID: 1897753037}
 --- !u!1 &675725707
 GameObject:
@@ -2917,7 +2918,7 @@ Camera:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1047512132}
-  m_Enabled: 1
+  m_Enabled: 0
   serializedVersion: 2
   m_ClearFlags: 2
   m_BackGroundColor: {r: 0.19215687, g: 0.3019608, b: 0.4745098, a: 0}

@@ -37,12 +37,7 @@ public class TitleUI : MonoBehaviour
         GlobalUiInputSignals.Disable();
     }
 
-    // EscapePerformedFallback(최저 우선순위)로 받는다 - upgradePanel처럼 GlobalUiInputSignals를 구독하는
-    // 패널이 이번 Esc를 소비하면 이 메서드는 호출되지 않는다. settingPanel/tutorialChoicePanel은 자체
-    // Esc 구독이 없어(닫기 버튼/바깥 클릭으로만 닫힘) 여기서 실시간으로 걸러준다 - fallback이 항상
-    // 마지막에 돌기 때문에 지난 프레임을 캐싱하지 않아도 값이 어긋나지 않는다.
-    // ConfirmPopup(세이브 덮어쓰기 확인창)은 자기 스스로 Esc를 구독하지 않고 Cancel()만 열어두는
-    // 방식이라, 여기서 직접 불러줘야 한다.
+    // EscapePerformedFallback(최저 우선순위) - Esc 구독이 없는 패널(setting/tutorialChoice/ConfirmPopup)만 걸러준다.
     private void OnEscape()
     {
         if (confirmPopup != null && confirmPopup.gameObject.activeSelf)

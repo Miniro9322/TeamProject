@@ -50,9 +50,7 @@ public class CenterHubPanel : MonoBehaviour, IClosablePanel
         outsideCloser.MarkOpened();
         GlobalUiInputSignals.ClickPerformed += HandleCloseCheck;
         GlobalUiInputSignals.EscapePerformed += HandleCloseCheck;
-        // 허브 패널이 열릴 땐 지역 상세 패널을 닫는다. 실제 SetActive(true)는 openButton에 붙은
-        // UIButtonHeld가 처리하므로(이 컴포넌트가 아님), 클릭 리스너 실행 순서에 기대지 않도록
-        // 이 컴포넌트가 켜질 때마다 항상 실행되는 OnEnable에서 처리한다.
+
         if (detailPanel != null) detailPanel.Close();
 
         if (tradeFoodButton != null)
