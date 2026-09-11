@@ -5,7 +5,7 @@
 ![Unity](https://img.shields.io/badge/Unity-6000.3.15f1-black?logo=unity)
 ![Language](https://img.shields.io/badge/C%23-239120?logo=csharp&logoColor=white)
 ![Team](https://img.shields.io/badge/Team-4인-blue)
-![Period](https://img.shields.io/badge/2026.07–09-lightgrey)
+![Period](https://img.shields.io/badge/개발기간-2026.07.08–09.03-lightgrey)
 ![Render](https://img.shields.io/badge/URP-17.3-blue)
 
 <!-- ▶️ 플레이 가능한 빌드가 있으면 이 줄에 itch.io 등 링크를 최상단에 배치 -->
@@ -15,8 +15,6 @@
 | :---: | :---: | :---: |
 | ![day-night](docs/day-night.gif) | ![combat](docs/combat.gif) | ![merge](docs/merge.gif) |
 -->
-
-<sup>저장소명 `GyoungYilARK` 는 개발 초기 코드네임이며, 프로덕트명은 `PioneerOfFelucia` 입니다.</sup>
 
 ---
 
